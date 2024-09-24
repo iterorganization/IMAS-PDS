@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "pds"
 authors = [
   {name = "PDS Developers"},
-  {name = "Olivier Hoenen", email = "olivier.hoenen@iter.org"},
+  {name = "Mireille Schneider", email = "Mireille.Schneider@iter.org"},
 ]
 description = "Pulse Design Simulator to simulate and prepare experiments"
 readme = {file = "README.md", content-type = "text/markdown"}
