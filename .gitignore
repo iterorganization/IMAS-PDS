@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+
+# Unit test / coverage reports
+.cache
+
+tmp
+.coverage
+.venv
+venv
+build
+junit.xml
+.idea/
