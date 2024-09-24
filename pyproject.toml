@@ -119,6 +119,7 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = [
+    "imas.*",
     "imaspy.*",
     "numpy.*",
     "rich.*",
