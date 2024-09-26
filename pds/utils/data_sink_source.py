@@ -65,6 +65,9 @@ def handle_source(
     listed_ports: PORT_LIST,
     t_cur: float,
 ) -> None:
+    if db_entry is None:
+        return
+
     for port_name in listed_ports["O_F"]:
         occ = get_setting_optional(instance, f"{port_name}_occ", default=0)
         slice_out = db_entry.get_slice(
