@@ -5,12 +5,17 @@ from imaspy import DBEntry
 
 from libmuscle.manager.manager import Manager
 from libmuscle.manager.run_dir import RunDir
+from pds import get_project_root
 
 
 def test_source_to_sink(tmpdir, core_profiles):
-    tmppath = Path(str(tmpdir))
-    with DBEntry(f"imas:hdf5?path=macro_source", "w") as entry:
+    data_source_path = (Path(get_project_root()) / 'macro_source').absolute()
+    data_sink_path = (Path(get_project_root()) / 'micro_sink').absolute()
+    source_uri = f"imas:hdf5?path={data_source_path}"
+    sink_uri = f"imas:hdf5?path={data_sink_path}"
+    with DBEntry(source_uri, "w") as entry:
         entry.put(core_profiles)
+    tmppath = Path(str(tmpdir))
     # make config
     ymmsl_text = (
         'ymmsl_version: v0.1\n'
@@ -18,18 +23,18 @@ def test_source_to_sink(tmpdir, core_profiles):
         '  name: test_model\n'
         '  components:\n'
         '    macro:\n'
-        '      ports:\n'
-        '        o_f: core_profiles_out\n'
         '      implementation: sink_source\n'
+        '      ports:\n'
+        '        o_i: [core_profiles_out]\n'
         '    micro:\n'
-        '      ports:\n'
-        '        f_init: core_profiles_in\n'
         '      implementation: sink_source\n'
+        '      ports:\n'
+        '        f_init: [core_profiles_in]\n'
         '  conduits:\n'
         '    macro.core_profiles_out: micro.core_profiles_in\n'
         'settings:\n'
-        '  macro.source_uri: imas:hdf5?path=macro_source\n'
-        '  micro.sink_uri: imas:hdf5?path=micro_sink\n'
+        f"  macro.source_uri: {source_uri}\n"
+        f"  micro.sink_uri: {sink_uri}\n"
         'implementations:\n'
         '  sink_source:\n'
         '    executable: python\n'
@@ -54,6 +59,6 @@ def test_source_to_sink(tmpdir, core_profiles):
     # check that all went well
     assert success
 
-    assert (tmppath / 'micro_sink').exists()
-    with DBEntry("imas:hdf5?path=micro_sink", "r") as entry:
+    assert data_sink_path.exists()
+    with DBEntry(sink_uri, "r") as entry:
         assert entry.get('core_profiles') == core_profiles

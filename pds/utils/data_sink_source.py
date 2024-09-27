@@ -33,14 +33,18 @@ def muscled_sink_source() -> None:
 def sliced_source(instance: Instance) -> None:
     first_run = True
     t_idx = 0
+    sink_uri = None
+    sink_db_entry = None
+    source_db_entry = None
     while instance.reuse_instance():
         if first_run:
             dd_version = get_setting_optional(instance, "dd_version")
             sink_uri = get_setting_optional(instance, "sink_uri")
             source_uri = get_setting_optional(instance, "source_uri")
             listed_ports = build_port_list(instance)
+            assert len(listed_ports["O_I"]) == 1
 
-            if (source_uri is None) != len(listed_ports["O_F"]) == 0:
+            if (source_uri is None) != len(listed_ports["O_I"]) == 0:
                 raise Warning("needs uri to act as source")
 
             if sink_uri is not None:
@@ -48,15 +52,19 @@ def sliced_source(instance: Instance) -> None:
             if source_uri is not None:
                 source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
                 if sink_uri is None:
-                    ids_name = listed_ports["O_F"][0].replace("_out", "")
+                    ids_name = listed_ports["O_I"][0].replace("_out", "")
                     t_array: List[float] = source_db_entry.get(ids_name).time
             first_run = False
 
         t_cur = handle_sink(instance, sink_db_entry, listed_ports)
         if t_cur is None:
             t_cur = t_array[t_idx]
-        handle_source(instance, sink_db_entry, listed_ports, t_cur)
+        for t_cur in t_array:
+            handle_source(instance, sink_db_entry, listed_ports, t_cur)
         t_idx += 1
+    for db_entry in [source_db_entry, sink_db_entry]:
+        if db_entry is not None:
+            db_entry.close()
 
 
 def handle_source(
@@ -68,7 +76,7 @@ def handle_source(
     if db_entry is None:
         return
 
-    for port_name in listed_ports["O_F"]:
+    for port_name in listed_ports["O_I"]:
         occ = get_setting_optional(instance, f"{port_name}_occ", default=0)
         slice_out = db_entry.get_slice(
             ids_name=port_name,
@@ -110,11 +118,11 @@ def get_setting_optional(
 
 
 def build_port_list(instance: Instance) -> PORT_LIST:
-    listed_ports: PORT_LIST = {"O_F": [], "F_INIT": []}
+    listed_ports: PORT_LIST = {"O_I": [], "F_INIT": []}
     for _, ports in instance.list_ports().items():
         for port_name in ports:
             if port_name.endswith("_out"):
-                listed_ports["O_F"].append(port_name)
+                listed_ports["O_I"].append(port_name)
             elif port_name.endswith("_in"):
                 listed_ports["F_INIT"].append(port_name)
             else:
