@@ -1,22 +1,26 @@
 """
 Muscled data sink and/or source actor.
-Assumes that the port names for the conduits going out and in have
+- Assumes that the port names for the conduits going out and in have
 the format "*ids_name*_in" and "*ids_name*_out", will fail otherwise.
-Set sink_uri and/or source_uri in the settings to determine which DBEntry
+- Set sink_uri and/or source_uri in the settings to determine which DBEntry
 is used as data sink and/or source.
-You can set the occurrence number per port with the optional setting
+- You can set the occurrence number per port with the optional setting
 "*ids_name*_out_occ"
+- For now the only available ports for the components are:
+    source: O_I
+    sink: F_INIT
+    sink_source: F_INIT, O_F
 
 How to use in ymmsl file:
 model:
-  name: test_model
+  name: example_model
   components:
     macro:
-      implementation: sink_source
+      implementation: source_component
       ports:
       o_i: [core_profiles_out]
     micro:
-      implementation: sink_source
+      implementation: sink_component
       ports:
       f_init: [core_profiles_in]
   conduits:
@@ -25,9 +29,12 @@ settings:
   macro.source_uri: source_uri
   micro.sink_uri: sink_uri
 implementations:
-  sink_source:
+  sink_component:
     executable: python
-    args: -u -m pds.utils.data_sink_source
+    args: -u -m pds.utils.sink_component
+  source_component:
+    executable: python
+    args: -u -m pds.utils.source_component
 
 """
 
@@ -48,6 +55,7 @@ PORT_LIST = Dict[str, List[str]]
 
 
 def muscled_sink() -> None:
+    """Implementation of sink component"""
     instance = Instance(
         {
             Operator.F_INIT: [
@@ -71,6 +79,7 @@ def muscled_sink() -> None:
 
 
 def muscled_source() -> None:
+    """Implementation of source component"""
     instance = Instance(
         {
             Operator.O_I: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
@@ -96,6 +105,7 @@ def muscled_source() -> None:
 
 
 def muscled_sink_source() -> None:
+    """Implementation of hybrid sink source component"""
     instance = Instance(
         {
             Operator.F_INIT: [
@@ -127,6 +137,7 @@ def muscled_sink_source() -> None:
 
 
 def get_port_list(instance: Instance, operator: Operator) -> List[str]:
+    """Filter list of ids_names by which ones are actually connected for given instance"""
     total_port_list = instance.list_ports().get(operator, [])
     port_list = [port for port in total_port_list if instance.is_connected(port)]
     return port_list
@@ -138,6 +149,7 @@ def handle_source(
     port_list: List[str],
     t_cur: float,
 ) -> None:
+    """Loop through source ids_names and send all outgoing messages"""
     if db_entry is None:
         return
 
@@ -161,6 +173,7 @@ def handle_sink(
     port_list: List[str],
 ) -> Optional[float]:
     t_cur = None
+    """Loop through sink ids_names and receive all incoming messages"""
     for port_name in port_list:
         ids_name = port_name.replace("_in", "")
         occ = get_setting_optional(instance, f"{port_name}_occ", default=0)
@@ -178,6 +191,7 @@ def handle_sink(
 def get_setting_optional(
     instance: Instance, setting_name: str, default: Optional[SettingValue] = None
 ) -> Optional[SettingValue]:
+    """Helper function to get optional settings from instance"""
     setting: Optional[SettingValue]
     try:
         setting = instance.get_setting(setting_name)
@@ -187,6 +201,7 @@ def get_setting_optional(
 
 
 def sanity_check_ports(instance: Instance) -> None:
+    """Check whether any obvious problems are present in the instance config"""
     # check port name
     for operator, ports in instance.list_ports().items():
         for port_name in ports:
