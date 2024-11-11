@@ -30,14 +30,14 @@ implementations:
     args: -u -m pds.utils.data_sink_source
 
 """
-import logging
-from typing import Dict, List, Optional, Tuple
 
-import imas
+import logging
+from typing import Dict, List, Optional
+
 from imas.imasdef import CLOSEST_SAMPLE
 from imaspy import DBEntry, IDSFactory
 from libmuscle import Instance, Message
-from ymmsl import SettingValue, Operator
+from ymmsl import Operator, SettingValue
 
 PORT_LIST = Dict[str, List[str]]
 
@@ -48,84 +48,89 @@ PORT_LIST = Dict[str, List[str]]
 
 
 def muscled_sink() -> None:
-    instance = Instance({
-        Operator.F_INIT: [f"{ids_name}_in" for ids_name in IDSFactory().ids_names()],
-    })
+    instance = Instance(
+        {
+            Operator.F_INIT: [
+                f"{ids_name}_in" for ids_name in IDSFactory().ids_names()
+            ],
+        }
+    )
     first_run = True
     while instance.reuse_instance():
         if first_run:
-            dd_version, sink_db_entry, _ = first_run_init(instance)
+            dd_version = get_setting_optional(instance, "dd_version")
+            sink_uri = get_setting_optional(instance, "sink_uri")
+            sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
             port_list_in = get_port_list(instance, Operator.F_INIT)
+            sanity_check_ports(instance)
             first_run = False
 
         # F_INIT
-        handle_sink(
-            instance, sink_db_entry, port_list_in
-        )
+        handle_sink(instance, sink_db_entry, port_list_in)
     sink_db_entry.close()
 
 
 def muscled_source() -> None:
-    instance = Instance({
-        Operator.O_I: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
-    })
+    instance = Instance(
+        {
+            Operator.O_I: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
+        }
+    )
     first_run = True
     while instance.reuse_instance():
         if first_run:
-            dd_version, _, source_db_entry = first_run_init(instance)
+            dd_version = get_setting_optional(instance, "dd_version")
+            source_uri = get_setting_optional(instance, "source_uri")
+            source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
             port_list_out = get_port_list(instance, Operator.O_I)
-            t_array: List[float] = source_db_entry.get(port_list_out[0].replace('_out', '')).time
+            t_array: List[float] = source_db_entry.get(
+                port_list_out[0].replace("_out", "")
+            ).time
+            sanity_check_ports(instance)
             first_run = False
 
         for t_inner in t_array:
             # O_I
-            handle_source(
-                instance, source_db_entry, port_list_out, t_inner
-            )
+            handle_source(instance, source_db_entry, port_list_out, t_inner)
     source_db_entry.close()
 
 
 def muscled_sink_source() -> None:
-    instance = Instance({
-        Operator.F_INIT: [f"{ids_name}_in" for ids_name in IDSFactory().ids_names()],
-        Operator.O_F: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
-    })
+    instance = Instance(
+        {
+            Operator.F_INIT: [
+                f"{ids_name}_in" for ids_name in IDSFactory().ids_names()
+            ],
+            Operator.O_F: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
+        }
+    )
     first_run = True
     while instance.reuse_instance():
         if first_run:
-            dd_version, sink_db_entry, source_db_entry = first_run_init(instance)
+            dd_version = get_setting_optional(instance, "dd_version")
+            sink_uri = get_setting_optional(instance, "sink_uri")
+            source_uri = get_setting_optional(instance, "source_uri")
+            sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
+            source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
             port_list_in = get_port_list(instance, Operator.F_INIT)
             port_list_out = get_port_list(instance, Operator.O_F)
+            sanity_check_ports(instance)
             first_run = False
 
         # F_INIT
-        t_cur = handle_sink(
-            instance, sink_db_entry, port_list_in
-        )
+        t_cur = handle_sink(instance, sink_db_entry, port_list_in) or 0
         # O_F
-        handle_source(
-            instance, source_db_entry, port_list_out, t_cur
-        )
+        handle_source(instance, source_db_entry, port_list_out, t_cur)
 
     sink_db_entry.close()
     source_db_entry.close()
+
 
 def get_port_list(instance: Instance, operator: Operator) -> List[str]:
     total_port_list = instance.list_ports().get(operator, [])
     port_list = [port for port in total_port_list if instance.is_connected(port)]
     return port_list
 
-def first_run_init(instance: Instance) -> Tuple[Optional[str], Optional[DBEntry], Optional[DBEntry]]:
-    dd_version = get_setting_optional(instance, "dd_version")
-    sink_uri = get_setting_optional(instance, "sink_uri")
-    source_uri = get_setting_optional(instance, "source_uri")
-    sanity_check_ports(instance)
-    sink_db_entry, source_db_entry = [None, None]
-    if sink_uri is not None:
-        sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
-    if source_uri is not None:
-        source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
-    return dd_version, sink_db_entry, source_db_entry
 
 def handle_source(
     instance: Instance,
@@ -193,14 +198,23 @@ def sanity_check_ports(instance: Instance) -> None:
     # check whether uri is provided if component acts as source
     no_source_uri = get_setting_optional(instance, "source_uri") is None
     no_source_ports = (
-        len(instance.list_ports().get(Operator.O_I, []) + instance.list_ports().get(Operator.O_F, []))
+        len(
+            instance.list_ports().get(Operator.O_I, [])
+            + instance.list_ports().get(Operator.O_F, [])
+        )
         == 0
     )
     if no_source_uri != no_source_ports:
         raise Warning("needs uri to act as source")
     # check no duplicate ports in F_INIT/S or O_I/O_F
-    overlap_out = len(set(instance.list_ports().get(Operator.O_I, [])) & set(instance.list_ports().get(Operator.O_F, [])))
-    overlap_in = len(set(instance.list_ports().get(Operator.F_INIT, [])) & set(instance.list_ports().get(Operator.S, [])))
+    overlap_out = len(
+        set(instance.list_ports().get(Operator.O_I, []))
+        & set(instance.list_ports().get(Operator.O_F, []))
+    )
+    overlap_in = len(
+        set(instance.list_ports().get(Operator.F_INIT, []))
+        & set(instance.list_ports().get(Operator.S, []))
+    )
     if overlap_in or overlap_out:
         raise Warning("cannot use the same port name for different ports")
 

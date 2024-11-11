@@ -1,6 +1,6 @@
 import logging
 
-from . import muscled_sink_source
+from .data_sink_source import muscled_sink_source
 
 if __name__ == "__main__":
     logging.basicConfig()
