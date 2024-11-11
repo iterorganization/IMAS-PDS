@@ -1,4 +1,12 @@
 """
+Muscled data sink and/or source actor.
+Assumes that the port names for the conduits going out and in have
+the format "*ids_name*_in" and "*ids_name*_out", will fail otherwise.
+Set sink_uri and/or source_uri in the settings to determine which DBEntry
+is used as data sink and/or source.
+You can set the occurrence number per port with the optional setting
+"*ids_name*_out_occ"
+
 How to use in ymmsl file:
 model:
   name: test_model
@@ -23,94 +31,101 @@ implementations:
 
 """
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import imas
 from imas.imasdef import CLOSEST_SAMPLE
-from imaspy import DBEntry
+from imaspy import DBEntry, IDSFactory
 from libmuscle import Instance, Message
 from ymmsl import SettingValue, Operator
 
 PORT_LIST = Dict[str, List[str]]
 
-
-def muscled_sink_source() -> None:
-    """
-    Muscled data sink and/or source actor.
-    Assumes that the port names for the conduits going out and in have
-    the format "*ids_name*_in" and "*ids_name*_out", will fail otherwise.
-    Set sink_uri and/or source_uri in the settings to determine which DBEntry
-    is used as data sink and/or source.
-    You can set the occurrence number per port with the optional setting
-    "*ids_name*_out_occ"
-    """
-
-    # TODO: enable specifying time range
-    # TODO: setting for full ids instead of separate time_slices
-    # TODO: handle sanity checks for timestamps
-    # TODO: enable having S input but no O_I output
-
-    print("Start source")
-    instance = Instance()
-    sliced_source(instance)
-    print("Source done.")
+# TODO: enable specifying time range
+# TODO: setting for full ids instead of separate time_slices
+# TODO: handle sanity checks for timestamps
+# TODO: make fully flexible single component
 
 
-def sliced_source(instance: Instance) -> None:
+def muscled_sink() -> None:
+    instance = Instance({
+        Operator.F_INIT: [f"{ids_name}_in" for ids_name in IDSFactory().ids_names()],
+    })
     first_run = True
-    sink_db_entry = None
-    source_db_entry = None
-    t_idx = 0
     while instance.reuse_instance():
         if first_run:
-            dd_version = get_setting_optional(instance, "dd_version")
-            sink_uri = get_setting_optional(instance, "sink_uri")
-            source_uri = get_setting_optional(instance, "source_uri")
-            sanity_check_ports(instance)
+            dd_version, sink_db_entry, _ = first_run_init(instance)
+            port_list_in = get_port_list(instance, Operator.F_INIT)
+            first_run = False
 
-            if sink_uri is not None:
-                sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
-            if source_uri is not None:
-                source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
-                # get outer loop t_array for the case that t_cur cannot be obtained from incoming message
-                only_out_outer = len(instance.list_ports()[Operator.O_F]) > 0 and len(instance.list_ports()[Operator.F_INIT]) == 0
-                # (for now) always get inner loop t_array from output data
-                only_out_inner = len(instance.list_ports()[Operator.O_I]) > 0
-                if sink_uri is None or only_out_outer:
-                    ids_name = instance.list_ports()[Operator.O_F][0].replace(
-                        "_out", ""
-                    )
-                    t_array_outer: List[float] = source_db_entry.get(ids_name).time
-                if only_out_inner:
-                    ids_name = instance.list_ports()[Operator.O_I][0].replace(
-                        "_out", ""
-                    )
-                    t_array_inner: List[float] = source_db_entry.get(ids_name).time
+        # F_INIT
+        handle_sink(
+            instance, sink_db_entry, port_list_in
+        )
+    sink_db_entry.close()
+
+
+def muscled_source() -> None:
+    instance = Instance({
+        Operator.O_I: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
+    })
+    first_run = True
+    while instance.reuse_instance():
+        if first_run:
+            dd_version, _, source_db_entry = first_run_init(instance)
+            port_list_out = get_port_list(instance, Operator.O_I)
+            t_array: List[float] = source_db_entry.get(port_list_out[0].replace('_out', '')).time
+            first_run = False
+
+        for t_inner in t_array:
+            # O_I
+            handle_source(
+                instance, source_db_entry, port_list_out, t_inner
+            )
+    source_db_entry.close()
+
+
+def muscled_sink_source() -> None:
+    instance = Instance({
+        Operator.F_INIT: [f"{ids_name}_in" for ids_name in IDSFactory().ids_names()],
+        Operator.O_F: [f"{ids_name}_out" for ids_name in IDSFactory().ids_names()],
+    })
+    first_run = True
+    while instance.reuse_instance():
+        if first_run:
+            dd_version, sink_db_entry, source_db_entry = first_run_init(instance)
+            port_list_in = get_port_list(instance, Operator.F_INIT)
+            port_list_out = get_port_list(instance, Operator.O_F)
             first_run = False
 
         # F_INIT
         t_cur = handle_sink(
-            instance, sink_db_entry, instance.list_ports()[Operator.F_INIT]
+            instance, sink_db_entry, port_list_in
         )
-        if t_cur is None:
-            t_cur = t_array_outer[t_idx]
-        for t_inner in t_array_inner:
-            # S
-            handle_sink(instance, source_db_entry, instance.list_ports()[Operator.S])
-            # O_I
-            handle_source(
-                instance, source_db_entry, instance.list_ports()[Operator.O_I], t_inner
-            )
-        t_idx += 1
         # O_F
         handle_source(
-            instance, source_db_entry, instance.list_ports()[Operator.O_F], t_cur
+            instance, source_db_entry, port_list_out, t_cur
         )
 
-    for db_entry in [source_db_entry, sink_db_entry]:
-        if db_entry is not None:
-            db_entry.close()
+    sink_db_entry.close()
+    source_db_entry.close()
 
+def get_port_list(instance: Instance, operator: Operator) -> List[str]:
+    total_port_list = instance.list_ports().get(operator, [])
+    port_list = [port for port in total_port_list if instance.is_connected(port)]
+    return port_list
+
+def first_run_init(instance: Instance) -> Tuple[Optional[str], Optional[DBEntry], Optional[DBEntry]]:
+    dd_version = get_setting_optional(instance, "dd_version")
+    sink_uri = get_setting_optional(instance, "sink_uri")
+    source_uri = get_setting_optional(instance, "source_uri")
+    sanity_check_ports(instance)
+    sink_db_entry, source_db_entry = [None, None]
+    if sink_uri is not None:
+        sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
+    if source_uri is not None:
+        source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
+    return dd_version, sink_db_entry, source_db_entry
 
 def handle_source(
     instance: Instance,
@@ -122,9 +137,10 @@ def handle_source(
         return
 
     for port_name in port_list:
+        ids_name = port_name.replace("_out", "")
         occ = get_setting_optional(instance, f"{port_name}_occ", default=0)
         slice_out = db_entry.get_slice(
-            ids_name=port_name,
+            ids_name=ids_name,
             occurrence=occ,
             time_requested=t_cur,
             interpolation_method=CLOSEST_SAMPLE,
@@ -147,7 +163,8 @@ def handle_sink(
         msg_in = instance.receive(port_name)
         t_cur = msg_in.timestamp
         if db_entry is not None:
-            ids_data = imas.get(ids_name)()
+            # ids_data = getattr(imas, ids_name)()
+            ids_data = getattr(IDSFactory(), ids_name)()
             ids_data.deserialize(msg_in.data)
             db_entry.put_slice(ids_data, occurrence=occ)
     return t_cur
@@ -169,18 +186,23 @@ def sanity_check_ports(instance: Instance) -> None:
     for operator, ports in instance.list_ports().items():
         for port_name in ports:
             if not (
-                (port_name.endswith("_in") and operator.name not in ["F_INIT", "S"])
+                (port_name.endswith("_in") and operator.name in ["F_INIT", "S"])
                 or (port_name.endswith("_out") and operator.name in ["O_I", "O_F"])
             ):
                 raise Warning("your port name sucks and you should feel bad")
     # check whether uri is provided if component acts as source
     no_source_uri = get_setting_optional(instance, "source_uri") is None
     no_source_ports = (
-        len(instance.list_ports()[Operator.O_I] + instance.list_ports()[Operator.O_F])
+        len(instance.list_ports().get(Operator.O_I, []) + instance.list_ports().get(Operator.O_F, []))
         == 0
     )
     if no_source_uri != no_source_ports:
         raise Warning("needs uri to act as source")
+    # check no duplicate ports in F_INIT/S or O_I/O_F
+    overlap_out = len(set(instance.list_ports().get(Operator.O_I, [])) & set(instance.list_ports().get(Operator.O_F, [])))
+    overlap_in = len(set(instance.list_ports().get(Operator.F_INIT, [])) & set(instance.list_ports().get(Operator.S, [])))
+    if overlap_in or overlap_out:
+        raise Warning("cannot use the same port name for different ports")
 
 
 if __name__ == "__main__":
