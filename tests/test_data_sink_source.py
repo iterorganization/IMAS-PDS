@@ -17,37 +17,37 @@ def test_source_to_sink(tmpdir, core_profiles):
         entry.put(core_profiles)
     tmppath = Path(str(tmpdir))
     # make config
-    ymmsl_text = (
-        "ymmsl_version: v0.1\n"
-        "model:\n"
-        "  name: test_model\n"
-        "  components:\n"
-        "    source_component:\n"
-        "      implementation: source_component\n"
-        "      ports:\n"
-        "        o_i: [core_profiles_out]\n"
-        "    sink_component:\n"
-        "      implementation: sink_component\n"
-        "      ports:\n"
-        "        f_init: [core_profiles_in]\n"
-        "  conduits:\n"
-        "    source_component.core_profiles_out: sink_component.core_profiles_in\n"
-        "settings:\n"
-        f"  source_component.source_uri: {source_uri}\n"
-        f"  sink_component.sink_uri: {sink_uri}\n"
-        "implementations:\n"
-        "  sink_component:\n"
-        "    executable: python\n"
-        "    args: -u -m pds.utils.sink_component\n"
-        "  source_component:\n"
-        "    executable: python\n"
-        "    args: -u -m pds.utils.source_component\n"
-        "resources:\n"
-        "  source_component:\n"
-        "    threads: 1\n"
-        "  sink_component:\n"
-        "    threads: 1\n"
-    )
+    ymmsl_text = f"""
+ymmsl_version: v0.1
+model:
+  name: test_model
+  components:
+    source_component:
+      implementation: source_component
+      ports:
+        o_i: [core_profiles_out]
+    sink_component:
+      implementation: sink_component
+      ports:
+        f_init: [core_profiles_in]
+  conduits:
+    source_component.core_profiles_out: sink_component.core_profiles_in
+settings:
+  source_component.source_uri: {source_uri}
+  sink_component.sink_uri: {sink_uri}
+implementations:
+  sink_component:
+    executable: python
+    args: -u -m pds.utils.sink_component
+  source_component:
+    executable: python
+    args: -u -m pds.utils.source_component
+resources:
+  source_component:
+    threads: 1
+  sink_component:
+    threads: 1
+"""
 
     config = ymmsl.load(ymmsl_text)
 
@@ -82,50 +82,50 @@ def test_source_to_hybrid_to_sink(tmpdir, core_profiles):
         entry.put(core_profiles)
     tmppath = Path(str(tmpdir))
     # make config
-    ymmsl_text = (
-        "ymmsl_version: v0.1\n"
-        "model:\n"
-        "  name: test_model\n"
-        "  components:\n"
-        "    source_component:\n"
-        "      implementation: source_component\n"
-        "      ports:\n"
-        "        o_i: [core_profiles_out]\n"
-        "    sink_component:\n"
-        "      implementation: sink_component\n"
-        "      ports:\n"
-        "        f_init: [core_profiles_in]\n"
-        "    hybrid_component:\n"
-        "      implementation: hybrid_component\n"
-        "      ports:\n"
-        "        f_init: [core_profiles_in]\n"
-        "        o_f: [core_profiles_out]\n"
-        "  conduits:\n"
-        "    source_component.core_profiles_out: hybrid_component.core_profiles_in\n"
-        "    hybrid_component.core_profiles_out: sink_component.core_profiles_in\n"
-        "settings:\n"
-        f"  source_component.source_uri: {source_uri}\n"
-        f"  sink_component.sink_uri: {sink_uri}\n"
-        f"  hybrid_component.source_uri: {hybrid_source_uri}\n"
-        f"  hybrid_component.sink_uri: {hybrid_sink_uri}\n"
-        "implementations:\n"
-        "  sink_component:\n"
-        "    executable: python\n"
-        "    args: -u -m pds.utils.sink_component\n"
-        "  source_component:\n"
-        "    executable: python\n"
-        "    args: -u -m pds.utils.source_component\n"
-        "  hybrid_component:\n"
-        "    executable: python\n"
-        "    args: -u -m pds.utils.sink_source_component\n"
-        "resources:\n"
-        "  source_component:\n"
-        "    threads: 1\n"
-        "  sink_component:\n"
-        "    threads: 1\n"
-        "  hybrid_component:\n"
-        "    threads: 1\n"
-    )
+    ymmsl_text = f"""
+    ymmsl_version: v0.1
+    model:
+      name: test_model
+      components:
+        source_component:
+          implementation: source_component
+          ports:
+            o_i: [core_profiles_out]
+        sink_component:
+          implementation: sink_component
+          ports:
+            f_init: [core_profiles_in]
+        hybrid_component:
+          implementation: hybrid_component
+          ports:
+            f_init: [core_profiles_in]
+            o_f: [core_profiles_out]
+      conduits:
+        source_component.core_profiles_out: hybrid_component.core_profiles_in
+        hybrid_component.core_profiles_out: sink_component.core_profiles_in
+    settings:
+      source_component.source_uri: {source_uri}
+      sink_component.sink_uri: {sink_uri}
+      hybrid_component.source_uri: {hybrid_source_uri}
+      hybrid_component.sink_uri: {hybrid_sink_uri}
+    implementations:
+      sink_component:
+        executable: python
+        args: -u -m pds.utils.sink_component
+      source_component:
+        executable: python
+        args: -u -m pds.utils.source_component
+      hybrid_component:
+        executable: python
+        args: -u -m pds.utils.sink_source_component
+    resources:
+      source_component:
+        threads: 1
+      sink_component:
+        threads: 1
+      hybrid_component:
+        threads: 1
+    """
 
     config = ymmsl.load(ymmsl_text)
 

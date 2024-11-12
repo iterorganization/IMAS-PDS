@@ -35,22 +35,20 @@ implementations:
   source_component:
     executable: python
     args: -u -m pds.utils.source_component
-
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from imas.imasdef import CLOSEST_SAMPLE
 from imaspy import DBEntry, IDSFactory
+from imaspy.ids_defs import CLOSEST_INTERP
 from libmuscle import Instance, Message
 from ymmsl import Operator, SettingValue
-
-PORT_LIST = Dict[str, List[str]]
 
 # TODO: enable specifying time range
 # TODO: setting for full ids instead of separate time_slices
 # TODO: handle sanity checks for timestamps
+# TODO: make interp_method a setting
 # TODO: make fully flexible single component
 
 
@@ -67,7 +65,7 @@ def muscled_sink() -> None:
     while instance.reuse_instance():
         if first_run:
             dd_version = get_setting_optional(instance, "dd_version")
-            sink_uri = get_setting_optional(instance, "sink_uri")
+            sink_uri = instance.get_setting("sink_uri")
             sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
             port_list_in = get_port_list(instance, Operator.F_INIT)
             sanity_check_ports(instance)
@@ -89,11 +87,11 @@ def muscled_source() -> None:
     while instance.reuse_instance():
         if first_run:
             dd_version = get_setting_optional(instance, "dd_version")
-            source_uri = get_setting_optional(instance, "source_uri")
+            source_uri = instance.get_setting("source_uri")
             source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
             port_list_out = get_port_list(instance, Operator.O_I)
-            t_array: List[float] = source_db_entry.get(
-                port_list_out[0].replace("_out", "")
+            t_array = source_db_entry.get(
+                port_list_out[0].replace("_out", ""), lazy=True
             ).time
             sanity_check_ports(instance)
             first_run = False
@@ -118,8 +116,8 @@ def muscled_sink_source() -> None:
     while instance.reuse_instance():
         if first_run:
             dd_version = get_setting_optional(instance, "dd_version")
-            sink_uri = get_setting_optional(instance, "sink_uri")
-            source_uri = get_setting_optional(instance, "source_uri")
+            sink_uri = instance.get_setting("sink_uri")
+            source_uri = instance.get_setting("source_uri")
             sink_db_entry = DBEntry(sink_uri, "w", dd_version=dd_version)
             source_db_entry = DBEntry(source_uri, "r", dd_version=dd_version)
             port_list_in = get_port_list(instance, Operator.F_INIT)
@@ -137,7 +135,8 @@ def muscled_sink_source() -> None:
 
 
 def get_port_list(instance: Instance, operator: Operator) -> List[str]:
-    """Filter list of ids_names by which ones are actually connected for given instance"""
+    """Filter list of ids_names by which ones are actually connected for
+    given instance"""
     total_port_list = instance.list_ports().get(operator, [])
     port_list = [port for port in total_port_list if instance.is_connected(port)]
     return port_list
@@ -160,10 +159,9 @@ def handle_source(
             ids_name=ids_name,
             occurrence=occ,
             time_requested=t_cur,
-            interpolation_method=CLOSEST_SAMPLE,
+            interpolation_method=CLOSEST_INTERP,
         )
         msg_out = Message(t_cur, data=slice_out.serialize())
-        logging.info(f"#sync# Sending {port_name}")
         instance.send(port_name, msg_out)
 
 
@@ -172,12 +170,11 @@ def handle_sink(
     db_entry: Optional[DBEntry],
     port_list: List[str],
 ) -> Optional[float]:
-    t_cur = None
     """Loop through sink ids_names and receive all incoming messages"""
+    t_cur = None
     for port_name in port_list:
         ids_name = port_name.replace("_in", "")
         occ = get_setting_optional(instance, f"{port_name}_occ", default=0)
-        logging.info(f"#sync# Receiving {port_name}")
         msg_in = instance.receive(port_name)
         t_cur = msg_in.timestamp
         if db_entry is not None:
@@ -205,11 +202,16 @@ def sanity_check_ports(instance: Instance) -> None:
     # check port name
     for operator, ports in instance.list_ports().items():
         for port_name in ports:
-            if not (
-                (port_name.endswith("_in") and operator.name in ["F_INIT", "S"])
-                or (port_name.endswith("_out") and operator.name in ["O_I", "O_F"])
-            ):
-                raise Warning("your port name sucks and you should feel bad")
+            if operator.name in ["F_INIT", "S"] and not port_name.endswith("_in"):
+                raise Exception(
+                    "Incoming port names should use the format '*ids_name*_in'. "
+                    f"Problem port is {port_name}."
+                )
+            if operator.name in ["O_I", "O_F"] and not port_name.endswith("_out"):
+                raise Exception(
+                    "Outgoing port names should use the format '*ids_name*_out'. "
+                    f"Problem port is {port_name}."
+                )
     # check whether uri is provided if component acts as source
     no_source_uri = get_setting_optional(instance, "source_uri") is None
     no_source_ports = (
@@ -220,18 +222,10 @@ def sanity_check_ports(instance: Instance) -> None:
         == 0
     )
     if no_source_uri != no_source_ports:
-        raise Warning("needs uri to act as source")
-    # check no duplicate ports in F_INIT/S or O_I/O_F
-    overlap_out = len(
-        set(instance.list_ports().get(Operator.O_I, []))
-        & set(instance.list_ports().get(Operator.O_F, []))
-    )
-    overlap_in = len(
-        set(instance.list_ports().get(Operator.F_INIT, []))
-        & set(instance.list_ports().get(Operator.S, []))
-    )
-    if overlap_in or overlap_out:
-        raise Warning("cannot use the same port name for different ports")
+        raise Exception(
+            "Component needs a DBEntry URI to act as source. "
+            "Add source_uri in the ymmsl settings file."
+        )
 
 
 if __name__ == "__main__":
