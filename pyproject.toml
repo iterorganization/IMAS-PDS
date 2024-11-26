@@ -52,7 +52,6 @@ dependencies = [
     "importlib_resources",
     "rich",
     "packaging",
-    "imas",
     "imaspy",
     "muscle3",
 ]
