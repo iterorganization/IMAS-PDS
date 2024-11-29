@@ -40,7 +40,7 @@ SDCC setup
   .. code-block:: bash
 
     # Load modules every time you use pds
-    module load IMAS/3.40.1-5.1.0-intel-2020b IMASPy MUSCLE3
+    module load IMAS IMASPy MUSCLE3
     # And activate the Python virtual environment
     . venv/bin/activate
 
