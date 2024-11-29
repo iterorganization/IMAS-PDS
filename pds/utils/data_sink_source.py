@@ -1,40 +1,42 @@
 """
 Muscled data sink and/or source actor.
+
 - Assumes that the port names for the conduits going out and in have
-the format "*ids_name*_in" and "*ids_name*_out", will fail otherwise.
+    the format ``*ids_name*_in`` and ``*ids_name*_out``, will fail otherwise.
 - Set sink_uri and/or source_uri in the settings to determine which DBEntry
-is used as data sink and/or source.
+    is used as data sink and/or source.
 - You can set the occurrence number per port with the optional setting
-"*ids_name*_out_occ"
+    ``*ids_name*_out_occ``
 - For now the only available ports for the components are:
     source: O_I
     sink: F_INIT
     sink_source: F_INIT, O_F
 
-How to use in ymmsl file:
-model:
-  name: example_model
-  components:
-    macro:
-      implementation: source_component
-      ports:
-      o_i: [core_profiles_out]
-    micro:
-      implementation: sink_component
-      ports:
-      f_init: [core_profiles_in]
-  conduits:
-    macro.core_profiles_out: micro.core_profiles_in
-settings:
-  macro.source_uri: source_uri
-  micro.sink_uri: sink_uri
-implementations:
-  sink_component:
-    executable: python
-    args: -u -m pds.utils.sink_component
-  source_component:
-    executable: python
-    args: -u -m pds.utils.source_component
+How to use in ymmsl file::
+
+    model:
+        name: example_model
+        components:
+            macro:
+                implementation: source_component
+                ports:
+                o_i: [core_profiles_out]
+            micro:
+                implementation: sink_component
+                ports:
+                f_init: [core_profiles_in]
+        conduits:
+            macro.core_profiles_out: micro.core_profiles_in
+    settings:
+        macro.source_uri: source_uri
+        micro.sink_uri: sink_uri
+    implementations:
+        sink_component:
+            executable: python
+            args: -u -m pds.utils.sink_component
+        source_component:
+            executable: python
+            args: -u -m pds.utils.source_component
 """
 
 import logging
