@@ -27,7 +27,7 @@ SDCC setup
   .. code-block:: bash
 
     # load IMAS and IMASPy before install
-    module load IMAS/3.40.1-5.1.0-intel-2020b IMASPy MUSCLE3
+    module load IMAS IMASPy MUSCLE3
     python3 -m venv ./venv
     . venv/bin/activate
     pip install --upgrade pip
