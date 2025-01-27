@@ -1,0 +1,43 @@
+ymmsl_version: v0.1
+model:
+  name: torax_muscle3
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [core_profiles_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [core_profiles_in]
+  conduits:
+    source.equilibrium_out: torax.equilibrium_in
+    torax.core_profiles_out: sink.core_profiles_in
+settings:
+  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/130012/4"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/3/130012/5"
+  muscle_remote_log_level: 'DEBUG'
+  python_config_module: 'torax.examples.basic_config'
+implementations:
+  source:
+    executable: python
+    args: "-u -m pds.utils.source_component"
+  sink:
+    executable: python
+    args: "-u -m pds.utils.sink_component"
+  torax:
+    executable: python
+    args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  torax:
+    threads: 1
+

@@ -1,0 +1,73 @@
+ymmsl_version: v0.1
+model:
+  name: torax_nice_coupling
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+    sink_source:
+      implementation: sink_source
+      ports:
+        o_f: [equilibrium_in]
+        o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_in_1]
+        o_i: [equilibrium_out_2]
+        s: [equilibrium_in_2]
+        o_f: [equilibrium_out_1]
+  conduits:
+    source.equilibrium_out: torax.equilibrium_in_1
+    torax.equilibrium_out_2: nice.equilibrium_in
+    torax.equilibrium_out_2: sink_source.equilibrium_in
+    sink_source.pf_passive_out: nice.pf_passive_in
+    sink_source.pf_active_out: nice.pf_active_in
+    sink_source.iron_core_out: nice.iron_core_in
+    sink_source.wall_out: nice.wall_in
+    nice.equilibrium_out: torax.equilibrium_in_2
+    torax.equilibrium_out_1: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
+  sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
+  sink.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/203/"
+  xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
+  muscle_remote_log_level: 'DEBUG'
+  python_config_module: 'torax.examples.basic_config'
+implementations:
+  sink:
+    executable: python
+    args: "-u -m pds.utils.sink_component"
+  source:
+    executable: python
+    args: "-u -m pds.utils.source_component"
+  sink_source:
+    executable: python
+    args: "-u -m pds.utils.sink_source_component"
+  nice_inv:
+    executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_inv_muscle3
+  torax:
+    executable: python
+    args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  sink_source:
+    threads: 1
+  nice:
+    threads: 1
+  torax:
+    threads: 1
+
