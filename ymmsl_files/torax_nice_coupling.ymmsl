@@ -27,6 +27,10 @@ model:
         o_i: [equilibrium_out_2]
         s: [equilibrium_in_2]
         o_f: [equilibrium_out_1]
+    olc:
+      implementation: olc
+      ports:
+        f_init: [pf_active_in]
   conduits:
     source.equilibrium_out: torax.equilibrium_in_1
     torax.equilibrium_out_2: nice.equilibrium_in
@@ -36,11 +40,15 @@ model:
     sink_source.iron_core_out: nice.iron_core_in
     sink_source.wall_out: nice.wall_in
     nice.equilibrium_out: torax.equilibrium_in_2
+    nice.pf_active_out: olc.pf_active_in
     torax.equilibrium_out_1: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
   sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
   sink.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/203/"
+  olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
+  olc.rulesets: "olc"
+  olc.apply_generic: False
   xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'torax.examples.basic_config'
@@ -59,6 +67,9 @@ implementations:
   torax:
     executable: python
     args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
+  olc:
+    executable: python
+    args: "-u -m pds.utils.olc_component"
 resources:
   source:
     threads: 1
@@ -69,5 +80,7 @@ resources:
   nice:
     threads: 1
   torax:
+    threads: 1
+  olc:
     threads: 1
 
