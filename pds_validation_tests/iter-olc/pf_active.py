@@ -1,10 +1,11 @@
 """
-PDS-OLC-specific validation rules for the ``pf_active`` IDS.
+PDS-OLC-specific validation rules for the ``pf_active`` IDS for ITER scenarios.
 Based on https://docs.google.com/spreadsheets/d/1p4vzkrOC39OY-q3MoRhB91CJWH_dNzfW/edit?gid=770757157#gid=770757157
 """
 
 pf_current_limits = {
-    # interpolation setpoints based on temperature of 4.3K
+    # linear interpolation setpoints based on temperature of 4.3K
+    # [(current 1, magnetic field 1), (current 2, magnetic field 2)]
     "PF1": [(48000, 6.4), (41000, 6.5)],
     "PF2": [(55000, 4.8), (50000, 5.0)],
     "PF3": [(55000, 4.8), (50000, 5.0)],
@@ -13,7 +14,8 @@ pf_current_limits = {
     "PF6": [(48000, 6.4), (41000, 6.5)],
 }
 cs_current_limits = {
-    # interpolation setpoints based on temperature of 4.3K
+    # linear interpolation setpoints based on temperature of 4.3K
+    # [(current 1, magnetic field 1), (current 2, magnetic field 2)]
     "CS3U": [(45000, 12.6), (40000, 13.0)],
     "CS2U": [(45000, 12.6), (40000, 13.0)],
     "CS1U": [(45000, 12.6), (40000, 13.0)],
@@ -102,7 +104,8 @@ def validate_force_limits_pf(ids):
         for key in pf_force_limits.keys():
             if key in coil.name:
                 if coil.force.data.value:
-                    assert coil.force.data.value < pf_force_limits[key]
+                    assert coil.force.data.value < pf_force_limits[key][0]
+                    assert coil.force.data.value > pf_force_limits[key][1]
 
 
 @validator("pf_active")
