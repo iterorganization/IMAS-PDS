@@ -47,7 +47,7 @@ settings:
   sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
   sink.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/203/"
   olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
-  olc.rulesets: "olc"
+  olc.rulesets: "iter-olc"
   olc.apply_generic: False
   xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
