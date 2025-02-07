@@ -1,6 +1,6 @@
 """
 PDS-OLC-specific validation rules for the ``pf_active`` IDS for ITER scenarios.
-Based on https://docs.google.com/spreadsheets/d/1p4vzkrOC39OY-q3MoRhB91CJWH_dNzfW/edit?gid=770757157#gid=770757157
+Based on ITER 33NHXN document
 """
 
 pf_current_limits = {
