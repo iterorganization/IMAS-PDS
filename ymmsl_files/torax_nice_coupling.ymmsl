@@ -13,7 +13,7 @@ model:
     sink_source:
       implementation: sink_source
       ports:
-        o_f: [equilibrium_in]
+        f_init: [equilibrium_in]
         o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
     nice_inv:
       implementation: nice_inv
