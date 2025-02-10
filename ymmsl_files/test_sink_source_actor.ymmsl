@@ -1,0 +1,29 @@
+ymmsl_version: v0.1
+model:
+  name: test_model
+  components:
+    source_component:
+      implementation: source_component
+      ports:
+        o_i: [equilibrium_out]
+    sink_component:
+      implementation: sink_component
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source_component.equilibrium_out: sink_component.equilibrium_in
+settings:
+  source_component.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/3"
+  sink_component.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/201"
+implementations:
+  sink_component:
+    executable: python
+    args: -u -m imas_m3.actors.sink_component
+  source_component:
+    executable: python
+    args: -u -m imas_m3.actors.source_component
+resources:
+  source_component:
+    threads: 1
+  sink_component:
+    threads: 1

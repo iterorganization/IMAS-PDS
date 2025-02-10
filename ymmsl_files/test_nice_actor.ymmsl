@@ -62,10 +62,10 @@ settings:
 implementations:
   sink:
     executable: python
-    args: "-u -m pds.utils.sink_component"
+    args: "-u -m imas_m3.actors.sink_component"
   source:
     executable: python
-    args: "-u -m pds.utils.source_component"
+    args: "-u -m imas_m3.actors.source_component"
   nice_inv:
     executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_inv_muscle3
   nice_evo:

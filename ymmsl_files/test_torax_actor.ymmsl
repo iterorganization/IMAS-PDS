@@ -26,10 +26,10 @@ settings:
 implementations:
   source:
     executable: python
-    args: "-u -m pds.utils.source_component"
+    args: "-u -m imas_m3.actors.source_component"
   sink:
     executable: python
-    args: "-u -m pds.utils.sink_component"
+    args: "-u -m imas_m3.actors.sink_component"
   torax:
     executable: python
     args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"

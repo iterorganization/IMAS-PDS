@@ -55,13 +55,13 @@ settings:
 implementations:
   sink:
     executable: python
-    args: "-u -m pds.utils.sink_component"
+    args: "-u -m imas_m3.actors.sink_component"
   source:
     executable: python
-    args: "-u -m pds.utils.source_component"
+    args: "-u -m imas_m3.actors.source_component"
   sink_source:
     executable: python
-    args: "-u -m pds.utils.sink_source_component"
+    args: "-u -m imas_m3.actors.sink_source_component"
   nice_inv:
     executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_inv_muscle3
   torax:
@@ -69,7 +69,7 @@ implementations:
     args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
   olc:
     executable: python
-    args: "-u -m pds.utils.olc_component"
+    args: "-u -m imas_m3.actors.olc_component"
 resources:
   source:
     threads: 1

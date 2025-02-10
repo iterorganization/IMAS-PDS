@@ -1,0 +1,31 @@
+ymmsl_version: v0.1
+model:
+  name: test_model
+  components:
+    source_component:
+      implementation: source_component
+      ports:
+        o_i: [pf_active_out]
+    olc_component:
+      implementation: olc_component
+      ports:
+        f_init: [pf_active_in]
+  conduits:
+    source_component.equilibrium_out: olc_component.equilibrium_in
+settings:
+  source_component.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/3"
+  olc_component.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
+  olc_component.rulesets: "iter-olc"
+  olc_component.apply_generic: False
+implementations:
+  olc_component:
+    executable: python
+    args: -u -m imas_m3.actors.olc_component
+  source_component:
+    executable: python
+    args: -u -m imas_m3.actors.source_component
+resources:
+  source_component:
+    threads: 1
+  olc_component:
+    threads: 1
