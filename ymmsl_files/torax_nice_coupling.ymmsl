@@ -33,14 +33,14 @@ model:
         f_init: [pf_active_in]
   conduits:
     source.equilibrium_out: torax.equilibrium_in_1
-    torax.equilibrium_out_2: nice.equilibrium_in
+    torax.equilibrium_out_2: nice_inv.equilibrium_in
     torax.equilibrium_out_2: sink_source.equilibrium_in
-    sink_source.pf_passive_out: nice.pf_passive_in
-    sink_source.pf_active_out: nice.pf_active_in
-    sink_source.iron_core_out: nice.iron_core_in
-    sink_source.wall_out: nice.wall_in
-    nice.equilibrium_out: torax.equilibrium_in_2
-    nice.pf_active_out: olc.pf_active_in
+    sink_source.pf_passive_out: nice_inv.pf_passive_in
+    sink_source.pf_active_out: nice_inv.pf_active_in
+    sink_source.iron_core_out: nice_inv.iron_core_in
+    sink_source.wall_out: nice_inv.wall_in
+    nice_inv.equilibrium_out: torax.equilibrium_in_2
+    nice_inv.pf_active_out: olc.pf_active_in
     torax.equilibrium_out_1: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
@@ -77,7 +77,7 @@ resources:
     threads: 1
   sink_source:
     threads: 1
-  nice:
+  nice_inv:
     threads: 1
   torax:
     threads: 1
