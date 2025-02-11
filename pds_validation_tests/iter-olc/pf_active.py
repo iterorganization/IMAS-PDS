@@ -103,9 +103,9 @@ def validate_force_limits_pf(ids):
     for coil in ids.coil:
         for key in pf_force_limits.keys():
             if key in coil.name:
-                if coil.force.data.value:
-                    assert coil.force.data.value < pf_force_limits[key][0]
-                    assert coil.force.data.value > pf_force_limits[key][1]
+                if coil.force_vertical.data.value:
+                    assert coil.force_vertical.data.value < pf_force_limits[key][0]
+                    assert coil.force_vertical.data.value > pf_force_limits[key][1]
 
 
 @validator("pf_active")
