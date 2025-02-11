@@ -17,6 +17,8 @@ settings:
   olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False
+  olc.halt_on_error: False
+  muscle_remote_log_level: 'DEBUG'
 implementations:
   olc:
     executable: python
@@ -29,3 +31,4 @@ resources:
     threads: 1
   olc:
     threads: 1
+
