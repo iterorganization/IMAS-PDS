@@ -1,6 +1,6 @@
 ymmsl_version: v0.1
 model:
-  name: nice_imas_inv_muscle3
+  name: test_nice_actor
   components:
     source:
       implementation: source

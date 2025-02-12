@@ -1,6 +1,6 @@
 ymmsl_version: v0.1
 model:
-  name: test_model
+  name: test_sink_source_actor
   components:
     source_component:
       implementation: source_component

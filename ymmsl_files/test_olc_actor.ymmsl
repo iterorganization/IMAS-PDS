@@ -1,6 +1,6 @@
 ymmsl_version: v0.1
 model:
-  name: test_model
+  name: test_olc_actor
   components:
     source:
       implementation: source
@@ -31,4 +31,3 @@ resources:
     threads: 1
   olc:
     threads: 1
-
