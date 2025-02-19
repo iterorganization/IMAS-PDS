@@ -36,8 +36,6 @@ model:
   conduits:
     source.equilibrium_out: nice_inv.equilibrium_in
     source.pf_active_out: nice_inv.pf_active_in
-    source.pf_active_out: nice_evo.pf_active_in
-    source.pf_active_out: nice_dir.pf_active_in
     source.wall_out: nice_inv.wall_in
     source.wall_out: nice_evo.wall_in
     source.wall_out: nice_dir.wall_in
@@ -50,7 +48,11 @@ model:
     nice_inv.equilibrium_out: nice_evo.equilibrium_in
     nice_inv.equilibrium_out: nice_dir.equilibrium_in
     nice_inv.equilibrium_out: sink_inv.equilibrium_in
+    nice_inv.pf_active_out: nice_evo.pf_active_in
+    nice_inv.pf_active_out: nice_dir.pf_active_in
+    nice_inv.pf_active_out: sink_inv.pf_active_in
     nice_evo.equilibrium_out: sink_evo.equilibrium_in
+    nice_evo.pf_active_out: sink_evo.pf_active_in
     nice_dir.equilibrium_out: sink_dir.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
