@@ -1,0 +1,44 @@
+ymmsl_version: v0.1
+model:
+  name: test_metis_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    metis:
+      implementation: metis
+      ports:
+        f_init: [equilibrium]
+        o_f: [equilibrium_output]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: metis.equilibrium
+    metis.equilibrium_output: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/iter/3/130012/4"
+  sink.sink_uri: "imas:hdf5?path=/home/iter/sanderm/public/imasdb/iter/3/130012/5"
+  muscle_remote_log_level: 'debug'
+  metis.metis_clock_time_start: 0.0  
+  metis.metis_clock_time_stop: 3.0
+  metis.metis_filename:  /Home/JA132999/Zone_Travail/METIS4ITM/eufus.Git/metis/certification/metis/ITER_rampup_ECCD.mat
+implementations:
+  source:
+    executable: python
+    args: "-u -m imas_m3.actors.source_component"
+  sink:
+    executable: python
+    args: "-u -m imas_m3.actors.sink_component"
+   metis: 
+    executable: export IMAS_AL_SERIALIZER_TMP_DIR=$IMAS_AL_SERIALIZER_TMP_DIR_METIS ; matlab
+    args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  metis:
+    threads: 1
