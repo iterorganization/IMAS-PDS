@@ -54,20 +54,25 @@ settings:
   python_config_module: 'torax.examples.basic_config'
 implementations:
   sink:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_component"
   source:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
     executable: python
     args: "-u -m imas_m3.actors.source_component"
   sink_source:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_source_component"
   nice_inv:
     executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_inv_muscle3
   torax:
+    virtual_env: /home/ITER/sanderm/gitrepos/torax-m3/venv
     executable: python
     args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
   olc:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
     executable: python
     args: "-u -m imas_m3.actors.olc_component"
 resources:
