@@ -1,0 +1,61 @@
+ymmsl_version: v0.1
+model:
+  name: test_accumulator_actor
+  components:
+    source:
+      implementation: source_component
+      ports:
+        o_i: [equilibrium_out]
+    accumulator:
+      implementation: accumulator_component
+      ports:
+        s: [equilibrium_in]
+        o_f: [equilibrium_out]
+    accumulator_optional_port:
+      implementation: accumulator_component
+      ports:
+        s: [equilibrium_in, t_next]
+        o_f: [equilibrium_out]
+    sink:
+      implementation: sink_component
+      ports:
+        f_init: [equilibrium_in]
+    sink_optional_port:
+      implementation: sink_component
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: accumulator.equilibrium_in
+    source.equilibrium_out: accumulator_optional_port.equilibrium_in
+    source.equilibrium_out: accumulator_optional_port.t_next
+    accumulator.equilibrium_out: sink.equilibrium_in
+    accumulator_optional_port.equilibrium_out: sink_optional_port.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/3"
+  sink.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/201"
+  sink_optional_port.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/202"
+implementations:
+  sink_component:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    executable: python
+    args: -u -m imas_m3.actors.sink_component
+  source_component:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    executable: python
+    args: -u -m imas_m3.actors.source_component
+  accumulator_component:
+    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    executable: python
+    args: -u -m imas_m3.actors.accumulator_component
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  sink_optional_port:
+    threads: 1
+  accumulator:
+    threads: 1
+  accumulator_optional_port:
+    threads: 1
+
