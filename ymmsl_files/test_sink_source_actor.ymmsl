@@ -17,11 +17,11 @@ settings:
   sink_component.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/201"
 implementations:
   sink_component:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
     executable: python
     args: -u -m imas_m3.actors.sink_component
   source_component:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
     executable: python
     args: -u -m imas_m3.actors.source_component
 resources:

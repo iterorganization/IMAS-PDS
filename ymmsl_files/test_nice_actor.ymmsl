@@ -63,11 +63,11 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   sink:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_component"
   source:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.source_component"
   nice_inv:
