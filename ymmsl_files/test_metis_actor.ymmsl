@@ -46,19 +46,24 @@ settings:
   metis.metis_option_orientation: -1
   metis.metis_option_COCOS_method: Native
   metis.metis_option_COCOS_check: off
+  metis.metis_updatetimeonrestart: 0
+  # equilibrium IDS
   metis.metis_external_data_equilibrium: 1
   metis.metis_external_data_current_diffusion: 1
-  metis.metis_external_data_electron_temperature: 1
-  metis.metis_external_data_electron_density: 1
-  metis.metis_external_data_ion_temperature: 1
-  metis.metis_external_data_charge_effective: 1
-  metis.metis_external_data_momentum: 1
-  metis.metis_external_data_LHCD: 1
-  metis.metis_external_data_ECRH: 1
-  metis.metis_external_data_ICRH: 1
-  metis.metis_external_data_NBI:  1
-  metis.metis_external_data_PLINE: 1
-  metis.metis_external_data_runaway: 1
+  # plasma_profiles IDS
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  # plasma_sources IDS
+  metis.metis_external_data_LHCD: 0
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI:  0
+  metis.metis_external_data_PLINE: 0
+  metis.metis_external_data_runaway: 0
+
 
 implementations:
   source:
