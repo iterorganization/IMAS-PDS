@@ -19,8 +19,8 @@ model:
     source.equilibrium_out: metis.equilibrium
     metis.equilibrium_output: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/iter/3/130012/4"
-  sink.sink_uri: "imas:hdf5?path=/home/iter/sanderm/public/imasdb/iter/3/130012/5"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_metis/"
   muscle_remote_log_level: 'debug'
   metis.metis_clock_time_start: 0.0  
   metis.metis_clock_time_stop: 3.0

@@ -19,8 +19,8 @@ model:
     source.equilibrium_out: torax.equilibrium_in
     torax.equilibrium_out: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/130012/4"
-  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/3/130012/5"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_torax/"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'torax.examples.basic_config'
 implementations:

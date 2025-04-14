@@ -43,9 +43,9 @@ model:
     nice_inv.pf_active_out: olc.pf_active_in
     torax.equilibrium_out_1: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
-  sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
-  sink.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/203/"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_torax/"
   olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False

@@ -13,7 +13,7 @@ model:
   conduits:
     source.pf_active_out: olc.pf_active_in
 settings:
-  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER_MD/3/111001/103"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
   olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False

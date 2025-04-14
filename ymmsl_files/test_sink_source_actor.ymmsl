@@ -13,8 +13,8 @@ model:
   conduits:
     source_component.equilibrium_out: sink_component.equilibrium_in
 settings:
-  source_component.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/3"
-  sink_component.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/201"
+  source_component.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink_component.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_inv/"
 implementations:
   sink_component:
     virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv

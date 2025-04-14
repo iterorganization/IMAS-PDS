@@ -55,10 +55,10 @@ model:
     nice_evo.pf_active_out: sink_evo.pf_active_in
     nice_dir.equilibrium_out: sink_dir.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3/"
-  sink_inv.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/201/"
-  sink_evo.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/202/"
-  sink_dir.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/203/"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink_inv.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_inv/"
+  sink_evo.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_evo/"
+  sink_dir.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_dir/"
   xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
 implementations:
