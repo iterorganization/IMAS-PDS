@@ -59,23 +59,23 @@ settings:
   sink_inv.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_inv/"
   sink_evo.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_evo/"
   sink_dir.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_dir/"
-  xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
+  xml_path: /home/ITER/sanderm/gitrepos/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
 implementations:
   sink:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_component"
   source:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.source_component"
   nice_inv:
-    executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_inv_muscle3
+    executable: $HOME/gitrepos/nice/run/nice_imas_inv_muscle3
   nice_evo:
-    executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_evo_muscle3
+    executable: $HOME/gitrepos/nice/run/nice_imas_evo_muscle3
   nice_dir:
-    executable: /home/ITER/sanderm/gitrepos/nice/run/nice_imas_dir_muscle3
+    executable: $HOME/gitrepos/nice/run/nice_imas_dir_muscle3
 resources:
   source:
     threads: 1

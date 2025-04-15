@@ -25,17 +25,17 @@ settings:
   python_config_module: 'torax.examples.basic_config'
 implementations:
   source:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.source_component"
   sink:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_component"
   torax:
-    virtual_env: /home/ITER/sanderm/gitrepos/torax-m3/venv
+    virtual_env: $HOME/gitrepos/torax-m3/venv
     executable: python
-    args: "-u /home/ITER/sanderm/gitrepos/torax-m3/torax_m3/torax_m3.py"
+    args: "-u $HOME/gitrepos/torax-m3/torax_m3/torax_m3.py"
 resources:
   source:
     threads: 1

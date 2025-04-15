@@ -29,7 +29,7 @@ settings:
   metis.metis_usenexttimestamp: 0
   metis.metis_computation: 1
   metis.metis_coldinit: 0
-  metis.metis_filename:  /home/ITER/sanderm/gitrepos/metis/certification/metis/ITER_rampup_ECCD.mat
+  metis.metis_filename:  $HOME/gitrepos/metis/certification/metis/ITER_rampup_ECCD.mat
   metis.metis_synchronization_reuse: 0
   metis.metis_synchronization_flush: 0
   metis.metis_alwaysreadinitport: 0
@@ -67,11 +67,11 @@ settings:
 
 implementations:
   source:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.source_component"
   sink:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/imas-m3/venv
     executable: python
     args: "-u -m imas_m3.actors.sink_component"
   metis: 
