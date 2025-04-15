@@ -8,6 +8,8 @@ build-backend = "setuptools.build_meta"
 name = "pds"
 authors = [
   {name = "PDS Developers"},
+  {name = "Mike Sanders", email = "msanders@ignitioncomputing.com"},
+  {name = "Daan van Vugt", email = "dvanvugt@ignitioncomputing.com"},
   {name = "Mireille Schneider", email = "Mireille.Schneider@iter.org"},
 ]
 description = "Pulse Design Simulator to simulate and prepare experiments"
@@ -48,12 +50,10 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "numpy>=1.15.4",
-    "importlib_resources",
-    "rich",
     "packaging",
-    "imaspy",
+    "imas-python",
     "muscle3",
+    "imas-muscle3",
 ]
 
 [project.optional-dependencies]
@@ -119,9 +119,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = [
     "imas.*",
-    "imaspy.*",
     "numpy.*",
-    "rich.*",
 ]
 ignore_missing_imports = true
 
