@@ -41,19 +41,20 @@ module load IMAS-Python
 
 
 # SET UP METIS
-git clone ssh://git@git.iter.org/scen/metis.git
-cd metis
-python3 -m venv ./venv
-. venv/bin/activate
-matlab -nodisplay -nosplash -r "make_metis_linux; exit"
-deactivate
-cd ..
+#git clone ssh://git@git.iter.org/scen/metis.git
+#cd metis
+#python3 -m venv ./venv
+#. venv/bin/activate
+#matlab -nodisplay -nosplash -r "make_metis_linux; exit"
+#deactivate
+#cd ..
 
 # SET UP NICE
 git clone git@gitlab.inria.fr:blfauger/nice.git
 cd nice
 git submodule init
 git submodule update
+git checkout develop            # For now change to develop branch, otherwise next command won't work
 cp run/iwrap/param/inv/iter/param.x* run/input
 cp run/iwrap/param/xsd/param.x* run/input
 cd src
