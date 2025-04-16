@@ -1,0 +1,94 @@
+ymmsl_version: v0.1
+model:
+  name: test_nice_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    nice_evo:
+      implementation: nice_evo
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    nice_dir:
+      implementation: nice_dir
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out]
+    sink_inv:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, pf_active_in]
+    sink_evo:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, pf_active_in]
+    sink_dir:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: nice_inv.equilibrium_in
+    source.pf_active_out: nice_inv.pf_active_in
+    source.wall_out: nice_inv.wall_in
+    source.wall_out: nice_evo.wall_in
+    source.wall_out: nice_dir.wall_in
+    source.pf_passive_out: nice_inv.pf_passive_in
+    source.pf_passive_out: nice_evo.pf_passive_in
+    source.pf_passive_out: nice_dir.pf_passive_in
+    source.iron_core_out: nice_inv.iron_core_in
+    source.iron_core_out: nice_evo.iron_core_in
+    source.iron_core_out: nice_dir.iron_core_in
+    nice_inv.equilibrium_out: nice_evo.equilibrium_in
+    nice_inv.equilibrium_out: nice_dir.equilibrium_in
+    nice_inv.equilibrium_out: sink_inv.equilibrium_in
+    nice_inv.pf_active_out: nice_evo.pf_active_in
+    nice_inv.pf_active_out: nice_dir.pf_active_in
+    nice_inv.pf_active_out: sink_inv.pf_active_in
+    nice_evo.equilibrium_out: sink_evo.equilibrium_in
+    nice_evo.pf_active_out: sink_evo.pf_active_in
+    nice_dir.equilibrium_out: sink_dir.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink_inv.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_inv/"
+  sink_evo.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_evo/"
+  sink_dir.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_nice_dir/"
+  xml_path: /home/ITER/sanderm/gitrepos/nice/run/input/param.xml
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  sink:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.sink_component"
+  source:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.source_component"
+  nice_inv:
+    executable: $HOME/gitrepos/nice/run/nice_imas_inv_muscle3
+  nice_evo:
+    executable: $HOME/gitrepos/nice/run/nice_imas_evo_muscle3
+  nice_dir:
+    executable: $HOME/gitrepos/nice/run/nice_imas_dir_muscle3
+resources:
+  source:
+    threads: 1
+  sink_inv:
+    threads: 1
+  sink_evo:
+    threads: 1
+  sink_dir:
+    threads: 1
+  nice_inv:
+    threads: 1
+  nice_evo:
+    threads: 1
+  nice_dir:
+    threads: 1
+

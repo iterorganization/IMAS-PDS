@@ -1,0 +1,91 @@
+ymmsl_version: v0.1
+model:
+  name: torax_nice_coupling
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+    sink_source:
+      implementation: sink_source
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_in_1]
+        o_i: [equilibrium_out_2]
+        s: [equilibrium_in_2]
+        o_f: [equilibrium_out_1]
+    olc:
+      implementation: olc
+      ports:
+        f_init: [pf_active_in]
+  conduits:
+    source.equilibrium_out: torax.equilibrium_in_1
+    torax.equilibrium_out_2: nice_inv.equilibrium_in
+    torax.equilibrium_out_2: sink_source.equilibrium_in
+    sink_source.pf_passive_out: nice_inv.pf_passive_in
+    sink_source.pf_active_out: nice_inv.pf_active_in
+    sink_source.iron_core_out: nice_inv.iron_core_in
+    sink_source.wall_out: nice_inv.wall_in
+    nice_inv.equilibrium_out: torax.equilibrium_in_2
+    nice_inv.pf_active_out: olc.pf_active_in
+    torax.equilibrium_out_1: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink_source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_torax/"
+  olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
+  olc.rulesets: "iter-olc"
+  olc.apply_generic: False
+  xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
+  muscle_remote_log_level: 'DEBUG'
+  python_config_module: 'torax.examples.basic_config'
+implementations:
+  sink:
+    virtual_env: $HOME/gitrepos/imas_m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.sink_component"
+  source:
+    virtual_env: $HOME/gitrepos/imas_m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.source_component"
+  sink_source:
+    virtual_env: $HOME/gitrepos/imas_m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.sink_source_component"
+  nice_inv:
+    executable: $HOME/gitrepos/nice/run/nice_imas_inv_muscle3
+  torax:
+    virtual_env: $HOME/gitrepos/torax-m3/venv
+    executable: python
+    args: "-u $HOME/gitrepos/torax-m3/torax_m3/torax_m3.py"
+  olc:
+    virtual_env: $HOME/gitrepos/imas_m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.olc_component"
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  sink_source:
+    threads: 1
+  nice_inv:
+    threads: 1
+  torax:
+    threads: 1
+  olc:
+    threads: 1
+

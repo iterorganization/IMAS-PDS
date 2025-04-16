@@ -1,0 +1,86 @@
+ymmsl_version: v0.1
+model:
+  name: test_metis_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    metis:
+      implementation: metis
+      ports:
+        f_init: [equilibrium]
+        o_f: [equilibrium_output]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: metis.equilibrium
+    metis.equilibrium_output: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_metis/"
+  muscle_remote_log_level: 'debug'
+  metis.metis_clock_time_start: 0.0  
+  metis.metis_clock_time_stop: 3.0
+  metis.metis_clock_time_dt: 1.0
+  metis.metis_clock_internal: off
+  metis.metis_usenexttimestamp: 0
+  metis.metis_computation: 1
+  metis.metis_coldinit: 0
+  metis.metis_filename:  $HOME/gitrepos/metis/certification/metis/ITER_rampup_ECCD.mat
+  metis.metis_synchronization_reuse: 0
+  metis.metis_synchronization_flush: 0
+  metis.metis_alwaysreadinitport: 0
+  metis.metis_idstime: 0
+  metis.metis_timeoffset: 0.0
+  metis.metis_nbpts1d: 101
+  metis.metis_psioffset: 0.0
+  metis.metis_numberofequilibriumtimeslices: 3
+  metis.metis_sawtooth_onoff: off
+  metis.metis_sawtooth_nbtmin: 3
+  metis.metis_option_machine: test_muscle3
+  metis.metis_option_available_flux: 130.0
+  metis.metis_option_sign: 1
+  metis.metis_option_orientation: -1
+  metis.metis_option_COCOS_method: Native
+  metis.metis_option_COCOS_check: off
+  metis.metis_updatetimeonrestart: 0
+  # equilibrium IDS
+  metis.metis_external_data_equilibrium: 1
+  metis.metis_external_data_current_diffusion: 1
+  # plasma_profiles IDS
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  # plasma_sources IDS
+  metis.metis_external_data_LHCD: 0
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI:  0
+  metis.metis_external_data_PLINE: 0
+  metis.metis_external_data_runaway: 0
+
+
+implementations:
+  source:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.source_component"
+  sink:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: "-u -m imas_m3.actors.sink_component"
+  metis: 
+    executable: matlab
+    args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  metis:
+    threads: 1

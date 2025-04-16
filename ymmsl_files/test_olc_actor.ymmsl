@@ -1,0 +1,35 @@
+ymmsl_version: v0.1
+model:
+  name: test_olc_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [pf_active_out]
+    olc:
+      implementation: olc
+      ports:
+        f_init: [pf_active_in]
+  conduits:
+    source.pf_active_out: olc.pf_active_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  olc.extra_rule_dirs: "/home/ITER/sanderm/gitrepos/pds/pds_validation_tests"
+  olc.rulesets: "iter-olc"
+  olc.apply_generic: False
+  olc.halt_on_error: False
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  olc:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: -u -m imas_m3.actors.olc_component
+  source:
+    virtual_env: $HOME/gitrepos/imas-m3/venv
+    executable: python
+    args: -u -m imas_m3.actors.source_component
+resources:
+  source:
+    threads: 1
+  olc:
+    threads: 1
