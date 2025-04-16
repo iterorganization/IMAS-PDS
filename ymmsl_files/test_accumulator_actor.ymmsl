@@ -31,20 +31,20 @@ model:
     accumulator.equilibrium_out: sink.equilibrium_in
     accumulator_optional_port.equilibrium_out: sink_optional_port.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/3"
-  sink.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/201"
-  sink_optional_port.sink_uri: "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/666666/202"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_accumulator/"
+  sink_optional_port.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_accumulator_optional_port/"
 implementations:
   sink:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/imas_m3/venv
     executable: python
     args: -u -m imas_m3.actors.sink_component
   source:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/imas_m3/venv
     executable: python
     args: -u -m imas_m3.actors.source_component
   accumulator:
-    virtual_env: /home/ITER/sanderm/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/imas_m3/venv
     executable: python
     args: -u -m imas_m3.actors.accumulator_component
 resources:
