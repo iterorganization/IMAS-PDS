@@ -1,0 +1,65 @@
+ymmsl_version: v0.1
+model:
+  name: torax_nice_accumulator_coupling
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    nice:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out]
+    accumulator:
+      implementation: accumulator
+      ports:
+        s: [equilibrium_in]
+        o_f: [equilibrium_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_f_init]
+        o_i: [equilibrium_o_i]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: nice.equilibrium_in
+    nice.equilibrium_out: accumulator.equilibrium_in
+    accumulator.equilibrium_out: torax.equilibrium_f_init
+    torax.equilibrium_o_i: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_torax_nice_accumulator/"
+  nice_inv.xml_path: "/home/ITER/sanderm/gitrepos/nice/run/input/param.xml"
+  torax.python_config_module: 'torax.examples.basic_config'
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  source:
+    executable: python
+    args: "-u -m imas_m3.actors.source_component"
+  sink:
+    executable: python
+    args: "-u -m imas_m3.actors.sink_component"
+  accumulator:
+    executable: python
+    args: "-u -m imas_m3.actors.accumulator_component"
+  torax:
+    executable: python
+    args: "-u $HOME/gitrepos/torax-m3/torax_m3/torax_m3.py"
+  nice_inv:
+    executable: $HOME/gitrepos/nice/run/nice_imas_inv_muscle3
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  accumulator:
+    threads: 1
+  torax:
+    threads: 1
+  nice_inv:
+    threads: 1
+
