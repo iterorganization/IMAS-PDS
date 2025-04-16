@@ -25,12 +25,12 @@ make -C docs html
 ```
 
 # Repositories
-[PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
-[IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
-[NICE](https://git.iter.org/projects/EQ/repos/nice/browse): Equilibrium code
-[METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
-[TORAX](https://github.com/google-deepmind/torax): Transport code
-[TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
+- [PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
+- [IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
+- [NICE](https://git.iter.org/projects/EQ/repos/nice/browse): Equilibrium code
+- [METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
+- [TORAX](https://github.com/google-deepmind/torax): Transport code
+- [TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
 
 # Test workflows
 To try out the test workflows, first make sure to all necessary components/actors are installed. 
