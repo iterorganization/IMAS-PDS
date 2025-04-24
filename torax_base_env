@@ -1,0 +1,12 @@
+# ENV VARIABLES
+export IMAS_AL_DISABLE_VALIDATE=1
+ulimit -s unlimited
+unset MPLBACKEND
+
+# MODULE LOAD
+module purge
+module load Python
+module load Boost
+module load HDF5
+module load MUSCLE3
+

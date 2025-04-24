@@ -21,56 +21,41 @@
 #  torax_m3 - 6c0ed3915
 #  torax    - be3f8c4b1
 
-# ENV VARIABLES
-export IMAS_AL_DISABLE_VALIDATE=1
-ulimit -s unlimited
-unset MPLBACKEND
-
 # MODULE LOAD
 pip install --upgrade pip
 pip install --upgrade setuptools wheel
 
-module purge
-module load Python
-module load Boost
-module load HDF5
-module load libxml2
-module load SuiteSparse/7.7.0-intel-2023b
-module load IMAS/4.0.0-intel-2023b
-module unload IMAS-AL-Python
-# module load IMAS-Python
-module load MUSCLE3
-module load IDS-Validator
-module load MATLAB
-module load GCC
-
 # SET UP PDS
 echo "############## INSTALLING PDS ##############"
+source imas_base_env
 git clone ssh://git@git.iter.org/scen/pds.git
 cd pds
 python3 -m venv ./venv
 . venv/bin/activate
-pip install 'imas-python @ git+ssh://git@github.com/iterorganization/IMAS-Python.git@develop'
-pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
 pip install -e .
 deactivate
+module purge
 cd ..
- 
+
 # SET UP IMAS-M3
 echo "############## INSTALLING IMAS-MUSCLE3 ##############"
+source imas_base_env
+module load IDS-Validator
 git clone git@github.com:iterorganization/IMAS-muscle3.git
 cd IMAS-muscle3
 git checkout readme
 python3 -m venv ./venv
-pip install 'imas-python @ git+ssh://git@github.com/iterorganization/IMAS-Python.git@develop'
-pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
 . venv/bin/activate
 pip install -e .
 deactivate
+module purge
 cd ..
 
 # SET UP METIS
 # echo "############## INSTALLING METIS ##############"
+# source imas_base_env
+# module load MATLAB
+# module load GCC
 # git clone ssh://git@git.iter.org/scen/metis.git
 # cd metis
 # python3 -m venv ./venv
@@ -78,9 +63,13 @@ cd ..
 # matlab -nodisplay -nosplash -r "make_metis_linux; exit"
 # deactivate
 # cd ..
+# module purge
 
 # SET UP NICE
 echo "############## INSTALLING NICE ##############"
+source imas_base_env
+module load SuiteSparse/7.7.0-intel-2023b
+module load libxml2
 git clone git@gitlab.inria.fr:blfauger/nice.git
 cd nice
 git submodule init
@@ -93,31 +82,31 @@ cp Makefile.TEMPLATE Makefile
 make -j nice_imas_inv_muscle3
 make -j nice_imas_dir_muscle3
 make -j nice_imas_evo_muscle3
+module purge
 cd ../..
 
 # SET UP TORAX-M3
 echo "############## INSTALLING TORAX-M3 ##############"
+# pip install 'imas-python @ git+ssh://git@github.com/iterorganization/imas-python.git@develop'
+# pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@be3f8c4b1'
+# git checkout 6c0ed3915
+source torax_base_env
 git clone ssh://git@git.iter.org/scen/torax-m3.git
 cd torax-m3
-python3 -m venv ./venv
+git checkout feature/muscle3_actor
+python -m venv ./venv
 . venv/bin/activate
 pip install --upgrade pip
 pip install build
 pip install 'numpy > 2'
 # pip install imas-python
-pip install 'imas-python @ git+ssh://git@github.com/iterorganization/IMAS-Python.git@develop'
+pip install 'imas-python @ git+ssh://git@github.com/mikesndrs/imas-python.git@feature/enable-numpy-2.0'
 pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
-# pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@feature/IMAS_coupling'
-pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@feature/be3f8c4b1'
-git checkout 6c0ed3915
+pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@feature/IMAS_coupling'
 pip install -e .
 deactivate
-
-# # Install QLKNN_7_11
-# git clone https://github.com/google-deepmind/fusion_surrogates.git
-# pip install -e ./fusion_surrogates
-# export TORAX_QLKNN_MODEL_PATH="$PWD"/fusion_surrogates/fusion_surrogates/models/qlknn_7_11.qlknn
-# echo export TORAX_QLKNN_MODEL_PATH="$PWD"/fusion_surrogates/fusion_surrogates/models/qlknn_7_11.qlknn >> ~/.bashrc
+module purge
+cd ..
 
 # END MESSAGE
 echo 'You can try out the test couplings in the pds/ymmsl_files directory by running:'
