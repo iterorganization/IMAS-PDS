@@ -36,17 +36,17 @@ settings:
   sink_optional_port.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_accumulator_optional_port/"
 implementations:
   sink:
-    virtual_env: $HOME/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
-    args: -u -m imas_m3.actors.sink_component
+    args: -u -m imas_muscle3.actors.sink_component
   source:
-    virtual_env: $HOME/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
-    args: -u -m imas_m3.actors.source_component
+    args: -u -m imas_muscle3.actors.source_component
   accumulator:
-    virtual_env: $HOME/gitrepos/imas_m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
-    args: -u -m imas_m3.actors.accumulator_component
+    args: -u -m imas_muscle3.actors.accumulator_component
 resources:
   source:
     threads: 1
