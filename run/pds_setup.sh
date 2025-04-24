@@ -30,6 +30,7 @@ echo "############## INSTALLING PDS ##############"
 source imas_base_env
 git clone ssh://git@git.iter.org/scen/pds.git
 cd pds
+git checkout feature/sdcc_install_instructions
 python3 -m venv ./venv
 . venv/bin/activate
 pip install -e .

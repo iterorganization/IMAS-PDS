@@ -36,15 +36,15 @@ settings:
   sink_optional_port.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_accumulator_optional_port/"
 implementations:
   sink:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.source_component
   accumulator:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.accumulator_component
 resources:

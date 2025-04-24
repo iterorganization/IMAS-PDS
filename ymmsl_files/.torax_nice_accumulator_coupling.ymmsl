@@ -38,21 +38,21 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   accumulator:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 MUSCLE3
-    virtual_env: torax-m3/venv
+    virtual_env: [PWD_PLACEHOLDER]/torax-m3/venv
     executable: python
     args: "-u -m torax_m3.torax_m3"
   nice_inv:

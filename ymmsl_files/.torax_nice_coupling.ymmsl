@@ -54,26 +54,26 @@ settings:
   python_config_module: 'torax.examples.basic_config'
 implementations:
   sink:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink_source:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
   olc:
     modules: IDS-Validator
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.olc_component"
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 MUSCLE3
-    virtual_env: torax-m3/venv
+    virtual_env: [PWD_PLACEHOLDER]/torax-m3/venv
     executable: python
     args: "-u -m torax_m3.torax_m3"
   nice_inv:

@@ -6,6 +6,11 @@ model:
       implementation: source
       ports:
         o_i: [equilibrium_out]
+    accumulator:
+      implementation: accumulator
+      ports:
+        s: [equilibrium_in]
+        o_f: [equilibrium_out]
     torax:
       implementation: torax
       ports:
@@ -16,7 +21,8 @@ model:
       ports:
         f_init: [equilibrium_in]
   conduits:
-    source.equilibrium_out: torax.equilibrium_f_init
+    source.equilibrium_out: accumulator.equilibrium_in
+    accumulator.equilibrium_out: torax.equilibrium_f_init
     torax.equilibrium_o_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids_torax"
@@ -25,23 +31,29 @@ settings:
   python_config_module: 'torax.examples.basic_config'
 implementations:
   source:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
+  accumulator:
+    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.accumulator_component
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 MUSCLE3
-    virtual_env: torax-m3/venv
+    virtual_env: [PWD_PLACEHOLDER]/torax-m3/venv
     executable: python
     args: "-u -m torax_m3.torax_m3"
 resources:
   source:
     threads: 1
   sink:
+    threads: 1
+  accumulator:
     threads: 1
   torax:
     threads: 1
