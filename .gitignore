@@ -22,3 +22,4 @@ ymmsl_files/output/
 run/*
 !run/*_base_env
 !run/pds_setup.sh
+!run/setup_test_files.bash

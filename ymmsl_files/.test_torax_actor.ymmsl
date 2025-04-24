@@ -19,23 +19,23 @@ model:
     source.equilibrium_out: torax.equilibrium_f_init
     torax.equilibrium_o_f: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids_torax"
-  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_torax"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids_torax"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_torax"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'torax.examples.basic_config'
 implementations:
   source:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 MUSCLE3
-    virtual_env: $HOME/gitrepos/torax-m3/venv
+    virtual_env: torax-m3/venv
     executable: python
     args: "-u -m torax_m3.torax_m3"
 resources:

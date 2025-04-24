@@ -19,8 +19,8 @@ model:
     source.equilibrium_out: metis.equilibrium
     metis.equilibrium_output: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_metis/"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_metis/"
   muscle_remote_log_level: 'debug'
   metis.metis_clock_time_start: 0.0  
   metis.metis_clock_time_stop: 3.0
@@ -29,7 +29,7 @@ settings:
   metis.metis_usenexttimestamp: 0
   metis.metis_computation: 1
   metis.metis_coldinit: 0
-  metis.metis_filename:  $HOME/gitrepos/metis/certification/metis/ITER_rampup_ECCD.mat
+  metis.metis_filename:  metis/certification/metis/ITER_rampup_ECCD.mat
   metis.metis_synchronization_reuse: 0
   metis.metis_synchronization_flush: 0
   metis.metis_alwaysreadinitport: 0
@@ -67,11 +67,11 @@ settings:
 
 implementations:
   source:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   metis: 

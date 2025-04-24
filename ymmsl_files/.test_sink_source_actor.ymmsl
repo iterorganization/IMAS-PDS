@@ -13,15 +13,15 @@ model:
   conduits:
     source_component.equilibrium_out: sink_component.equilibrium_in
 settings:
-  source_component.source_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/input/test_data_ids/"
-  sink_component.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/ymmsl_files/output/sink_inv/"
+  source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
+  sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_inv/"
 implementations:
   sink_component:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source_component:
-    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    virtual_env: IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.source_component
 resources:

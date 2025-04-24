@@ -36,6 +36,8 @@ pip install -e .
 deactivate
 module purge
 cd ..
+bash setup_test_files.bash
+echo "############## FINISHED PDS ##############"
 
 # SET UP IMAS-M3
 echo "############## INSTALLING IMAS-MUSCLE3 ##############"
@@ -50,8 +52,9 @@ pip install -e .
 deactivate
 module purge
 cd ..
+echo "############## FINISHED IMAS-MUSCLE3 ##############"
 
-# SET UP METIS
+# # SET UP METIS
 # echo "############## INSTALLING METIS ##############"
 # source imas_base_env
 # module load MATLAB
@@ -64,6 +67,7 @@ cd ..
 # deactivate
 # cd ..
 # module purge
+# echo "############## FINISHED METIS ##############"
 
 # SET UP NICE
 echo "############## INSTALLING NICE ##############"
@@ -84,6 +88,7 @@ make -j nice_imas_dir_muscle3
 make -j nice_imas_evo_muscle3
 module purge
 cd ../..
+echo "############## FINISHED NICE ##############"
 
 # SET UP TORAX-M3
 echo "############## INSTALLING TORAX-M3 ##############"
@@ -107,6 +112,7 @@ pip install -e .
 deactivate
 module purge
 cd ..
+echo "############## FINISHED TORAX-M3 ##############"
 
 # END MESSAGE
 echo 'You can try out the test couplings in the pds/ymmsl_files directory by running:'
