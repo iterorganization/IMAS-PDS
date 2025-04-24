@@ -62,19 +62,22 @@ settings:
   xml_path: /home/ITER/sanderm/gitrepos/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
 implementations:
-  sink:
-    virtual_env: $HOME/gitrepos/imas-m3/venv
-    executable: python
-    args: "-u -m imas_m3.actors.sink_component"
   source:
-    virtual_env: $HOME/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
-    args: "-u -m imas_m3.actors.source_component"
+    args: "-u -m imas_muscle3.actors.source_component"
+  sink:
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: $HOME/gitrepos/nice/run/nice_imas_inv_muscle3
   nice_evo:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: $HOME/gitrepos/nice/run/nice_imas_evo_muscle3
   nice_dir:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: $HOME/gitrepos/nice/run/nice_imas_dir_muscle3
 resources:
   source:

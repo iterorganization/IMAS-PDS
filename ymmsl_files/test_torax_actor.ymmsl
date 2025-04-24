@@ -25,14 +25,16 @@ settings:
   python_config_module: 'torax.examples.basic_config'
 implementations:
   source:
-    virtual_env: $HOME/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: $HOME/gitrepos/imas-m3/venv
+    virtual_env: $HOME/gitrepos/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   torax:
+    base_env: CLEAN
+    modules: Python Boost HDF5 MUSCLE3
     virtual_env: $HOME/gitrepos/torax-m3/venv
     executable: python
     args: "-u -m torax_m3.torax_m3"
