@@ -33,16 +33,19 @@ make -C docs html
 [TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
 
 # Test workflows
-To try out the test workflows, first make sure to all necessary components/actors are installed. 
-Then, run the setup script for the data source paths.
-Make sure all paths in the ymmsl worklow files to executables and virtual environments are correct for your setup.
-Then run the workflow using the muscle manager
-```
-cd ~/gitrepos/pds/ymmsl_files
-# first argument is the path where the ymmsl files are located
-# second argument is the path to your installation of the pds repository
-bash setup_test_files.bash . ~/gitrepos/pds
-muscle_manager --start-all test_source_sink_actor.ymmsl
+A setup stript is provided with an installation of the necessary repositories.
+Test workflows can be run to check if everything is working as expected.
+These workflows can be used as a template for your own workflows.
+
+```bash
+# move to run folder where all the generated code is ignored by git
+cd run/
+# install repos
+. pds_setup.sh
+# prepare base environment and loaded modules
+source imas_base_env
+# run test workflow of choice
+muscle_manager -start-all pds/ymmsl_files/test_sink_source_actor.ymmsl
 ```
 
 # Examples

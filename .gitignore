@@ -18,3 +18,7 @@ junit.xml
 .idea/
 
 ymmsl_files/output/
+
+run/*
+!run/*_base_env
+!run/pds_setup.sh
