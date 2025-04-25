@@ -75,7 +75,7 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   metis: 
-    modules MATLAB GCC
+    modules: MATLAB GCC
     executable: matlab
     args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
 resources:
