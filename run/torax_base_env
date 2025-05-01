@@ -5,8 +5,14 @@ unset MPLBACKEND
 
 # MODULE LOAD
 module purge
+# module load Python/3.11.5-GCCcore-13.2.0
 module load Python
+# module load Boost/1.83.0-intel-compilers-2023.2.1
 module load Boost
+# module load HDF5/1.14.4.3-iimpi-2023b
 module load HDF5
-module load MUSCLE3
+# module load libiconv/1.17-GCCcore-13.2.0
+module load libiconv
+# module load OpenBLAS/0.3.24-GCC-13.2.0
+module load OpenBLAS
 
