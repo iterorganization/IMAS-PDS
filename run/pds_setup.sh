@@ -18,8 +18,8 @@
 # https://git.iter.org/projects/SCEN/repos/pds/browse
 
 # works for:
-#  torax_m3 - 6c0ed3915
-#  torax    - be3f8c4b1
+#  torax_m3 - a990e1ddab06436fa04db750339a3ed7aaa7b5d3
+#  torax    - 9bc36562370448020409507eca2ac1f7ddd1bddf
 
 # MODULE LOAD
 pip install --upgrade pip
@@ -109,31 +109,21 @@ fi
 # SET UP TORAX-M3
 if [ "$INSTALL_TORAX" == true ]; then
   echo "############## INSTALLING TORAX-M3 ##############"
-  # pip install 'imas-python @ git+ssh://git@github.com/iterorganization/imas-python.git@develop'
-  # pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@be3f8c4b1d93ca2bb22149a6d3da9ce04b7a0c78'
-  # git checkout 4dfa77c4688684cda646f55d8b4db992a3107d4f
   source torax_base_env
   git clone ssh://git@git.iter.org/scen/torax-m3.git
   cd torax-m3
   # git checkout feature/muscle3_actor
-  git checkout 4dfa77c4688684cda646f55d8b4db992a3107d4f
+  git checkout a990e1ddab06436fa04db750339a3ed7aaa7b5d3
   python -m venv ./venv
   . venv/bin/activate
   pip install --upgrade pip
   pip install build
-  echo "############## INSTALLING NUMPY ##############"
   pip install 'numpy > 2'
-  echo "############## INSTALLING IMAS-PYTHON ##############"
-  # pip install imas-python
   pip install 'imas-python @ git+ssh://git@github.com/mikesndrs/imas-python.git@feature/enable-numpy-2.0'
-  echo "############## INSTALLING IMAS-CORE ##############"
   pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
-  echo "############## INSTALLING TORAX ##############"
   # pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@feature/IMAS_coupling'
-  pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@be3f8c4b1d93ca2bb22149a6d3da9ce04b7a0c78'
-  echo "############## INSTALLING MUSCLE3 ##############"
+  pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@9bc36562370448020409507eca2ac1f7ddd1bddf'
   pip install muscle3
-  echo "############## INSTALLING TORAX-M3 ##############"
   pip install -e . --no-deps
   deactivate
   module purge
