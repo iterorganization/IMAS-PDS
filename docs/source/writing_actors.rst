@@ -12,7 +12,9 @@ MUSCLE3
 Since the PDS actors are based on the MUSCLE3 framework,  
 it is recommended to look at the
 `MUSCLE3 documentation <https://muscle3.readthedocs.io/en/latest/>`_
-to get a good understanding of the basics.
+to get a good understanding of the basics. The rest of this page is
+written with the assumption that the reader has a basic understanding
+of the MUSCLE3 framework.
 
 Inner/outer loop structure
 --------------------------
@@ -20,7 +22,7 @@ Inner/outer loop structure
 MUSCLE3 actors might work as a macro model, a micro model, or both
 at the same time. Make sure that the actor is connected on any port
 it might use within the PDS ecosystem.
-When a certain port is optional, you can simple add it to your
+When a certain port is optional in your actor, you can simple add it to your
 muscle instance on its initialization so that the port is always available.
 However, make sure it only send or receive when the port is connected in
 the ymmsl workflow (check with instance.is_connected(port_name)).
@@ -36,7 +38,7 @@ are added to any outgoing muscle message.
 If it is the last message, set next_timestamp to None/nil/null/etc.
 to signal that will be no more messages coming after it.
 A seperate next_timestamp might be tracked for
-the outer and inner loop.
+the outer and inner loop of the actor.
 
 Optional timescale bridge
 -------------------------
@@ -56,7 +58,7 @@ PDS actor example
 -----------------
 
 To provide an example, underneath is the code for what a generic PDS
-muscle3 actor would look like for the fictional simulation code 'MyModel'.
+muscle3 actor in python would look like for the fictional simulation code 'MyModel'.
 The actor can use the equilibrium IDS on all ports,
 but the O_I and S ports are optional 
 and the actor won't use them if they are not connected.
@@ -84,8 +86,8 @@ that needs it is able to use it.
     instance = Instance(
       {
         Operator.F_INIT: ["equilibrium_f_init"],
-        Operator.O_I: ["equilibrium_o_i"],
-        Operator.S: ["equilibrium_s"],
+        Operator.O_I: ["equilibrium_o_i"], # optional port
+        Operator.S: ["equilibrium_s"], # optional port
         Operator.O_F: ["equilibrium_o_f"],
       }
     )
