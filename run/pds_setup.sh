@@ -18,7 +18,7 @@
 # https://git.iter.org/projects/SCEN/repos/pds/browse
 
 # works for:
-#  torax_m3 - e5858a7e825b7b1ff24eb4943d748192e345d4a1
+#  torax_m3 - c5633a9466283c6fe56b14063003a21654e35f75
 #  torax    - 9bc36562370448020409507eca2ac1f7ddd1bddf
 
 # MODULE LOAD
@@ -113,7 +113,7 @@ if [ "$INSTALL_TORAX" == true ]; then
   git clone ssh://git@git.iter.org/scen/torax-m3.git
   cd torax-m3
   # git checkout feature/muscle3_actor
-  git checkout e5858a7e825b7b1ff24eb4943d748192e345d4a1
+  git checkout c5633a9466283c6fe56b14063003a21654e35f75
   python -m venv ./venv
   . venv/bin/activate
   pip install --upgrade pip

@@ -5,12 +5,12 @@ model:
     source:
       implementation: source
       ports:
-        o_i: [equilibrium_out]
-    nice:
-      implementation: sink
+        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    nice_inv:
+      implementation: nice_inv
       ports:
-        f_init: [equilibrium_in]
-        o_f: [equilibrium_out]
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
     accumulator:
       implementation: accumulator
       ports:
@@ -26,8 +26,12 @@ model:
       ports:
         f_init: [equilibrium_in]
   conduits:
-    source.equilibrium_out: nice.equilibrium_in
-    nice.equilibrium_out: accumulator.equilibrium_in
+    source.equilibrium_out: nice_inv.equilibrium_in
+    source.pf_active_out: nice_inv.pf_active_in
+    source.pf_passive_out: nice_inv.pf_passive_in
+    source.iron_core_out: nice_inv.iron_core_in
+    source.wall_out: nice_inv.wall_in
+    nice_inv.equilibrium_out: accumulator.equilibrium_in
     accumulator.equilibrium_out: torax.equilibrium_f_init
     torax.equilibrium_o_i: sink.equilibrium_in
 settings:
@@ -57,7 +61,7 @@ implementations:
     args: "-u -m torax_m3.torax_m3"
   nice_inv:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: nice/run/nice_imas_inv_muscle3
+    executable: [PWD_PLACEHOLDER]/nice/run/nice_imas_inv_muscle3
 resources:
   source:
     threads: 1
