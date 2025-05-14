@@ -178,8 +178,9 @@ For each setting show:
 Available Ports
 ---------------
 
-Show all the available ports for your actor. Often divided in a
-mandatory section and an optional section.
+Show all the available ports for your actor.
+Often divided in a mandatory section and an optional section.
+Can also be divided into subsections per operator.
 For each port show:
 
 * Name
