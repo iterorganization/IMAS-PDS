@@ -11,13 +11,16 @@
 # git.iter.org/scen/pds.git
 
 # installation guides
-# https://github.com/iterorganization/IMAS-muscle3
-# https://gitlab.inria.fr/blfauger/nice/-/wikis/home
-# https://git.iter.org/projects/SCEN/repos/metis/browse/doc/METIS_installation_guide.pdf
-# https://torax.readthedocs.io/en/latest/installation.html
 # https://git.iter.org/projects/SCEN/repos/pds/browse
+# https://github.com/iterorganization/IMAS-muscle3
+# https://github.com/iterorganization/Waveform-Editor
+# https://git.iter.org/projects/SCEN/repos/metis/browse/doc/METIS_installation_guide.pdf
+# https://gitlab.inria.fr/blfauger/nice/-/wikis/home
+# https://torax.readthedocs.io/en/latest/installation.html
 
 # works for:
+#  WFE      - a9ec29c6df8850ba1982772c25fb70b99f5ed68a
+#  NICE     - b308cc394eeaea099e1926cdd5aae2067469cef2
 #  torax_m3 - e5858a7e825b7b1ff24eb4943d748192e345d4a1
 #  torax    - 9bc36562370448020409507eca2ac1f7ddd1bddf
 
@@ -27,6 +30,7 @@ pip install --upgrade setuptools wheel
 
 INSTALL_PDS=true
 INSTALL_IMAS_MUSCLE3=true
+INSTALL_WAVEFORM_EDITOR=true
 INSTALL_METIS=true
 INSTALL_NICE=true
 INSTALL_TORAX=true
@@ -59,6 +63,23 @@ if [ "$INSTALL_IMAS_MUSCLE3" == true ]; then
   python3 -m venv ./venv
   . venv/bin/activate
   pip install -e .
+  deactivate
+  module purge
+  cd ..
+  echo "############## FINISHED IMAS-MUSCLE3 ##############"
+fi
+
+# SET UP WAVEFORM-EDITOR
+if [ "$INSTALL_WAVEFORM_EDITOR" == true ]; then
+  echo "############## INSTALLING WAVEFORM-EDITOR ##############"
+  source imas_base_env
+  git clone git@github.com:iterorganization/Waveform-Editor.git
+  cd Waveform-Editor
+  # git checkout develop
+  git checkout feature/muscle3-actor
+  python3 -m venv ./venv
+  . venv/bin/activate
+  pip install -e .[muscle3]
   deactivate
   module purge
   cd ..
