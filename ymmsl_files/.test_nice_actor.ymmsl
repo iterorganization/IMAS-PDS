@@ -72,13 +72,13 @@ implementations:
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: nice/run/nice_imas_inv_muscle3
+    executable: [PWD_PLACEHOLDER]/nice/run/nice_imas_inv_muscle3
   nice_evo:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: nice/run/nice_imas_evo_muscle3
+    executable: [PWD_PLACEHOLDER]/nice/run/nice_imas_evo_muscle3
   nice_dir:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: nice/run/nice_imas_dir_muscle3
+    executable: [PWD_PLACEHOLDER]/nice/run/nice_imas_dir_muscle3
 resources:
   source:
     threads: 1
