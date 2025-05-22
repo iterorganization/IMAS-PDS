@@ -38,7 +38,7 @@ settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_torax_nice_accumulator/"
   nice_inv.xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
-  torax.python_config_module: 'torax.examples.basic_config'
+  torax.python_config_module: 'examples/basic_config.py'
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:

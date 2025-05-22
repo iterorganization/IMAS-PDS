@@ -61,7 +61,7 @@ settings:
   olc.apply_generic: False
   xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
-  python_config_module: 'torax.examples.basic_config'
+  python_config_module: 'examples/basic_config.py'
 implementations:
   sink:
     virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
