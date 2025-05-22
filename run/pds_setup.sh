@@ -89,18 +89,10 @@ fi
 # SET UP METIS
 if [ "$INSTALL_METIS" == true ]; then
   echo "############## INSTALLING METIS ##############"
-  source imas_base_env
-  module load MATLAB
-  module load GCC
-  git clone ssh://git@git.iter.org/scen/metis.git
+  git clone ssh://git@git.iter.org/scen/metis.git -b muscle3
   cd metis
-  git checkout muscle3
-  python3 -m venv ./venv
-  # . venv/bin/activate
-  # matlab -nodisplay -nosplash -r "make_metis_linux; exit"
-  # deactivate
+  matlab -nodisplay -batch zineb_path
   cd ..
-  module purge
   echo "############## FINISHED METIS ##############"
 fi
 

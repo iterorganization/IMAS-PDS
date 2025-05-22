@@ -22,49 +22,6 @@ settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_metis/"
   muscle_remote_log_level: 'debug'
-  metis.metis_clock_time_start: 0.0  
-  metis.metis_clock_time_stop: 3.0
-  metis.metis_clock_time_dt: 1.0
-  metis.metis_clock_internal: off
-  metis.metis_usenexttimestamp: 0
-  metis.metis_computation: 1
-  metis.metis_coldinit: 0
-  metis.metis_filename:  metis/certification/metis/ITER_rampup_ECCD.mat
-  metis.metis_synchronization_reuse: 0
-  metis.metis_synchronization_flush: 0
-  metis.metis_alwaysreadinitport: 0
-  metis.metis_idstime: 0
-  metis.metis_timeoffset: 0.0
-  metis.metis_nbpts1d: 101
-  metis.metis_psioffset: 0.0
-  metis.metis_numberofequilibriumtimeslices: 3
-  metis.metis_sawtooth_onoff: off
-  metis.metis_sawtooth_nbtmin: 3
-  metis.metis_option_machine: test_muscle3
-  metis.metis_option_available_flux: 130.0
-  metis.metis_option_sign: 1
-  metis.metis_option_orientation: -1
-  metis.metis_option_COCOS_method: Native
-  metis.metis_option_COCOS_check: off
-  metis.metis_updatetimeonrestart: 0
-  # equilibrium IDS
-  metis.metis_external_data_equilibrium: 1
-  metis.metis_external_data_current_diffusion: 1
-  # plasma_profiles IDS
-  metis.metis_external_data_electron_temperature: 0
-  metis.metis_external_data_electron_density: 0
-  metis.metis_external_data_ion_temperature: 0
-  metis.metis_external_data_charge_effective: 0
-  metis.metis_external_data_momentum: 0
-  # plasma_sources IDS
-  metis.metis_external_data_LHCD: 0
-  metis.metis_external_data_ECRH: 0
-  metis.metis_external_data_ICRH: 0
-  metis.metis_external_data_NBI:  0
-  metis.metis_external_data_PLINE: 0
-  metis.metis_external_data_runaway: 0
-
-
 implementations:
   source:
     virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
@@ -75,9 +32,11 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   metis: 
-    modules: MATLAB GCC
+    modules: MATLAB
+    env:
+      DIR_METIS4MUSCLE3: [PWD_PLACEHOLDER]/metis/workflow/muscle3/mfile
     executable: matlab
-    args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
+    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
 resources:
   source:
     threads: 1
