@@ -25,6 +25,7 @@ Manual
    self
    installing
    usage
+   writing_actors
    tips_and_tricks
 
 .. toctree::
