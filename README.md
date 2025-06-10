@@ -44,9 +44,3 @@ cd ~/gitrepos/pds/ymmsl_files
 bash setup_test_files.bash . ~/gitrepos/pds
 muscle_manager --start-all test_source_sink_actor.ymmsl
 ```
-
-# Examples
-```
-insert text
-```
-
