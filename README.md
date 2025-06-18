@@ -45,7 +45,7 @@ cd run/
 # prepare base environment and loaded modules
 source imas_base_env
 # run test workflow of choice
-muscle_manager -start-all pds/ymmsl_files/test_sink_source_actor.ymmsl
+muscle_manager --start-all pds/ymmsl_files/test_sink_source_actor.ymmsl
 ```
 
 # Examples
