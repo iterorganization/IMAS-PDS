@@ -20,7 +20,7 @@ model:
       implementation: torax
       ports:
         f_init: [equilibrium_f_init]
-        o_i: [equilibrium_o_i]
+        o_f: [equilibrium_o_f]
     sink:
       implementation: sink
       ports:
@@ -38,7 +38,7 @@ settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_torax_nice_accumulator/"
   nice_inv.xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
-  torax.python_config_module: 'examples/basic_config.py'
+  torax.python_config_module: '[PWD_PLACEHOLDER]/config_torax.py'
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:

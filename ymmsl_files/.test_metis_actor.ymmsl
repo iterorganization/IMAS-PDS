@@ -9,18 +9,21 @@ model:
     metis:
       implementation: metis
       ports:
-        f_init: [equilibrium]
-        o_f: [equilibrium_output]
+        f_init: [equilibrium_input_f]
+        o_f: [equilibrium_output_f]
     sink:
       implementation: sink
       ports:
         f_init: [equilibrium_in]
   conduits:
-    source.equilibrium_out: metis.equilibrium
-    metis.equilibrium_output: sink.equilibrium_in
+    source.equilibrium_out: metis.equilibrium_input_f
+    metis.equilibrium_output_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_metis/"
+  metis.metis_computation: 1
+  metis.metis_filename: "[PWD_PLACEHOLDER]/metis/certification/metis/ITER_rampup_ECCD.mat"
+  metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
 implementations:
   source:
@@ -32,11 +35,11 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   metis: 
-    modules: MATLAB
     env:
       DIR_METIS4MUSCLE3: [PWD_PLACEHOLDER]/metis/workflow/muscle3/mfile
+      IMAS_VERSION: '4.0.0'
     executable: matlab
-    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
+    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(1);"
 resources:
   source:
     threads: 1
