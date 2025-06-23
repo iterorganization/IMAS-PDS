@@ -21,12 +21,12 @@ make -C docs html
 ```
 
 # Repositories
-[PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
-[IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
-[NICE](https://gitlab.inria.fr/blfauger/nice/-/wikis/home): Free Boundary Equilibrium code
-[METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
-[TORAX](https://github.com/google-deepmind/torax): Transport code
-[TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
+- [PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
+- [IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
+- [NICE](https://gitlab.inria.fr/blfauger/nice/-/wikis/home): Free Boundary Equilibrium code
+- [METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
+- [TORAX](https://github.com/google-deepmind/torax): Transport code
+- [TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
 
 # Test workflows
 A setup stript is provided with an installation of the necessary repositories.
@@ -44,9 +44,3 @@ source imas_base_env
 # run test workflow of choice
 muscle_manager --start-all pds/ymmsl_files/test_sink_source_actor.ymmsl
 ```
-
-# Examples
-```
-insert text
-```
-
