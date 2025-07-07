@@ -1,0 +1,123 @@
+ymmsl_version: v0.1
+model:
+  name: default_scenario_torax
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    sink_source:
+      implementation: sink_source
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    chease:
+      implementation: chease
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    accumulator:
+      implementation: accumulator
+      ports:
+        s: [equilibrium_in, pf_active_in, pf_passive_in]
+        o_f: [equilibrium_out, pf_active_out, pf_passive_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_f_init]
+        o_f: [equilibrium_o_f]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, pf_active_in, pf_passive_in, wall_in, iron_core_in]
+    nice_sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+    chease_sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+  conduits:
+    source.equilibrium_out: sink_source.equilibrium_in
+    sink_source.equilibrium_out: nice_inv.equilibrium_in
+    sink_source.equilibrium_out: chease.equilibrium_in
+    sink_source.pf_active_out: nice_inv.pf_active_in
+    sink_source.pf_passive_out: nice_inv.pf_passive_in
+    sink_source.pf_passive_out: accumulator.pf_passive_in
+    sink_source.iron_core_out: nice_inv.iron_core_in
+    sink_source.iron_core_out: sink.iron_core_in
+    sink_source.wall_out: nice_inv.wall_in
+    sink_source.wall_out: sink.wall_in
+    # nice_inv.equilibrium_out: accumulator.equilibrium_in
+    chease.equilibrium_out: accumulator.equilibrium_in
+    nice_inv.equilibrium_out: nice_sink.equilibrium_in
+    chease.equilibrium_out: chease_sink.equilibrium_in
+    nice_inv.pf_active_out: accumulator.pf_active_in
+    accumulator.equilibrium_out: torax.equilibrium_f_init
+    accumulator.pf_active_out: sink.pf_active_in
+    accumulator.pf_passive_out: sink.pf_passive_in
+    torax.equilibrium_o_f: sink.equilibrium_in
+settings:
+  sink_source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_0"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_0"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_1"
+  nice_sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/nice_1"
+  chease_sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/chease_1"
+  nice_inv.xml_path: "[PWD_PLACEHOLDER]/scenario_configs/torax_default/config_nice.xml"
+  chease.code_parameters: '[PWD_PLACEHOLDER]/chease/input/chease_input_reflist.xml'
+  torax.python_config_module: "[PWD_PLACEHOLDER]/scenario_configs/torax_default/config_torax.py"
+  # torax.output_all_timeslices: true
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  sink_source:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_source_component"
+  source:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  sink:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  accumulator:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.accumulator_component"
+  torax:
+    base_env: CLEAN
+    modules: Python Boost HDF5 MUSCLE3
+    virtual_env: [PWD_PLACEHOLDER]/run/torax-m3/venv
+    executable: python
+    args: "-u -m torax_m3.torax_m3"
+  nice_inv:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
+    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+  chease:
+    executable: [PWD_PLACEHOLDER]/run/chease/chease_m3/bin/chease_17.exe
+resources:
+  chease:
+    threads: 1
+  sink_source:
+    threads: 1
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  accumulator:
+    threads: 1
+  torax:
+    threads: 1
+  nice_inv:
+    threads: 1
+  nice_sink:
+    threads: 1
+  chease_sink:
+    threads: 1

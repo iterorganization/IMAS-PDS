@@ -24,6 +24,7 @@ INSTALL_WAVEFORM_EDITOR="true"
 INSTALL_METIS="true"
 INSTALL_NICE="true"
 INSTALL_TORAX="true"
+INSTALL_CHEASE="true"
 
 BRANCH_PDS='feature/sdcc_install_instructions'
 BRANCH_IMAS_MUSCLE3='main'
@@ -32,34 +33,29 @@ BRANCH_METIS='muscle3'
 BRANCH_NICE='master'
 BRANCH_TORAX='feature/IMAS_coupling'
 BRANCH_TORAX_M3='feature/muscle3_actor'
+BRANCH_CHEASE='feature/muscle3'
 
 # MODULE LOAD
 pip install --upgrade pip
 pip install --upgrade setuptools wheel
 
 # SET UP PDS
-if [ "$INSTALL_PDS" = "true" ] && [ ! -d "pds" ]; then
+if [ "$INSTALL_PDS" = "true" ]; then
   echo "############## INSTALLING PDS ##############"
-  source imas_base_env
-  git clone ssh://git@git.iter.org/scen/pds.git -b $BRANCH_PDS
-  cd pds
-  python3 -m venv ./venv
-  . venv/bin/activate
-  pip install -e .
-  deactivate
-  module purge
-  cd ..
   bash setup_test_files.bash
   echo "############## FINISHED PDS ##############"
 fi
+
+cd run/
 
 # SET UP IMAS-M3
 if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] && [ ! -d "IMAS-muscle3" ]; then
   echo "############## INSTALLING IMAS-MUSCLE3 ##############"
   source imas_base_env
   module load IDS-Validator
-  git clone git@github.com:iterorganization/IMAS-muscle3.git -b $BRANCH_IMAS_MUSCLE3
+  git clone git@github.com:iterorganization/IMAS-muscle3.git
   cd IMAS-muscle3
+  git checkout $BRANCH_IMAS_MUSCLE3
   python3 -m venv ./venv
   . venv/bin/activate
   pip install -e .
@@ -73,8 +69,9 @@ fi
 if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] && [ ! -d "Waveform-Editor" ]; then
   echo "############## INSTALLING WAVEFORM-EDITOR ##############"
   source imas_base_env
-  git clone git@github.com:iterorganization/Waveform-Editor.git -b $BRANCH_WAVEFORM_EDITOR
+  git clone git@github.com:iterorganization/Waveform-Editor.git
   cd Waveform-Editor
+  git checkout $BRANCH_WAVEFORM_EDITOR
   python3 -m venv ./venv
   . venv/bin/activate
   pip install -e .[muscle3]
@@ -87,8 +84,9 @@ fi
 # SET UP METIS
 if [ "$INSTALL_METIS" = "true" ] && [ ! -d "metis" ]; then
   echo "############## INSTALLING METIS ##############"
-  git clone ssh://git@git.iter.org/scen/metis.git -b $BRANCH_METIS
+  git clone ssh://git@git.iter.org/scen/metis.git
   cd metis
+  git checkout $BRANCH_METIS
   matlab -nodisplay -batch zineb_path
   cd ..
   echo "############## FINISHED METIS ##############"
@@ -100,12 +98,14 @@ if [ "$INSTALL_NICE" = "true" ] && [ ! -d "nice" ]; then
   source imas_base_env
   module load SuiteSparse/7.7.0-intel-2023b
   module load libxml2
-  git clone git@gitlab.inria.fr:blfauger/nice.git -b $BRANCH_NICE
+  git clone git@gitlab.inria.fr:blfauger/nice.git
   cd nice
+  git checkout $BRANCH_NICE
   git submodule init
   git submodule update
   cp run/iwrap/param/inv/iter/param.x* run/input
   cp run/iwrap/param/xsd/param.x* run/input
+  # sed -i "s|always_save_grids_gdd = true|always_save_grids_gdd = false|" "src/nice_imas.cc"
   cd src
   cp Makefile.TEMPLATE Makefile
   make -j nice_imas_inv_muscle3
@@ -120,8 +120,9 @@ fi
 if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax-m3" ]; then
   echo "############## INSTALLING TORAX-M3 ##############"
   source torax_base_env
-  git clone ssh://git@git.iter.org/scen/torax-m3.git -b $BRANCH_TORAX_M3
+  git clone ssh://git@git.iter.org/scen/torax-m3.git
   cd torax-m3
+  git checkout $BRANCH_TORAX_M3
   python -m venv ./venv
   . venv/bin/activate
   pip install --upgrade pip
@@ -138,10 +139,40 @@ if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax-m3" ]; then
   echo "############## FINISHED TORAX-M3 ##############"
 fi
 
+# SET UP CHEASE
+if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
+  echo "############## INSTALLING CHEASE ##############"
+  # source imas_base_env
+  git clone ssh://git@gitlab.epfl.ch:spc/chease.git
+  cd chease
+  git checkout $BRANCH_CHEASE
+  cd python
+  source config_muscle3.sh
+  cd ..
+  ./build_imas.csh
+  iwrap -f iwrap/chease_choices_M3.yaml -i $PWD
+  mv chease chease_m3
+
+  cd chease_m3
+  sed -i "s|<cocos_in>[0-9]\+</cocos_in>|<cocos_in>17</cocos_in>|" "input/chease_input_choices.xml"
+  sed -i "s|<cocos_out>[0-9]\+</cocos_out>|<cocos_out>17</cocos_out>|" "input/chease_input_choices.xml"
+  make
+  cd ..
+
+  cd ..
+  echo "############## FINISHED CHEASE ##############"
+fi
+
+cd ..
+
 # END MESSAGE
-echo 'You can try out the test couplings in the pds/ymmsl_files directory by running:'
+echo 'YOU CAN TRY OUT THE TEST COUPLINGS IN THE PDS/YMMSL_FILES DIRECTORY BY RUNNING'
+echo ''
+echo 'cd run'
+echo ''
+echo 'AND'
 echo ''
 echo 'muscle_manager --start-all path/to/my/file.ymmsl'
 echo ''
-echo 'Make sure to change any relavant file paths in the ymmsl files!'
+echo 'MAKE SURE TO CHANGE ANY RELAVANT FILE PATHS IN THE YMMSL FILES!'
 

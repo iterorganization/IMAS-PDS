@@ -1,0 +1,43 @@
+ymmsl_version: v0.1
+model:
+  name: test_chease_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in]
+    chease:
+      implementation: chease
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out]
+  conduits:
+    source.equilibrium_out: chease.equilibrium_in
+    chease.equilibrium_out: sink.equilibrium_in
+settings:
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_chease/"
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  source:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  sink:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  chease:
+    executable: [PWD_PLACEHOLDER]/run/chease/chease_m3/bin/chease.exe
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  chease:
+    threads: 1
+

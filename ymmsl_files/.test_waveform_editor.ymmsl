@@ -20,20 +20,20 @@ model:
     waveform_editor.ec_launchers_out: sink.ec_launchers_in
     waveform_editor.nbi_out: sink.nbi_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/pds/ymmsl_files/output/sink_waveform_editor/"
-  waveform_editor.waveforms: [PWD_PLACEHOLDER]/Waveform-Editor/tests/muscle3_integration/waveforms.yaml
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_waveform_editor/"
+  waveform_editor.waveforms: [PWD_PLACEHOLDER]/run/Waveform-Editor/tests/muscle3_integration/waveforms.yaml
 implementations:
   sink:
-    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    virtual_env: [PWD_PLACEHOLDER]/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
     executable: python
     args: -u -m imas_muscle3.actors.source_component
   waveform_editor:
-    virtual_env: [PWD_PLACEHOLDER]/Waveform-Editor/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv
     executable: waveform-editor
     args: actor
 resources:

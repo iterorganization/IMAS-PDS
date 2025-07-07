@@ -23,6 +23,7 @@ make -C docs html
 # Repositories
 - [PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
 - [IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
+- [WAVEFORM-EDITOR](https://github.com/iterorganization/Waveform-Editor): Generate pre built waveform data
 - [NICE](https://gitlab.inria.fr/blfauger/nice/-/wikis/home): Free Boundary Equilibrium code
 - [METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
 - [TORAX](https://github.com/google-deepmind/torax): Transport code
@@ -35,12 +36,12 @@ These workflows can be used as a template for your own workflows.
 Make sure you have access rights to all the relevant codes.
 
 ```bash
-# move to run folder where all the generated code is ignored by git
-cd run/
 # install repos
 . pds_setup.sh
+# move to run folder where all the generated code is ignored by git
+cd run/
 # prepare base environment and loaded modules
 source imas_base_env
 # run test workflow of choice
-muscle_manager --start-all pds/ymmsl_files/test_sink_source_actor.ymmsl
+muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
 ```
