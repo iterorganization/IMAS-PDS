@@ -156,6 +156,7 @@ if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
   cd chease_m3
   sed -i "s|<cocos_in>[0-9]\+</cocos_in>|<cocos_in>17</cocos_in>|" "input/chease_input_choices.xml"
   sed -i "s|<cocos_out>[0-9]\+</cocos_out>|<cocos_out>17</cocos_out>|" "input/chease_input_choices.xml"
+  rm bin/chease.exe
   make
   cd ..
 
