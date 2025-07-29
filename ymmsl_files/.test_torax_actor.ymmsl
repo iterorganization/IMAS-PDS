@@ -45,9 +45,9 @@ implementations:
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 libiconv OpenBLAS
-    virtual_env: [PWD_PLACEHOLDER]/run/torax-m3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/torax/venv
     executable: python
-    args: "-u -m torax_m3.torax_m3"
+    args: "-u -m torax._src.orchestration.run_muscle3"
 resources:
   source:
     threads: 1

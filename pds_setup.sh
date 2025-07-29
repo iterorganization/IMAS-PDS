@@ -31,8 +31,7 @@ BRANCH_IMAS_MUSCLE3='main'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3'
 BRANCH_NICE='master'
-BRANCH_TORAX='feature/IMAS_coupling'
-BRANCH_TORAX_M3='feature/muscle3_actor'
+BRANCH_TORAX='feature/muscle3_actor'
 BRANCH_CHEASE='feature/muscle3'
 
 # MODULE LOAD
@@ -116,13 +115,13 @@ if [ "$INSTALL_NICE" = "true" ] && [ ! -d "nice" ]; then
   echo "############## FINISHED NICE ##############"
 fi
 
-# SET UP TORAX-M3
-if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax-m3" ]; then
-  echo "############## INSTALLING TORAX-M3 ##############"
+# SET UP TORAX
+if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax" ]; then
+  echo "############## INSTALLING TORAX ##############"
   source torax_base_env
-  git clone ssh://git@git.iter.org/scen/torax-m3.git
-  cd torax-m3
-  git checkout $BRANCH_TORAX_M3
+  git clone ssh://git@github.com/mikesndrs/torax.git
+  cd torax
+  git checkout $BRANCH_TORAX
   python -m venv ./venv
   . venv/bin/activate
   pip install --upgrade pip
@@ -130,13 +129,11 @@ if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax-m3" ]; then
   pip install 'numpy > 2'
   pip install 'imas-python @ git+ssh://git@github.com/mikesndrs/imas-python.git@feature/enable-numpy-2.0'
   pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
-  pip install 'torax @ git+ssh://git@github.com/mikesndrs/torax.git@feature/IMAS_coupling'
-  pip install muscle3
-  pip install -e . --no-deps
+  pip install -e .[dev,muscle3]
   deactivate
   module purge
   cd ..
-  echo "############## FINISHED TORAX-M3 ##############"
+  echo "############## FINISHED TORAX ##############"
 fi
 
 # SET UP CHEASE
