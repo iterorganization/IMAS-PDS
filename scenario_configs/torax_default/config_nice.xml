@@ -22,7 +22,7 @@
 	<iterMaxDir>40</iterMaxDir>
 	<epsStopDir>1.0e-10</epsStopDir>
 	<iterMaxDirInitRecon>2</iterMaxDirInitRecon>
-	<iterMaxDirInitInv>3</iterMaxDirInitInv>
+	<iterMaxDirInitInv>2</iterMaxDirInitInv>
 	<iterMaxRecon>20</iterMaxRecon>
 	<epsStopRecon>1.0e-10</epsStopRecon>
 	<iterMaxInv>40</iterMaxInv>
@@ -306,7 +306,7 @@
     <wPinduced>1.0e-3</wPinduced>
 
 <!-- for Clough Tocher  -->
-	<ct_profile_method>0</ct_profile_method>
+	<ct_profile_method>1</ct_profile_method>
 	<ct_approx_n_by_triangle>5</ct_approx_n_by_triangle>
 
 <!-- control outputs, interpolated magaxis, xpoint, gaps  -->

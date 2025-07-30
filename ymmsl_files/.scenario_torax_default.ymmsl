@@ -54,8 +54,8 @@ model:
     sink_source.iron_core_out: sink.iron_core_in
     sink_source.wall_out: nice_inv.wall_in
     sink_source.wall_out: sink.wall_in
-    # nice_inv.equilibrium_out: accumulator.equilibrium_in
-    chease.equilibrium_out: accumulator.equilibrium_in
+    nice_inv.equilibrium_out: accumulator.equilibrium_in
+    # chease.equilibrium_out: accumulator.equilibrium_in
     nice_inv.equilibrium_out: nice_sink.equilibrium_in
     chease.equilibrium_out: chease_sink.equilibrium_in
     nice_inv.pf_active_out: accumulator.pf_active_in

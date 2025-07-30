@@ -62,6 +62,10 @@ CONFIG = {
         'model_name': 'constant', # 'qlknn', 'constant'
         'smooth_everywhere': True,
         'smoothing_width': 0.1,
+        'chi_i': 1e-4,
+        'chi_e': 1e-4,
+        'D_e': 1e-4,
+        'V_e': 1e-4,
     },
     'solver': {
         'solver_type': 'linear',
