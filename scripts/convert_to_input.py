@@ -26,16 +26,24 @@ def main():
     summary = db_in.get("summary", autoconvert=False)
     time_array = summary.time
     interesting_time_slices = find_interesting_time_slices(summary)
+    skipped = []
 
     for idx in interesting_time_slices:
         t = time_array[idx]
         # equilibrium ids
-        eq_orig = db_in.get_slice(
-            "equilibrium",
-            time_requested=t,
-            interpolation_method=CLOSEST_INTERP,
-            autoconvert=False,
-        )
+        for i in range(10):
+            eq_orig = db_in.get_slice(
+                "equilibrium",
+                time_requested=t,
+                interpolation_method=CLOSEST_INTERP,
+                autoconvert=False,
+            )
+            if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) >= 1:
+                break
+            t += 1
+        if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) < 1:
+            skipped.append(t)
+            continue
         eq_orig_ts = eq_orig.time_slice[0]
         # keep in mind that profiles_1d.psi is defined for psi_norm = 0..0.99 
         # and boundary_separatrix at psi_norm = 1
@@ -44,8 +52,6 @@ def main():
         eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
         eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
         eq = convert_ids(eq_orig, "4.0.0")
-        if len(eq.time_slice[0].boundary.outline.r) < 1:
-            continue
         db_out.put_slice(eq)
 
         # pf_active ids
@@ -82,6 +88,7 @@ def main():
     db_in.close()
     db_backup.close()
     db_out.close()
+    print(skipped)
 
 
 def find_interesting_time_slices(sm):
