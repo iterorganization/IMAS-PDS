@@ -8,9 +8,15 @@ from scipy.interpolate import interp1d as interp1
 from imas import DBEntry, IDSFactory, convert_ids
 from imas.ids_defs import CLOSEST_INTERP
 
+SHOT_NR = 105092
 BACKUP_PATH = "/home/ITER/vanschr/public/imasdb/ITER/4/666666/3"
-SOURCE_PATH = "/work/imas/shared/imasdb/ITER/3/105084/1"
-TARGET_PATH = "/home/ITER/sanderm/gitrepos/pds/run/temp_data/105084_in"
+if SHOT_NR == 105092:
+    SOURCE_PATH = f"/home/ITER/dubrovm/public/imasdb/iter/3/{SHOT_NR}/1"
+    SOURCE_BACKEND = 'mdsplus'
+else:
+    SOURCE_PATH = f"/work/imas/shared/imasdb/ITER/3/{SHOT_NR}/1"
+    SOURCE_BACKEND = 'hdf5'
+TARGET_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/temp_data/{SHOT_NR}_in"
 N_TIMESLICES = 51
 
 
@@ -19,7 +25,7 @@ def main():
     # find interesting timeslices
     # convert boundary_separatrix to boundary
 
-    db_in = DBEntry(f"imas:hdf5?path={SOURCE_PATH}", "r")
+    db_in = DBEntry(f"imas:{SOURCE_BACKEND}?path={SOURCE_PATH}", "r")
     db_backup = DBEntry(f"imas:hdf5?path={BACKUP_PATH}", "r")
     db_out = DBEntry(f"imas:hdf5?path={TARGET_PATH}", "w")
 
@@ -29,9 +35,9 @@ def main():
     skipped = []
 
     for idx in interesting_time_slices:
-        t = time_array[idx]
         # equilibrium ids
         for i in range(10):
+            t = time_array[idx]
             eq_orig = db_in.get_slice(
                 "equilibrium",
                 time_requested=t,
@@ -40,18 +46,25 @@ def main():
             )
             if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) >= 1:
                 break
-            t += 1
+            idx += 1
         if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) < 1:
+            t = time_array[idx]
             skipped.append(t)
             continue
         eq_orig_ts = eq_orig.time_slice[0]
-        # keep in mind that profiles_1d.psi is defined for psi_norm = 0..0.99 
-        # and boundary_separatrix at psi_norm = 1
-        eq_orig_ts.profiles_1d.psi[-1] = eq_orig_ts.boundary_separatrix.psi
+        # DINA input - NICE output defined at psi_norm: 
+        # profiles_1d.psi: 0..0.995 - 0..1
+        # boundary: 0.995 - 1
+        # boundary_separatrix: 1 - na
         eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
         eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
         eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
+        # eq_orig_ts.profiles_1d.psi[-1] = eq_orig_ts.boundary_separatrix.psi
         eq = convert_ids(eq_orig, "4.0.0")
+        psi = eq.time_slice[0].profiles_1d.psi
+        psi_a = psi[0]
+        psi_b = eq.time_slice[0].boundary.psi
+        eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(psi_b - psi_a)
         db_out.put_slice(eq)
 
         # pf_active ids

@@ -8,10 +8,11 @@ import numpy as np
 from imas import DBEntry, IDSFactory
 from imas.ids_defs import CLOSEST_INTERP
 
-ORIGINAL_PATH = '/home/ITER/sanderm/gitrepos/pds/run/temp_data/105084_in'
-RESULT_PATH = '/home/ITER/sanderm/gitrepos/pds/run/temp_data/105084_out'
-EQUILIBRIUM_FIGURE_PATH = '/home/ITER/sanderm/gitrepos/pds/run/tmp/pds_run_equilibrium.png'
-COIL_FIGURE_PATH = '/home/ITER/sanderm/gitrepos/pds/run/tmp/pds_run_coils.png'
+SHOT_NR = 105092
+ORIGINAL_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/temp_data/{SHOT_NR}_in"
+RESULT_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/temp_data/{SHOT_NR}_out"
+EQUILIBRIUM_FIGURE_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/tmp/pds_run_equilibrium_{SHOT_NR}.png"
+COIL_FIGURE_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/tmp/pds_run_coils_{SHOT_NR}.png"
 
 EQUILIBRIUM_FIELDS_0D = [
   ('global_quantities', 'ip'),
@@ -24,8 +25,6 @@ EQUILIBRIUM_FIELDS_0D = [
   ('boundary', 'psi'),
   ('boundary', 'elongation'),
   ('boundary', 'triangularity'),
-  # ('profiles_1d', 'elongation'),
-  # ('profiles_1d', 'triangularity'),
   # ('x-point'),
 ]
 
@@ -33,13 +32,11 @@ EQUILIBRIUM_FIELDS_1D = [
   ('profiles_1d', 'q'),
   ('profiles_1d', 'psi'),
   ('profiles_1d', 'pressure'),
+  ('profiles_1d', 'dpressure_dpsi'),
+  ('profiles_1d', 'f_df_dpsi'),
   # ('profiles_1d', 'elongation'),
-  # ('profiles_1d', 'triangularity'),
+  # ('profiles_1d', 'triangularity_lower'),
   # ('x-point'),
-]
-
-PF_ACTIVE_FIELDS = [
-  # ('coil currents'),
 ]
 
 def nested_getattr(obj, name_list):
@@ -68,6 +65,13 @@ def main():
         eq_dict[field[-1]] = {'org': [], 'res': []}
       val_org = nested_getattr(eq_org.time_slice[0], field).value
       val_res = nested_getattr(eq_res.time_slice[0], field).value
+
+      if 'boundary' in field and hasattr(eq_res.time_slice[0].profiles_1d, field[-1]):
+        res_arr = getattr(eq_res.time_slice[0].profiles_1d, field[-1]).value
+        res_psi = eq_res.time_slice[0].profiles_1d.psi.value
+        res_psi_norm = abs(res_psi - res_psi[0]) / abs(res_psi[-1] - res_psi[0])
+        val_res = np.interp(0.99, res_psi_norm, res_arr)
+
       eq_dict[field[-1]]['org'].append(val_org)
       eq_dict[field[-1]]['res'].append(val_res)
   nrows, ncols = (4, 4)
@@ -90,14 +94,16 @@ def main():
       eq_res = db_res.get_slice('equilibrium', time_requested=t, **get_kwargs)
       val_org = nested_getattr(eq_org.time_slice[0], field)
       val_res = nested_getattr(eq_res.time_slice[0], field)
-      x_org = eq_org.time_slice[0].profiles_1d.rho_tor_norm
-      x_res = eq_res.time_slice[0].profiles_1d.rho_tor_norm
+      psi_org = eq_org.time_slice[0].profiles_1d.psi
+      psi_res = eq_res.time_slice[0].profiles_1d.psi
+      x_org = abs(psi_org - psi_org[0]) / abs(psi_org[-1] - psi_org[0])
+      x_res = abs(psi_res - psi_res[0]) / abs(psi_res[-1] - psi_res[0])
       axes[idx].plot(x_org, val_org, label=f"t={t}", color=color)
       axes[idx].scatter(x_res, val_res, color=color, marker='.')
     axes[idx].legend()
     axes[idx].set_title(field[-1])
     axes[idx].set_ylabel(field[-1])
-    axes[idx].set_xlabel('rho_tor_norm')
+    axes[idx].set_xlabel('psi_norm')
 
   fig.tight_layout(rect=[0, 0.03, 1, 0.95])
   fig.savefig(EQUILIBRIUM_FIGURE_PATH)
