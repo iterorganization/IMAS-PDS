@@ -24,3 +24,6 @@ run/*
 !run/input/
 ymmsl_files/*
 !ymmsl_files/.*
+
+*.ymmsl
+!.*.ymmsl

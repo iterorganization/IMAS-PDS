@@ -2,36 +2,39 @@
 Script to build valid inputs for the PDS couplings from DINA output data.
 """
 
+import argparse
 import numpy as np
 from scipy.integrate import cumulative_trapezoid as cumtrapz
 from scipy.interpolate import interp1d as interp1
 from imas import DBEntry, IDSFactory, convert_ids
 from imas.ids_defs import CLOSEST_INTERP
 
-SHOT_NR = 105092
-BACKUP_PATH = "/home/ITER/vanschr/public/imasdb/ITER/4/666666/3"
-if SHOT_NR == 105092:
-    SOURCE_PATH = f"/home/ITER/dubrovm/public/imasdb/iter/3/{SHOT_NR}/1"
-    SOURCE_BACKEND = 'mdsplus'
-else:
-    SOURCE_PATH = f"/work/imas/shared/imasdb/ITER/3/{SHOT_NR}/1"
-    SOURCE_BACKEND = 'hdf5'
-TARGET_PATH = f"/home/ITER/sanderm/gitrepos/pds/run/temp_data/{SHOT_NR}_in"
-N_TIMESLICES = 51
+
+def handle_args():
+    parser = argparse.ArgumentParser(description='Get preprocessed input data for NICE from DINA')
+    parser.add_argument("--source_uri", type=str, help='URI to load DINA output data from')
+    parser.add_argument("--backup_uri", type=str, help='URI to load backup DINA output data from')
+    parser.add_argument("--sink_uri", type=str, help='URI to write NICE input data to')
+    parser.add_argument("--n_timeslices", type=int, default=51, help='Number of timeslices')
+    args = parser.parse_args()
+    return args
 
 
 def main():
-    # convert to DDV4
-    # find interesting timeslices
-    # convert boundary_separatrix to boundary
+    """
+    convert to DDV4
+    find interesting timeslices
+    convert boundary_separatrix to boundary
+    """
+    args = handle_args()
 
-    db_in = DBEntry(f"imas:{SOURCE_BACKEND}?path={SOURCE_PATH}", "r")
-    db_backup = DBEntry(f"imas:hdf5?path={BACKUP_PATH}", "r")
-    db_out = DBEntry(f"imas:hdf5?path={TARGET_PATH}", "w")
+    db_in = DBEntry(args.source_uri, "r")
+    db_backup = DBEntry(args.backup_uri, "r")
+    db_out = DBEntry(args.sink_uri, "w")
 
     summary = db_in.get("summary", autoconvert=False)
     time_array = summary.time
-    interesting_time_slices = find_interesting_time_slices(summary)
+    interesting_time_slices = find_interesting_time_slices(summary, args.n_timeslices)
     skipped = []
 
     for idx in interesting_time_slices:
@@ -59,7 +62,6 @@ def main():
         eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
         eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
         eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
-        # eq_orig_ts.profiles_1d.psi[-1] = eq_orig_ts.boundary_separatrix.psi
         eq = convert_ids(eq_orig, "4.0.0")
         psi = eq.time_slice[0].profiles_1d.psi
         psi_a = psi[0]
@@ -68,7 +70,6 @@ def main():
         db_out.put_slice(eq)
 
         # pf_active ids
-        # pfa_orig = db_in.get_slice(
         pfa_orig = db_in.get_slice(
             "pf_active",
             time_requested=t,
@@ -104,7 +105,7 @@ def main():
     print(skipped)
 
 
-def find_interesting_time_slices(sm):
+def find_interesting_time_slices(sm, n_timeslices):
     t = sm.time
     # energy signal
     wth = sm.global_quantities.energy_thermal.value
@@ -116,7 +117,6 @@ def find_interesting_time_slices(sm):
     R = sm.boundary.magnetic_axis_r.value
     a = sm.boundary.minor_radius.value
     K = sm.boundary.elongation.value
-    # indice_valid = (R>1) & (abs(ip) > 50e3)
     indice_valid = [i for i in range(len(R)) if R[i] > 1 and abs(ip[i]) > 50e3]
     R = max(np.array(R) + np.array([1]))
     # constante
@@ -145,7 +145,7 @@ def find_interesting_time_slices(sm):
         kind="linear",
     )
     indice_selected = sorted(
-        list(set([int(idx) for idx in f_nearest(np.linspace(0, 1, N_TIMESLICES))]))
+        list(set([int(idx) for idx in f_nearest(np.linspace(0, 1, n_timeslices))]))
     )
     return indice_selected
 

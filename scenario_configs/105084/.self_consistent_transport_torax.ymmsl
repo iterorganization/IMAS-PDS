@@ -1,0 +1,92 @@
+ymmsl_version: v0.1
+model:
+  name: prescribed_transport_105084_torax_acc
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    accumulator:
+      implementation: accumulator
+      ports:
+        s: [equilibrium_in]
+        o_f: [equilibrium_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_f_init]
+        o_f: [equilibrium_o_f]
+    sink_nice:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+    sink_torax:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+  conduits:
+    source.equilibrium_out: nice_inv.equilibrium_in
+    source.pf_active_out: nice_inv.pf_active_in
+    source.wall_out: nice_inv.wall_in
+    source.pf_passive_out: nice_inv.pf_passive_in
+    source.iron_core_out: nice_inv.iron_core_in
+    nice_inv.equilibrium_out: sink_nice.equilibrium_in
+    nice_inv.equilibrium_out: accumulator.equilibrium_in
+    accumulator.equilibrium_out: torax.equilibrium_f_init
+    nice_inv.pf_active_out: sink_nice.pf_active_in
+    source.wall_out: sink_nice.wall_in
+    source.pf_passive_out: sink_nice.pf_passive_in
+    source.iron_core_out: sink_nice.iron_core_in
+    torax.equilibrium_o_f: sink_torax.equilibrium_in
+    nice_inv.pf_active_out: sink_torax.pf_active_in
+    source.wall_out: sink_torax.wall_in
+    source.pf_passive_out: sink_torax.pf_passive_in
+    source.iron_core_out: sink_torax.iron_core_in
+settings:
+  source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084/tmp/data/105084_in/"
+  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084/tmp/data/105084_out_nice"
+  sink_torax.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084/tmp/data/105084_out_torax"
+  torax.output_all_timeslices: True
+  xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/105084/config_nice.xml
+  python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/105084/config_torax.py
+  muscle_remote_log_level: 'DEBUG'
+implementations:
+  source:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  sink:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  accumulator:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.accumulator_component"
+  nice_inv:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
+    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+  torax:
+    base_env: CLEAN
+    modules: Python Boost HDF5 libiconv OpenBLAS
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/torax/venv
+    executable: python
+    args: "-u -m torax._src.orchestration.run_muscle3"
+resources:
+  source:
+    threads: 1
+  sink_nice:
+    threads: 1
+  sink_torax:
+    threads: 1
+  accumulator:
+    threads: 1
+  torax:
+    threads: 1
+  nice_inv:
+    threads: 1
