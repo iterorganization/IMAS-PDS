@@ -2,7 +2,7 @@
 IMAS PDS is an integrated modeling tool.
 
 # Installation
-Installation guide [ITER sharepoint](https://sharepoint.iter.org/departments/POP/CM/IMDesign/Code%20Documentation/PDS/installing.html)
+Installation guide can be found on [ITER sharepoint](https://sharepoint.iter.org/departments/POP/CM/IMDesign/Code%20Documentation/PDS/installing.html)
 Note that the IMAS PDS repository currently functions as a hub for combining different codes and tools, and does not need an installation of its own to function. 
 
 # Documentation
