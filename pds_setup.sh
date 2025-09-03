@@ -26,7 +26,7 @@ INSTALL_NICE="true"
 INSTALL_TORAX="true"
 INSTALL_CHEASE="true"
 
-BRANCH_PDS='feature/sdcc_install_instructions'
+BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='main'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3'
