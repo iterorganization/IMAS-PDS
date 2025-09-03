@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# Should be run from PDS repo directory
+# Should be run from PDS repo base directory.
+# Takes all ymmsl files with a . in front,
+# changes [PWD_PLACEHOLDER] to the path of the current PDS installation,
+# creates new ymmsl files that can actually be run.
 
 set -euo pipefail
 

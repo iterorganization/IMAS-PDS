@@ -5,7 +5,7 @@ Using the IMAS PDS
 
 Setting up actors
 -----------------
-A setup stript is provided with an installation of the necessary repositories.
+A setup script is provided with an installation of the necessary repositories.
 Make sure you have access rights to all the relevant codes.
 
 .. code-block:: bash
