@@ -1,3 +1,5 @@
+# This file expects to be run inside the parent directory
+
 source ../../run/imas_base_env
 
 echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"

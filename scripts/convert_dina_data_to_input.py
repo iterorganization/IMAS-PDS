@@ -2,6 +2,7 @@
 Script to build valid inputs for the PDS couplings from DINA output data.
 """
 
+import logging
 import argparse
 import numpy as np
 from scipy.integrate import cumulative_trapezoid as cumtrapz
@@ -69,35 +70,30 @@ def main():
         eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(psi_b - psi_a)
         db_out.put_slice(eq)
 
-        # pf_active ids
-        pfa_orig = db_in.get_slice(
-            "pf_active",
-            time_requested=t,
-            interpolation_method=CLOSEST_INTERP,
-            autoconvert=False,
-        )
-        pfa = convert_ids(pfa_orig, "4.0.0")
-        db_out.put_slice(pfa)
+        # time dependent standard
+        for (ids_name, db) in [
+            ('pf_active', db_in),
+            ('pf_passive', db_backup),
+            ('core_profiles', db_in),
+            ('core_sources', db_in),
+        ]:
+            slice_orig = db.get_slice(
+                ids_name,
+                time_requested=t,
+                interpolation_method=CLOSEST_INTERP,
+                autoconvert=False,
+            )
+            slice = convert_ids(slice_orig, "4.0.0")
+            db_out.put_slice(slice)
 
-        # pf_passive ids
-        pfp_orig = db_backup.get_slice(
-            "pf_passive",
-            time_requested=t,
-            interpolation_method=CLOSEST_INTERP,
-            autoconvert=False,
-        )
-        pfp = convert_ids(pfp_orig, "4.0.0")
-        db_out.put_slice(pfp)
-
-    # wall ids
-    wall_orig = db_backup.get("wall", autoconvert=False)
-    wall = convert_ids(wall_orig, "4.0.0")
-    db_out.put(wall)
-
-    # core ids
-    core_orig = db_backup.get("iron_core", autoconvert=False)
-    core = convert_ids(core_orig, "4.0.0")
-    db_out.put(core)
+    # time independent standard
+    for (ids_name, db) in [
+        ('wall', db_backup),
+        ('iron_core', db_backup),
+    ]:
+        ids_orig = db.get(ids_name, autoconvert=False)
+        ids = convert_ids(ids_orig, "4.0.0")
+        db_out.put(ids)
 
     db_in.close()
     db_backup.close()
@@ -135,7 +131,8 @@ def find_interesting_time_slices(sm, n_timeslices):
     fbvi = (fbvi - min(fbvi)) / (max(fbvi) - min(fbvi))
     # added to be strictely monotonic and have some points in flattop
     ft = (t - min(t)) / (max(t) - min(t))
-    f = (fwi + fbvi + ft) / 3
+    # f = (fwi + fbvi + ft) / 3
+    f = ft
     # juste to take into account validity
     f = (f - min(f[indice_valid])) / (max(f[indice_valid] - min(f[indice_valid])))
     # time selection
@@ -151,4 +148,8 @@ def find_interesting_time_slices(sm, n_timeslices):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.WARNING,
+    )
     main()

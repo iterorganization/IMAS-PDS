@@ -310,7 +310,7 @@
 	<ct_approx_n_by_triangle>5</ct_approx_n_by_triangle>
 
 <!-- control outputs, interpolated magaxis, xpoint, gaps  -->
-	<outputForControl>0</outputForControl>
+	<outputForControl>1</outputForControl>
 
    <rd_basis_choice>2</rd_basis_choice>
    <rd_n_dof>10</rd_n_dof> 
