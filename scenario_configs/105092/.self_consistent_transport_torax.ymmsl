@@ -38,6 +38,10 @@ model:
       implementation: sink
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+    visualization:
+      implementation: visualization
+      ports:
+        s: [equilibrium_in]
   conduits:
     source.equilibrium_out: nice_inv.equilibrium_in
     source.pf_active_out: nice_inv.pf_active_in
@@ -56,6 +60,7 @@ model:
     nice_inv.equilibrium_out: sink_nice.equilibrium_in
     nice_inv.equilibrium_out: nice_dir.equilibrium_in
     nice_inv.equilibrium_out: accumulator.equilibrium_in
+    nice_inv.equilibrium_out: visualization.equilibrium_in
     nice_inv.pf_active_out: sink_nice.pf_active_in
     nice_inv.pf_active_out: sink_torax.pf_active_in
     nice_inv.pf_active_out: nice_dir.pf_active_in
@@ -71,6 +76,10 @@ settings:
   torax.output_all_timeslices: True
   xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_nice.xml
   python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_torax.py
+  visualization.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization.port: 5007
+  visualization.throttle_interval: 0.1
+  visualization.keep_alive: true
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
@@ -97,6 +106,10 @@ implementations:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/torax/venv
     executable: python
     args: "-u -m torax._src.orchestration.run_muscle3"
+  visualization:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.visualization_component"
 resources:
   source:
     threads: 1
@@ -113,4 +126,6 @@ resources:
   nice_dir:
     threads: 1
   nice_inv:
+    threads: 1
+  visualization:
     threads: 1
