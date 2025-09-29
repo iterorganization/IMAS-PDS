@@ -83,6 +83,8 @@ def main():
             interpolation_method=CLOSEST_INTERP,
             autoconvert=False,
         )
+        # VS coils have incompatible geometry_type for NICE in input,
+        # should be identical across shots so getting geometry from backup is fine
         for i in [12, 13]:
             slice_orig.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
         slice = convert_ids(slice_orig, "4.0.0")
@@ -116,6 +118,7 @@ def main():
     db_backup.close()
     db_out.close()
     print(skipped)
+
 
 def find_interesting_time_slices(sm, n_timeslices):
     t = sm.time
