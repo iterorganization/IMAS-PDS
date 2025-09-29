@@ -70,9 +70,26 @@ def main():
         eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(psi_b - psi_a)
         db_out.put_slice(eq)
 
+        # pf_active ids
+        slice_orig = db_in.get_slice(
+            'pf_active',
+            time_requested=t,
+            interpolation_method=CLOSEST_INTERP,
+            autoconvert=False,
+        )
+        slice_backup = db_backup.get_slice(
+            'pf_active',
+            time_requested=t,
+            interpolation_method=CLOSEST_INTERP,
+            autoconvert=False,
+        )
+        for i in [12, 13]:
+            slice_orig.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
+        slice = convert_ids(slice_orig, "4.0.0")
+        db_out.put_slice(slice)
+
         # time dependent standard
         for (ids_name, db) in [
-            ('pf_active', db_in),
             ('pf_passive', db_backup),
             ('core_profiles', db_in),
             ('core_sources', db_in),
@@ -99,7 +116,6 @@ def main():
     db_backup.close()
     db_out.close()
     print(skipped)
-
 
 def find_interesting_time_slices(sm, n_timeslices):
     t = sm.time
