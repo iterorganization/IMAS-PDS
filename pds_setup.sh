@@ -83,10 +83,13 @@ fi
 # SET UP METIS
 if [ "$INSTALL_METIS" = "true" ] && [ ! -d "metis" ]; then
   echo "############## INSTALLING METIS ##############"
+  source imas_base_env
+  module load MATLAB
   git clone ssh://git@git.iter.org/scen/metis.git
   cd metis
   git checkout $BRANCH_METIS
   matlab -nodisplay -batch zineb_path
+  module purge
   cd ..
   echo "############## FINISHED METIS ##############"
 fi
@@ -119,6 +122,7 @@ fi
 if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax" ]; then
   echo "############## INSTALLING TORAX ##############"
   source torax_base_env
+  module load CMake/3.27.6-GCCcore-13.2.0 UDA
   git clone ssh://git@github.com/mikesndrs/torax.git
   cd torax
   git checkout $BRANCH_TORAX
@@ -140,7 +144,8 @@ fi
 if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
   echo "############## INSTALLING CHEASE ##############"
   # source imas_base_env
-  git clone ssh://git@gitlab.epfl.ch:spc/chease.git
+  # git clone ssh://git@gitlab.epfl.ch:spc/chease.git
+  git clone https://gitlab.epfl.ch/spc/chease.git
   cd chease
   git checkout $BRANCH_CHEASE
   cd python
