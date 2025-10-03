@@ -25,6 +25,7 @@ INSTALL_METIS="true"
 INSTALL_NICE="true"
 INSTALL_TORAX="true"
 INSTALL_CHEASE="true"
+INSTALL_PCS="true"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='main'
@@ -33,6 +34,7 @@ BRANCH_METIS='muscle3'
 BRANCH_NICE='master'
 BRANCH_TORAX='feature/muscle3_actor'
 BRANCH_CHEASE='feature/muscle3'
+BRANCH_PCS='master'
 
 # MODULE LOAD
 pip install --upgrade pip
@@ -140,6 +142,18 @@ if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax" ]; then
   echo "############## FINISHED TORAX ##############"
 fi
 
+# SET UP PCS
+if [ "$INSTALL_PCS" = "true" ] && [ ! -d "pcs" ]; then
+  echo "############## INSTALLING PCS ##############"
+  git clone ssh://git@git.iter.org/pcs/pcs.git
+  cd pcs
+  git checkout $BRANCH_PCS
+  git clone https://github.com/iterorganization/PCSSP.git pcssp
+  cd pcssp
+  git submodule update --init
+  cd ../..
+  echo "############## FINISHED PCS ##############"
+fi
 # SET UP CHEASE
 if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
   echo "############## INSTALLING CHEASE ##############"
