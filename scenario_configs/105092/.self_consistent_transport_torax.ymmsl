@@ -1,6 +1,6 @@
 ymmsl_version: v0.1
 model:
-  name: prescribed_transport_105092_torax_acc
+  name: self_consistent_transport_105092
   components:
     source:
       implementation: source
@@ -11,11 +11,6 @@ model:
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
         o_f: [equilibrium_out, pf_active_out]
-    nice_dir:
-      implementation: nice_dir
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out]
     accumulator:
       implementation: accumulator
       ports:
@@ -25,20 +20,21 @@ model:
       implementation: torax
       ports:
         f_init: [equilibrium_f_init]
+        o_i: [equilibrium_o_i]
         o_f: [equilibrium_o_f]
     sink_nice:
       implementation: sink
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-    sink_dir:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
     sink_torax:
       implementation: sink
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-    visualization:
+    visualization_nice:
+      implementation: visualization
+      ports:
+        s: [equilibrium_in]
+    visualization_torax:
       implementation: visualization
       ports:
         s: [equilibrium_in]
@@ -48,9 +44,6 @@ model:
     source.wall_out: nice_inv.wall_in
     source.pf_passive_out: nice_inv.pf_passive_in
     source.iron_core_out: nice_inv.iron_core_in
-    source.wall_out: nice_dir.wall_in
-    source.pf_passive_out: nice_dir.pf_passive_in
-    source.iron_core_out: nice_dir.iron_core_in
     source.wall_out: sink_nice.wall_in
     source.pf_passive_out: sink_nice.pf_passive_in
     source.iron_core_out: sink_nice.iron_core_in
@@ -58,28 +51,29 @@ model:
     source.pf_passive_out: sink_torax.pf_passive_in
     source.iron_core_out: sink_torax.iron_core_in
     nice_inv.equilibrium_out: sink_nice.equilibrium_in
-    nice_inv.equilibrium_out: nice_dir.equilibrium_in
     nice_inv.equilibrium_out: accumulator.equilibrium_in
-    nice_inv.equilibrium_out: visualization.equilibrium_in
+    nice_inv.equilibrium_out: visualization_nice.equilibrium_in
     nice_inv.pf_active_out: sink_nice.pf_active_in
     nice_inv.pf_active_out: sink_torax.pf_active_in
-    nice_inv.pf_active_out: nice_dir.pf_active_in
-    nice_dir.equilibrium_out: sink_dir.equilibrium_in
     accumulator.equilibrium_out: torax.equilibrium_f_init
+    torax.equilibrium_o_i: visualization_torax.equilibrium_in
     torax.equilibrium_o_f: sink_torax.equilibrium_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_in/"
   sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_out_nice"
-  sink_dir.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_out_dir"
   sink_torax.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_out_torax"
   torax.output_all_timeslices: True
   xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_nice.xml
   python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_torax.py
-  visualization.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
-  visualization.port: 5007
-  visualization.throttle_interval: 0.1
-  visualization.keep_alive: true
+  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_nice.port: 5007
+  visualization_nice.throttle_interval: 0.4
+  visualization_nice.keep_alive: false
+  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_torax.port: 5008
+  visualization_torax.throttle_interval: 0.4
+  visualization_torax.keep_alive: false
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
@@ -97,9 +91,6 @@ implementations:
   nice_inv:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
-  nice_dir:
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_dir_muscle3
   torax:
     base_env: CLEAN
     modules: Python Boost HDF5 libiconv OpenBLAS
@@ -117,15 +108,13 @@ resources:
     threads: 1
   sink_torax:
     threads: 1
-  sink_dir:
-    threads: 1
   accumulator:
     threads: 1
   torax:
     threads: 1
-  nice_dir:
-    threads: 1
   nice_inv:
     threads: 1
-  visualization:
+  visualization_nice:
+    threads: 1
+  visualization_torax:
     threads: 1
