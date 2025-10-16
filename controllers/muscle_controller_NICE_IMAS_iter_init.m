@@ -10,8 +10,14 @@
 
 fprintf('Controller Initialization\n')
 
-// run('../../initNice4matlab.m')
-// run('../../../../pcs/pcssp_pcs_add_paths.m')
+% run('../../initNice4matlab.m')
+% run('../../../../pcs/pcssp_pcs_add_paths.m')
+% get PCS stuff
+pcs_path = getenv('PCS_PATH');
+if isempty(pcs_path)
+    error('PCS_PATH environment variable not set');
+end
+run('pcssp_pcs_add_paths')
 
 logger = py.logging.getLogger();
 setdefault(py.os.environ,'MUSCLE_INSTANCE','macro');
@@ -46,11 +52,11 @@ if ~instance.reuse_instance()
     error('Communication with MUSCLE3 failed')
 end
 
-% get PCS stuff
-run(instance.get_setting('pcs_path', 'str'))
-
 %% Prepare IDS Python object
-equilibrium_python=py.imas.equilibrium();
+% equilibrium_python=py.imas.equilibrium();
+equilibrium_python=ids_init('equilibrium');
+% equilibrium_python=ids_gen_allocate(equilibrium_python, 'equilibrium', '');
+% equilibrium_python=py.imas.IDSFactory().equilibrium();
 
 
 %% Init NICE parameters
@@ -60,19 +66,17 @@ equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
 
 msg_pfa = instance.receive("pf_active_f_init");
 pfa_serial=uint8(msg_pfa.data);
-pf_active = imas_deserialize(pfa_serial, "pf_active");
+pf_active = imas_deserialize(pfa_serial, 'pf_active');
 
-t_start = equilibrium.time{1};
-t_max = equilibrium.time{end};
+t_start = equilibrium.time(1);
+t_max = equilibrium.time(end);
 
 %% call simulink model inits
-
-
 reference_current=[];
 coils_resistance=[];
 for i=1:length(pf_active.coil)
-    reference_current(i)=pf_active.coil{i}.current.data;
-    coils_resistance(i)=pf_active.coil{i}.resistance;
+    reference_current=[reference_current; pf_active.coil{i}.current.data];
+    coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
 end
 reference_current=reference_current';
 coils_resistance=coils_resistance';
