@@ -26,5 +26,5 @@ mkdir -p $RUNDIR
 muscle_manager --start-all self_consistent_transport_torax.ymmsl --run-dir $RUNDIR
 # muscle_manager --start-all magnetically_controlled_torax.ymmsl --run-dir $RUNDIR
 
-echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
-python ../../scripts/plot_validation.py
+# echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
+# python ../../scripts/plot_validation.py

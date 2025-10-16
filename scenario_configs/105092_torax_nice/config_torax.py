@@ -1,6 +1,6 @@
 """Simplified config using mostly defaults for various simulation components."""
 
-imas_uri = "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/scenario_configs/105092/tmp/data/105092_in/"
+imas_uri = "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/scenario_configs/105092_torax_nice/tmp/data/105092_in/"
 
 def get_imas_profile_conditions(imas_uri):
     import imas

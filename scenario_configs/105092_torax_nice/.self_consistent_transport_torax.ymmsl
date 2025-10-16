@@ -60,12 +60,12 @@ model:
     torax.equilibrium_o_f: sink_torax.equilibrium_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_in/"
-  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_out_nice"
-  sink_torax.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092/tmp/data/105092_out_torax"
+  source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092_torax_nice/tmp/data/105092_in/"
+  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092_torax_nice/tmp/data/105092_out_nice"
+  sink_torax.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092_torax_nice/tmp/data/105092_out_torax"
   torax.output_all_timeslices: True
-  xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_nice.xml
-  python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/105092/config_torax.py
+  xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/105092_torax_nice/config_nice.xml
+  python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/105092_torax_nice/config_torax.py
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
   visualization_nice.port: 5007
   visualization_nice.throttle_interval: 0.4

@@ -87,6 +87,9 @@ def main():
         # should be identical across shots so getting geometry from backup is fine
         for i in [12, 13]:
             slice_orig.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
+        for i in range(14):
+            assert slice_orig.coil[i].name == slice_backup.coil[i].name
+            slice_orig.coil[i].resistance = slice_backup.coil[i].resistance
         slice = convert_ids(slice_orig, "4.0.0")
         db_out.put_slice(slice)
 
