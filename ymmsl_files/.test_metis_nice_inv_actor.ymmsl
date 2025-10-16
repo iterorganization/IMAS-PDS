@@ -1,0 +1,76 @@
+ymmsl_version: v0.1
+model:
+  name: test_metis_nice_inv_actor
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in,pf_active_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in]
+    nice_inv:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    metis:
+      implementation: metis
+      ports:
+        f_init: [clock_input_f]
+        o_f: [equilibrium_output_i,pulse_schedule_output_i,plasma_profiles_output_i,plasma_sources_output_i]
+  conduits:
+    source.equilibrium_out: metis.clock_input_f
+    metis.equilibrium_output_i: nice_inv.equilibrium_in
+    source.pf_active_out: nice_inv.pf_active_in
+    source.pf_passive_out: nice_inv.pf_passive_in
+    source.iron_core_out: nice_inv.iron_core_in
+    source.wall_out: nice_inv.wall_in
+    nice_inv.equilibrium_out: sink.equilibrium_in
+    nice_inv.pf_active_out: sink.pf_active_in
+    metis.pulse_schedule_output_i: sink.pulse_schedule_in
+    metis.plasma_profiles_output_i: sink.plasma_profiles_in
+    metis.plasma_sources_output_i: sink.plasma_sources_in
+
+settings:
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/ymmsl_files/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/ymmsl_files/output/sink_metis/"
+  metis.metis_computation: 1
+  metis.metis_external_data_equilibrium: 0
+  metis.metis_filename: "[PWD_PLACEHOLDER]/run/metis/certification/metis/ITER_rampup_ECCD.mat"
+  muscle_remote_log_level: 'debug'
+  olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/run/pds/pds_validation_tests"
+  olc.rulesets: "iter-olc"
+  olc.apply_generic: False
+  xml_path: "[PWD_PLACEHOLDER]/run/nice/run/input/param.xml"
+  muscle_remote_log_level: 'DEBUG'
+  python_config_module: 'examples/basic_config.py'
+
+implementations:
+  source:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  sink:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  metis: 
+    env:
+      DIR_METIS4MUSCLE3: [PWD_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
+    executable: matlab
+    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+  nice_inv:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
+    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+
+resources:
+  source:
+    threads: 1
+  sink:
+    threads: 1
+  metis:
+    threads: 10
+  nice_inv:
+    threads: 1
