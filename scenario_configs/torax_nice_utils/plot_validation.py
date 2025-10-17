@@ -64,7 +64,7 @@ def main():
   }
 
   equilibrium_plots(dbs)
-  # pf_active_plots(dbs)
+  pf_active_plots(dbs)
 
   for db in dbs.values():
     db.close()
@@ -96,7 +96,7 @@ def equilibrium_plots(dbs):
 
       for key in dbs.keys():
         eq_dict[field[-1]][key].append(vals[key])
-  nrows, ncols = (4, 2)
+  nrows, ncols = (5, 2)
   fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12,12))
   axes = axes.flatten()
   colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -123,6 +123,14 @@ def equilibrium_plots(dbs):
         else:
           axes[idx].scatter(psi_norm, val, color=colors[i_t], marker='.')
     axes[idx].legend()
+  if 'dina' in dbs.keys():
+    vals = []
+    for t in equilibrium.time:
+      dina_eq = dbs['dina'].get_slice('equilibrium', time_requested=t, **GET_KWARGS).time_slice[0]
+      nice_eq = dbs['nice'].get_slice('equilibrium', time_requested=t, **GET_KWARGS).time_slice[0]
+      vals.append(nice_eq.profiles_1d.pressure[0] / dina_eq.profiles_1d.pressure[0])
+    axes[idx + 1].plot(equilibrium.time, vals, color=colors[0])
+    axes[idx + 1].plot(equilibrium.time, np.array(eq_dict['beta_tor']['nice']) / np.array(eq_dict['beta_tor']['dina']), color=colors[1])
 
   fig.tight_layout(rect=[0, 0.03, 1, 0.95])
   fig.savefig(EQUILIBRIUM_FIGURE_PATH)
@@ -133,8 +141,8 @@ def pf_active_plots(dbs):
     key: db.get('pf_active')
     for key, db in dbs.items()
   }
-  nrows, ncols = (4, 4)
-  fig, axes = plt.subplots(nrows=nrows, ncols=nrows, figsize=(12,12))
+  nrows, ncols = (5, 3)
+  fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12,12))
   axes = axes.flatten()
   for key, pfa in pfas.items():
     for coil in pfa.coil:
