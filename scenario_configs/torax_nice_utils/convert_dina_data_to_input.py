@@ -85,12 +85,12 @@ def main():
         )
         # VS coils have incompatible geometry_type for NICE in input,
         # should be identical across shots so getting geometry from backup is fine
-        for i in [12, 13]:
-            slice_orig.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
-        for i in range(14):
-            assert slice_orig.coil[i].name == slice_backup.coil[i].name
-            slice_orig.coil[i].resistance = slice_backup.coil[i].resistance
         slice = convert_ids(slice_orig, "4.0.0")
+        for i in [12, 13]:
+            slice.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
+        for i in range(14):
+            assert slice.coil[i].name == slice_backup.coil[i].name
+            slice.coil[i].resistance = slice_backup.coil[i].resistance
         db_out.put_slice(slice)
 
         # time dependent standard

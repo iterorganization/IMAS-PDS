@@ -44,14 +44,25 @@ def get_imas_sources(imas_uri):
         }
     return sources
 
+def get_t_values(imas_uri):
+    import imas
+    import numpy as np
+    with imas.DBEntry(imas_uri, 'r') as db:
+        eq = db.get('equilibrium')
+        t_initial = eq.time[0]
+        t_final = eq.time[-1]
+    return t_initial, t_final
+
+t_initial, t_final = get_t_values(imas_uri)
+
 CONFIG = {
     'profile_conditions': get_imas_profile_conditions(imas_uri),
     'plasma_composition': {
         'main_ion': {'H': 1},
     },
     'numerics': {
-        't_initial': 0,
-        't_final': 170,
+        't_initial': t_initial,
+        't_final': t_final,
         'exact_t_final': True,
         'fixed_dt': 0.1,
         'resistivity_multiplier': 1,
