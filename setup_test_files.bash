@@ -9,23 +9,26 @@ set -euo pipefail
 
 given_dir="ymmsl_files"
 
-for file in "$given_dir"/.*.ymmsl; do
-  # Skip . and ..
-  [[ "$file" != "$given_dir"/.*.ymmsl ]] && continue
+# Recursively find all .*.ymmsl files
+find "$given_dir" -type f -name ".*.ymmsl" | while read -r file; do
 
-  # Extract filename
-  filename=$(basename "$file")
-  
-  # Remove the leading dot
+  # Extract filename relative to given_dir
+  rel_path="${file#$given_dir/}"
+
+  # Remove the leading dot from the basename
+  dir_path=$(dirname "$rel_path")
+  filename=$(basename "$rel_path")
   new_filename="${filename#.}"
 
+  # Ensure target directory exists
+  mkdir -p "$given_dir/$dir_path"
+
   # Skip if already exists
-  if [ -f "$given_dir/$new_filename" ]; then
-    continue
+  if [ -f "$given_dir/$dir_path/$new_filename" ]; then
+      continue
   fi
 
   echo "Processing: $file"
   # Use sed to replace the matching substrings
-  sed "s|\[PWD_PLACEHOLDER\]|$(pwd)|g"  "$file" > "$given_dir/$new_filename"
-done
-
+  sed "s|\[PWD_PLACEHOLDER\]|$(pwd)|g" "$file" > "$given_dir/$dir_path/$new_filename"
+done 
