@@ -27,7 +27,8 @@ Exercise 1
 
     .. md-tab-item:: Solution
 
-        bla bla
+        .. literalinclude:: ../../../../ymmsl_files/training/.source_sink.ymmsl
+           :language: yaml
 
 
 We add the first actual simulation code, NICE, to the workflow.
@@ -47,7 +48,8 @@ Exercise 2
         
     .. md-tab-item:: Solution
 
-        bla bla
+        .. literalinclude:: ../../../../ymmsl_files/training/.source_nice_sink.ymmsl
+           :language: yaml
 
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
@@ -67,7 +69,8 @@ Exercise 3
         
     .. md-tab-item:: Solution
 
-        bla bla
+        .. literalinclude:: ../../../../ymmsl_files/training/.source_nice_viz_sink.ymmsl
+           :language: yaml
 
 
 Instead of using the premade IDS values, might want to define certain waveforms for easy testing.
