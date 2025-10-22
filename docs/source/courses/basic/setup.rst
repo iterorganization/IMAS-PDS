@@ -3,7 +3,7 @@
 PDS 101: setup
 ========================
 
-For these training excercises you will need an installation of the PDS repo and access to IMASPy.
+For these training exercises you will need an installation of the PDS repo and access to IMAS-Python.
 
 .. code-block:: console
 
@@ -13,5 +13,5 @@ For these training excercises you will need an installation of the PDS repo and 
     # a setup stript is provided with an installation of the necessary repositories.
     # make sure you have access rights to all the relevant codes.
     # expects to be run from the repo root directory
-    $ . pds_setup.sh
-    $ source run/imas_base_env
+    . pds_setup.sh
+    source run/imas_base_env

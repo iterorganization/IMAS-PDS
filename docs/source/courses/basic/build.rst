@@ -8,8 +8,8 @@ In this section we explore building our own workflow step by step.
 We start with the simplest workflow, loading IDS data and sending it to another actor. 
 A small custom IDS has been prepared to that the wokflow is fast and iterative development is easy.
 You can swap this out with your own data, although it is advised to go through the exercises with the custom data first.
-The custom IDS can be found at path/to/custom/ids
-*path to docs*
+The custom IDS can be found on SDCC at `/home/ITER/sanderm/public/imasdb/ITER/training_ids`
+For more information on the sink and source actors read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
 Exercise 1
 ----------
@@ -32,7 +32,7 @@ Exercise 1
 
 We add the first actual simulation code, NICE, to the workflow.
 We use the inverse mode actor to calculate the needed coil currents to obtain the desired plasma shape.
-*path to docs*  
+For more information on the NICE code read the `docs <https://blfauger.gitlabpages.inria.fr/nice/>`_.
 A NICE config file has been defined at path/to/nice/config.
 
 Exercise 2
@@ -51,9 +51,9 @@ Exercise 2
 
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
-*path to docs*  
+For more information on the visualization actor read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 A visualization actor config file has been defined at path/to/visualization/config.
-You can also make and try your own.
+You can also make and try out your own.
 
 Exercise 3
 ----------
@@ -72,9 +72,9 @@ Exercise 3
 
 Instead of using the premade IDS values, might want to define certain waveforms for easy testing.
 We now add the Waveform Editor actor to the workflow.
-*path to docs*  
+For more information on the waveform editor actor read the `docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
 A simple waveform editor config file has been defined at path/to/waveform-editor/config.
-You can also make and try your own.
+You can also make and try out your own.
 
 Exercise 4
 ----------
@@ -92,9 +92,9 @@ Exercise 4
 
 Instead of handchecking, we might want to automate the process of checking whether the data output is valid.
 We now add the IMAS-validator actor to the workflow.
-*path to docs*  
-An IMAS-validator ruleset has been defined at path/to/waveform-editor/config.
-You can also make and try your own.
+For more information on the IMAS-validator actor read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
+An IMAS-validator ruleset has been defined at `pds_validation_test/iter-olc`.
+You can also make and try out your own.
 
 Exercise 5
 ----------
@@ -114,11 +114,11 @@ As a final step we want to run the transport code TORAX based on the NICE output
 We now add the TORAX actor to the workflow.
 *path to docs*  
 A TORAX config file has been defined at path/to/torax/config.
-You can also make and try your own.
+You can also make and try out your own.
 Since TORAX expects a full IDS with all timeslices present for its initialization, cannot use the NICE output outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
 For this we use the accumulator actor.
-*path to docs*  
+For more information on the accumulator actor read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
 Exercise 6
 ----------
