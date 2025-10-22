@@ -26,7 +26,12 @@ files=(
   "config_nice.xml"
 )
 for file in "${files[@]}"; do
-  sed "s|\[BASEDIR_PLACEHOLDER\]|$basedir|g" "$basedir/scenario_configs/torax_nice_utils/.$file" > $file
+  if test -f ".$file"; then
+    cp ".$file" $file
+  else
+    cp "$basedir/scenario_configs/torax_nice_utils/.$file" $file
+  fi
+  sed -i "s|\[BASEDIR_PLACEHOLDER\]|$basedir|g" $file
   sed -i "s|\[SHOT_NR\]|$SHOT_NR|g" $file
 done
 
