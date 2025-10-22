@@ -42,6 +42,12 @@ Manual
    ci_config
 
 
+.. toctree::
+   :caption: Training
+   :maxdepth: 1
+
+   courses/basic_user_training
+
 
 LICENSE
 -------
