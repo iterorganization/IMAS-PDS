@@ -19,8 +19,7 @@ model:
     visualization:
       implementation: visualization_component
       ports:
-        f_init: [pf_active_md_in, wall_md_in]
-        s: [equilibrium_in, pf_active_in]
+        s: [equilibrium_in, pf_active_in,pf_active_md_in, wall_md_in]
     sink:
       implementation: sink
       ports:

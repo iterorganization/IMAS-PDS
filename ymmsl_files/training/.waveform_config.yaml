@@ -3,8 +3,6 @@ globals:
   machine_description:
     equilibrium: 
       imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/
-    pf_active:
-      imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/
 equilibrium:
   equilibrium/time_slice/global_quantities/ip:
   - {type: constant, value: -1.5e7}

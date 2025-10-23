@@ -1,11 +1,20 @@
 ymmsl_version: v0.1
 model:
-  name: source_nice_viz_sink
+  name: source_waveform_nice_viz_sink
   components:
     source:
       implementation: source
       ports:
         o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    waveform_editor:
+      implementation: waveform_editor
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out]
+    olc:
+      implementation: olc
+      ports:
+        f_init: [equilibrium_in]
     nice:
       implementation: nice_inv
       ports:
@@ -14,13 +23,12 @@ model:
     visualization:
       implementation: visualization_component
       ports:
-        s: [equilibrium_in, pf_active_in, pf_active_md_in, wall_md_in]
+        s: [equilibrium_in, pf_active_in,pf_active_md_in, wall_md_in]
     sink:
       implementation: sink
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
   conduits:
-    source.equilibrium_out: nice.equilibrium_in
     source.wall_out: nice.wall_in
     source.pf_active_out: nice.pf_active_in
     source.pf_passive_out: nice.pf_passive_in
@@ -34,18 +42,36 @@ model:
     source.wall_out: visualization.wall_md_in
     source.pf_active_out: visualization.pf_active_md_in
     nice.pf_active_out: visualization.pf_active_in
+    source.equilibrium_out: waveform_editor.equilibrium_in
+    waveform_editor.equilibrium_out: nice.equilibrium_in
+    waveform_editor.equilibrium_out: olc.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_nice_viz_sink"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_viz_sink"
   xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
   visualization.port: 5010
+  visualization.automatic_mode: true
+  waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
+  olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests/training"
+  olc.rulesets: "valid_eq"
+  olc.apply_generic: False
+  olc.halt_on_error: True
 implementations:
   source:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
+  waveform_editor:
+    virtual_env: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv
+    executable: waveform-editor
+    args: actor
+  olc:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    modules: IDS-Validator
+    executable: python
+    args: -u -m imas_muscle3.actors.olc_component
   sink:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
     executable: python
@@ -66,4 +92,7 @@ resources:
     threads: 1
   sink:
     threads: 1
-
+  olc:
+    threads: 1
+  waveform_editor:
+    threads: 1
