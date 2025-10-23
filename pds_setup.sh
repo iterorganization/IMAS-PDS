@@ -50,11 +50,14 @@ fi
 cd run/
 
 # SET UP IMAS-M3
-if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] && [ ! -d "IMAS-muscle3" ]; then
+IMAS_MUSCLE3_URL="git@github.com:iterorganization/IMAS-muscle3.git"
+if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
+   && [ ! -d "IMAS-muscle3" ] \
+   && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
   echo "############## INSTALLING IMAS-MUSCLE3 ##############"
   source imas_base_env
   module load IDS-Validator
-  git clone git@github.com:iterorganization/IMAS-muscle3.git
+  git clone $IMAS_MUSCLE3_URL
   cd IMAS-muscle3
   git checkout $BRANCH_IMAS_MUSCLE3
   python3 -m venv ./venv
@@ -64,13 +67,18 @@ if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] && [ ! -d "IMAS-muscle3" ]; then
   module purge
   cd ..
   echo "############## FINISHED IMAS-MUSCLE3 ##############"
+else
+  echo "Skipping IMAS_MUSCLE3"
 fi
 
 # SET UP WAVEFORM-EDITOR
-if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] && [ ! -d "Waveform-Editor" ]; then
+WAVEFORM_EDITOR_URL="git@github.com:iterorganization/Waveform-Editor.git"
+if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
+   && [ ! -d "Waveform-Editor" ] \
+   && git ls-remote "$WAVEFORM_EDITOR_URL" &>/dev/null; then
   echo "############## INSTALLING WAVEFORM-EDITOR ##############"
   source imas_base_env
-  git clone git@github.com:iterorganization/Waveform-Editor.git
+  git clone $WAVEFORM_EDITOR_URL
   cd Waveform-Editor
   git checkout $BRANCH_WAVEFORM_EDITOR
   python3 -m venv ./venv
@@ -80,29 +88,39 @@ if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] && [ ! -d "Waveform-Editor" ]; then
   module purge
   cd ..
   echo "############## FINISHED IMAS-MUSCLE3 ##############"
+else
+  echo "Skipping WAVEFORM_EDITOR"
 fi
 
 # SET UP METIS
-if [ "$INSTALL_METIS" = "true" ] && [ ! -d "metis" ]; then
+METIS_URL="ssh://git@git.iter.org/scen/metis.git"
+if [ "$INSTALL_METIS" = "true" ] \
+   && [ ! -d "metis" ] \
+   && git ls-remote "$METIS_URL" &>/dev/null; then
   echo "############## INSTALLING METIS ##############"
   source imas_base_env
   module load MATLAB
-  git clone ssh://git@git.iter.org/scen/metis.git
+  git clone $METIS_URL
   cd metis
   git checkout $BRANCH_METIS
   matlab -nodisplay -batch zineb_path
   module purge
   cd ..
   echo "############## FINISHED METIS ##############"
+else
+  echo "Skipping METIS"
 fi
 
 # SET UP NICE
-if [ "$INSTALL_NICE" = "true" ] && [ ! -d "nice" ]; then
+NICE_URL="git@gitlab.inria.fr:blfauger/nice.git"
+if [ "$INSTALL_NICE" = "true" ] \
+   && [ ! -d "nice" ] \
+   && git ls-remote "$NICE_URL" &>/dev/null; then
   echo "############## INSTALLING NICE ##############"
   source imas_base_env
   module load SuiteSparse/7.7.0-intel-2023b
   module load libxml2
-  git clone git@gitlab.inria.fr:blfauger/nice.git
+  git clone $NICE_URL
   cd nice
   git checkout $BRANCH_NICE
   git submodule init
@@ -118,14 +136,19 @@ if [ "$INSTALL_NICE" = "true" ] && [ ! -d "nice" ]; then
   module purge
   cd ../..
   echo "############## FINISHED NICE ##############"
+else
+  echo "Skipped NICE"
 fi
 
 # SET UP TORAX
-if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax" ]; then
+TORAX_URL=ssh://git@github.com/mikesndrs/torax.git
+if [ "$INSTALL_TORAX" = "true" ] \
+   && [ ! -d "torax" ] \
+   && git ls-remote "$TORAX_URL" &>/div/null; then
   echo "############## INSTALLING TORAX ##############"
   source torax_base_env
   module load CMake/3.27.6-GCCcore-13.2.0 UDA
-  git clone ssh://git@github.com/mikesndrs/torax.git
+  git clone "$TORAX_URL"
   cd torax
   git checkout $BRANCH_TORAX
   python -m venv ./venv
@@ -140,12 +163,17 @@ if [ "$INSTALL_TORAX" = "true" ] && [ ! -d "torax" ]; then
   module purge
   cd ..
   echo "############## FINISHED TORAX ##############"
+else
+  echo "Skipped TORAX"
 fi
 
 # SET UP PCS
-if [ "$INSTALL_PCS" = "true" ] && [ ! -d "pcs" ]; then
+PCS_URL="ssh://git@git.iter.org/pcs/pcs.git"
+if [ "$INSTALL_PCS" = "true" ] \
+   && [ ! -d "pcs" ] \
+   && git ls-remote "$PCS_URL" &>/dev/null; then
   echo "############## INSTALLING PCS ##############"
-  git clone ssh://git@git.iter.org/pcs/pcs.git
+  git clone "$PCS_URL"
   cd pcs
   git checkout $BRANCH_PCS
   git clone https://github.com/iterorganization/PCSSP.git pcssp
@@ -153,13 +181,19 @@ if [ "$INSTALL_PCS" = "true" ] && [ ! -d "pcs" ]; then
   git submodule update --init
   cd ../..
   echo "############## FINISHED PCS ##############"
+else
+  echo "Skipping PCS"
 fi
+
 # SET UP CHEASE
-if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
+CHEASE_URL="ssh://git@gitlab.epfl.ch:spc/chease.git"
+# CHEASE_URL="https://gitlab.epfl.ch/spc/chease.git"
+if [ "$INSTALL_CHEASE" = "true" ] \
+   && [ ! -d "chease" ] \
+   && git ls-remote "$CHEASE_URL" &>/dev/null; then
   echo "############## INSTALLING CHEASE ##############"
   # source imas_base_env
-  # git clone ssh://git@gitlab.epfl.ch:spc/chease.git
-  git clone https://gitlab.epfl.ch/spc/chease.git
+  git clone "$CHEASE_URL"
   cd chease
   git checkout $BRANCH_CHEASE
   cd python
@@ -178,6 +212,8 @@ if [ "$INSTALL_CHEASE" = "true" ] && [ ! -d "chease" ]; then
 
   cd ..
   echo "############## FINISHED CHEASE ##############"
+else
+  echo 'Skipping CHEASE'
 fi
 
 cd ..
