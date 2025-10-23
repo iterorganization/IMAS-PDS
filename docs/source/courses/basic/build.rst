@@ -5,8 +5,8 @@ Building your own workflows
 
 In this section we explore building our own workflow step by step.
 
-We start with the simplest workflow, loading IDS data and sending it to another actor. 
-A small custom IDS has been prepared to that the wokflow is fast and iterative development is easy.
+We start with the simplest workflow; loading IDS data, sending it to another actor and saving the data. 
+A small custom IDS has been prepared to that the workflow is fast and iterative development is easy.
 You can swap this out with your own data, although it is advised to go through the exercises with the custom data first.
 The custom IDS can be found on SDCC at `/home/ITER/sanderm/public/imasdb/ITER/training_ids`
 For more information on the sink and source actors read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
@@ -18,7 +18,7 @@ Exercise 1
 
     .. md-tab-item:: Exercise
 
-        Build a workflow connecting an data source actor to a data sink actor.
+        Build a workflow connecting a data source actor to a data sink actor.
         Run it and check if the data output makes sense.
 
     .. md-tab-item:: Tip
@@ -93,7 +93,7 @@ Exercise 4
 Instead of handchecking, we might want to automate the process of checking whether the data output is valid.
 We now add the IMAS-validator actor to the workflow.
 For more information on the IMAS-validator actor read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
-An IMAS-validator ruleset has been defined at `pds_validation_test/iter-olc`.
+A simple IMAS-validator ruleset has been defined at `pds_validation_test/iter-olc`.
 You can also make and try out your own.
 
 Exercise 5
@@ -112,10 +112,10 @@ Exercise 5
 
 As a final step we want to run the transport code TORAX based on the NICE output.
 We now add the TORAX actor to the workflow.
-*path to docs*  
+For more information on TORAX read the `docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
 A TORAX config file has been defined at path/to/torax/config.
 You can also make and try out your own.
-Since TORAX expects a full IDS with all timeslices present for its initialization, cannot use the NICE output outright.
+Since TORAX expects a full IDS with all timeslices present for its initialization, we cannot use the NICE output outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
 For this we use the accumulator actor.
 For more information on the accumulator actor read the `docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.

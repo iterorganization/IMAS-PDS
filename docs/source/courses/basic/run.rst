@@ -5,6 +5,7 @@ Running existing PDS simulations
 
 In this section we show how to run pre existing workflows in this repo.
 You can use the actor specific test workflows or the iter scenario workflows.
+The `run` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
 
@@ -12,7 +13,7 @@ You can use the actor specific test workflows or the iter scenario workflows.
     source imas_base_env
 
 We start with the actor specific test workflows.
-They are saved in ymmsl_files directory.
+They are saved in the `ymmsl_files` directory.
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
 
@@ -44,9 +45,10 @@ Exercise 1
 
 Next we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
+The workflow can be run by running the `automate_runs.sh` shell script.
 The shell script:
 
-- rewrites the paths in the template configuration files for the user.
+- rewrites the path placeholders in the template configuration files for the user.
 - preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
 - runs the prebuilt workflow using the muscle_manager.
 
