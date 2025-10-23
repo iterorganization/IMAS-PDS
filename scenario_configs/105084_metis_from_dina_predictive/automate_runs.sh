@@ -8,7 +8,7 @@ echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
 #  --backup_uri "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3" \
 #  --sink_uri "imas:hdf5?path=$(pwd)/tmp/data/105084_in" \
 #  --n_timeslices 51
-imas convert "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1" $IMAS_VERSION "imas:hdf5?path=$(pwd)/tmp/data/105084_in"
+imas convert "imas:mdsplus?path=/work/imas/shared/imasdb/ITER/3/105084/1" $IMAS_VERSION "imas:hdf5?path=$(pwd)/tmp/data/105084_in"
 
 # make METIS dataset
 echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
