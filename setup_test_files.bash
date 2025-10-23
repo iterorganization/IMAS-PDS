@@ -9,8 +9,8 @@ set -euo pipefail
 
 given_dir="ymmsl_files"
 
-# Recursively find all .*.ymmsl files
-find "$given_dir" -type f -name ".*.ymmsl" | while read -r file; do
+# Recursively find all .*.ymmsl and .*.yaml files
+find "$given_dir" -type f \( -name ".*.ymmsl" -o -name ".*.yaml" \) | while read -r file; do
 
   # Extract filename relative to given_dir
   rel_path="${file#$given_dir/}"
