@@ -92,6 +92,8 @@ def pf_active_plots_dina_nice(args, dbs):
                 pfa.time, coil.current.data, label=key, **PLOT_KWARGS
             )
             axes[coil_dict[coil_name]].legend()
+    for ax in axes[len(pfa.coil):]:
+        fig.delaxes(ax)
 
     # save figure
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])

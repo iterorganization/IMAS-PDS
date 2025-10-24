@@ -288,8 +288,8 @@
     	<group_current_index>0 1 2 4 5 6 7 8 9 10 11 12 13</group_current_index>
     	<n_group_fixed_index>2</n_group_fixed_index>
 	<group_fixed_index>11 12</group_fixed_index>
-    	<n_group_penalized_to_zero_index>11</n_group_penalized_to_zero_index>
-	<group_penalized_to_zero_index>0 1 2 3 4 5 6 7 8 9 10</group_penalized_to_zero_index>
+    	<n_group_penalized_to_zero_index>2</n_group_penalized_to_zero_index>
+	<group_penalized_to_zero_index>11 12</group_penalized_to_zero_index>
 
 
 <!-- evolution inverse -->
