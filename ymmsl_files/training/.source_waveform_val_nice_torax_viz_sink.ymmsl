@@ -1,0 +1,127 @@
+ymmsl_version: v0.1
+model:
+  name: source_waveform_nice_torax_viz_sink
+  components:
+    source:
+      implementation: source
+      ports:
+        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+    waveform_editor:
+      implementation: waveform_editor
+      ports:
+        f_init: [equilibrium_in]
+        o_f: [equilibrium_out]
+    olc:
+      implementation: olc
+      ports:
+        f_init: [equilibrium_in]
+    nice:
+      implementation: nice_inv
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [equilibrium_out, pf_active_out]
+    accumulator:
+      implementation: accumulator
+      ports:
+        s: [equilibrium_in]
+        o_f: [equilibrium_out]
+    torax:
+      implementation: torax
+      ports:
+        f_init: [equilibrium_f_init]
+        o_f: [equilibrium_o_f]
+    visualization:
+      implementation: visualization_component
+      ports:
+        s: [equilibrium_in, pf_active_in,pf_active_md_in, wall_md_in]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+  conduits:
+    source.wall_out: nice.wall_in
+    source.pf_active_out: nice.pf_active_in
+    source.pf_passive_out: nice.pf_passive_in
+    source.iron_core_out: nice.iron_core_in
+    nice.pf_active_out: sink.pf_active_in
+    source.wall_out: sink.wall_in
+    source.pf_passive_out: sink.pf_passive_in
+    source.iron_core_out: sink.iron_core_in
+    nice.equilibrium_out: visualization.equilibrium_in
+    source.wall_out: visualization.wall_md_in
+    source.pf_active_out: visualization.pf_active_md_in
+    nice.pf_active_out: visualization.pf_active_in
+    source.equilibrium_out: waveform_editor.equilibrium_in
+    waveform_editor.equilibrium_out: nice.equilibrium_in
+    waveform_editor.equilibrium_out: olc.equilibrium_in
+    nice.equilibrium_out: accumulator.equilibrium_in
+    accumulator.equilibrium_out: torax.equilibrium_f_init
+    torax.equilibrium_o_f: sink.equilibrium_in
+    
+settings:
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_torax_viz_sink"
+  xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
+  muscle_remote_log_level: 'DEBUG'
+  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization.port: 5010
+  visualization.automatic_mode: true
+  waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
+  olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests/training"
+  olc.rulesets: "valid_eq"
+  olc.apply_generic: False
+  olc.halt_on_error: True
+  torax.python_config_module: '[PWD_PLACEHOLDER]/scenario_configs/torax_default/config_torax.py'
+implementations:
+  source:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  waveform_editor:
+    virtual_env: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv
+    executable: waveform-editor
+    args: actor
+  olc:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    modules: IDS-Validator
+    executable: python
+    args: -u -m imas_muscle3.actors.olc_component
+  sink:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  nice_inv:
+    modules: SuiteSparse/7.7.0-intel-2023b libxml2
+    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+  visualization_component:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.visualization_component
+  accumulator:
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.accumulator_component"
+  torax:
+    base_env: CLEAN
+    modules: Python Boost HDF5
+    virtual_env: [PWD_PLACEHOLDER]/run/torax/venv
+    executable: python
+    args: "-u -m torax._src.orchestration.run_muscle3"
+
+resources:
+  source:
+    threads: 1
+  nice:
+    threads: 1
+  visualization:
+    threads: 1
+  sink:
+    threads: 1
+  olc:
+    threads: 1
+  waveform_editor:
+    threads: 1
+  accumulator:
+    threads: 1
+  torax:
+    threads: 1
