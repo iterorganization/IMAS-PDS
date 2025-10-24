@@ -5,6 +5,8 @@ SOURCE_URI=$2
 BACKUP_URI=$3
 SINK_URI=$4
 N_TIMESLICES=$5
+shift 5
+T_LIST=("$@")
 
 basedir="$(dirname "$(dirname "$PWD")")"
 
@@ -41,5 +43,11 @@ mkdir -p $RUNDIR
 muscle_manager --start-all self_consistent_transport_torax.ymmsl --run-dir $RUNDIR
 # muscle_manager --start-all magnetically_controlled_torax.ymmsl --run-dir $RUNDIR
 
-# # echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
-# # python $basedir/scenario_configs/torax_nice_utils/plot_validation.py \
+echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
+python $basedir/scenario_configs/torax_nice_utils/plot_validation.py \
+  --shot_nr $SHOT_NR \
+  --dina_uri "$PWD/tmp/data/${SHOT_NR}_in" \
+  --nice_uri "$PWD/tmp/data/${SHOT_NR}_out_nice" \
+  --torax_uri "$PWD/tmp/data/${SHOT_NR}_out_torax" \
+  --output_dir "$PWD/tmp" \
+  --t_list "${T_LIST[@]}"
