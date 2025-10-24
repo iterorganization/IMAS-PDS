@@ -35,7 +35,7 @@ model:
     source.pf_active_out: visualization.pf_active_md_in
     nice.pf_active_out: visualization.pf_active_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
+  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/training_ids"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_nice_viz_sink"
   xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
