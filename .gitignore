@@ -27,3 +27,8 @@ ymmsl_files/*
 
 *.ymmsl
 !.*.ymmsl
+
+scenario_configs/**
+!scenario_configs/**/automate_runs.sh
+!scenario_configs/**/info.txt
+!scenario_configs/torax_nice_utils

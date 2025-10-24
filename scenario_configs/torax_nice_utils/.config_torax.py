@@ -1,6 +1,6 @@
 """Simplified config using mostly defaults for various simulation components."""
 
-imas_uri = "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/scenario_configs/105092_torax_nice/tmp/data/105092_in/"
+imas_uri = "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_in/"
 
 def get_imas_profile_conditions(imas_uri):
     import imas
@@ -44,14 +44,25 @@ def get_imas_sources(imas_uri):
         }
     return sources
 
+def get_t_values(imas_uri):
+    import imas
+    import numpy as np
+    with imas.DBEntry(imas_uri, 'r') as db:
+        eq = db.get('equilibrium')
+        t_initial = eq.time[0]
+        t_final = eq.time[-1]
+    return t_initial, t_final
+
+t_initial, t_final = get_t_values(imas_uri)
+
 CONFIG = {
     'profile_conditions': get_imas_profile_conditions(imas_uri),
     'plasma_composition': {
         'main_ion': {'H': 1},
     },
     'numerics': {
-        't_initial': 0,
-        't_final': 170,
+        't_initial': t_initial,
+        't_final': t_final,
         'exact_t_final': True,
         'fixed_dt': 0.1,
         'resistivity_multiplier': 1,

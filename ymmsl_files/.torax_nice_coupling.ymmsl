@@ -82,7 +82,7 @@ implementations:
     args: "-u -m imas_muscle3.actors.olc_component"
   torax:
     base_env: CLEAN
-    modules: Python Boost HDF5 MUSCLE3
+    modules: Python Boost HDF5 libiconv OpenBLAS
     virtual_env: [PWD_PLACEHOLDER]/run/torax/venv
     executable: python
     args: "-u -m torax._src.orchestration.run_muscle3"
