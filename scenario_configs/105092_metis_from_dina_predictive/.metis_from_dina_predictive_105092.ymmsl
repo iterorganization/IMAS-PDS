@@ -1,0 +1,53 @@
+ymmsl_version: v0.1
+model:
+  name: metis_from_dina_105092_predictive
+  components:
+    source_metis:
+      implementation: source_metis
+      ports:
+        o_i: [pulse_schedule_out]
+    sink:
+      implementation: sink
+      ports:
+        f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in]
+    metis:
+      implementation: metis
+      ports:
+        f_init: [pulse_schedule_f_init,pulse_schedule_in_f]
+        o_f: [equilibrium_out_f,pulse_schedule_out_f,plasma_profiles_out_f,plasma_sources_out_f]
+  conduits:
+    source_metis.pulse_schedule_out: metis.pulse_schedule_f_init
+    source_metis.pulse_schedule_out: metis.pulse_schedule_in_f
+    metis.pulse_schedule_out_f: sink.pulse_schedule_in
+    metis.plasma_profiles_out_f: sink.plasma_profiles_in
+    metis.plasma_sources_out_f: sink.plasma_sources_in
+    metis.equilibrium_out_f: sink.equilibrium_in   
+settings:
+  source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092_metis_from_dina_predictive/tmp/data/105092_metis_in/"
+  sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105092_metis_from_dina_predictive/tmp/data/105092_metis_out/"
+  metis.metis_computation: 1
+  metis.metis_external_data_equilibrium: 0
+  muscle_remote_log_level: 'DEBUG'
+  python_config_module: 'examples/basic_config.py'
+implementations:
+  sink:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+  source_metis:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+  metis: 
+    env: 
+        DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
+    executable: matlab
+    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+ #   args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+resources:
+  sink:
+    threads: 1
+  source_metis:
+    threads: 1
+  metis:
+    threads: 10
