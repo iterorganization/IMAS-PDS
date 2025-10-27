@@ -13,7 +13,7 @@ model:
   conduits:
     source.equilibrium_out: sink.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/docs/source/courses/training_data/training_ids/"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_sink"
 implementations:
   source:

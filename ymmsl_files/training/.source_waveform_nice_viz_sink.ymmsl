@@ -41,9 +41,9 @@ model:
     source.equilibrium_out: waveform_editor.equilibrium_in
     waveform_editor.equilibrium_out: nice.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/docs/source/courses/training_data/training_ids/"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_viz_sink"
-  xml_path: [PWD_PLACEHOLDER]/docs/source/courses/training_data/nice_param.xml
+  xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
   visualization.port: 5010
