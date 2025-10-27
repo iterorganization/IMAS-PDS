@@ -1,6 +1,0 @@
-Coupling for the barebones torax config.
-
-Last tested for versions:
-- Nice:     *git commit*
-- Torax:    *git commit*
-- Chease:   *git commit*
