@@ -10,7 +10,7 @@ We start with the simplest workflow; loading IDS data, sending it to another act
 A small custom IDS has been prepared on SDCC so that the workflow is fast and iterative development is easy. 
 You can swap this out with your own data, although it is advised to go through the exercises with the custom data first.
 
-The URI for the custom IDS is ``imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/training_ids``.
+The IDSs are available at ``pds/docs/source/courses/training_data/training_ids``.
 
 For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
@@ -19,7 +19,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
    have been made available in the
    ``pds/ymmsl_files/training`` directory. It is recommended to attempt the
    exercises yourself first. If you get stuck, you can try running the provided 
-   solution files and see if you understand how it works.
+   solution YMMSL files and see if you understand how they are implemented.
 
 Exercise 1
 ----------
@@ -127,9 +127,9 @@ of checking whether the data output is valid.
 We now add the IMAS-validator actor to the workflow.
 For more information on the IMAS-validator actor read the `IMAS-VALIDATOR docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
-A simple IMAS-validator ruleset has been defined at ``pds/pds_validation_test/training/valid_eq``. This ruleset contains only a single example rule, checking that the plasma current remains
+A simple IMAS-validator ruleset has been defined at ``pds/pds_validation_test/training``. This ruleset contains only a single simple, example rule checking that the plasma current remains
 below 17 MA. This should always be valid, since we set the plasma current to be 15 MA in 
-the previous exercise.
+the previous exercise, by using the Waveform Editor actor.
 
 Exercise 5a
 -----------
@@ -160,19 +160,24 @@ Exercise 5b
 
     .. md-tab-item:: Exercise
 
-        Now replace the IMAS-Validator ruleset to the one defined at ``pds/pds_validation_test/training/invalid_eq``. This ruleset contains only a single example rule, checking that the plasma current remains above 17 MA. This will not be valid, since we set it to be 15 MA in previous exercise. 
+        Now replace the plasma current value in the waveform configuration from 15 MA 
+        to 20 MA, and rerun the pipeline from previous exercise. 
 
-        Run it and check if the data output makes sense.
+        What do you expect to happen?
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
-        It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
-        To execute the workflow, use the corresponding ready-to-run file from the
-        ``pds/ymmsl_files/training`` directory.
+        Update the plasma current in the waveform configuration to 20 MA:
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_waveform_val_nice_viz_sink_invalid.ymmsl
-           :language: yaml
+        .. code-block:: yaml
+
+            [...]
+            equilibrium:
+              equilibrium/time_slice/global_quantities/ip:
+              - {type: constant, value: -2.0e7}
+
+        The OLC actor will fail, as this does not adhere to the ruleset defined in 
+        previous exercise.
 
 As a final step we want to run the transport code TORAX based on the NICE output.
 We now add the TORAX actor to the workflow.
