@@ -3,7 +3,7 @@
 source ../../run/imas_base_env
 
 echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
-python ../../scripts/convert_dina_data_to_input.py \
+python ../torax_nice_utils/convert_dina_data_to_input.py \
   --source_uri "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1" \
   --backup_uri "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3" \
   --sink_uri "imas:hdf5?path=$(pwd)/tmp/data/105084_nice_in" \

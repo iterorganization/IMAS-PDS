@@ -50,10 +50,10 @@ model:
     metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
     metis.plasma_sources_out_f: sink_metis.plasma_sources_in 
 settings:
-  source_nice.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_nice_inverse_from_dina_predictive/tmp/data/105084_nice_in/" 
-  source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_nice_inverse_from_dina_predictive/tmp/data/105084_metis_in/"
-  sink_metis.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_nice_inverse_from_dina_predictive/tmp/data/105084_metis_out/"
-  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_nice_inverse_from_dina_predictive/tmp/data/105084_nice_out/"
+  source_nice.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_nice_in/" 
+  source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_metis_in/"
+  sink_metis.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_metis_out/"
+  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_nice_out/"
   olc.extra_rule_dirs: "/home/ITER/artaudj1/PDS/pds/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False
