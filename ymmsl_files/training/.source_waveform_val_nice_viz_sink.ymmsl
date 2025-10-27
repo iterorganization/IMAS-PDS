@@ -46,7 +46,7 @@ model:
     waveform_editor.equilibrium_out: nice.equilibrium_in
     waveform_editor.equilibrium_out: olc.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/training_ids"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/docs/source/courses/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_viz_sink"
   xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
@@ -54,8 +54,8 @@ settings:
   visualization.port: 5010
   visualization.automatic_mode: true
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
-  olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests/training"
-  olc.rulesets: "valid_eq"
+  olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"
+  olc.rulesets: "training"
   olc.apply_generic: False
   olc.halt_on_error: True
 implementations:
