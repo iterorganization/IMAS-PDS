@@ -12,7 +12,47 @@ The `run` subdirectory can be used as a sandbox for installing and running many 
     cd run/
     source imas_base_env
 
-We start with the actor specific test workflows.
+First we look at some ITER scenarios:
+These workflows are made to demonstrate and validate the performance of the PDS actors.
+The different scenarios can be found in the `scenario_configs` directory.
+The workflow can be run by running the `automate_runs.sh` shell script.
+The shell script:
+
+- rewrites the path placeholders in the template configuration files for the user.
+- preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
+- runs the prebuilt workflow using the muscle_manager.
+
+The shell script currently expects to be run from the specific scenario directory itself.
+
+.. code-block:: console
+
+    cd path/to/my/scenario_config
+    bash automate_runs.sh
+
+.. note::
+
+    Use the visualization tool from IMAS-MUSCLE3 to look at the data.
+
+Exercise 1
+----------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Run a scenario workflow.
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: console
+
+            cd ../scenario_configs/105092_torax_nice
+            bash automate_runs.sh
+
+        Check if results look as expected using the visualization tool.
+
+            
+Next we look at actor specific test workflows.
 They are saved in the `ymmsl_files` directory.
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
@@ -21,11 +61,7 @@ These workflows can be used as a template for your own workflows.
 
     muscle_manager --start-all path/to/my/workflow.ymmsl
 
-.. note::
-
-    Use the visualization tool from IMAS-MUSCLE3 to look at the data.
-
-Exercise 1
+Exercise 2
 ----------
 
 .. md-tab-set::
@@ -41,39 +77,3 @@ Exercise 1
             muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
 
         Check if results look as expected using the visualization tool.
-
-
-Next we look at some ITER scenarios:
-These workflows are made to demonstrate and validate the performance of the PDS actors.
-The workflow can be run by running the `automate_runs.sh` shell script.
-The shell script:
-
-- rewrites the path placeholders in the template configuration files for the user.
-- preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
-- runs the prebuilt workflow using the muscle_manager.
-
-The shell script currently expects to be run from the specific scenario directory itself.
-
-.. code-block:: console
-
-    cd path/to/my/scenario_config
-    bash automate_runs.sh
-
-Exercise 2
-----------
-
-.. md-tab-set::
-
-    .. md-tab-item:: Exercise
-
-        Run scenario workflow.
-
-    .. md-tab-item:: Solution
-
-        .. code-block:: console
-
-            cd ../scenario_configs/105092_torax_nice
-            bash automate_runs.sh
-
-        Check if results look as expected using the visualization tool.
-            
