@@ -1,6 +1,6 @@
 .. _`basic/setup`:
 
-PDS 101: setup
+PDS 101: Setup
 ==============
 
 For these training exercises you will need an installation of the PDS repo and access to IMAS-Python.
@@ -15,3 +15,7 @@ For these training exercises you will need an installation of the PDS repo and a
     # expects to be run from the repo root directory
     . pds_setup.sh
     source run/imas_base_env
+
+For the training exercises you will need access to a graphical environment to visualize
+the simulation results. If you are on SDCC, it is recommended to follow this training
+through the NoMachine client.

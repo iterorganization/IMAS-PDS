@@ -20,11 +20,11 @@ The URI of the prepared training data is as follows (note: you will need to upda
 For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
 .. tip::
-   The solution YMMSL files for all exercises, containing the correct relative paths 
+   The solution yMMSL files for all exercises, containing the correct relative paths 
    have been made available in the
    ``pds/ymmsl_files/training`` directory. It is recommended to attempt the
    exercises yourself first. If you get stuck, you can try running the provided 
-   solution YMMSL files and see if you understand how they are implemented.
+   solution yMMSL files and see if you understand how they are implemented.
 
 Exercise 1
 ----------
@@ -43,7 +43,7 @@ Exercise 1
 
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
@@ -73,7 +73,7 @@ Exercise 2
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
@@ -98,7 +98,7 @@ Exercise 3
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
@@ -125,7 +125,7 @@ Exercise 4
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
@@ -158,7 +158,7 @@ Exercise 5a
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
@@ -217,7 +217,7 @@ Exercise 6
         
     .. md-tab-item:: Solution
 
-        The YMMSL file below shows the solution for this exercise.  
+        The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
