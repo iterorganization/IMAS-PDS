@@ -19,7 +19,7 @@ model:
     sink_metis:
       implementation: sink_metis
       ports:
-        f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in]         
+        f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in,summary_in]         
     sink_nice:
       implementation: sink_metis
       ports:
@@ -28,7 +28,7 @@ model:
       implementation: metis
       ports:
         f_init: [pulse_schedule_f_init,pulse_schedule_in_f]
-        o_f: [equilibrium_out_f,pulse_schedule_out_f,plasma_profiles_out_f,plasma_sources_out_f]
+        o_f: [equilibrium_out_f,pulse_schedule_out_f,plasma_profiles_out_f,plasma_sources_out_f,summary_out_f]
     olc:
       implementation: olc
       ports:
@@ -49,6 +49,7 @@ model:
     metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
     metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
     metis.plasma_sources_out_f: sink_metis.plasma_sources_in 
+    metis.summary_out_f: sink_metis.summary_in 
 settings:
   source_nice.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_nice_in/" 
   source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/105084_metis_predictive_nice_inverse_from_dina/tmp/data/105084_metis_in/"

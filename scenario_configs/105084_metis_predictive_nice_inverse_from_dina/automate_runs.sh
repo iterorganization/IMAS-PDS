@@ -17,7 +17,7 @@ matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'Executio
 
 echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"
   # Use sed to replace the matching substrings
-  file="metis_nice_inverse_from_dina_interpretative_105084.ymmsl"
+  file="metis_nice_inverse_from_dina_predictive_105084.ymmsl"
   basedir="$(dirname "$(dirname "$PWD")")"
   echo basedir= $basedir
   sed "s|\[BASEDIR_PLACEHOLDER\]|$basedir|g"  ".$file" > $file
@@ -25,7 +25,7 @@ echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"
 echo "$(date +%H):$(date +%M):$(date +%S) RUNNING MUSCLE"
 RUNDIR="tmp/m3_runs/run_prescribed_transport-$(date +%F)-$(date +%H%M%S)" 
 mkdir -p $RUNDIR
-muscle_manager --start-all metis_nice_inverse_from_dina_interpretative_105084.ymmsl --run-dir $RUNDIR
+muscle_manager --start-all metis_nice_inverse_from_dina_predictive_105084.ymmsl --run-dir $RUNDIR
 
 echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
 python ../../scripts/plot_validation.py
