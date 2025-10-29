@@ -50,7 +50,7 @@ fi
 cd run/
 
 # SET UP IMAS-M3
-IMAS_MUSCLE3_URL="git@github.com:iterorganization/IMAS-muscle3.git"
+IMAS_MUSCLE3_URL="https://github.com/iterorganization/IMAS-MUSCLE3.git"
 if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
    && [ ! -d "IMAS-muscle3" ] \
    && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
@@ -72,7 +72,7 @@ else
 fi
 
 # SET UP WAVEFORM-EDITOR
-WAVEFORM_EDITOR_URL="git@github.com:iterorganization/Waveform-Editor.git"
+WAVEFORM_EDITOR_URL="https://github.com/iterorganization/Waveform-Editor.git"
 if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
    && [ ! -d "Waveform-Editor" ] \
    && git ls-remote "$WAVEFORM_EDITOR_URL" &>/dev/null; then
@@ -93,7 +93,7 @@ else
 fi
 
 # SET UP METIS
-METIS_URL="ssh://git@git.iter.org/scen/metis.git"
+METIS_URL="https://git.iter.org/scm/scen/metis.git"
 if [ "$INSTALL_METIS" = "true" ] \
    && [ ! -d "metis" ] \
    && git ls-remote "$METIS_URL" &>/dev/null; then
@@ -112,7 +112,7 @@ else
 fi
 
 # SET UP NICE
-NICE_URL="git@gitlab.inria.fr:blfauger/nice.git"
+NICE_URL="https://gitlab.inria.fr/blfauger/nice.git"
 if [ "$INSTALL_NICE" = "true" ] \
    && [ ! -d "nice" ] \
    && git ls-remote "$NICE_URL" &>/dev/null; then
@@ -141,10 +141,10 @@ else
 fi
 
 # SET UP TORAX
-TORAX_URL=ssh://git@github.com/mikesndrs/torax.git
+TORAX_URL=https://github.com/mikesndrs/torax.git
 if [ "$INSTALL_TORAX" = "true" ] \
    && [ ! -d "torax" ] \
-   && git ls-remote "$TORAX_URL" &>/div/null; then
+   && git ls-remote "$TORAX_URL" &>/dev/null; then
   echo "############## INSTALLING TORAX ##############"
   source torax_base_env
   module load CMake/3.27.6-GCCcore-13.2.0 UDA
@@ -168,7 +168,7 @@ else
 fi
 
 # SET UP PCS
-PCS_URL="ssh://git@git.iter.org/pcs/pcs.git"
+PCS_URL="https://git.iter.org/scm/pcs/pcs.git"
 if [ "$INSTALL_PCS" = "true" ] \
    && [ ! -d "pcs" ] \
    && git ls-remote "$PCS_URL" &>/dev/null; then
@@ -186,8 +186,7 @@ else
 fi
 
 # SET UP CHEASE
-CHEASE_URL="ssh://git@gitlab.epfl.ch:spc/chease.git"
-# CHEASE_URL="https://gitlab.epfl.ch/spc/chease.git"
+CHEASE_URL="https://gitlab.epfl.ch/spc/chease.git"
 if [ "$INSTALL_CHEASE" = "true" ] \
    && [ ! -d "chease" ] \
    && git ls-remote "$CHEASE_URL" &>/dev/null; then

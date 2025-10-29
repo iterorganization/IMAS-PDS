@@ -4,6 +4,13 @@ PDS 101: Setup
 ==============
 
 For these training exercises you will need an installation of the PDS repo and access to IMAS-Python.
+You will need read access to the repositories:
+
+- `IMAS-MUSCLE3 <https://github.com/iterorganization/IMAS-muscle3>`_
+- `NICE <https://gitlab.inria.fr/blfauger/nice>`_
+- `TORAX <https://github.com/google-deepmind/torax>`_
+- `WAVEFORM-EDITOR <https://github.com/iterorganization/Waveform-Editor>`_
+
 
 .. code-block:: console
 

@@ -5,7 +5,11 @@ Building your own workflows
 
 In this section we explore building our own workflow step by step.
 
+Exercise 1
+----------
+
 We start with the simplest workflow; loading IDS data, sending it to another actor and saving the data. 
+The workflow and data is prepared for showcasing the different actors and is not indended to lead to a fully physical solution.
 
 A small custom IDS has been prepared on SDCC so that the workflow is fast and iterative development is easy. 
 You can swap this out with your own data, although it is advised to go through the exercises with the custom data first.
@@ -19,15 +23,18 @@ The URI of the prepared training data is as follows (note: you will need to upda
 
 For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
+.. note::
+    MUSCLE3 uses the current environment by default.
+    It also enables the user to pick a specific virtual environment for a given implementation.
+    Many of the python based actors were installed in the `pds_setup.sh` script using virtual environments.
+    Make sure to use those virtual environments when using these actors.
+
 .. tip::
    The solution yMMSL files for all exercises, containing the correct relative paths 
    have been made available in the
    ``pds/ymmsl_files/training`` directory. It is recommended to attempt the
    exercises yourself first. If you get stuck, you can try running the provided 
    solution yMMSL files and see if you understand how they are implemented.
-
-Exercise 1
-----------
 
 .. md-tab-set::
 
@@ -56,13 +63,13 @@ Exercise 1
         and check if they are the same using ``imas.util.calc_hash()``.
 
 
+Exercise 2
+----------
+
 We add the first actual simulation code, NICE, to the workflow.
 We use the inverse mode actor to calculate the coil currents required to obtain a desired plasma shape.
 For more information on the NICE code read the `NICE docs <https://blfauger.gitlabpages.inria.fr/nice/>`_.
 A NICE config file has been defined at ``<pds root>/training_data/nice_param.xml``.
-
-Exercise 2
-----------
 
 .. md-tab-set::
 
@@ -81,19 +88,25 @@ Exercise 2
         .. literalinclude:: ../../../../ymmsl_files/training/.source_nice_sink.ymmsl
            :language: yaml
 
+Exercise 3
+----------
+
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
 For more information on the visualization actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 A visualization actor config file has been defined at ``<pds root>/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py``.
+This example config expects the following IDSs connected to the S port:
 
-Exercise 3
-----------
+    - equilibrium: [equilibrium_in]
+    - pf_active: [pf_active_in, pf_active_md_in]
+    - wall: [wall_md_in]
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
         Connect the NICE output to the visualization actor in addition to the existing connections.
+
         Run it and check if the data output makes sense.
         
     .. md-tab-item:: Solution
@@ -107,13 +120,13 @@ Exercise 3
            :language: yaml
 
 
+Exercise 4
+----------
+
 Instead of using the premade IDS values, might want to define certain waveforms for easy testing.
 We now add the Waveform Editor actor to the workflow.
 For more information on the waveform editor actor read the `Waveform Editor docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
 A simple waveform editor config file has been prepared for you, located at ``<pds root>/ymmsl_files/training/waveform_config.yaml``.
-
-Exercise 4
-----------
 
 .. md-tab-set::
 
@@ -136,6 +149,9 @@ Exercise 4
         The Waveform Editor configuration defines a single waveform for the plasma current (Ip),
         which is set to be a constant value at 15 MA.
 
+Exercise 5a
+-----------
+
 Instead of checking if the data is valid by hand, we might want to automate the process 
 of checking whether the data output is valid.
 We now add the IMAS-validator actor to the workflow. This allows us to validate an IDS
@@ -145,9 +161,6 @@ For more information on the IMAS-Validator actor read the `IMAS-Validator docs <
 A simple IMAS-validator ruleset has been defined at ``<pds root>/pds_validation_test/training``. This ruleset contains only a single simple rule checking that the plasma current remains
 below 17 MA. This should always be valid, since we set the plasma current to be 15 MA in 
 the previous exercise, by using the Waveform Editor actor.
-
-Exercise 5a
------------
 
 .. md-tab-set::
 
@@ -169,7 +182,6 @@ Exercise 5a
 
 Exercise 5b
 -----------
-
 
 .. md-tab-set::
 
@@ -194,6 +206,9 @@ Exercise 5b
         The OLC actor will fail, as this does not adhere to the ruleset defined in 
         previous exercise.
 
+Exercise 6
+----------
+
 As a final step we want to run the transport code TORAX based on the NICE output.
 We now add the TORAX actor to the workflow.
 For more information on TORAX read the `docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
@@ -203,9 +218,6 @@ Since TORAX expects a full IDS with all timeslices present for its initializatio
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
 For this we use the accumulator actor.
 For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
-
-Exercise 6
-----------
 
 .. md-tab-set::
 

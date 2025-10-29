@@ -33,7 +33,7 @@ model:
     visualization_nice:
       implementation: visualization
       ports:
-        s: [equilibrium_in]
+        s: [equilibrium_in, pf_active_in, wall_md_in, pf_active_md_in]
     visualization_torax:
       implementation: visualization
       ports:
@@ -50,11 +50,14 @@ model:
     source.wall_out: sink_torax.wall_in
     source.pf_passive_out: sink_torax.pf_passive_in
     source.iron_core_out: sink_torax.iron_core_in
+    source.pf_active_out: visualization_nice.pf_active_md_in
+    source.wall_out: visualization_nice.wall_md_in
     nice_inv.equilibrium_out: sink_nice.equilibrium_in
     nice_inv.equilibrium_out: accumulator.equilibrium_in
     nice_inv.equilibrium_out: visualization_nice.equilibrium_in
     nice_inv.pf_active_out: sink_nice.pf_active_in
     nice_inv.pf_active_out: sink_torax.pf_active_in
+    nice_inv.pf_active_out: visualization_nice.pf_active_in
     accumulator.equilibrium_out: torax.equilibrium_f_init
     torax.equilibrium_o_i: visualization_torax.equilibrium_in
     torax.equilibrium_o_f: sink_torax.equilibrium_in
@@ -66,7 +69,7 @@ settings:
   torax.output_all_timeslices: True
   xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_nice.xml
   python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_torax.py
-  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
   visualization_nice.port: 5007
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
