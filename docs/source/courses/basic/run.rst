@@ -68,11 +68,19 @@ The shell script currently expects to be run from the specific scenario director
         .. image:: pds_equilibrium_0D_105092.png
         .. image:: pds_equilibrium_1D_105092.png
 
-    muscle_manager --start-all path/to/my/workflow.ymmsl
 
 Exercise 2
 ----------
 
+Next we look at actor specific test workflows.
+They are saved in the ``ymmsl_files`` directory.
+Test workflows can be run to check if everything is working as expected.
+These workflows can be used as a template for your own workflows.
+
+.. code-block:: console
+
+    muscle_manager --start-all path/to/my/workflow.ymmsl
+    
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
