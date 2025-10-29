@@ -23,6 +23,8 @@ You will need read access to the repositories:
     . pds_setup.sh
     source run/imas_base_env
 
-For the training exercises you will need access to a graphical environment to visualize
+For this training you will need access to a graphical environment to visualize
 the simulation results. If you are on SDCC, it is recommended to follow this training
-through the NoMachine client.
+through the NoMachine client, and using chrome as your default browser (there have been
+issues when using firefox through NoMachine).
+
