@@ -38,6 +38,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
     An example for setting the virtual environment of the source actor from the IMAS-MUSCLE3 code is shown below.
 
     .. code-block:: console
+
         implementations:
         source:
             virtual_env: <pds root>/run/IMAS-muscle3/venv
