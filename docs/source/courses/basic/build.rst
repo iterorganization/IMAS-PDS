@@ -61,7 +61,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
         Ensure the equilibrium IDS from the URI shown above will be sent.
         Run it using the muscle-manager and check if the input equilibrium IDS is the same as the output IDS.
 
-        To check whether the two IDSs are identical, you can use the python function ``imas.util.idsdiff()`` (`docs <https://imas-python.readthedocs.io/en/stable/generated/imas.util.idsdiff.html#imas.util.idsdiff>`_)
+        To check whether the two IDSs are identical, you can use the python function ``imas.util.idsdiff()`` (`IMAS-PYTHON docs <https://imas-python.readthedocs.io/en/stable/generated/imas.util.idsdiff.html#imas.util.idsdiff>`_)
         or the command line tool ``idsdiff`` (from IDStools) and compare the two outputs.
         Alternatively, you can calculate the hashes the two IDSs,
         and check if they are the same using ``imas.util.calc_hash()``.
@@ -247,7 +247,7 @@ Exercise 6
 
 As a final step we want to run the transport code TORAX based on the NICE output.
 We now add the TORAX actor to the workflow.
-For more information on TORAX read the `docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
+For more information on TORAX read the `TORAX docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
 A TORAX config file has been defined at ``<pds root>/training_data/config_torax.py``.
 
 Since TORAX expects an IDS with all time slices present for its initialization, we cannot use the NICE output outright.
