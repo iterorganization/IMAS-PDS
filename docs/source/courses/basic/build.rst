@@ -59,10 +59,10 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
         Copy the file at ``ymmsl_files/training/source_sink.ymmsl``.
         This is a workflow connecting a data source actor to a data sink actor. 
         Ensure the equilibrium IDS from the URI shown above will be sent.
-        Run it and check if the input equilibrium IDS is the same as the output IDS.
+        Run it using the muscle-manager and check if the input equilibrium IDS is the same as the output IDS.
 
-        To check whether the two IDSs are identical, you can use the python function `imas.util.idsdiff() <https://imas-python.readthedocs.io/en/stable/generated/imas.util.idsdiff.html#imas.util.idsdiff>`_
-        or the command line tool `idsdiff (from IDStools)` and compare the two outputs.
+        To check whether the two IDSs are identical, you can use the python function ``imas.util.idsdiff()`` (`docs <https://imas-python.readthedocs.io/en/stable/generated/imas.util.idsdiff.html#imas.util.idsdiff>`_)
+        or the command line tool ``idsdiff`` (from IDStools) and compare the two outputs.
         Alternatively, you can calculate the hashes the two IDSs,
         and check if they are the same using ``imas.util.calc_hash()``.
 
@@ -99,7 +99,7 @@ A NICE config file has been defined at ``<pds root>/training_data/nice_param.xml
         
     .. md-tab-item:: Tip
 
-        You can look at the test workflows in the ymmsl_files directory for inspiration.
+        You can look at the test workflows in the ``ymmsl_files`` directory for inspiration.
 
     .. md-tab-item:: Solution
 
@@ -121,10 +121,10 @@ A visualization actor config file has been defined at ``<pds root>/run/IMAS-musc
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
 
-- equilibrium_in: connected to equilibrium output IDS from NICE for time dependent results and 1D profiles
-- pf_active_in: connected to pf_active output IDS from NICE for coil current plots
-- pf_active_md_in: connected to pf_active IDS from source for machine description of coils
-- wall_md_in: connected to wall IDS from source for machine description of vessel
+- `equilibrium_in`: connected to equilibrium output IDS from NICE for time dependent results and 1D profiles
+- `pf_active_in`: connected to pf_active output IDS from NICE for coil current plots
+- `pf_active_md_in`: connected to pf_active IDS from source for machine description of coils
+- `wall_md_in`: connected to wall IDS from source for machine description of vessel
 
 .. md-tab-set::
 

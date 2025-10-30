@@ -12,23 +12,23 @@ You will need read access to the repositories:
 - `TORAX <https://github.com/google-deepmind/torax>`_
 - `WAVEFORM-EDITOR <https://github.com/iterorganization/Waveform-Editor>`_
 
+First clone the project.
+
+A setup script ``pds_setup.sh`` is provided with an installation of the necessary repositories.
+The script expects to be run from the repo root directory
+Make sure you have access rights to all the relevant codes.
+
+Load a base environment ``run/imas_base_env`` with the necessary modules for the PDS workflows.
+Some actors currently require a specific virtual environment, this will be taken into account in the workflow configurations.
 
 .. code-block:: console
 
     git clone ssh://git@git.iter.org/scen/pds.git
     cd pds
-
-    # a setup script is provided with an installation of the necessary repositories.
-    # make sure you have access rights to all the relevant codes.
-    # expects to be run from the repo root directory
     . pds_setup.sh
-    # load a base environment with the necessary modules for the PDS workflows.
-    # some actors currently require a specific virtual environment, this will be taken
-    # into account in the workflow configurations
     source run/imas_base_env
 
 For this training you will need access to a graphical environment to visualize
 the simulation results. If you are on SDCC, it is recommended to follow this training
 through the NoMachine client, and using chrome as your default browser (there have been
 issues when using firefox through NoMachine).
-

@@ -5,7 +5,7 @@ Running existing PDS simulations
 
 In this section we show how to run pre existing workflows in this repo.
 You can use the actor specific test workflows or the iter scenario workflows.
-The `run` subdirectory can be used as a sandbox for installing and running many different codes.
+The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
 
@@ -71,6 +71,7 @@ The shell script currently expects to be run from the specific scenario director
         .. image:: pds_equilibrium_0D_105092.png
         .. image:: pds_equilibrium_1D_105092.png
 
+You can also run some other workflows for different workflows and scenarios.
 
 Exercise 2
 ----------
@@ -90,7 +91,7 @@ This exercise is mostly relevant for developers.
     .. md-tab-item:: Exercise
 
         Run some of the actor specific test workflows.
-        The main usecase of these test workflows is to make sure the actors can run without crashing.
+        The main use case of these test workflows is to make sure the actors can run without crashing.
 
         ``ymmsl_files/test_sink_source_actor.ymmsl`` tests if data is properly loaded from a given DBEntry and saved in the next.
 
@@ -106,14 +107,14 @@ This exercise is mostly relevant for developers.
 
             muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
 
-        `test_sink_source_actor.ymmsl` simply loads data from 1 Data Entry and saves it in a new one.
+        ``test_sink_source_actor.ymmsl`` simply loads data from 1 Data Entry and saves it in a new one.
         The input and output are expected to be the same.
 
-        `test_waveform_editor.ymmsl` takes the timestamp of an incoming message and sets a waveform for 
+        ``test_waveform_editor.ymmsl`` takes the timestamp of an incoming message and sets a waveform for 
         the ec_launchers/beam(1)/power_launched/data to ramp up to 50 kW over 10 seconds, remain constant for 30 seconds,
         and ramp down to 0 over 10 seconds again.
 
-        `test_sink_source_actor.ymmsl` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
+        ``test_sink_source_actor.ymmsl`` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
         needed to realize this plasma shape. The equilibrium output is expected to be close to the input.
 
         Optionally, you can check if the results look as expected using the standard IMAS exploration tools.
