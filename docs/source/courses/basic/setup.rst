@@ -4,6 +4,7 @@ PDS 101: Setup
 ==============
 
 For these training exercises you will need an installation of the PDS repo and access to IMAS-Python.
+The training material currently expects the user to be on SDCC.
 You will need read access to the repositories:
 
 - `IMAS-MUSCLE3 <https://github.com/iterorganization/IMAS-muscle3>`_
@@ -21,6 +22,9 @@ You will need read access to the repositories:
     # make sure you have access rights to all the relevant codes.
     # expects to be run from the repo root directory
     . pds_setup.sh
+    # load a base environment with the necessary modules for the PDS workflows.
+    # some actors currently require a specific virtual environment, this will be taken
+    # into account in the workflow configurations
     source run/imas_base_env
 
 For this training you will need access to a graphical environment to visualize

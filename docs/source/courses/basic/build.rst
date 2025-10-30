@@ -4,6 +4,13 @@ Building your own workflows
 ===========================
 
 In this section we explore building our own workflow step by step.
+If needed, make sure to refresh your knowledge on `MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
+It is recommended to do these exercises in the ``run`` directory or make your own directory.
+
+.. code-block:: console
+
+    cd run
+    source imas_base_env
 
 Exercise 1
 ----------
@@ -24,10 +31,18 @@ The URI of the prepared training data is as follows (note: you will need to upda
 For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
 .. note::
-    MUSCLE3 uses the current environment by default.
-    It also enables the user to pick a specific virtual environment for a given implementation.
+    MUSCLE3 uses the locally set environment variables by default.
+    It also enables the user to pick a specific virtual environment for a given implementation of an actor.
     Many of the python based actors were installed in the `pds_setup.sh` script using virtual environments.
     Make sure to use those virtual environments when using these actors.
+    An example for setting the virtual environment of the source actor from the IMAS-MUSCLE3 code is shown below.
+
+    .. code-block:: console
+        implementations:
+        source:
+            virtual_env: <pds root>/run/IMAS-muscle3/venv
+            executable: python
+            args: "-u -m imas_muscle3.actors.source_component"
 
 .. tip::
    The solution yMMSL files for all exercises, containing the correct relative paths 
@@ -40,15 +55,22 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
     .. md-tab-item:: Exercise
 
-        Build a workflow connecting a data source actor to a data sink actor. 
-        Ensure the equilibrium IDS from the URI shown above will be send.
+        Copy the file at ``ymmsl_files/training/source_sink.ymmsl``.
+        This is a workflow connecting a data source actor to a data sink actor. 
+        Ensure the equilibrium IDS from the URI shown above will be sent.
         Run it and check if the input equilibrium IDS is the same as the output IDS.
 
-    .. md-tab-item:: Tip
-
-        You can look at the test workflows in the ymmsl_files directory for inspiration.
+        To check whether the two IDSs are identical, you can use the python function `imas.util.idsdiff() <https://imas-python.readthedocs.io/en/stable/generated/imas.util.idsdiff.html#imas.util.idsdiff>`_
+        or the command line tool `idsdiff (from IDStools)` and compare the two outputs.
+        Alternatively, you can calculate the hashes the two IDSs,
+        and check if they are the same using ``imas.util.calc_hash()``.
 
     .. md-tab-item:: Solution
+
+        .. code-block:: console
+
+            cp ../ymmsl_files/training/source_sink.ymmsl .
+            muscle_manager --start-all ./source_sink.ymmsl
 
         The yMMSL file below shows the solution for this exercise.  
         It uses ``[PWD_PLACEHOLDER]`` markers for directory paths and will not run as-is.  
@@ -57,10 +79,6 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
         .. literalinclude:: ../../../../ymmsl_files/training/.source_sink.ymmsl
            :language: yaml
-
-        To check whether the two IDSs are identical, you can use ``imas print <URI> equilibrium``
-        and compare the two outputs. Alternatively, you can calculate the hashes the two IDSs,
-        and check if they are the same using ``imas.util.calc_hash()``.
 
 
 Exercise 2
@@ -78,6 +96,10 @@ A NICE config file has been defined at ``<pds root>/training_data/nice_param.xml
         Insert the NICE inverse mode actor between the sink and source actors in your workflow.
         Run it and check if the data output makes sense.
         
+    .. md-tab-item:: Tip
+
+        You can look at the test workflows in the ymmsl_files directory for inspiration.
+
     .. md-tab-item:: Solution
 
         The yMMSL file below shows the solution for this exercise.  
@@ -95,11 +117,13 @@ Sometimes a simulation can take a long time and you don't want to wait until the
 We now add the runtime visualization actor to the workflow.
 For more information on the visualization actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 A visualization actor config file has been defined at ``<pds root>/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py``.
-This example config expects the following IDSs connected to the S port:
+The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
+The given example config expects the following IDSs connected to the S port:
 
-    - equilibrium: [equilibrium_in]
-    - pf_active: [pf_active_in, pf_active_md_in]
-    - wall: [wall_md_in]
+- equilibrium_in: connected to equilibrium output IDS from NICE for time dependent results and 1D profiles
+- pf_active_in: connected to pf_active output IDS from NICE for coil current plots
+- pf_active_md_in: connected to pf_active IDS from source for machine description of coils
+- wall_md_in: connected to wall IDS from source for machine description of vessel
 
 .. md-tab-set::
 
@@ -120,10 +144,10 @@ This example config expects the following IDSs connected to the S port:
            :language: yaml
 
 
-Exercise 4
-----------
+Exercise 4a
+-----------
 
-Instead of using the premade IDS values, might want to define certain waveforms for easy testing.
+Instead of using the premade IDS values, you might want to define certain waveforms for quick and flexible testing.
 We now add the Waveform Editor actor to the workflow.
 For more information on the waveform editor actor read the `Waveform Editor docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
 A simple waveform editor config file has been prepared for you, located at ``<pds root>/ymmsl_files/training/waveform_config.yaml``.
@@ -132,9 +156,23 @@ A simple waveform editor config file has been prepared for you, located at ``<pd
 
     .. md-tab-item:: Exercise
 
+        Inspect the given waveform editor config file.
+        What does the waveform configuration define? 
+        
+    .. md-tab-item:: Solution
+
+        The Waveform Editor configuration defines a single waveform for the plasma current (Ip),
+        which is set to be a constant value at 15 MA.
+
+Exercise 4b
+-----------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
         Insert the waveform editor actor between the source actor and the nice actor.
-        What does the waveform configuration define? Does the output IDS of the sink actor
-        reflect this?
+        Does the output IDS of the sink actor reflect the expected behavior from the configuration?
         
     .. md-tab-item:: Solution
 
@@ -145,9 +183,6 @@ A simple waveform editor config file has been prepared for you, located at ``<pd
 
         .. literalinclude:: ../../../../ymmsl_files/training/.source_waveform_nice_viz_sink.ymmsl
            :language: yaml
-
-        The Waveform Editor configuration defines a single waveform for the plasma current (Ip),
-        which is set to be a constant value at 15 MA.
 
 Exercise 5a
 -----------
@@ -214,7 +249,7 @@ We now add the TORAX actor to the workflow.
 For more information on TORAX read the `docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
 A TORAX config file has been defined at ``<pds root>/training_data/config_torax.py``.
 
-Since TORAX expects a full IDS with all timeslices present for its initialization, we cannot use the NICE output outright.
+Since TORAX expects an IDS with all time slices present for its initialization, we cannot use the NICE output outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
 For this we use the accumulator actor.
 For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
