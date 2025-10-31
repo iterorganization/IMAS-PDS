@@ -5,12 +5,6 @@ Running existing PDS simulations
 
 In this section we show how to run pre existing workflows in this repo.
 You can use the actor specific test workflows or the iter scenario workflows.
-The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
-
-.. code-block:: console
-
-    cd run/
-    source imas_base_env
 
 Exercise 1
 ----------
@@ -57,7 +51,7 @@ The shell script currently expects to be run from the specific scenario director
 
         .. code-block:: console
 
-            cd ../scenario_configs/105092_torax_nice
+            cd scenario_configs/105092_torax_nice
             bash automate_runs.sh
 
         Check if results look as expected using the visualization tool.
@@ -81,9 +75,15 @@ They are saved in the ``ymmsl_files`` directory.
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
 This exercise is mostly relevant for developers.
+The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
 
+    # if still in scenario_configs dir:
+    cd ../..
+
+    cd run/
+    source imas_base_env
     muscle_manager --start-all path/to/my/workflow.ymmsl
 
 .. md-tab-set::
