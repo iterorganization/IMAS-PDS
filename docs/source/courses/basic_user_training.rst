@@ -1,9 +1,10 @@
 .. _`PDS 101`:
 
-PDS 101
-=======
+PDS training
+============
 
-In this PDS training, we introduce you to the basic concepts and features of the PDS ecosystem.
+In this PDS training we introduce you to the basic concepts and features of the PDS ecosystem.
+For developers, we also show how to build your own workflow using various support and simulation actors.
 You will need some basic familiarity with Python. 
 For a refresher, see the `Python tutorial <https://docs.python.org/3/tutorial/>`_.
 We also assume some basic knowledge of the `IMAS-Data-Dictionary <https://imas-data-dictionary.readthedocs.io/en/latest/>`_.

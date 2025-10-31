@@ -1,9 +1,9 @@
 .. _`basic/setup`:
 
-PDS 101: Setup
-==============
+PDS Setup
+=========
 
-For these training exercises you will need an installation of the PDS repo and access to IMAS-Python.
+For these training exercises you will need an installation of the PDS repository and access to IMAS-Python.
 The training material currently expects the user to be on SDCC.
 You will need read access to the repositories:
 

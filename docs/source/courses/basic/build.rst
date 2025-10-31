@@ -6,6 +6,7 @@ Building your own workflows
 In this section we explore building our own workflow step by step.
 If needed, make sure to refresh your knowledge on `MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
 It is recommended to do these exercises in the ``run`` directory or make your own directory.
+These exercises are mostly relevant for developers.
 
 .. code-block:: console
 
