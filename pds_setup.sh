@@ -156,8 +156,8 @@ if [ "$INSTALL_TORAX" = "true" ] \
   pip install --upgrade pip
   pip install build
   pip install 'numpy > 2'
-  pip install 'imas-python @ git+ssh://git@github.com/mikesndrs/imas-python.git@feature/enable-numpy-2.0'
-  pip install 'imas_core @ git+ssh://git@git.iter.org/imas/al-core.git@develop'
+  pip install 'imas-python @ git+https://github.com/mikesndrs/IMAS-Python.git@feature/enable-numpy-2.0'
+  pip install 'imas_core @ git+https://git.iter.org/scm/imas/al-core.git@develop'
   pip install -e .[dev,muscle3]
   deactivate
   module purge
