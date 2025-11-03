@@ -7,7 +7,7 @@ For these training exercises you will need an installation of the PDS repository
 The training material currently expects the user to be on SDCC.
 You will need read access to the repositories:
 
-- `IMAS-MUSCLE3 <https://github.com/iterorganization/IMAS-muscle3>`_
+- `IMAS-MUSCLE3 <https://github.com/iterorganization/IMAS-MUSCLE3>`_
 - `NICE <https://gitlab.inria.fr/blfauger/nice>`_
 - `TORAX <https://github.com/google-deepmind/torax>`_
 - `WAVEFORM-EDITOR <https://github.com/iterorganization/Waveform-Editor>`_

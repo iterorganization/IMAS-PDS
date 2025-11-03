@@ -63,11 +63,11 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:

@@ -61,11 +61,11 @@ settings:
 
 implementations:
   sink:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_metis:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 

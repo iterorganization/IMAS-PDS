@@ -63,7 +63,7 @@ settings:
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_torax_viz_sink"
   xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
-  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization.port: 5010
   visualization.automatic_mode: true
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
@@ -75,7 +75,7 @@ settings:
   torax.output_all_timeslices: true
 implementations:
   source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   waveform_editor:
@@ -83,23 +83,23 @@ implementations:
     executable: waveform-editor
     args: actor
   olc:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     modules: IDS-Validator
     executable: python
     args: -u -m imas_muscle3.actors.olc_component
   sink:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   visualization_component:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
   accumulator:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv
+    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   torax:

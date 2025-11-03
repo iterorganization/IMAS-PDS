@@ -42,7 +42,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
         implementations:
         source:
-            virtual_env: <pds root>/run/IMAS-muscle3/venv
+            virtual_env: <pds root>/run/IMAS-MUSCLE3/venv
             executable: python
             args: "-u -m imas_muscle3.actors.source_component"
 
@@ -118,7 +118,7 @@ Exercise 3
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
 For more information on the visualization actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
-A visualization actor config file has been defined at ``<pds root>/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py``.
+A visualization actor config file has been defined at ``<pds root>/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py``.
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
 

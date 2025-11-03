@@ -4,7 +4,7 @@
 
 # For use on SDCC
 # User needs to have access to:
-# github.com:iterorganization/IMAS-muscle3.git
+# github.com:iterorganization/IMAS-MUSCLE3.git
 # gitlab.inria.fr:blfauger/nice.git
 # git.iter.org/scen/metis.git
 # git.iter.org/scen/torax-m3.git
@@ -12,7 +12,7 @@
 
 # installation guides
 # https://git.iter.org/projects/SCEN/repos/pds/browse
-# https://github.com/iterorganization/IMAS-muscle3
+# https://github.com/iterorganization/IMAS-MUSCLE3
 # https://github.com/iterorganization/Waveform-Editor
 # https://git.iter.org/projects/SCEN/repos/metis/browse/doc/METIS_installation_guide.pdf
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
