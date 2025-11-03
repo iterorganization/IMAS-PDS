@@ -51,7 +51,6 @@ settings:
   xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
-  visualization.port: 5010
   visualization.automatic_mode: true
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
   olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"

@@ -40,7 +40,6 @@ settings:
   xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
-  visualization.port: 5010
 implementations:
   source:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-muscle3/venv

@@ -70,11 +70,9 @@ settings:
   xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_nice.xml
   python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_torax.py
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/pds/pds.py
-  visualization_nice.port: 5007
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
   visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-muscle3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
-  visualization_torax.port: 5008
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   muscle_remote_log_level: 'DEBUG'
