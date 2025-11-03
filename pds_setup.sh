@@ -52,7 +52,7 @@ cd run/
 # SET UP IMAS-M3
 IMAS_MUSCLE3_URL="https://github.com/iterorganization/IMAS-MUSCLE3.git"
 if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
-   && [ ! -d "IMAS-muscle3" ] \
+   && [ ! -d "IMAS-MUSCLE3" ] \
    && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
   echo "############## INSTALLING IMAS-MUSCLE3 ##############"
   source imas_base_env
