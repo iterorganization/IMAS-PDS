@@ -24,11 +24,12 @@ find "$given_dir" -type f \( -name ".*.ymmsl" -o -name ".*.yaml" \) | while read
   mkdir -p "$given_dir/$dir_path"
 
   # Skip if already exists
-  if [ -f "$given_dir/$dir_path/$new_filename" ]; then
-      continue
-  fi
+  # if [ -f "$given_dir/$dir_path/$new_filename" ]; then
+  #     continue
+  # fi
 
-  echo "Processing: $file"
+  # echo "Processing: $file"
+
   # Use sed to replace the matching substrings
   sed "s|\[PWD_PLACEHOLDER\]|$(pwd)|g" "$file" > "$given_dir/$dir_path/$new_filename"
 done 
