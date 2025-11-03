@@ -58,7 +58,7 @@ if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
   source imas_base_env
   module load IDS-Validator
   git clone $IMAS_MUSCLE3_URL
-  cd IMAS-muscle3
+  cd IMAS-MUSCLE3
   git checkout $BRANCH_IMAS_MUSCLE3
   python3 -m venv ./venv
   . venv/bin/activate
