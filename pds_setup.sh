@@ -87,7 +87,7 @@ if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
   deactivate
   module purge
   cd ..
-  echo "############## FINISHED IMAS-MUSCLE3 ##############"
+  echo "############## FINISHED WAVEFORM-EDITOR ##############"
 else
   echo "Skipping WAVEFORM_EDITOR"
 fi
