@@ -19,8 +19,8 @@ pfa = ids_init('pf_active');
 pfa.time = [t_cur];
 pfa.coil=ids_allocate('pf_active', 'coil', 14);
 for i = 1:14
-    pfa.coil{i}.resistance = resistances{i};
-    pfa.coil{i}.voltage.data=[voltage{i}];
+    pfa.coil{i}.resistance = resistances(i);
+    pfa.coil{i}.voltage.data=voltage(i);
 end
 pfa_serialized=imas_serialize(pfa, 'pf_active');
 msg =  py.libmuscle.Message(t_cur,py.None,pfa_serialized);
