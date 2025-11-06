@@ -75,12 +75,13 @@ t_max = equilibrium.time(end);
 reference_current=[];
 coils_resistance=[];
 for i=1:length(pf_active.coil)
-    reference_current=[reference_current; pf_active.coil{i}.current.data];
+    reference_current=[reference_current, pf_active.coil{i}.current.data];
     coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
 end
-reference_current=reference_current';
+reference_current=reference_current;
 coils_resistance=coils_resistance';
 
+reference_current_ts = timeseries(reference_current,equilibrium.time)
 %Init Simulink object
 
 % bunch of hardcoded ref settings for now since this controller is only for
@@ -91,7 +92,7 @@ IpControlMode_KCURR=0;
 schedulingVar_KCURR=0; %Ip
 
 Ipl_ref= 1.5e7;
-CSPF_curr_ref= reference_current;
+CSPF_curr_ref= reference_current_ts;
 CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out 
 
 enable_RZIp=1;
