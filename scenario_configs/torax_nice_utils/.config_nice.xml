@@ -15,7 +15,7 @@
 	<algoReconPolar>0</algoReconPolar>
 	<algoReconPressure>0</algoReconPressure>
 	<algoReconMSE>0</algoReconMSE>
-	<algoStartFromScratch>1</algoStartFromScratch>
+	<algoStartFromScratch>0</algoStartFromScratch>
 	<algoStartFromScratchReconAB>1</algoStartFromScratchReconAB>
 	<algoStartPsiFromInData>0</algoStartPsiFromInData>
 	<algoWithIp>1</algoWithIp>
@@ -36,23 +36,13 @@
 
     	<useMobileWall>0</useMobileWall>
 
-		<!-- changed -->
-    <refinedZone1>0</refinedZone1>
-    <nPointsZone1>4</nPointsZone1>
-    <rPointsZone1>1 0 0 1</rPointsZone1>
-    <zPointsZone1>-0.5 -0.7 0.7 0.5</zPointsZone1>
-    <rInPointZone1>0.5</rInPointZone1>
-    <zInPointZone1>0</zInPointZone1>
-    <zone1TriangleArea>0.0003</zone1TriangleArea>
-		<!-- changed -->
-
-    <!-- <refinedZone1>1</refinedZone1>
+    <refinedZone1>1</refinedZone1>
     <nPointsZone1>4</nPointsZone1>
     <rPointsZone1>4.45 5.39 5.78 4.70</rPointsZone1>
     <zPointsZone1>-3.5 -3.86 -3.20 -2.81</zPointsZone1>
     <rInPointZone1>5.1</rInPointZone1>
     <zInPointZone1>-3.3</zInPointZone1>
-    <zone1TriangleArea>0.0005</zone1TriangleArea> -->
+    <zone1TriangleArea>0.001</zone1TriangleArea>
     
     <refinedZone2>0</refinedZone2>
     <nPointsZone2>4</nPointsZone2>
@@ -62,21 +52,21 @@
     <zInPointZone2>0.6</zInPointZone2>
     <zone2TriangleArea>0.00003</zone2TriangleArea>
     
-    <refinedZone3>0</refinedZone3>
+    <refinedZone3>1</refinedZone3>
     <nPointsZone3>10</nPointsZone3>
     <rPointsZone3>6.0 6.2 6.2 6.4 6.6 6.6 6.4 6.4 6.2 6.0</rPointsZone3>
     <zPointsZone3>0.2 0.2 0.4 0.2 0.2 1.0 1.0 0.8 1.0 1.0</zPointsZone3>
     <rInPointZone3>6.1</rInPointZone3>
     <zInPointZone3>0.3</zInPointZone3>
-    <zone3TriangleArea>0.0005</zone3TriangleArea>
+    <zone3TriangleArea>0.001</zone3TriangleArea>
 
-	<vacuumTriangleArea>0.002</vacuumTriangleArea>
-	<airTriangleArea>0.04</airTriangleArea>
-	<airInTriangleArea>0.01</airInTriangleArea>
+	<vacuumTriangleArea>0.008</vacuumTriangleArea>
+	<airTriangleArea>0.2</airTriangleArea>
+	<airInTriangleArea>0.02</airInTriangleArea>
 	<ironTriangleArea>0.005</ironTriangleArea>
-	<coilTriangleArea>0.005</coilTriangleArea>
-	<vesselTriangleArea>0.005</vesselTriangleArea>
-	<passiveStructTriangleArea>0.005</passiveStructTriangleArea>
+	<coilTriangleArea>0.05</coilTriangleArea>
+	<vesselTriangleArea>0.05</vesselTriangleArea>
+	<passiveStructTriangleArea>0.05</passiveStructTriangleArea>
 
 	<useNewCOCOSManager>1</useNewCOCOSManager>
 	<inoutCOCOS>17</inoutCOCOS>
@@ -94,6 +84,8 @@
 
 	<inCOCOS>17</inCOCOS>
 	<outCOCOS>17</outCOCOS>
+	<always_save_grids_ggd>0</always_save_grids_ggd>
+
 	
 	<profile_method>1</profile_method>
 
@@ -310,7 +302,7 @@
 	<ct_approx_n_by_triangle>5</ct_approx_n_by_triangle>
 
 <!-- control outputs, interpolated magaxis, xpoint, gaps  -->
-	<outputForControl>1</outputForControl>
+	<outputForControl>0</outputForControl>
 
    <rd_basis_choice>2</rd_basis_choice>
    <rd_n_dof>10</rd_n_dof> 
