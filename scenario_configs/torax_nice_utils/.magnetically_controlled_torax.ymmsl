@@ -128,13 +128,14 @@ implementations:
       SCDDS_COREPATH: [BASEDIR_PLACEHOLDER]/run/pcs/pcssp/scdds
     modules: MATLAB/2024a-r6-GCCcore-13.2.0
     executable: matlab
+    # args: -r "[s,t] = unix('which python');
     args: -batch "[s,t] = unix('which python');
                   pyenv('Version',strtrim(t),'ExecutionMode','InProcess');
                   addpath(getenv('PCS_PATH'));
-                  addpath(getenv('CONTROLLER_PATH'));
+                  run('[BASEDIR_PLACEHOLDER]/run/nice/runmatlab/initNice4matlab.m');
                   pcssp_pcs_add_paths;
                   comparisons.ExternalSCMLink.setupGitConfig();
-                  run('[BASEDIR_PLACEHOLDER]/run/nice/runmatlab/initNice4matlab.m');
+                  addpath(getenv('CONTROLLER_PATH'));
                   muscle_controller_NICE_IMAS_iter_init;"
   visualization:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
