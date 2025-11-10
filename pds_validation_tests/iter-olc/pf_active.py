@@ -109,31 +109,31 @@ def validate_force_limits_pf(ids):
 
 
 @validator("pf_active")
-def validate_current_limits_pf(ids):
+def validate_current_limits_pf(pf_active):
     """Validate currents in poloidal field coils are within operational limits"""
-    for coil in ids.coil:
+    for coil in pf_active.coil:
         for key in pf_current_limits.keys():
             if key in coil.name:
                 if coil.current.data.value:
-                    I_limit = interpolate_current(
-                        coil.b_field_max, pf_current_limits[key]
-                    )
-                    assert coil.current.data.value < I_limit
-                    # also compare against coil.current_limit_max?
+                    assert len(coil.current.data.value) == len(coil.b_field_max_timed.data.value)
+                    I_limit = [interpolate_current(
+                        b_field, pf_current_limits[key]
+                    ) for b_field in coil.b_field_max_timed.data.value]
+                    assert all(coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit)))
 
 
 @validator("pf_active")
-def validate_current_limits_cs(ids):
+def validate_current_limits_cs(pf_active):
     """Validate currents in central solenoid coils are within operational limits"""
-    for coil in ids.coil:
+    for coil in pf_active.coil:
         for key in cs_current_limits.keys():
             if key in coil.name:
                 if coil.current.data.value:
-                    I_limit = interpolate_current(
-                        coil.b_field_max, cs_current_limits[key]
-                    )
-                    assert coil.current.data.value < I_limit
-                    # also compare against coil.current_limit_max?
+                    assert len(coil.current.data.value) == len(coil.b_field_max_timed.data.value)
+                    I_limit = [interpolate_current(
+                        b_field, cs_current_limits[key]
+                    ) for b_field in coil.b_field_max_timed.data.value]
+                    assert all(coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit)))
 
 
 @validator("pf_active")
