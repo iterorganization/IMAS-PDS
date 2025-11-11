@@ -1,7 +1,7 @@
 # this file expects to be run from the 'run' folder
 set -euo pipefail # stop if anything doesn't work
 
-IMAS_MUSCLE_URL=${1:-"https://github.com/iterorganization/IMAS-MUSCLE3.git"}
+IMAS_MUSCLE3_URL=${1:-"https://github.com/iterorganization/IMAS-MUSCLE3.git"}
 BRANCH_IMAS_MUSCLE3=${2:-"main"}
 
 source imas_base_env
