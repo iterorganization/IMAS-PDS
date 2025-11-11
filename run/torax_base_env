@@ -1,5 +1,4 @@
 # ENV VARIABLES
-export IMAS_AL_DISABLE_VALIDATE=1
 ulimit -s unlimited
 unset MPLBACKEND
 
