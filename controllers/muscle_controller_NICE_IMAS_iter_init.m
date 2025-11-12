@@ -91,7 +91,7 @@ enable_KCURR=1;
 IpControlMode_KCURR=0;
 schedulingVar_KCURR=0; %Ip
 
-Ipl_ref= 1.5e7;
+Ipl_ref= 3.5e6;
 CSPF_curr_ref= reference_current_ts;
 CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out 
 

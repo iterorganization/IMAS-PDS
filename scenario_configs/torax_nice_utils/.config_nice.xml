@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <parameters>
-	<verbose>1</verbose>
+	<verbose>0</verbose>
 	<outputTxtFiles>0</outputTxtFiles>
 	<outputRestartFiles>0</outputRestartFiles>
 	<algoMode>31</algoMode>
@@ -26,9 +26,9 @@
 	<iterMaxRecon>20</iterMaxRecon>
 	<epsStopRecon>1.0e-10</epsStopRecon>
 	<iterMaxInv>40</iterMaxInv>
-	<epsStopInv>1.0e-10</epsStopInv>
+	<epsStopInv>1.0e-8</epsStopInv>
 	<iterMaxEvo>50</iterMaxEvo>
-	<epsStopEvo>1.0e-10</epsStopEvo>
+	<epsStopEvo>1.0e-9</epsStopEvo>
     	<useDefaultDirectInit>1</useDefaultDirectInit>
     	<radiusInit>2.25</radiusInit>
     	<rcenterInit>6.2</rcenterInit>

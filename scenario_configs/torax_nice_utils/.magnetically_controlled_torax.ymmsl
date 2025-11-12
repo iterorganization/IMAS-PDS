@@ -41,7 +41,7 @@ model:
     sink_torax:
       implementation: sink
       ports:
-        f_init: [equilibrium_in]
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
     sink_controller:
       implementation: sink
       ports:
@@ -49,7 +49,7 @@ model:
     visualization_nice:
       implementation: visualization
       ports:
-        s: [equilibrium_in]
+        s: [equilibrium_in, pf_active_in, wall_md_in, pf_active_md_in]
     visualization_torax:
       implementation: visualization
       ports:
@@ -60,9 +60,6 @@ model:
     accumulator.equilibrium_out: torax.equilibrium_f_init
     accumulator.equilibrium_out: magnetic_controller.equilibrium_f_init
     accumulator.pf_active_out: magnetic_controller.pf_active_f_init
-
-    accumulator.pf_active_out: sink_controller.pf_active_in
-
     torax.equilibrium_o_i: magnetic_controller.equilibrium_s
     torax.equilibrium_o_i: nice_evo.equilibrium_in
     torax.equilibrium_o_i: sink_source.equilibrium_in
@@ -72,12 +69,19 @@ model:
     sink_source.pf_passive_out: nice_evo.pf_passive_in
     sink_source.iron_core_out: nice_evo.iron_core_in
     sink_source.wall_out: nice_evo.wall_in
+    sink_source.wall_out: visualization_nice.wall_md_in
+    sink_source.pf_active_out: visualization_nice.pf_active_md_in
+    sink_source.pf_active_out: sink_torax.pf_active_in
+    sink_source.pf_passive_out: sink_torax.pf_passive_in
+    sink_source.wall_out: sink_torax.wall_in
+    sink_source.iron_core_out: sink_torax.iron_core_in
     magnetic_controller.pf_active_o_i: nice_evo.pf_active_in
-    # magnetic_controller.pf_active_o_i: sink_controller.pf_active_in
+    magnetic_controller.pf_active_o_i: sink_controller.pf_active_in
     nice_evo.equilibrium_out: torax.equilibrium_s
     nice_evo.equilibrium_out: sink_nice.equilibrium_in
     nice_evo.equilibrium_out: visualization_nice.equilibrium_in
     nice_evo.pf_active_out: sink_nice.pf_active_in
+    nice_evo.pf_active_out: visualization_nice.pf_active_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice/"
@@ -88,7 +92,7 @@ settings:
   torax.output_all_timeslices: True
   xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_nice.xml
   python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_torax.py
-  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
   visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py

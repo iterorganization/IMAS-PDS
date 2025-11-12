@@ -1,4 +1,4 @@
-function muscle_NICE_input(t_cur,voltage)
+function muscle_NICE_input(t_cur,voltage,coil_current)
 % This function receives the current simulation time and
 % a voltage from simulink.
 
@@ -24,6 +24,7 @@ for i = 1:14
     pfa.coil{i}.element = pfa_base.coil{i}.element;
     pfa.coil{i}.resistance = resistances(i);
     pfa.coil{i}.voltage.data=voltage(i);
+    pfa.coil{i}.current.data=coil_current(i);
 end
 
 pfa_serialized=imas_serialize(pfa, 'pf_active');
