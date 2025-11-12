@@ -124,6 +124,6 @@ tic;
 logs = sim(in);
 close_system('pcssp_KCURR_RZIp_MUSCLE3',0);
 simulation_time=toc;
-plasma_duration=params.stop_time-params.start_time;
+plasma_duration=t_max-t_start;
 
 fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
