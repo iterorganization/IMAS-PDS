@@ -1,0 +1,6 @@
+Coupling DINA shot 105099.
+
+Last tested for versions:
+- Nice:     *git commit*
+- Torax:    *git commit*
+- Chease:   *git commit*
