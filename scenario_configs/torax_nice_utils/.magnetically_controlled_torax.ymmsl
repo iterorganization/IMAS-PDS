@@ -6,11 +6,6 @@ model:
       implementation: source
       ports:
         o_i: [equilibrium_out, pf_active_out]
-    accumulator:
-      implementation: accumulator
-      ports:
-        s: [equilibrium_in, pf_active_in]
-        o_f: [equilibrium_out, pf_active_out]
     torax:
       implementation: torax
       ports:
@@ -55,11 +50,9 @@ model:
       ports:
         s: [equilibrium_in]
   conduits:
-    source.equilibrium_out: accumulator.equilibrium_in
-    source.pf_active_out: accumulator.pf_active_in
-    accumulator.equilibrium_out: torax.equilibrium_f_init
-    accumulator.equilibrium_out: magnetic_controller.equilibrium_f_init
-    accumulator.pf_active_out: magnetic_controller.pf_active_f_init
+    source.equilibrium_out: torax.equilibrium_f_init
+    source.equilibrium_out: magnetic_controller.equilibrium_f_init
+    source.pf_active_out: magnetic_controller.pf_active_f_init
     torax.equilibrium_o_i: magnetic_controller.equilibrium_s
     torax.equilibrium_o_i: nice_evo.equilibrium_in
     torax.equilibrium_o_i: sink_source.equilibrium_in
@@ -85,6 +78,7 @@ model:
 
 settings:
   source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice/"
+  source.iterative: false
   sink_source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice/"
   sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice_evo"
   sink_controller.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_controller"
@@ -112,10 +106,6 @@ implementations:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
-  accumulator:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.accumulator_component"
   nice_evo:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
@@ -155,8 +145,6 @@ resources:
   sink_controller:
     threads: 1
   sink_torax:
-    threads: 1
-  accumulator:
     threads: 1
   torax:
     threads: 1

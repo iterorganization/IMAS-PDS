@@ -48,82 +48,80 @@ if ~exist('instance','var') == 1
     instance = py.libmuscle.Instance(ports);
 end
 
-if ~instance.reuse_instance()
-    error('Communication with MUSCLE3 failed')
+while instance.reuse_instance()
+    %% Prepare IDS Python object
+    % equilibrium_python=py.imas.equilibrium();
+    equilibrium_python=ids_init('equilibrium');
+    % equilibrium_python=ids_gen_allocate(equilibrium_python, 'equilibrium', '');
+    % equilibrium_python=py.imas.IDSFactory().equilibrium();
+
+
+    %% Init NICE parameters
+    msg_eq = instance.receive("equilibrium_f_init");
+    equilibrium_serial=uint8(msg_eq.data);
+    equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
+
+    msg_pfa = instance.receive("pf_active_f_init");
+    pfa_serial=uint8(msg_pfa.data);
+    pf_active = imas_deserialize(pfa_serial, 'pf_active');
+
+    t_start = equilibrium.time(1);
+    t_max = equilibrium.time(end);
+
+    %% call simulink model inits
+    reference_current=[];
+    coils_resistance=[];
+    for i=1:length(pf_active.coil)
+        reference_current=[reference_current, pf_active.coil{i}.current.data];
+        coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
+    end
+    reference_current=reference_current;
+    coils_resistance=coils_resistance';
+
+    reference_current_ts = timeseries(reference_current,equilibrium.time)
+    %Init Simulink object
+
+    % bunch of hardcoded ref settings for now since this controller is only for
+    % workflow showcase purposes
+    % Ipl_ref should be from equilibrium IDS and time bound, disable IP control for now.
+    enable_KCURR=1;
+    IpControlMode_KCURR=0;
+    schedulingVar_KCURR=0; %Ip
+
+    Ipl_ref= 3.5e6;
+    CSPF_curr_ref= reference_current_ts;
+    CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out 
+
+    enable_RZIp=1;
+    IpControlMode_RZIp=0;
+    schedulingVar_RZIp=0; %Ip
+    schedulingVar_RZIp =[50, 1, 1.2]'; %[50, 1, 1.2]'
+
+    Rpl_ref= 6.2;
+    Zpl_ref= 0.3;
+
+    %%  Simulink controller 
+
+    obj = pcssp_KCURR_PFPO1_obj;
+    obj.init;
+    obj.setup;
+
+    obj2 = pcssp_RZIp_CCS_obj;
+    obj2.init;
+    obj2.setup;
+
+    %% create Reference for Simulink
+    in = Simulink.SimulationInput('pcssp_KCURR_RZIp_MUSCLE3');
+    in = in.setModelParameter('StartTime',num2str(t_start),'StopTime',num2str(t_max));
+    in = in.setModelParameter('SaveOutput', 'on');
+
+
+    fprintf('Start closed loop\n')
+    tic;
+    logs = sim(in);
+    close_system('pcssp_KCURR_RZIp_MUSCLE3',0);
+    simulation_time=toc;
+    plasma_duration=t_max-t_start;
+
+    fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
 end
-
-%% Prepare IDS Python object
-% equilibrium_python=py.imas.equilibrium();
-equilibrium_python=ids_init('equilibrium');
-% equilibrium_python=ids_gen_allocate(equilibrium_python, 'equilibrium', '');
-% equilibrium_python=py.imas.IDSFactory().equilibrium();
-
-
-%% Init NICE parameters
-msg_eq = instance.receive("equilibrium_f_init");
-equilibrium_serial=uint8(msg_eq.data);
-equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
-
-msg_pfa = instance.receive("pf_active_f_init");
-pfa_serial=uint8(msg_pfa.data);
-pf_active = imas_deserialize(pfa_serial, 'pf_active');
-
-t_start = equilibrium.time(1);
-t_max = equilibrium.time(end);
-
-%% call simulink model inits
-reference_current=[];
-coils_resistance=[];
-for i=1:length(pf_active.coil)
-    reference_current=[reference_current, pf_active.coil{i}.current.data];
-    coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
-end
-reference_current=reference_current;
-coils_resistance=coils_resistance';
-
-reference_current_ts = timeseries(reference_current,equilibrium.time)
-%Init Simulink object
-
-% bunch of hardcoded ref settings for now since this controller is only for
-% workflow showcase purposes
-% Ipl_ref should be from equilibrium IDS and time bound, disable IP control for now.
-enable_KCURR=1;
-IpControlMode_KCURR=0;
-schedulingVar_KCURR=0; %Ip
-
-Ipl_ref= 3.5e6;
-CSPF_curr_ref= reference_current_ts;
-CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out 
-
-enable_RZIp=1;
-IpControlMode_RZIp=0;
-schedulingVar_RZIp=0; %Ip
-schedulingVar_RZIp =[50, 1, 1.2]'; %[50, 1, 1.2]'
-
-Rpl_ref= 6.2;
-Zpl_ref= 0.3;
-
-%%  Simulink controller 
-
-obj = pcssp_KCURR_PFPO1_obj;
-obj.init;
-obj.setup;
-
-obj2 = pcssp_RZIp_CCS_obj;
-obj2.init;
-obj2.setup;
-
-%% create Reference for Simulink
-in = Simulink.SimulationInput('pcssp_KCURR_RZIp_MUSCLE3');
-in = in.setModelParameter('StartTime',num2str(t_start),'StopTime',num2str(t_max));
-in = in.setModelParameter('SaveOutput', 'on');
-
-
-fprintf('Start closed loop\n')
-tic;
-logs = sim(in);
-close_system('pcssp_KCURR_RZIp_MUSCLE3',0);
-simulation_time=toc;
-plasma_duration=t_max-t_start;
-
-fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
