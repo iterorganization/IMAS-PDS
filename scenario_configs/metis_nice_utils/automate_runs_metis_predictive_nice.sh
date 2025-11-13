@@ -24,6 +24,7 @@ echo "T_LIST=" "${T_LIST[@]}"
 basedir="$(dirname "$(dirname "$PWD")")"
 export matlab_path=$basedir/scenario_configs/metis_nice_utils
 source "$basedir/run/imas_base_env"
+export IMAS_AL_DISABLE_VALIDATE=1 
 
 echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
 python $basedir/scenario_configs/metis_nice_utils/convert_dina_data_to_input.py \

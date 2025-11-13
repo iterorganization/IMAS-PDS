@@ -1,6 +1,6 @@
 ymmsl_version: v0.1
 model:
-  name: metis_nice_inv_from_dina_105084
+  name: metis_nice_inv_from_dina_[SHOT_NR]
   components:
     source_nice:
       implementation: source_nice

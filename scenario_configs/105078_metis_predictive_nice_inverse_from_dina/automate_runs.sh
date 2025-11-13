@@ -1,7 +1,7 @@
 # This file expects to be run inside the parent directory
 
-SHOT_NR="105084"
-SOURCE_URI="imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1"
+SHOT_NR="105078"
+SOURCE_URI="imas:mdsplus?path=/home/ITER/dubrovm/public/imasdb/iter/3/105078/6"
 BACKUP_URI="imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3"
 SINK_URI="imas:hdf5?path=$(pwd)/tmp/data/${SHOT_NR}_dina_in"
 SINK_UPDATE_URI="imas:hdf5?path=$(pwd)/tmp/data/${SHOT_NR}_dina_update_in"
@@ -11,7 +11,7 @@ T_LIST=(20 35 60)
 
 basedir="$(dirname "$(dirname "$PWD")")"
 
-bash "$basedir/scenario_configs/metis_alone_utils/automate_runs_metis_interpretative.sh" \
+bash "$basedir/scenario_configs/metis_nice_utils/automate_runs_metis_predictive_nice.sh" \
   "$SHOT_NR" \
   "$SOURCE_URI" \
   "$BACKUP_URI" \
