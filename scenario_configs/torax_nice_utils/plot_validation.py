@@ -75,8 +75,8 @@ def pf_active_plots_dina_nice(args, dbs):
     }
 
     # init figure
-    nrows, ncols = (5, 3)
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
+    nrows, ncols = (7, 2)
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 22))
     fig.suptitle(f"{args.shot_nr}: {'-'.join(dbs.keys()).upper()}", fontsize=16)
     axes = axes.flatten()
 
@@ -164,7 +164,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
 
     # init figure
     nrows, ncols = (5, 2)
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 22))
     fig.suptitle(f"{args.shot_nr}: {'-'.join(dbs.keys()).upper()}", fontsize=16)
     axes = axes.flatten()
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]

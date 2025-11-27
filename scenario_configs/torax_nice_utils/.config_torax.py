@@ -65,6 +65,7 @@ CONFIG = {
         't_final': t_final,
         'exact_t_final': True,
         'fixed_dt': 0.1,
+        'adaptive_dt': False,
         'resistivity_multiplier': 1,
         'evolve_current': True,
         # 'evolve_current': False,

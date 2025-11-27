@@ -4,7 +4,7 @@ SHOT_NR="105099"
 SOURCE_URI="imas:mdsplus?path=/home/ITER/dubrovm/public/imasdb/iter/3/105099/2"
 BACKUP_URI="imas:hdf5?path=/home/ITER/sanderm/public/imasdb/ITER/4/666666/3"
 SINK_URI="imas:hdf5?path=$(pwd)/tmp/data/${SHOT_NR}_in"
-N_TIMESLICES=51
+N_TIMESLICES=41
 T_LIST=(20 35 60)
 
 basedir="$(dirname "$(dirname "$PWD")")"

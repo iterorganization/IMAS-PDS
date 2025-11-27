@@ -1,6 +1,7 @@
 # ENV VARIABLES
 ulimit -s unlimited
 unset MPLBACKEND
+export IMAS_VERSION="4.0.0"
 
 # MODULE LOAD
 module purge

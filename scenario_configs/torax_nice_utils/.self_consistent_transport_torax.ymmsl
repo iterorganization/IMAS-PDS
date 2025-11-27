@@ -105,11 +105,13 @@ implementations:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   torax:
-    base_env: CLEAN
-    modules: Python Boost HDF5 libiconv OpenBLAS
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/torax/venv
-    executable: python
-    args: "-u -m torax._src.orchestration.run_muscle3"
+    script: |
+      #!/bin/bash
+      module purge
+      module load Python Boost HDF5 libiconv OpenBLAS
+      source [BASEDIR_PLACEHOLDER]/run/torax/venv/bin/activate
+      export IMAS_VERSION="4.0.0"
+      python -u -m torax._src.orchestration.run_muscle3
   visualization:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
