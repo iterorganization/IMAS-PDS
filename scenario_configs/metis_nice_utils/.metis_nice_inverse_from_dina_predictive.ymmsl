@@ -50,8 +50,8 @@ model:
 settings:
   source_nice.source_uri:  "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_dina_in/" 
   source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_metis_in/"
-  sink_metis.sink_uri:     "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_metis_out/"
-  sink_nice.sink_uri:      "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_nice_out/"
+  sink_metis.sink_uri:     "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_metis_out"
+  sink_nice.sink_uri:      "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_predictive_nice_inverse_from_dina/tmp/data/[SHOT_NR]_nice_out"
   metis.metis_computation: 1
   # this value sould be tune if psi_LCFS is a constrainte in NICE inverse
   metis.metis_psioffset: 9.0 
@@ -113,6 +113,8 @@ implementations:
     args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
 #    args: -r "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(3);"
   nice_inv:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
 resources:

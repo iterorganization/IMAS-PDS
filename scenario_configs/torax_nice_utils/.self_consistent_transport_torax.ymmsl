@@ -102,6 +102,8 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   nice_inv:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   torax:

@@ -110,6 +110,8 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
   nice_evo:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
   torax:
