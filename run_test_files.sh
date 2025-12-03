@@ -17,7 +17,7 @@ for f in "$given_dir"/test*.ymmsl; do
     mid=$(echo "$filename" | sed -E 's/^(test[^.]*)\.ymmsl$/\1/')
     ts=$(date +"%Y-%m-%d-%H%M%S")
     new="run/tmp/m3_runs/run-$ts-$mid"
-    mkdir $new
+    mkdir -p $new
     echo "Running: $f"
     # echo $new
     muscle_manager --start-all $f --run-dir $new
