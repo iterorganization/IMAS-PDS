@@ -51,7 +51,9 @@ settings:
   source_nice.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/tmp/data/[SHOT_NR]_dina_in/" 
   source_metis.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/tmp/data/[SHOT_NR]_metis_in/"
   sink_metis.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/tmp/data/[SHOT_NR]_metis_out"
+  sink_metis.sink_mode: "w"
   sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/tmp/data/[SHOT_NR]_nice_out"
+  sink_nice.sink_mode: "w"
   metis.metis_computation: 1
   # this value sould be tune if psi_LCFS is a constrainte in NICE inverse
   metis.metis_psioffset: 9.0
