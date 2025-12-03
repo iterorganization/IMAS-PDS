@@ -14,7 +14,8 @@ model:
     source_component.equilibrium_out: sink_component.equilibrium_in
 settings:
   source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_inv/"
+  sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_inv"
+  sink_component.sink_mode: "w"
 implementations:
   sink_component:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv

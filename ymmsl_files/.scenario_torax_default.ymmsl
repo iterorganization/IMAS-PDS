@@ -67,7 +67,9 @@ settings:
   sink_source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_0"
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_0"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/torax_nice_1"
+  sink.sink_mode: "w"
   nice_sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/nice_1"
+  nicesink.sink_mode: "w"
   chease_sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/temp_data/chease_1"
   nice_inv.xml_path: "[PWD_PLACEHOLDER]/scenario_configs/torax_default/config_nice.xml"
   chease.code_parameters: '[PWD_PLACEHOLDER]/chease/input/chease_input_reflist.xml'

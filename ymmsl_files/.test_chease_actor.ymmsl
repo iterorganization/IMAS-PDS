@@ -20,7 +20,8 @@ model:
     chease.equilibrium_out: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_chease/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_chease"
+  sink.sink_mode: "w"
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:

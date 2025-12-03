@@ -56,9 +56,12 @@ model:
     nice_dir.equilibrium_out: sink_dir.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink_inv.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_inv/"
-  sink_evo.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_evo/"
-  sink_dir.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_dir/"
+  sink_inv.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_inv"
+  sink_inv.sink_mode: "w"
+  sink_evo.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_evo"
+  sink_evo.sink_mode: "w"
+  sink_dir.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_dir"
+  sink_dir.sink_mode: "w"
   xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
 implementations:
@@ -71,12 +74,18 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   nice_evo:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
   nice_dir:
+    env: 
+      IMAS_AL_DISABLE_VALIDATE: 1
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_dir_muscle3
 resources:
