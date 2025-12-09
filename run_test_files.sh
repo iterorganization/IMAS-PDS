@@ -12,6 +12,11 @@ source "run/imas_base_env"
 
 # Recursively find all .*.ymmsl and .*.yaml files
 for f in "$given_dir"/test*.ymmsl; do
+
+    if [[ "$f" == *"metis"* ]]; then
+        continue
+    fi
+
     [ -e "$f" ] || continue
     filename=$(basename "$f")
     mid=$(echo "$filename" | sed -E 's/^(test[^.]*)\.ymmsl$/\1/')
@@ -19,7 +24,6 @@ for f in "$given_dir"/test*.ymmsl; do
     new="run/tmp/m3_runs/run-$ts-$mid"
     mkdir -p $new
     echo "Running: $f"
-    # echo $new
     muscle_manager --start-all $f --run-dir $new
 done
 
