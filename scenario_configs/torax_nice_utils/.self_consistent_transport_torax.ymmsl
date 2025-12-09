@@ -111,9 +111,9 @@ implementations:
       #!/bin/bash
       module purge
       module load Python Boost HDF5 libiconv OpenBLAS
-      source [BASEDIR_PLACEHOLDER]/run/torax/venv/bin/activate
+      source [BASEDIR_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION="4.0.0"
-      python -u -m torax._src.orchestration.run_muscle3
+      python -u -m torax_muscle3.torax_actor
   visualization:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python

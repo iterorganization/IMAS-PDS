@@ -28,15 +28,17 @@ INSTALL_CHEASE="true"
 INSTALL_PCS="true"
 
 BRANCH_PDS='master'
-BRANCH_IMAS_MUSCLE3='main'
+BRANCH_IMAS_MUSCLE3='develop'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='master'
-BRANCH_TORAX='feature/muscle3_actor'
+BRANCH_TORAX='main'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
 
 set -euo pipefail # stop if anything doesn't work
+
+# TODO: turn off install arg when easybuild module available
 
 # MODULE LOAD
 pip install --upgrade pip
@@ -100,9 +102,9 @@ else
 fi
 
 # SET UP TORAX
-TORAX_URL=https://github.com/mikesndrs/torax.git
+TORAX_URL=https://github.com/mikesndrs/TORAX-MUSCLE3.git
 if [ "$INSTALL_TORAX" = "true" ] \
-   && [ ! -d "torax" ] \
+   && [ ! -d "TORAX-MUSCLE3" ] \
    && git ls-remote "$TORAX_URL" &>/dev/null; then
   echo "############## INSTALLING TORAX ##############"
   bash ../setup_files/setup_torax.sh $TORAX_URL $BRANCH_TORAX

@@ -55,11 +55,13 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   torax:
-    base_env: CLEAN
-    modules: Python Boost HDF5 libiconv OpenBLAS
-    virtual_env: [PWD_PLACEHOLDER]/run/torax/venv
-    executable: python
-    args: "-u -m torax._src.orchestration.run_muscle3"
+    script: |
+      #!/bin/bash
+      module purge
+      module load Python Boost HDF5 libiconv OpenBLAS
+      source [BASEDIR_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
+      export IMAS_VERSION="4.0.0"
+      python -u -m torax_muscle3.torax_actor
   nice_inv:
     modules: SuiteSparse/7.7.0-intel-2023b libxml2
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
