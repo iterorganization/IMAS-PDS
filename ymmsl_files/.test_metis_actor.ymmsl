@@ -9,15 +9,15 @@ model:
     metis:
       implementation: metis
       ports:
-        f_init: [equilibrium_input_f]
-        o_f: [equilibrium_output_f]
+        f_init: [equilibrium_in_f]
+        o_f: [equilibrium_out_f]
     sink:
       implementation: sink
       ports:
         f_init: [equilibrium_in]
   conduits:
-    source.equilibrium_out: metis.equilibrium_input_f
-    metis.equilibrium_output_f: sink.equilibrium_in
+    source.equilibrium_out: metis.equilibrium_in_f
+    metis.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"

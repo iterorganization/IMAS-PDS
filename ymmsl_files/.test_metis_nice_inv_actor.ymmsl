@@ -18,20 +18,20 @@ model:
     metis:
       implementation: metis
       ports:
-        f_init: [clock_input_f]
-        o_f: [equilibrium_output_i,pulse_schedule_output_i,plasma_profiles_output_i,plasma_sources_output_i]
+        f_init: [clock_in_f]
+        o_f: [equilibrium_out_i,pulse_schedule_out_i,plasma_profiles_out_i,plasma_sources_out_i]
   conduits:
-    source.equilibrium_out: metis.clock_input_f
-    metis.equilibrium_output_i: nice_inv.equilibrium_in
+    source.equilibrium_out: metis.clock_in_f
+    metis.equilibrium_out_i: nice_inv.equilibrium_in
     source.pf_active_out: nice_inv.pf_active_in
     source.pf_passive_out: nice_inv.pf_passive_in
     source.iron_core_out: nice_inv.iron_core_in
     source.wall_out: nice_inv.wall_in
     nice_inv.equilibrium_out: sink.equilibrium_in
     nice_inv.pf_active_out: sink.pf_active_in
-    metis.pulse_schedule_output_i: sink.pulse_schedule_in
-    metis.plasma_profiles_output_i: sink.plasma_profiles_in
-    metis.plasma_sources_output_i: sink.plasma_sources_in
+    metis.pulse_schedule_out_i: sink.pulse_schedule_in
+    metis.plasma_profiles_out_i: sink.plasma_profiles_in
+    metis.plasma_sources_out_i: sink.plasma_sources_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/ymmsl_files/input/test_data_ids/"
