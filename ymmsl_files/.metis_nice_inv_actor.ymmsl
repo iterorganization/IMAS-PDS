@@ -34,8 +34,8 @@ model:
     metis.plasma_sources_out_i: sink.plasma_sources_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/ymmsl_files/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/ymmsl_files/output/sink_metis"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"
   sink.sink_mode: "w"
   metis.metis_computation: 1
   metis.metis_external_data_equilibrium: 0
