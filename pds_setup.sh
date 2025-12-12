@@ -40,14 +40,10 @@ set -euo pipefail # stop if anything doesn't work
 
 # TODO: turn off install arg when easybuild module available
 
-# MODULE LOAD
-pip install --upgrade pip
-pip install --upgrade setuptools wheel
-
 # SET UP PDS
 if [ "$INSTALL_PDS" = "true" ]; then
   echo "############## INSTALLING PDS ##############"
-  srun -p sun -n1 --pty bash setup_files/setup_test_files.sh
+  srun -n1 --pty bash setup_files/setup_test_files.sh
   echo "############## FINISHED PDS ##############"
 fi
 
@@ -59,7 +55,7 @@ if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
    && [ ! -d "IMAS-MUSCLE3" ] \
    && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
   echo "############## INSTALLING IMAS-MUSCLE3 ##############"
-  srun -p sun -n1 --pty bash ../setup_files/setup_imas_muscle3.sh $IMAS_MUSCLE3_URL $BRANCH_IMAS_MUSCLE3
+  srun -n1 --pty bash ../setup_files/setup_imas_muscle3.sh $IMAS_MUSCLE3_URL $BRANCH_IMAS_MUSCLE3
   echo "############## FINISHED IMAS-MUSCLE3 ##############"
 else
   echo "Skipping IMAS_MUSCLE3"
@@ -71,7 +67,7 @@ if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
    && [ ! -d "Waveform-Editor" ] \
    && git ls-remote "$WAVEFORM_EDITOR_URL" &>/dev/null; then
   echo "############## INSTALLING WAVEFORM-EDITOR ##############"
-  srun -p sun -n1 --pty bash ../setup_files/setup_waveform_editor.sh $WAVEFORM_EDITOR_URL $BRANCH_WAVEFORM_EDITOR
+  srun -n1 --pty bash ../setup_files/setup_waveform_editor.sh $WAVEFORM_EDITOR_URL $BRANCH_WAVEFORM_EDITOR
   echo "############## FINISHED WAVEFORM-EDITOR ##############"
 else
   echo "Skipping WAVEFORM_EDITOR"
@@ -95,7 +91,7 @@ if [ "$INSTALL_NICE" = "true" ] \
    && [ ! -d "nice" ] \
    && git ls-remote "$NICE_URL" &>/dev/null; then
   echo "############## INSTALLING NICE ##############"
-  srun -p sun -n1 --pty bash ../setup_files/setup_nice.sh $NICE_URL $BRANCH_NICE
+  srun -n1 --pty bash ../setup_files/setup_nice.sh $NICE_URL $BRANCH_NICE
   echo "############## FINISHED NICE ##############"
 else
   echo "Skipped NICE"
@@ -131,7 +127,7 @@ if [ "$INSTALL_CHEASE" = "true" ] \
    && [ ! -d "chease" ] \
    && git ls-remote "$CHEASE_URL" &>/dev/null; then
   echo "############## INSTALLING CHEASE ##############"
-  srun -p sun -n1 --pty bash ../setup_files/setup_chease.sh $CHEASE_URL $BRANCH_CHEASE
+  srun -n1 --pty bash ../setup_files/setup_chease.sh $CHEASE_URL $BRANCH_CHEASE
   echo "############## FINISHED CHEASE ##############"
 else
   echo 'Skipping CHEASE'

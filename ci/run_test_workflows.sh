@@ -16,7 +16,7 @@ bash run_test_files.sh
 
 cd scenario_configs/105092_torax_nice
 bash automate_runs.sh
-cd ../105092_metis_interpretative_nice_inverse_from_dina
+cd ../105092_metis_predictive_nice_inverse_from_dina
 bash automate_runs.sh
 cd ..
 
