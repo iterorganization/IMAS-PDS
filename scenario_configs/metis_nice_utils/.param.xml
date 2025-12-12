@@ -85,9 +85,7 @@
 	<inCOCOS>17</inCOCOS>
 	<outCOCOS>17</outCOCOS>
 	
-	<profile_method>1</profile_method>
 
-	<n_profile_1d>50</n_profile_1d>
 	<allErrorBar>0</allErrorBar>
 
     <r0>6.2</r0>
@@ -270,8 +268,10 @@
 	<!-- Inverse old with turns  -->
 	<!--abserrIg>3e7</abserrIg-->
 	<!-- Inverse new  -->
-	<abserrIg>3e5</abserrIg>
+	<abserrIg>1e5</abserrIg>
 	<relerrIg>0</relerrIg>
+
+<!--
     	<n_coil_group_index>14</n_coil_group_index>
     	<coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 12</coil_group_index>
     	<n_group_current_index>13</n_group_current_index>
@@ -280,6 +280,18 @@
 	<group_fixed_index>11 12</group_fixed_index>
     	<n_group_penalized_to_zero_index>0</n_group_penalized_to_zero_index>
 	<group_penalized_to_zero_index>0 1 2 4 5 6 7 8 9 10</group_penalized_to_zero_index>
+-->
+  <n_coil_group_index>14</n_coil_group_index>
+  <coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 25</coil_group_index>
+  <n_group_current_index>12</n_group_current_index>
+  <group_current_index>0 1 2 4 5 6 7 8 9 10 11 12</group_current_index>
+  <n_group_fixed_index>0</n_group_fixed_index>
+	<group_fixed_index>11</group_fixed_index>
+  <n_group_penalized_to_zero_index>0</n_group_penalized_to_zero_index>
+	<group_penalized_to_zero_index>0 1 2 3 4 5 6 7 8 9 10</group_penalized_to_zero_index>
+  <n_group_special_weight>6</n_group_special_weight>
+	<group_special_weight_index>6 7 8 9 10 11</group_special_weight_index>
+	<group_special_weight>0.1 0.1 0.1 0.1 0.1 0.01</group_special_weight>
 
 
 <!-- evolution inverse -->
@@ -299,8 +311,6 @@
 	<ct_profile_method>0</ct_profile_method>
 	<ct_approx_n_by_triangle>5</ct_approx_n_by_triangle>
 
-<!-- control outputs, interpolated magaxis, xpoint, gaps  -->
-	<outputForControl>0</outputForControl>
 
    <rd_basis_choice>2</rd_basis_choice>
    <rd_n_dof>10</rd_n_dof> 
@@ -309,8 +319,25 @@
     
     <dt>1.0e-3</dt>
 
+
+ <always_save_grids_ggd>1</always_save_grids_ggd>
+<!-- control outputs, interpolated magaxis, xpoint, gaps  -->
+	<outputForControl>0</outputForControl>
+
+  <profile_method>1</profile_method>
+	<n_profile_1d>50</n_profile_1d>
+  
 <!-- inverse (psi, theta) grid  -->
-    <n_theta_grid>101</n_theta_grid>
+  <outputInvGrid>0</outputInvGrid>
+  <n_theta_grid>101</n_theta_grid>
+
+<!-- profiles_2d cartesian grid  -->
+  <outputCartGrid>0</outputCartGrid>
+  <nr_cartgrid>101</nr_cartgrid>
+  <nz_cartgrid>201</nz_cartgrid>
+
+
+
 
 </parameters>
 
