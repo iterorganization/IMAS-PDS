@@ -88,9 +88,10 @@ def pf_active_plots_dina_nice(args, dbs):
                 axes[coil_dict[coil_name]].set_title(coil_name)
                 axes[coil_dict[coil_name]].set_ylabel("current")
                 axes[coil_dict[coil_name]].set_xlabel("time")
+            nbel = min(len(pfa.time),len(coil.current.data))
             axes[coil_dict[coil_name]].plot(
-                pfa.time, coil.current.data, label=key, **PLOT_KWARGS
-            )
+                    pfa.time[:nbel], coil.current.data[:nbel], label=key, **PLOT_KWARGS
+                )
             axes[coil_dict[coil_name]].legend()
     for ax in axes[len(pfa.coil):]:
         fig.delaxes(ax)
