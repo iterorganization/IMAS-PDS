@@ -41,7 +41,7 @@ export metis_imas_dataset=$SINK_METIS_URI
 echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"
 
-% get psi_offset
+# get psi_offset
 source ./tmp/PSI_OFFSET
 echo PSI_OFFSET = $PSI_OFFSET
 
