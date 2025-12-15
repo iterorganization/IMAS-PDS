@@ -41,6 +41,10 @@ export metis_imas_dataset=$SINK_METIS_URI
 echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"
 
+% get psi_offset
+source ./tmp/PSI_OFFSET
+echo PSI_OFFSET = $PSI_OFFSET
+
 
 echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"
 # Use sed to replace the matching substrings
@@ -56,6 +60,7 @@ for file in "${files[@]}"; do
   fi
   sed -i "s|\[BASEDIR_PLACEHOLDER\]|$basedir|g" $file
   sed -i "s|\[SHOT_NR\]|$SHOT_NR|g" $file
+  sed -i "s|\[PSI_OFFSET\]|$PSI_OFFSET|g" $file
 done
 
 echo "$(date +%H):$(date +%M):$(date +%S) RUNNING MUSCLE"

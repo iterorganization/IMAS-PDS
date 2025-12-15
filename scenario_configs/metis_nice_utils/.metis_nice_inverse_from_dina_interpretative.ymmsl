@@ -56,7 +56,7 @@ settings:
   sink_nice.sink_mode: "w"
   metis.metis_computation: 1
   # this value sould be tune if psi_LCFS is a constrainte in NICE inverse
-  metis.metis_psioffset: 9.0
+  metis.metis_psioffset: [PSI_OFFSET]
   metis.metis_external_data_equilibrium: 0
   # param.xml should maybe also be optimized to get the correct evolution of the coil currents
   xml_path: "[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/param.xml"
