@@ -102,7 +102,7 @@ else
 fi
 
 # SET UP TORAX
-TORAX_URL=https://github.com/mikesndrs/TORAX-MUSCLE3.git
+TORAX_URL=https://github.com/iterorganization/TORAX-MUSCLE3.git
 if [ "$INSTALL_TORAX" = "true" ] \
    && [ ! -d "TORAX-MUSCLE3" ] \
    && git ls-remote "$TORAX_URL" &>/dev/null; then
