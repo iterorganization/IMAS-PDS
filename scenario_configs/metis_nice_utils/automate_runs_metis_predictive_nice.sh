@@ -53,8 +53,10 @@ files=(
 )
 for file in "${files[@]}"; do
   if test -f ".$file"; then
+    echo "Use local configuration file $file"
     cp ".$file" $file
   else
+    echo "Use default configuration file $file"
     cp "$basedir/scenario_configs/metis_nice_utils/.$file" $file
   fi
   sed -i "s|\[BASEDIR_PLACEHOLDER\]|$basedir|g" $file
