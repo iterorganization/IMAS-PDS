@@ -129,7 +129,7 @@ resources:
   sink_nice:
     threads: 1
   nice_inv:
-    threads: 4
+    threads: 1
   metis:
     threads: 10
   
