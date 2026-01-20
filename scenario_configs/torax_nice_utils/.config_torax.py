@@ -2,26 +2,6 @@
 
 imas_uri = "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_in/"
 
-def get_imas_profile_conditions(imas_uri):
-    import imas
-    profile_conditions = {}
-    with imas.DBEntry(imas_uri, 'r') as db:
-        cp = db.get('core_profiles')
-        T_i = {}
-        T_e = {}
-        n_e = {}
-        for p1d in cp.profiles_1d:
-            t = int(p1d.time)
-            n_rho = p1d.grid.rho_tor_norm
-            # change temperatures from eV in IDS to KeV for torax
-            T_i[t] ={float(n_rho[i]): float(p1d.t_i_average[i]) / 1000 for i in range(len(n_rho))}
-            T_e[t] ={float(n_rho[i]): float(p1d.electrons.temperature[i]) / 1000 for i in range(len(n_rho))}
-            n_e[t] ={float(n_rho[i]): float(p1d.electrons.density[i]) for i in range(len(n_rho))}
-        profile_conditions['T_i'] = T_i
-        profile_conditions['T_e'] = T_e
-        profile_conditions['n_e'] = n_e
-    return profile_conditions
-
 def get_imas_sources(imas_uri):
     import imas
     import numpy as np
@@ -56,13 +36,15 @@ def get_t_values(imas_uri):
 t_initial, t_final = get_t_values(imas_uri)
 
 CONFIG = {
-    'profile_conditions': get_imas_profile_conditions(imas_uri),
+    'profile_conditions': {},
     'plasma_composition': {
         'main_ion': {'H': 1},
     },
     'numerics': {
-        't_initial': t_initial,
-        't_final': t_final,
+        # 't_initial': t_initial,
+        # 't_final': t_final,
+        't_initial': 30,
+        't_final': 130,
         'exact_t_final': True,
         'fixed_dt': 0.1,
         'adaptive_dt': False,

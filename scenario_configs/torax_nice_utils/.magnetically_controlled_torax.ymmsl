@@ -5,11 +5,11 @@ model:
     source:
       implementation: source
       ports:
-        o_i: [equilibrium_out, pf_active_out]
+        o_i: [equilibrium_out, pf_active_out, core_profiles_out]
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init]
+        f_init: [equilibrium_f_init, core_profiles_f_init]
         s: [equilibrium_s]
         o_i: [equilibrium_o_i]
         o_f: [equilibrium_o_f]
@@ -49,8 +49,13 @@ model:
       implementation: visualization
       ports:
         s: [equilibrium_in]
+    validator:
+      implementation: validator
+      ports:
+        f_init: [pf_active_in]
   conduits:
     source.equilibrium_out: torax.equilibrium_f_init
+    source.core_profiles_out: torax.core_profiles_f_init
     source.equilibrium_out: magnetic_controller.equilibrium_f_init
     source.pf_active_out: magnetic_controller.pf_active_f_init
     torax.equilibrium_o_i: magnetic_controller.equilibrium_s
@@ -95,6 +100,10 @@ settings:
   visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
+  validator.halt_on_error: True
+  validator.extra_rule_dirs: [BASEDIR_PLACEHOLDER]/pds_validation_tests/
+  validator.rulesets: iter-olc
+  validator.apply_generic: False
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
@@ -118,9 +127,10 @@ implementations:
     script: |
       #!/bin/bash
       module purge
-      module load Python Boost HDF5 libiconv OpenBLAS
+      module load Python
       source [BASEDIR_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION="4.0.0"
+      export JAX_COMPILATION_CACHE_DIR="[BASEDIR_PLACEHOLDER]/run/tmp/jax_cache"
       python -u -m torax_muscle3.torax_actor
   magnetic_controller: 
     env:
@@ -142,6 +152,10 @@ implementations:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.visualization_component"
+  validator:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.olc_component"
 resources:
   source:
     threads: 1
@@ -162,4 +176,6 @@ resources:
   visualization_nice:
     threads: 1
   visualization_torax:
+    threads: 1
+  validator:
     threads: 1

@@ -19,6 +19,10 @@ model:
       implementation: visualization
       ports:
         s: [equilibrium_in, pf_active_in, wall_md_in, pf_active_md_in]
+    validator:
+      implementation: validator
+      ports:
+        f_init: [pf_active_in]
   conduits:
     source.equilibrium_out: nice_inv.equilibrium_in
     source.pf_active_out: nice_inv.pf_active_in
@@ -34,6 +38,7 @@ model:
     nice_inv.pf_active_out: sink_nice.pf_active_in
     nice_inv.equilibrium_out: visualization_nice.equilibrium_in
     nice_inv.pf_active_out: visualization_nice.pf_active_in
+    nice_inv.pf_active_out: validator.pf_active_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_in/"
@@ -43,6 +48,10 @@ settings:
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
+  validator.halt_on_error: True
+  validator.extra_rule_dirs: [BASEDIR_PLACEHOLDER]/pds_validation_tests/
+  validator.rulesets: iter-olc
+  validator.apply_generic: False
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
@@ -62,6 +71,10 @@ implementations:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.visualization_component"
+  validator:
+    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: "-u -m imas_muscle3.actors.olc_component"
 resources:
   source:
     threads: 1
@@ -70,4 +83,6 @@ resources:
   nice_inv:
     threads: 8
   visualization_nice:
+    threads: 1
+  validator:
     threads: 1
