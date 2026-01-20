@@ -41,10 +41,8 @@ CONFIG = {
         'main_ion': {'H': 1},
     },
     'numerics': {
-        # 't_initial': t_initial,
-        # 't_final': t_final,
-        't_initial': 30,
-        't_final': 130,
+        't_initial': t_initial,
+        't_final': t_final,
         'exact_t_final': True,
         'fixed_dt': 0.1,
         'adaptive_dt': False,
