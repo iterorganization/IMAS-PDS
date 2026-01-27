@@ -62,7 +62,9 @@ settings:
   sink_evo.sink_mode: "w"
   sink_dir.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_dir"
   sink_dir.sink_mode: "w"
-  xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
+  nice_inv.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
+  nice_dir.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
+  nice_evo.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:

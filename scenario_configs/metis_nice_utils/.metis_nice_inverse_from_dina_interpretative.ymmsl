@@ -59,7 +59,7 @@ settings:
   metis.metis_psioffset: [PSI_OFFSET]
   metis.metis_external_data_equilibrium: 0
   # param.xml should maybe also be optimized to get the correct evolution of the coil currents
-  xml_path: "[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/param.xml"
+  nice_inv.xml_path: "[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_metis_interpretative_nice_inverse_from_dina/param.xml"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'examples/basic_config.py'
 

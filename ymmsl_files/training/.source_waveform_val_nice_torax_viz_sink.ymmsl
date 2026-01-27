@@ -29,7 +29,7 @@ model:
       implementation: torax
       ports:
         f_init: [equilibrium_f_init]
-        o_f: [equilibrium_o_f]
+        o_f: [equilibrium_o_f, core_profiles_o_f]
     visualization:
       implementation: visualization_component
       ports:
@@ -37,31 +37,40 @@ model:
     sink:
       implementation: sink
       ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
   conduits:
-    source.wall_out: nice.wall_in
-    source.pf_active_out: nice.pf_active_in
-    source.pf_passive_out: nice.pf_passive_in
-    source.iron_core_out: nice.iron_core_in
-    nice.pf_active_out: sink.pf_active_in
-    source.wall_out: sink.wall_in
-    source.pf_passive_out: sink.pf_passive_in
-    source.iron_core_out: sink.iron_core_in
-    nice.equilibrium_out: visualization.equilibrium_in
-    source.wall_out: visualization.wall_md_in
-    source.pf_active_out: visualization.pf_active_md_in
-    nice.pf_active_out: visualization.pf_active_in
     source.equilibrium_out: waveform_editor.equilibrium_in
-    waveform_editor.equilibrium_out: nice.equilibrium_in
-    waveform_editor.equilibrium_out: olc.equilibrium_in
-    nice.equilibrium_out: accumulator.equilibrium_in
+    source.wall_out:
+    - nice.wall_in
+    - sink.wall_in
+    - visualization.wall_md_in
+    source.pf_active_out:
+    - nice.pf_active_in
+    - visualization.pf_active_md_in
+    source.pf_passive_out:
+    - nice.pf_passive_in
+    - sink.pf_passive_in
+    source.iron_core_out:
+    - nice.iron_core_in
+    - sink.iron_core_in
+    waveform_editor.equilibrium_out:
+    - nice.equilibrium_in
+    - olc.equilibrium_in
+    nice.equilibrium_out:
+    - visualization.equilibrium_in
+    - accumulator.equilibrium_in
+    nice.pf_active_out:
+    - sink.pf_active_in
+    - visualization.pf_active_in
     accumulator.equilibrium_out: torax.equilibrium_f_init
     torax.equilibrium_o_f: sink.equilibrium_in
+    torax.core_profiles_o_f: sink.core_profiles_in
     
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_torax_viz_sink"
-  xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
+  sink.sink_mode: "w"
+  nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization.automatic_mode: true
@@ -105,9 +114,10 @@ implementations:
     script: |
       #!/bin/bash
       module purge
-      module load Python Boost HDF5 libiconv OpenBLAS
-      source [BASEDIR_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
+      module load Python
+      source [PWD_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION="4.0.0"
+      export JAX_COMPILATION_CACHE_DIR="[PWD_PLACEHOLDER]/run/tmp/jax_cache"
       python -u -m torax_muscle3.torax_actor
 
 resources:

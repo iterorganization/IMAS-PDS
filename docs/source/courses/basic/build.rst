@@ -57,8 +57,9 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
     .. md-tab-item:: Exercise
 
-        Copy the file at ``ymmsl_files/training/source_sink.ymmsl``.
+        Copy the file at ``ymmsl_files/training/source_sink.ymmsl`` to your running directory, most likely the ``run`` directory.
         This is a workflow connecting a data source actor to a data sink actor. 
+        This will be your starting point for this section of the exercises. We will gradually expand it by adding new MUSCLE3 actors every exercise.
         Ensure the equilibrium IDS from the URI shown above will be sent.
         Run it using the muscle-manager and check if the input equilibrium IDS is the same as the output IDS.
 
@@ -81,6 +82,12 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
         .. literalinclude:: ../../../../ymmsl_files/training/.source_sink.ymmsl
            :language: yaml
+
+        To check the whether the input and output are the same:
+
+        .. code-block:: console
+
+            idsdiff --uri 'imas:hdf5?path=/<pds_root>/training_data/training_ids/' 'imas:hdf5?path=/<pds_root>/run/output/training/source_sink'
 
 
 Exercise 2
@@ -132,6 +139,7 @@ The given example config expects the following IDSs connected to the S port:
     .. md-tab-item:: Exercise
 
         Connect the NICE output to the visualization actor in addition to the existing connections.
+        A browers tab should now pop up with the data visualization.
 
         Run it and check if the data output makes sense.
         
@@ -163,8 +171,9 @@ A simple waveform editor config file has been prepared for you, located at ``<pd
         
     .. md-tab-item:: Solution
 
-        The Waveform Editor configuration defines a single waveform for the plasma current (Ip),
-        which is set to be a constant value at 15 MA.
+        The Waveform Editor configuration defines 2 waveforms.
+        1 for the plasma current (Ip) which is set to be a constant value at 15 MA.
+        1 for the toroidal magnetic field in vacuum (b0) which is set to be a constant value at 2.65 T.
 
 Exercise 4b
 -----------
@@ -193,7 +202,8 @@ Instead of checking if the data is valid by hand, we might want to automate the 
 of checking whether the data output is valid.
 We now add the IMAS-validator actor to the workflow. This allows us to validate an IDS
 against a pre-defined ruleset.
-For more information on the IMAS-Validator actor read the `IMAS-Validator docs <https://imas-validator.readthedocs.io/en/latest/usage.html>`_.
+For more information on the IMAS-Validator actor read the `IMAS-Validator docs <https://imas-validator.readthedocs.io/en/latest/usage.html>`_
+or the `OLC actor docs <https://imas-muscle3.readthedocs.io/en/latest/actor_olc.html>`_.
 
 A simple IMAS-validator ruleset has been defined at ``<pds root>/pds_validation_test/training``. This ruleset contains only a single simple rule checking that the plasma current remains
 below 17 MA. This should always be valid, since we set the plasma current to be 15 MA in 
@@ -229,6 +239,9 @@ Exercise 5b
 
         What do you expect to happen?
         
+        Read the summary report in the working directory of the muscle3 run.
+        Does the summary report make sense?
+        
     .. md-tab-item:: Solution
 
         Update the plasma current in the waveform configuration to 20 MA:
@@ -251,9 +264,11 @@ We now add the TORAX actor to the workflow.
 For more information on TORAX read the `TORAX docs <https://torax.readthedocs.io/en/v1.1.1/>`_.
 A TORAX config file has been defined at ``<pds root>/training_data/config_torax.py``.
 
-Since TORAX expects an IDS with all time slices present for its initialization, we cannot use the NICE output outright.
+TORAX needs a full equilibrium IDS with multiple time slices for its initialization to create its internal geometry provider.
+Since the NICE output consists of separate single timeslices, we cannot use it outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
-For this we use the accumulator actor.
+For this we use the accumulator actor. This gathers incoming IDSs and combines them into a big IDS wih all timeslices at once.
+Once it gets the last input from the actor before it, it sends the combined IDS on to the next actor, which is TORAX in this case.
 For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
 .. md-tab-set::
@@ -261,6 +276,7 @@ For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https
     .. md-tab-item:: Exercise
 
         Insert the accumulator actor and TORAX actor between the nice actor and the sink actor.
+        Also send the core_profiles IDS output from the TORAX actor to the sink actor.
         You can potentially also add a second visualization actor to more easily check the progress of your simulation.
         Run it and check if the data output makes sense.
         

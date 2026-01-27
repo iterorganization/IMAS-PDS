@@ -60,7 +60,8 @@ settings:
   olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False
-  xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
+  nice_inv.xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
+  nice_inv_init.xml_path: "[PWD_PLACEHOLDER]/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'examples/basic_config.py'
 implementations:

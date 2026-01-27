@@ -114,7 +114,7 @@ The ``run`` subdirectory can be used as a sandbox for installing and running man
         the ec_launchers/beam(1)/power_launched/data to ramp up to 50 kW over 10 seconds, remain constant for 30 seconds,
         and ramp down to 0 over 10 seconds again.
 
-        ``test_sink_source_actor.ymmsl`` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
+        ``test_nice_actor.ymmsl`` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
         needed to realize this plasma shape. The equilibrium output is expected to be close to the input.
 
         Optionally, you can check if the results look as expected using the standard IMAS exploration tools.

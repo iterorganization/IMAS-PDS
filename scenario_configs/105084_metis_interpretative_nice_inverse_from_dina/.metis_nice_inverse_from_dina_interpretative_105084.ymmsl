@@ -65,7 +65,7 @@ settings:
   metis.metis_psioffset: 17.0
   metis.metis_external_data_equilibrium: 0
   # param.xml should maybe also be optimized to get the correct evolution of the coil currents
-  xml_path: "/home/ITER/artaudj1/PDS/pds/run/nice/run/input/param.xml"
+  nice_inv.xml_path: "/home/ITER/artaudj1/PDS/pds/run/nice/run/input/param.xml"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'examples/basic_config.py'
 

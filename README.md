@@ -32,8 +32,12 @@ make -C docs html
 
 
 # Setting up actors
-A setup stript is provided with an installation of the necessary repositories.
+A setup script is provided with an installation of the necessary repositories.
 Make sure you have access rights to all the relevant codes.
+The setup script will detect if codes are not yet available and install the missing ones.
+It is also configurable to enable or disable the installation of specific codes. 
+In case the installed codes are outdated, you can either update them by hand in the run/ folder or remove directories from the run/ folder and run the setup script again.
+
 ```bash
 # install repos
 . pds_setup.sh

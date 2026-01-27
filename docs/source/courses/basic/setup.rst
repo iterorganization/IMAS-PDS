@@ -17,6 +17,10 @@ First clone the project.
 A setup script ``pds_setup.sh`` is provided with an installation of the necessary repositories.
 The script expects to be run from the repo root directory
 Make sure you have access rights to all the relevant codes.
+The setup script will detect if codes are not yet available and install the missing ones.
+It is also configurable to enable or disable the installation of specific codes. 
+In case the installed codes are outdated, you can either update them by hand in the ``run/`` folder
+or remove directories from the ``run/`` folder and run the setup script again.
 
 Load a base environment ``run/imas_base_env`` with the necessary modules for the PDS workflows.
 Some actors currently require a specific virtual environment, this will be taken into account in the workflow configurations.
