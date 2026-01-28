@@ -33,6 +33,7 @@ Example cases
 -------------
 Example cases for actual ITER scenarios can be run for validation of the PDS workflows.
 The shell script currently assumes it is being run from the specific scenario config directory itself.
+Note that this way of running the PDS workflows will change in the future as more developments are being made.
 
 .. code-block:: bash
 

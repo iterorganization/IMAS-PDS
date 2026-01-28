@@ -25,7 +25,9 @@ Manual
    self
    installing
    usage
+   available_workflows
    writing_actors
+   adding_workflows
    tips_and_tricks
 
 .. toctree::
