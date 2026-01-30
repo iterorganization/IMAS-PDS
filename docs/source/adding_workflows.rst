@@ -9,22 +9,22 @@ Note that this process will change in the future as more developments are being 
 General
 -------
 
-Runnable scenarios are found in the ``scenario_configs`` directory in the PDS repository.
-A runnable scenario is contained in a named directory like ``105092_torax_nice``
-and is executed by moving to the directory and running the ``automate_runs.sh``
-script like:
+Runnable scenarios are found in the ``workflows`` directory in the PDS repository.
+A runnable scenario for a given workflow is contained in a named directory like
+``workflows/torax_nice_self_consistent_transport/scenarios/105092``.
+It is executed by running the ``run_workflow.sh`` script with the workflow name as first argument
+and the scenario as second argument like:
 
 .. code-block:: bash
+  # run test workflow of choice, in this case:
+  # workflow: torax-nice_self_consistent_transport
+  # scenario: 105084
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084
 
-  # prepare base environment and loaded modules
-  cd scenario_configs/105092_torax_nice
-  # run test workflow of choice
-  bash automate_runs.sh
-
-Many of the scenarios run the same structure, which can be found in a separate directory
-like ``torax_nice_utils``.
-In the utils directories are the default configuration and workflow files that are reused between scenarios.
+In the workflow directories are the default configuration and workflow files that are reused between scenarios.
 If a scenario needs its own config or workflow files, they should be added to the scenario subdirectory.
+Many of the scenarios use the same tools for data preprocessing or result analysis,
+which can be found in a separate directory like ``torax_nice_utils``.
 
 A scenario run consists of 4 steps, all of which should be integrated in the workflow:
 
@@ -46,7 +46,7 @@ File Prepping
 
 A workflow needs to have configuration files for all the used actors,
 as well as a ymmsl workflow file for MUSCLE3.
-These files are prepended with a dot (i.e. ``.my_workflow.ymmsl``)
+These files are prepended with a dot (i.e. ``.workflow.ymmsl``)
 and should have placeholders for the paths to files, since those are user specific.
 If a scenario has its own specific files that have priority over the default ones, 
 those should be added to the scenario subdirectory.
@@ -60,7 +60,7 @@ The workflow should be run using
 
 .. code-block:: bash
 
-  muscle_manager --start-all "my_workflow.ymmsl" --run_dir "tmp/my_run_dir"
+  muscle_manager --start-all "path/to/my/workflow.ymmsl" --run_dir "tmp/my_run_dir"
 
 Result Processing
 -----------------

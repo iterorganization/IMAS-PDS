@@ -15,13 +15,6 @@ echo "T_LIST=" "${T_LIST[@]}"
 export matlab_path="$PWD/workflows/metis_alone_utils"
 export IMAS_AL_DISABLE_VALIDATE=1 
 
-# echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
-# python $basedir/scenario_configs/metis_nice_utils/convert_dina_data_to_input.py \
-#   --source_uri $SOURCE_URI \
-#   --backup_uri $BACKUP_URI \
-#   --sink_uri $SINK_URI \
-#   --n_timeslices $N_TIMESLICES
-
 imas convert $SOURCE_URI $IMAS_VERSION $SINK_UPDATE_URI
 
 # make METIS dataset

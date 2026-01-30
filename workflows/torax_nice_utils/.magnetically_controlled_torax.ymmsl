@@ -82,18 +82,18 @@ model:
     nice_evo.pf_active_out: visualization_nice.pf_active_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice/"
+  source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
   source.iterative: false
-  sink_source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice/"
-  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice_evo"
-  sink_controller.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_controller"
-  sink_torax.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_torax"
+  sink_source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
+  sink_nice.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice_evo"
+  sink_controller.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_controller"
+  sink_torax.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_torax"
   sink_nice.sink_mode: "w"
   sink_controller.sink_mode: "w"
   sink_torax.sink_mode: "w"
   torax.output_all_timeslices: True
-  nice_evo.xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_nice.xml
-  python_config_module: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_torax.py
+  nice_evo.xml_path: [SUBDIR_PLACEHOLDER]/config_nice.xml
+  python_config_module: [SUBDIR_PLACEHOLDER]/config_torax.py
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false

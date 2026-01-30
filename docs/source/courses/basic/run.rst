@@ -11,21 +11,20 @@ Exercise 1
 
 First we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
-The different scenarios can be found in the ``scenario_configs`` directory.
-The workflow can be run by running the ``automate_runs.sh`` shell script.
+The different scenarios can be found in the ``workflows`` directory.
+The workflow can be run by running the ``run_workflow.sh`` shell script.
 The shell script:
 
-- rewrites the path placeholders in the template yMMSL configuration files for the user.
 - preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
+- rewrites the path placeholders in the template yMMSL configuration files for the user.
 - runs the prebuilt workflow using the muscle_manager.
-- makes some default plots of the data saved in ``scenario_configs/*my_scenario*/tmp/*my_figure*.png``.
+- makes some default plots of the data saved in ``workflows/*my_workflow*/scenarios/*my_scenario*/tmp/*my_figure*.png``.
 
-The shell script currently expects to be run from the specific scenario directory itself.
+The shell script currently expects to be run from the repository base directory.
 
 .. code-block:: console
 
-    cd path/to/my/scenario_config
-    bash automate_runs.sh
+    bash run_workflow.sh <my_workflow> <my_scenario>
 
 .. md-tab-set::
 
@@ -51,15 +50,14 @@ The shell script currently expects to be run from the specific scenario director
 
         .. code-block:: console
 
-            cd scenario_configs/105092_torax_nice
-            bash automate_runs.sh
+            bash automate_runs.sh torax_nice_self_consistent_transport 105092
 
         Check if results look as expected using the visualization tool.
         You can also check the default plots: 
         
-        ``scenario_configs/105092_torax_nice/tmp/pds_coils_105092.png``
-        ``scenario_configs/105092_torax_nice/tmp/pds_equilibrium_0D_105092.png``
-        ``scenario_configs/105092_torax_nice/tmp/pds_equilibrium_1D_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_coils_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
 
         .. image:: pds_coils_105092.png
         .. image:: pds_equilibrium_0D_105092.png
@@ -78,9 +76,6 @@ This exercise is mostly relevant for developers.
 The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
-
-    # if still in scenario_configs dir:
-    cd ../..
 
     cd run/
     source imas_base_env

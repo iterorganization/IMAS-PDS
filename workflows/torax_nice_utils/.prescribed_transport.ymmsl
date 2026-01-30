@@ -41,10 +41,10 @@ model:
     nice_inv.pf_active_out: validator.pf_active_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_in/"
-  sink_nice.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/tmp/data/[SHOT_NR]_out_nice"
+  source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
+  sink_nice.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice"
   sink_nice.sink_mode: "w"
-  nice_inv.xml_path: [BASEDIR_PLACEHOLDER]/scenario_configs/[SHOT_NR]_torax_nice/config_nice.xml
+  nice_inv.xml_path: [SUBDIR_PLACEHOLDER]/config_nice.xml
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
