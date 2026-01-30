@@ -3,7 +3,7 @@
 Adding new workflows
 ====================
 
-Here we provide an explanation for how add new workflows to the PDS.
+This section explains how to add new workflows to the PDS.
 Note that this process will change in the future as more developments are being made.
 
 General
@@ -47,11 +47,25 @@ File Prepping
 A workflow needs to have configuration files for all the used actors,
 as well as a ymmsl workflow file for MUSCLE3.
 These files are prepended with a dot (i.e. ``.my_workflow.ymmsl``)
-and should have placeholders for the paths to files, since those are user specific.
+and serve as the default configuration for the given workflow.
 If a scenario has its own specific files that have priority over the default ones, 
 those should be added to the scenario subdirectory.
-The files should then be copied and rewritten to actually runnable files in the scenario subdirectories 
-where the placeholders are filled in.
+Since the pds installation cannot always handle relative paths well, the files should have
+placeholders for the paths to files, since those are user specific.
+The template files should then be copied and rewritten to actually runnable files in the scenario subdirectories 
+where the placeholders are filled in. For example:
+
+.. code-block:: ymmsl
+
+  # part of the .workflow.ymmsl template file in the workflow directory
+  settings:
+    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
+
+.. code-block:: ymmsl
+
+  # part of the resulting workflow.ymmsl runnable file in the scenario directory
+  settings:
+    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
 
 Running the Workflow
 --------------------
@@ -65,5 +79,5 @@ The workflow should be run using
 Result Processing
 -----------------
 
-The results from the simulation should be processed, plots and analyses should be made.
+After the simulation is done, the results should be processed and plots and analyses should be made.
 The relevant quantities and plots depend on the workflow.

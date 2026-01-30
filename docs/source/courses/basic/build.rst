@@ -139,7 +139,7 @@ The given example config expects the following IDSs connected to the S port:
     .. md-tab-item:: Exercise
 
         Connect the NICE output to the visualization actor in addition to the existing connections.
-        A browers tab should now pop up with the data visualization.
+        A browser tab should now pop up with the data visualization.
 
         Run it and check if the data output makes sense.
         
@@ -254,7 +254,11 @@ Exercise 5b
               - {type: constant, value: -2.0e7}
 
         The OLC actor will fail, as this does not adhere to the ruleset defined in 
-        previous exercise.
+        previous exercise. It should look something like:
+        
+        .. literalinclude:: ../../../../ymmsl_files/training/failed_validator_report.txt
+           :language: txt
+
 
 Exercise 6
 ----------
@@ -267,7 +271,7 @@ A TORAX config file has been defined at ``<pds root>/training_data/config_torax.
 TORAX needs a full equilibrium IDS with multiple time slices for its initialization to create its internal geometry provider.
 Since the NICE output consists of separate single timeslices, we cannot use it outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
-For this we use the accumulator actor. This gathers incoming IDSs and combines them into a big IDS wih all timeslices at once.
+For this we use the accumulator actor. This gathers incoming IDSs and combines them into a big IDS with all timeslices at once.
 Once it gets the last input from the actor before it, it sends the combined IDS on to the next actor, which is TORAX in this case.
 For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
