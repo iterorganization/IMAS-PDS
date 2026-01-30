@@ -55,13 +55,13 @@ placeholders for the paths to files, since those are user specific.
 The template files should then be copied and rewritten to actually runnable files in the scenario subdirectories 
 where the placeholders are filled in. For example:
 
-.. code-block:: ymmsl
+.. code-block:: bash
 
   # part of the .workflow.ymmsl template file in the workflow directory
   settings:
     sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
 
-.. code-block:: ymmsl
+.. code-block:: bash
 
   # part of the resulting workflow.ymmsl runnable file in the scenario directory
   settings:

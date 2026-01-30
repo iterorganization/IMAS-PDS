@@ -257,7 +257,7 @@ Exercise 5b
         previous exercise. It should look something like:
         
         .. literalinclude:: ../../../../ymmsl_files/training/failed_validator_report.txt
-           :language: txt
+           :language: bash
 
 
 Exercise 6
