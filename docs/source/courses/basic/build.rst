@@ -125,6 +125,9 @@ Exercise 3
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
 For more information on the visualization actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
+You can also look at the `Visualization Actor training material <https://imas-muscle3.readthedocs.io/en/latest/training.html>_`, 
+which shows how to work with live data visualization, how to create custom plotting scripts,
+how to set it up in MUSCLE3 and how to use in in standalone mode.
 A visualization actor config file has been defined at ``<pds root>/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py``.
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
@@ -139,7 +142,7 @@ The given example config expects the following IDSs connected to the S port:
     .. md-tab-item:: Exercise
 
         Connect the NICE output to the visualization actor in addition to the existing connections.
-        A browers tab should now pop up with the data visualization.
+        A browser tab should now pop up with the data visualization.
 
         Run it and check if the data output makes sense.
         
@@ -160,6 +163,9 @@ Exercise 4a
 Instead of using the premade IDS values, you might want to define certain waveforms for quick and flexible testing.
 We now add the Waveform Editor actor to the workflow.
 For more information on the waveform editor actor read the `Waveform Editor docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
+You can also look at the `Waveform Editor training material <https://waveform-editor.readthedocs.io/en/latest/training/training.html>`_,
+which shows how to use the GUI and CLI for the Waveform Editor, how to configure the Waveform Editor, how to set up waveforms
+and how to export waveforms to an IDS.
 A simple waveform editor config file has been prepared for you, located at ``<pds root>/ymmsl_files/training/waveform_config.yaml``.
 
 .. md-tab-set::
@@ -254,7 +260,11 @@ Exercise 5b
               - {type: constant, value: -2.0e7}
 
         The OLC actor will fail, as this does not adhere to the ruleset defined in 
-        previous exercise.
+        previous exercise. It should look something like:
+        
+        .. literalinclude:: ../../../../ymmsl_files/training/failed_validator_report.txt
+           :language: bash
+
 
 Exercise 6
 ----------
@@ -267,7 +277,7 @@ A TORAX config file has been defined at ``<pds root>/training_data/config_torax.
 TORAX needs a full equilibrium IDS with multiple time slices for its initialization to create its internal geometry provider.
 Since the NICE output consists of separate single timeslices, we cannot use it outright.
 We first need to make sure that all the separate timeslices that are being sent around in MUSCLE3 are gathered into a single IDS before sending it to TORAX.
-For this we use the accumulator actor. This gathers incoming IDSs and combines them into a big IDS wih all timeslices at once.
+For this we use the accumulator actor. This gathers incoming IDSs and combines them into a big IDS with all timeslices at once.
 Once it gets the last input from the actor before it, it sends the combined IDS on to the next actor, which is TORAX in this case.
 For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 

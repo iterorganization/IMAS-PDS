@@ -15,7 +15,7 @@ model:
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_sink"
-  sink.sink_mode: "w"
+  sink.sink_mode: "x"
 implementations:
   source:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
