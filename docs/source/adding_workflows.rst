@@ -16,6 +16,7 @@ It is executed by running the ``run_workflow.sh`` script with the workflow name 
 and the scenario as second argument like:
 
 .. code-block:: bash
+
   # run test workflow of choice, in this case:
   # workflow: torax-nice_self_consistent_transport
   # scenario: 105084
