@@ -125,6 +125,9 @@ Exercise 3
 Sometimes a simulation can take a long time and you don't want to wait until the end to see if your output makes sense. 
 We now add the runtime visualization actor to the workflow.
 For more information on the visualization actor read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
+You can also look at the `Visualization Actor training material <https://imas-muscle3.readthedocs.io/en/latest/training.html>_`, 
+which shows how to work with live data visualization, how to create custom plotting scripts,
+how to set it up in MUSCLE3 and how to use in in standalone mode.
 A visualization actor config file has been defined at ``<pds root>/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py``.
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
@@ -161,7 +164,7 @@ Instead of using the premade IDS values, you might want to define certain wavefo
 We now add the Waveform Editor actor to the workflow.
 For more information on the waveform editor actor read the `Waveform Editor docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
 You can also look at the `Waveform Editor training material <https://waveform-editor.readthedocs.io/en/latest/training/training.html>`_,
-which shows how to use the. GUI and CLI for the Waveform Editor, how to configure the Waveform Editor, how to set up waveforms\
+which shows how to use the GUI and CLI for the Waveform Editor, how to configure the Waveform Editor, how to set up waveforms
 and how to export waveforms to an IDS.
 A simple waveform editor config file has been prepared for you, located at ``<pds root>/ymmsl_files/training/waveform_config.yaml``.
 
