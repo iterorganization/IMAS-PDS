@@ -26,13 +26,30 @@ In the workflow directories are the default configuration and workflow files tha
 If a scenario needs its own config or workflow files, they should be added to the scenario subdirectory.
 Many of the scenarios use the same tools for data preprocessing or result analysis,
 which can be found in a separate directory like ``torax_nice_utils``.
+A schematic of the directory structure is shown below:
+
+.. code-block:: text
+  :caption: Example directory structure for rule sets
+
+  └── workflows/
+     └── <workflow_name>/
+         ├── .workflow.ymmsl
+         ├── preprocess_data.sh
+         ├── create_runnable_files.sh
+         ├── run_simulation.sh
+         ├── postprocess_data.sh
+         └── scenarios/
+             └── <scenario_id>/
+                 ├── scenario_config.env
+                 ├── info.txt
+                 └── .<custom_overrides>  # Optional
 
 A scenario run consists of 4 steps, all of which should be integrated in the workflow:
 
-- data preprocessing
-- file prepping
-- running
-- plotting
+- preprocessing data (preprocess_data.sh)
+- file prepping (create_runnable_files.sh)
+- running simulation (run_simulation.sh)
+- postprocessing data (postprocess_data.sh)
 
 Data Preprocessing
 ------------------

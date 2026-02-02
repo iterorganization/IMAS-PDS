@@ -12,10 +12,29 @@ error() {
   exit 1
 }
 
+show_help() {
+  cat <<EOF
+Usage: bash $0 <workflow> <scenario> [optional args...]"
+
+Options:
+  -h, --help      Show this help message and exit
+
+Examples:
+  bash $(basename "$0") torax_nice_self_consistent_transport 105092
+EOF
+}
+
 # ---- argument parsing ---------------------------------------
 
+case "$1" in
+  -h|--help)
+    show_help
+    exit 0
+    ;;
+esac
+
 if [[ $# -lt 2 ]]; then
-  error "Usage: $0 <directory> <subdirectory> [optional args...]"
+  error "Usage: bash $0 <workflow> <scenario> [optional args...]"
 fi
 
 export DIR="$PWD/workflows/$1"
@@ -37,7 +56,7 @@ source $SCENARIO_CONFIG
 [[ -f "$DIR/preprocess_data.sh" ]] || error "Missing or non-executable preprocess_data.sh in $DIR"
 [[ -f "$DIR/create_runnable_files.sh" ]] || error "Missing or non-executable create_runnable_files.sh in $DIR"
 [[ -f "$DIR/run_simulation.sh" ]] || error "Missing or non-executable run_simulation.sh in $DIR"
-[[ -f "$DIR/plot_results.sh" ]] || error "Missing or non-executable plot_results.sh in $DIR"
+[[ -f "$DIR/postprocess_data.sh" ]] || error "Missing or non-executable postprocess_data.sh in $DIR"
 [[ -f "$DIR/.workflow.ymmsl" ]] || error "Missing or non-executable workflow.ymmsl in $DIR"
 
 # ---- run the script ----------------------------------------
@@ -48,4 +67,4 @@ bash "$DIR/create_runnable_files.sh"
 echo "$(date +%H):$(date +%M):$(date +%S) RUNNING MUSCLE"
 bash "$DIR/run_simulation.sh" "${EXTRA_ARGS[@]}"
 echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
-bash "$DIR/plot_results.sh"
+bash "$DIR/postprocess_data.sh"
