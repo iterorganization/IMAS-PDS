@@ -160,6 +160,9 @@ Exercise 4a
 Instead of using the premade IDS values, you might want to define certain waveforms for quick and flexible testing.
 We now add the Waveform Editor actor to the workflow.
 For more information on the waveform editor actor read the `Waveform Editor docs <https://waveform-editor.readthedocs.io/en/latest/muscle3.html>`_.
+You can also look at the `Waveform Editor training material <https://waveform-editor.readthedocs.io/en/latest/training/training.html>`_,
+which shows how to use the. GUI and CLI for the Waveform Editor, how to configure the Waveform Editor, how to set up waveforms\
+and how to export waveforms to an IDS.
 A simple waveform editor config file has been prepared for you, located at ``<pds root>/ymmsl_files/training/waveform_config.yaml``.
 
 .. md-tab-set::

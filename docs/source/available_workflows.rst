@@ -30,5 +30,5 @@ Requirements:
 
 - Requires DDv4 input data.
 - Requires equilibrium, pf_active, pf_passive, iron_core and wall IDS for NICE input.
-- Requires pf_active IDS where each coil objects only has single elements AoS for NICE input.
+- Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
 - Requires pf_active IDS to have coil objects with resistance values for NICE input.
