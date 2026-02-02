@@ -21,4 +21,5 @@ imas convert $SOURCE_URI $IMAS_VERSION $SINK_UPDATE_URI
 export metis_dina_source=$SINK_UPDATE_URI
 export metis_imas_dataset=$SINK_METIS_URI
 echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
+mkdir -p tmp
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"
