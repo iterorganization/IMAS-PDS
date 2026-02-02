@@ -11,7 +11,7 @@ module load Boost
 module load HDF5
 module load MUSCLE3
 
-module load IDStools
+module load IDStools/2.3.0
 module load IMAS-AL-Fortran
 module load IMAS-AL-Cpp
 module load IMAS-AL-Matlab
