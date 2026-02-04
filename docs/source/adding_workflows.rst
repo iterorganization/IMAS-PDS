@@ -46,10 +46,10 @@ A schematic of the directory structure is shown below:
 
 A scenario run consists of 4 steps, all of which should be integrated in the workflow:
 
-- preprocessing data (preprocess_data.sh)
-- file prepping (create_runnable_files.sh)
-- running simulation (run_simulation.sh)
-- postprocessing data (postprocess_data.sh)
+- Data Preprocessing (preprocess_data.sh)
+- File Prepping (create_runnable_files.sh)
+- Running the Simulation (run_simulation.sh)
+- Result Processing (postprocess_data.sh)
 
 Data Preprocessing
 ------------------
@@ -85,7 +85,7 @@ where the placeholders are filled in. For example:
   settings:
     sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
 
-Running the Workflow
+Running the Simulation
 --------------------
 
 The workflow should be run using 
