@@ -86,7 +86,7 @@ where the placeholders are filled in. For example:
     sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
 
 Running the Simulation
---------------------
+----------------------
 
 The workflow should be run using 
 
