@@ -192,12 +192,16 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                         eqs[key].time_slice[0].profiles_1d, field[-1]
                     ).value
                     nice_psi = eqs[key].time_slice[0].profiles_1d.psi.value
+                    if nice_psi.size == 0:
+                        continue
                     nice_psi_norm = abs(nice_psi - nice_psi[0]) / abs(
                         nice_psi[-1] - nice_psi[0]
                     )
                     vals[key] = np.interp(0.99, nice_psi_norm, nice_arr)
 
             for key in dbs.keys():
+                if abs(vals[key]) > 1e30:
+                    vals[key] = None
                 eq_dict[field[-1]][key].append(vals[key])
 
     # plot 0d profiles over time

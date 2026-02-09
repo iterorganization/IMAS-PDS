@@ -6,6 +6,19 @@ Running existing PDS simulations
 In this section we show how to run pre existing workflows in this repo.
 You can use the actor specific test workflows or the iter scenario workflows.
 
+
+.. note::
+
+    You can previsualize a scenario before running it to see which time slices will be most relevant.
+    Make sure to point to where the input for the simulation is located.
+    For the PDS scenarios, these can be found in the ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env`` file.
+
+    .. code-block:: console
+
+        module load IMAS
+        plotscenario --uri "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1"
+
+
 Exercise 1
 ----------
 
@@ -43,14 +56,14 @@ The shell script currently expects to be run from the repository base directory.
             This run might take a while and will only show feedback through the visualization actor
             after NICE has returned its first output.
             To run this scenario faster, you can lower ``N_TIMESLICES``, the amount of timeslices to be run in NICE,
-            in ``automate_runs.sh``. For 7-11 timeslices the general behavior is still very recognisable.
+            in ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env``. For 7-11 timeslices the general behavior is still very recognisable.
 
 
     .. md-tab-item:: Solution
 
         .. code-block:: console
 
-            bash automate_runs.sh torax_nice_self_consistent_transport 105092
+            bash run_workflow.sh torax_nice_self_consistent_transport 105092
 
         Check if results look as expected using the visualization tool.
         You can also check the default plots: 
