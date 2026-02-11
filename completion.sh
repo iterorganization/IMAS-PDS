@@ -7,7 +7,14 @@ _run_workflow_complete() {
 
   # First argument: list workflows/
   if [[ $COMP_CWORD -eq 1 ]]; then
-    COMPREPLY=($(compgen -W "$(ls -1 "$base/workflows" 2>/dev/null)" -- "$cur"))
+    COMPREPLY=()
+    if [[ -d "$base/workflows" ]]; then
+      for d in "$base/workflows"/*; do
+        [[ -d "$d/scenarios" ]] || continue
+        name="$(basename "$d")"
+        [[ "$name" == "$cur"* ]] && COMPREPLY+=("$name")
+      done
+    fi
     return 0
   fi
 

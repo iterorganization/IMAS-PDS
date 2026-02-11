@@ -37,9 +37,9 @@ The shell script currently expects to be run from the repository base directory.
 
 .. code-block:: console
 
-    # to enable autocompletion of the workflows and scenarios
+    # to enable tab completion of the workflows and scenarios
     source completion.sh
-    # to run the premade workflomw
+    # to run the premade workflom
     bash run_workflow.sh <my_workflow> <my_scenario>
 
 .. md-tab-set::

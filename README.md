@@ -65,7 +65,7 @@ To run a preconfigured workflow, run the ``run_workflow.sh`` file with the desir
 Note that this way of running the PDS workflows will change in the future as more developments are being made.
 
 ```bash
-# to enable autocompletion of the workflows and scenarios
+# to enable tab completion of the workflows and scenarios
 source completion.sh
 # run test workflow of choice, in this case:
 # workflow: torax-nice_self_consistent_transport
