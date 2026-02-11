@@ -1,7 +1,45 @@
 set -euo pipefail # stop if anything doesn't work
 
+next_path() {
+  local base="$1"
+  local n=1
+
+  # If the exact path doesn't exist, just return it
+  [[ -e "$base" ]] || { echo "$base"; return; }
+
+  # Otherwise find next free numbered name
+  while [[ -e "${base}_${n}" ]]; do
+    n=$((n + 1))   # arithmetic only on the counter
+  done
+
+  echo "${base}_${n}"
+}
+
+SUMMARY_URI=$SOURCE_URI
+
+# check if --rerun is among arguments
+if [[ " $* " == *" --rerun "* ]]; then
+  echo 'hi'
+  old_in="$SUBDIR/tmp/data/${SHOT_NR}_in"
+  old_out_nice="$SUBDIR/tmp/data/${SHOT_NR}_out_nice"
+  old_out_torax="$SUBDIR/tmp/data/${SHOT_NR}_out_torax"
+  if [[ -e "$old_in" && -e "$old_out_nice" && -e "$old_out_torax" ]]; then
+    new_in=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_in")
+    new_out_nice=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_nice")
+    new_out_torax=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_torax")
+    mv $old_in $new_in
+    mv $old_out_nice $new_out_nice
+    mv $old_out_torax $new_out_torax
+    SOURCE_URI="imas:hdf5?path=$new_out_torax"
+  else
+    echo "No results available yet"
+    exit 1
+  fi
+fi
+
 python $PWD/workflows/torax_nice_utils/convert_dina_data_to_input.py \
   --source_uri $SOURCE_URI \
+  --summary_uri $SUMMARY_URI \
   --backup_uri $BACKUP_URI \
   --sink_uri $SINK_URI \
   --n_timeslices $N_TIMESLICES

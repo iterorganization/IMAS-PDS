@@ -9,11 +9,13 @@ from scipy.integrate import cumulative_trapezoid as cumtrapz
 from scipy.interpolate import interp1d as interp1
 from imas import DBEntry, IDSFactory, convert_ids
 from imas.ids_defs import CLOSEST_INTERP
+from packaging import version
 
 
 def handle_args():
     parser = argparse.ArgumentParser(description='Get preprocessed input data for NICE from DINA')
     parser.add_argument("--source_uri", type=str, help='URI to load DINA output data from')
+    parser.add_argument("--summary_uri", type=str, help='URI to load DINA summary data from')
     parser.add_argument("--backup_uri", type=str, help='URI to load backup DINA output data from')
     parser.add_argument("--sink_uri", type=str, help='URI to write NICE input data to')
     parser.add_argument("--n_timeslices", type=int, default=51, help='Number of timeslices')
@@ -30,10 +32,11 @@ def main():
     args = handle_args()
 
     db_in = DBEntry(args.source_uri, "r")
+    db_sum = DBEntry(args.summary_uri, "r")
     db_backup = DBEntry(args.backup_uri, "r")
     db_out = DBEntry(args.sink_uri, "w")
 
-    summary = db_in.get("summary", autoconvert=False)
+    summary = db_sum.get("summary", autoconvert=False)
     time_array = summary.time
     interesting_time_slices = find_interesting_time_slices(summary, args.n_timeslices)
     skipped = []
@@ -48,21 +51,27 @@ def main():
                 interpolation_method=CLOSEST_INTERP,
                 autoconvert=False,
             )
-            if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) >= 1:
+            if version.parse(eq_orig._dd_version) < version.parse('4.0.0'):
+                bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
+            else:
+                bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
+            if  bndr_len>= 1:
                 break
             idx += 1
-        if len(eq_orig.time_slice[0].boundary_separatrix.outline.r) < 1:
+        if bndr_len < 1:
             t = time_array[idx]
             skipped.append(t)
             continue
-        eq_orig_ts = eq_orig.time_slice[0]
-        # DINA input - NICE output defined at psi_norm: 
-        # profiles_1d.psi: 0..0.995 - 0..1
-        # boundary: 0.995 - 1
-        # boundary_separatrix: 1 - na
-        eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
-        eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
-        eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
+        if version.parse(eq_orig._dd_version) < version.parse('4.0.0'):
+            eq_orig_ts = eq_orig.time_slice[0]
+
+            # DINA input - NICE output defined at psi_norm: 
+            # profiles_1d.psi: 0..0.995 - 0..1
+            # boundary: 0.995 - 1
+            # boundary_separatrix: 1 - na
+            eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
+            eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
+            eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
         eq = convert_ids(eq_orig, "4.0.0")
         psi = eq.time_slice[0].profiles_1d.psi
         psi_a = psi[0]
@@ -109,7 +118,7 @@ def main():
         for (ids_name, db) in [
             ('pf_passive', db_backup),
             ('core_profiles', db_in),
-            ('core_sources', db_in),
+            ('core_sources', db_sum),
         ]:
             slice_orig = db.get_slice(
                 ids_name,

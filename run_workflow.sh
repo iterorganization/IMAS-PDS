@@ -61,10 +61,10 @@ source $SCENARIO_CONFIG
 
 # ---- run the script ----------------------------------------
 echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
-bash "$DIR/preprocess_data.sh"
+bash "$DIR/preprocess_data.sh" "${EXTRA_ARGS[@]}"
 echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"
-bash "$DIR/create_runnable_files.sh"
+bash "$DIR/create_runnable_files.sh" "${EXTRA_ARGS[@]}"
 echo "$(date +%H):$(date +%M):$(date +%S) RUNNING MUSCLE"
 bash "$DIR/run_simulation.sh" "${EXTRA_ARGS[@]}"
 echo "$(date +%H):$(date +%M):$(date +%S) PLOTTING"
-bash "$DIR/postprocess_data.sh"
+bash "$DIR/postprocess_data.sh" "${EXTRA_ARGS[@]}"
