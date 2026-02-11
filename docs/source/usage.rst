@@ -40,6 +40,8 @@ Note that this way of running the PDS workflows will change in the future as mor
 
 .. code-block:: bash
 
+  # to enable autocompletion of the workflows and scenarios
+  source completion.sh
   # run test workflow of choice, in this case:
   # workflow: torax-nice_self_consistent_transport
   # scenario: 105084
