@@ -6,8 +6,8 @@
 	<algoStartPsiFromInData>0</algoStartPsiFromInData>
 	<algoWithIp>1</algoWithIp>
 	<iterMaxDirInitInv>0</iterMaxDirInitInv>
-	<iterMaxInv>40</iterMaxInv>
-	<epsStopInv>1.0e-10</epsStopInv>
+	<iterMaxInv>30</iterMaxInv>
+	<epsStopInv>1.0e-8</epsStopInv>
 	<iterMaxEvo>50</iterMaxEvo>
 	<epsStopEvo>1.0e-10</epsStopEvo>
     	<useDefaultDirectInit>1</useDefaultDirectInit>
@@ -78,15 +78,12 @@
   <n_group_current_index>12</n_group_current_index>
   <group_current_index>0 1 2 4 5 6 7 8 9 10 11 12</group_current_index>
   <n_group_fixed_index>0</n_group_fixed_index>
-	<group_fixed_index>11</group_fixed_index>
-  <n_group_penalized_to_zero_index>0</n_group_penalized_to_zero_index>
-	<group_penalized_to_zero_index>11</group_penalized_to_zero_index>
-
-<!--
-  <n_group_special_weight>6</n_group_special_weight>
-	<group_special_weight_index>5 6 7 8 9 10 </group_special_weight_index>
-	<group_special_weight>0.1 0.1 0.1 0.1 0.1 0.1</group_special_weight>  
--->
+	<group_fixed_index>0 1 2 3 4 7 8 11</group_fixed_index>
+  <n_group_penalized_to_zero_index>12</n_group_penalized_to_zero_index>
+	<group_penalized_to_zero_index>0 1 2 3 4 5 6 7 8 9 10 11</group_penalized_to_zero_index>
+  <n_group_special_weight>1</n_group_special_weight>
+	<group_special_weight_index>11</group_special_weight_index>
+	<group_special_weight>0.01</group_special_weight>  
 
 
   <rd_basis_choice>2</rd_basis_choice>
@@ -115,4 +112,3 @@
 
 
 </parameters>
-
