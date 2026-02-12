@@ -13,12 +13,22 @@ from packaging import version
 
 
 def handle_args():
-    parser = argparse.ArgumentParser(description='Get preprocessed input data for NICE from DINA')
-    parser.add_argument("--source_uri", type=str, help='URI to load DINA output data from')
-    parser.add_argument("--summary_uri", type=str, help='URI to load DINA summary data from')
-    parser.add_argument("--backup_uri", type=str, help='URI to load backup DINA output data from')
-    parser.add_argument("--sink_uri", type=str, help='URI to write NICE input data to')
-    parser.add_argument("--n_timeslices", type=int, default=51, help='Number of timeslices')
+    parser = argparse.ArgumentParser(
+        description="Get preprocessed input data for NICE from DINA"
+    )
+    parser.add_argument(
+        "--source_uri", type=str, help="URI to load DINA output data from"
+    )
+    parser.add_argument(
+        "--summary_uri", type=str, help="URI to load DINA summary data from"
+    )
+    parser.add_argument(
+        "--backup_uri", type=str, help="URI to load backup DINA output data from"
+    )
+    parser.add_argument("--sink_uri", type=str, help="URI to write NICE input data to")
+    parser.add_argument(
+        "--n_timeslices", type=int, default=51, help="Number of timeslices"
+    )
     args = parser.parse_args()
     return args
 
@@ -44,28 +54,29 @@ def main():
     for idx in interesting_time_slices:
         # equilibrium ids
         for i in range(10):
-            t = time_array[idx]
+            if idx + i >= len(time_array):
+                break
+            t = time_array[idx + i]
             eq_orig = db_in.get_slice(
                 "equilibrium",
                 time_requested=t,
                 interpolation_method=CLOSEST_INTERP,
                 autoconvert=False,
             )
-            if version.parse(eq_orig._dd_version) < version.parse('4.0.0'):
+            if version.parse(eq_orig._dd_version) < version.parse("4.0.0"):
                 bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
             else:
                 bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
-            if  bndr_len>= 1:
+            if bndr_len >= 1:
                 break
-            idx += 1
-        if bndr_len < 1:
-            t = time_array[idx]
+        if bndr_len == 0:
+            t = time_array[idx + i]
             skipped.append(t)
             continue
-        if version.parse(eq_orig._dd_version) < version.parse('4.0.0'):
+        if version.parse(eq_orig._dd_version) < version.parse("4.0.0"):
             eq_orig_ts = eq_orig.time_slice[0]
 
-            # DINA input - NICE output defined at psi_norm: 
+            # DINA input - NICE output defined at psi_norm:
             # profiles_1d.psi: 0..0.995 - 0..1
             # boundary: 0.995 - 1
             # boundary_separatrix: 1 - na
@@ -81,13 +92,13 @@ def main():
 
         # pf_active ids
         slice_orig = db_in.get_slice(
-            'pf_active',
+            "pf_active",
             time_requested=t,
             interpolation_method=CLOSEST_INTERP,
             autoconvert=False,
         )
         slice_backup = db_backup.get_slice(
-            'pf_active',
+            "pf_active",
             time_requested=t,
             interpolation_method=CLOSEST_INTERP,
             autoconvert=False,
@@ -99,26 +110,31 @@ def main():
             if len(slice.coil) == len(slice_backup.coil):
                 assert slice.coil[i].name == slice_backup.coil[i].name
                 # make sure geometry_type is nice compatible
-                slice.coil[i].element[0].geometry = slice_backup.coil[i].element[0].geometry
+                slice.coil[i].element[0].geometry = (
+                    slice_backup.coil[i].element[0].geometry
+                )
                 # make sure resistance is filled
                 slice.coil[i].resistance = slice_backup.coil[i].resistance
             else:
                 slice.coil[i].resistance = slice_backup.coil[0].resistance
                 if len(coil.element) > 1:
-                    if 'VS' in coil.name:
-                        slice.coil[i].resistance = slice_backup.coil[-2].resistance + slice_backup.coil[-1].resistance
+                    if "VS" in coil.name:
+                        slice.coil[i].resistance = (
+                            slice_backup.coil[-2].resistance
+                            + slice_backup.coil[-1].resistance
+                        )
                     else:
                         slice.coil[i].resistance *= len(coil.element)
                 for j, element in enumerate(coil.element):
                     slice.coil[i].element[j].geometry.geometry_type = 2
-                
+
         db_out.put_slice(slice)
 
         # time dependent standard
-        for (ids_name, db) in [
-            ('pf_passive', db_backup),
-            ('core_profiles', db_in),
-            ('core_sources', db_sum),
+        for ids_name, db in [
+            ("pf_passive", db_backup),
+            ("core_profiles", db_in),
+            ("core_sources", db_sum),
         ]:
             slice_orig = db.get_slice(
                 ids_name,
@@ -130,9 +146,9 @@ def main():
             db_out.put_slice(slice)
 
     # time independent standard
-    for (ids_name, db) in [
-        ('wall', db_backup),
-        ('iron_core', db_backup),
+    for ids_name, db in [
+        ("wall", db_backup),
+        ("iron_core", db_backup),
     ]:
         ids_orig = db.get(ids_name, autoconvert=False)
         ids = convert_ids(ids_orig, "4.0.0")

@@ -19,7 +19,6 @@ SUMMARY_URI=$SOURCE_URI
 
 # check if --rerun is among arguments
 if [[ " $* " == *" --rerun "* ]]; then
-  echo 'hi'
   old_in="$SUBDIR/tmp/data/${SHOT_NR}_in"
   old_out_nice="$SUBDIR/tmp/data/${SHOT_NR}_out_nice"
   old_out_torax="$SUBDIR/tmp/data/${SHOT_NR}_out_torax"
@@ -27,9 +26,9 @@ if [[ " $* " == *" --rerun "* ]]; then
     new_in=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_in")
     new_out_nice=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_nice")
     new_out_torax=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_torax")
-    mv $old_in $new_in
-    mv $old_out_nice $new_out_nice
-    mv $old_out_torax $new_out_torax
+    mv "$old_in" "$new_in"
+    mv "$old_out_nice" "$new_out_nice"
+    mv "$old_out_torax" "$new_out_torax"
     SOURCE_URI="imas:hdf5?path=$new_out_torax"
   else
     echo "No results available yet"
