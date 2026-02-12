@@ -39,7 +39,7 @@ The shell script currently expects to be run from the repository base directory.
 
     # to enable tab completion of the workflows and scenarios
     source completion.sh
-    # to run the premade workflom
+    # to run the premade workflow
     bash run_workflow.sh <my_workflow> <my_scenario>
 
 .. md-tab-set::
