@@ -70,7 +70,6 @@ def main():
             if bndr_len >= 1:
                 break
         if bndr_len == 0:
-            t = time_array[idx + i]
             skipped.append(t)
             continue
         if version.parse(eq_orig._dd_version) < version.parse("4.0.0"):
