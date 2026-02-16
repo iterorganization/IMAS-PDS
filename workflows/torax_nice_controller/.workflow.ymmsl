@@ -108,8 +108,8 @@ settings:
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   muscle_remote_log_level: 'DEBUG'
-  nice_evo.t_interval: 0.002   #Need to match torax dt
-  nice_evo.dt: 0.002
+  nice_evo.t_interval: 0.001   #Need to match torax dt
+  nice_evo.dt: 0.001
   
 implementations:
   source:
