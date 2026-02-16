@@ -25,6 +25,12 @@ It then uses the NICE equilibrium IDS output to initialize the TORAX geometry pr
 and runs TORAX with current evolution enabled from start to finish.
 This workflow is meant to be rerun multiple times until the results are converged to a satisfactory degree.
 This is done by hand by the user.
+This workflow also offers the optional argument ``--rerun`` to run it from the output from the last run.
+
+.. code-block:: bash
+
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084 --rerun
+
 
 Requirements:
 

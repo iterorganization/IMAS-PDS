@@ -19,14 +19,14 @@ model:
     acc2:
       implementation: accumulator
       ports:
-        s: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+        s: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
+        o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out, core_profiles_out]
     torax:
       implementation: torax
       ports:
         f_init: [equilibrium_f_init, core_profiles_f_init]
         o_i: [equilibrium_o_i]
-        o_f: [equilibrium_o_f]
+        o_f: [equilibrium_o_f, core_profiles_o_f]
     sink_nice:
       implementation: sink
       ports:
@@ -34,7 +34,7 @@ model:
     sink_torax:
       implementation: sink
       ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
     visualization_nice:
       implementation: visualization
       ports:
@@ -74,11 +74,13 @@ model:
     accumulator.core_profiles_out: torax.core_profiles_f_init
     torax.equilibrium_o_i: visualization_torax.equilibrium_in
     torax.equilibrium_o_f: acc2.equilibrium_in
+    torax.core_profiles_o_f: acc2.core_profiles_in
     acc2.equilibrium_out: sink_torax.equilibrium_in
     acc2.pf_active_out: sink_torax.pf_active_in
     acc2.pf_passive_out: sink_torax.pf_passive_in
     acc2.iron_core_out: sink_torax.iron_core_in
     acc2.wall_out: sink_torax.wall_in
+    acc2.core_profiles_out: sink_torax.core_profiles_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
