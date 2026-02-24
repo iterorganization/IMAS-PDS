@@ -5,14 +5,13 @@ model:
     source:
       implementation: source
       ports:
-        o_i: [equilibrium_out, pf_active_out, wall_out, pf_passive_out, iron_core_out ] #core_profiles_out
+        o_i: [equilibrium_out, pf_active_out, wall_out, pf_passive_out, iron_core_out, core_profiles_out]
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init]  #core_profiles_f_init
+        f_init: [equilibrium_f_init, core_profiles_f_init]
         s: [equilibrium_s]
-        o_i: [equilibrium_o_i]
-        o_f: [equilibrium_o_f]
+        o_i: [equilibrium_o_i, core_profiles_o_i]
     sink_source:
       implementation: sink_source
       ports:
@@ -21,6 +20,7 @@ model:
     sink_source_nice:
       implementation: sink_source_nice
       ports:
+        f_init: [equilibrium_in]
         o_f: [wall_out, pf_active_out]
     magnetic_controller:
       implementation: magnetic_controller
@@ -41,7 +41,7 @@ model:
     sink_torax:
       implementation: sink
       ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
     sink_controller:
       implementation: sink
       ports:
@@ -63,12 +63,12 @@ model:
     source.pf_passive_out: nice_evo.pf_passive_f_init
     source.iron_core_out: nice_evo.iron_core_f_init
     source.wall_out: nice_evo.wall_f_init
-    #source.core_profiles_out: torax.core_profiles_f_init
+    source.core_profiles_out: torax.core_profiles_f_init
     
     torax.equilibrium_o_i: nice_evo.equilibrium_s
     torax.equilibrium_o_i: sink_source.equilibrium_in 
     torax.equilibrium_o_i: visualization_torax.equilibrium_in
-    torax.equilibrium_o_f: sink_torax.equilibrium_in
+    torax.equilibrium_o_i: sink_torax.equilibrium_in
 
     sink_source_nice.wall_out: visualization_nice.wall_md_in
     sink_source_nice.pf_active_out: visualization_nice.pf_active_md_in
@@ -81,6 +81,7 @@ model:
     nice_evo.equilibrium_o_i: magnetic_controller.equilibrium_s
     nice_evo.equilibrium_o_i: sink_nice.equilibrium_in
     nice_evo.equilibrium_o_i: visualization_nice.equilibrium_in
+    nice_evo.equilibrium_o_i: sink_source_nice.equilibrium_in
     nice_evo.pf_active_o_i: magnetic_controller.pf_active_s
     nice_evo.pf_active_o_i: sink_nice.pf_active_in
     nice_evo.pf_active_o_i: visualization_nice.pf_active_in
@@ -88,10 +89,11 @@ model:
     magnetic_controller.pf_active_o_i: sink_controller.pf_active_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=/home/ITER/grosg1/Documents/pds/workflows/torax_nice_self_consistent_transport/scenarios/105078/tmp/data/105078_out_nice/"   #"imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
+  source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
   source.iterative: false
+  source.t_min: [TSTART_PLACEHOLDER]
   sink_source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
-  sink_source_nice.source_uri: "imas:hdf5?path=/home/ITER/grosg1/Documents/pds/workflows/torax_nice_self_consistent_transport/scenarios/105078/tmp/data/105078_out_nice/"
+  sink_source_nice.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
   sink_nice.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice_evo"
   sink_controller.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_controller"
   sink_torax.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_torax"
