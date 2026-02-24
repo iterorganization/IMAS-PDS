@@ -29,26 +29,34 @@ model:
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
   conduits:
-    source.wall_out: nice.wall_in
-    source.pf_active_out: nice.pf_active_in
-    source.pf_passive_out: nice.pf_passive_in
-    source.iron_core_out: nice.iron_core_in
-    nice.equilibrium_out: sink.equilibrium_in
-    nice.pf_active_out: sink.pf_active_in
-    source.wall_out: sink.wall_in
-    source.pf_passive_out: sink.pf_passive_in
-    source.iron_core_out: sink.iron_core_in
-    nice.equilibrium_out: visualization.equilibrium_in
-    source.wall_out: visualization.wall_md_in
-    source.pf_active_out: visualization.pf_active_md_in
-    nice.pf_active_out: visualization.pf_active_in
     source.equilibrium_out: waveform_editor.equilibrium_in
-    waveform_editor.equilibrium_out: nice.equilibrium_in
-    waveform_editor.equilibrium_out: olc.equilibrium_in
+    source.pf_active_out:
+    - nice.pf_active_in
+    - visualization.pf_active_md_in
+    source.pf_passive_out:
+    - nice.pf_passive_in
+    - sink.pf_passive_in
+    source.wall_out:
+    - nice.wall_in
+    - sink.wall_in
+    - visualization.wall_md_in
+    source.iron_core_out:
+    - nice.iron_core_in
+    - sink.iron_core_in
+    waveform_editor.equilibrium_out:
+    - nice.equilibrium_in
+    - olc.equilibrium_in
+    nice.equilibrium_out:
+    - sink.equilibrium_in
+    - visualization.equilibrium_in
+    nice.pf_active_out:
+    - sink.pf_active_in
+    - visualization.pf_active_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/training/source_waveform_nice_viz_sink"
-  xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
+  sink.sink_mode: "x"
+  nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
   visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
   visualization.automatic_mode: true

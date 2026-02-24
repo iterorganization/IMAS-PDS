@@ -1,7 +1,7 @@
 # this file expects to be run from the 'run' folder
 set -euo pipefail # stop if anything doesn't work
 
-TORAX_URL=${1:-"https://github.com/mikesndrs/TORAX-MUSCLE3.git"}
+TORAX_URL=${1:-"https://github.com/iterorganization/TORAX-MUSCLE3.git"}
 BRANCH_TORAX=${2:-"main"}
 
 module purge

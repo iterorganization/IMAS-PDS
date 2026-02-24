@@ -1,0 +1,14 @@
+set -euo pipefail # stop if anything doesn't work
+
+PLOTDIR="$SUBDIR/tmp/data" 
+
+# load T_LIST from string
+IFS=' ' read -r -a T_LIST <<< "$T_LIST"
+
+python $PWD/workflows/metis_nice_utils/plot_validation_metis_nice.py \
+  --shot_nr $SHOT_NR \
+  --dina_uri "$PLOTDIR/${SHOT_NR}_dina_update_in" \
+  --nice_uri "$PLOTDIR/${SHOT_NR}_nice_out" \
+  --metis_uri "$PLOTDIR/${SHOT_NR}_metis_out" \
+  --output_dir "$SUBDIR/tmp" \
+  --t_list "${T_LIST[@]}"

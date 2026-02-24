@@ -44,16 +44,13 @@ def interpolate_current(B_value, setpoints):
 @validator("pf_active")
 def validate_force_limits_cs(ids):
     """Validate forces on central solenoid coils are within operational limits"""
-    # Skip until more clarity about F_tp4K and fci
-    return
     alpha = -0.0019
     beta = [0.0389, 0, 1161, 0, 1933, 0.2696, 0.3468, 0.4239]
     gamma = 0.0739
     F0 = 16.82
     dF = -0.53
     mg = 1.18e6
-    # TODO: F_tp4K not defined
-    F_tp4K = None
+    F_tp4K = 190e6
     sum_radial = 0
     sum_vertical = 0
     sum_vertical_beta = 0
@@ -69,12 +66,7 @@ def validate_force_limits_cs(ids):
     for coil in ids.coil:
         for key in cs_force_dict.keys():
             if key in coil.name:
-                cs_force_dict = coil.force_vertical.data.value
-                # TODO: not clear how F_ci is defined (combination of crushing vertical and crushing radial?)
-                # sum_radial +=
-                # sum_vertical +=
-                # sum_vertical_beta +=
-                # sum_c +=
+                cs_force_dict[key] = coil.force_vertical.data.value
     if all([val is not None for val in cs_force_dict.values()]):
         return
 

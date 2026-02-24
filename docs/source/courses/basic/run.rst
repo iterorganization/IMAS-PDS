@@ -6,26 +6,41 @@ Running existing PDS simulations
 In this section we show how to run pre existing workflows in this repo.
 You can use the actor specific test workflows or the iter scenario workflows.
 
+
+.. note::
+
+    You can previsualize a scenario before running it to see which time slices will be most relevant.
+    Make sure to point to where the input for the simulation is located.
+    For the PDS scenarios, these can be found in the ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env`` file.
+
+    .. code-block:: console
+
+        module load IMAS
+        plotscenario --uri "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1"
+
+
 Exercise 1
 ----------
 
 First we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
-The different scenarios can be found in the ``scenario_configs`` directory.
-The workflow can be run by running the ``automate_runs.sh`` shell script.
+The different scenarios can be found in the ``workflows`` directory.
+The workflow can be run by running the ``run_workflow.sh`` shell script.
 The shell script:
 
-- rewrites the path placeholders in the template yMMSL configuration files for the user.
 - preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
+- rewrites the path placeholders in the template yMMSL configuration files for the user.
 - runs the prebuilt workflow using the muscle_manager.
-- makes some default plots of the data saved in ``scenario_configs/*my_scenario*/tmp/*my_figure*.png``.
+- makes some default plots of the data saved in ``workflows/*my_workflow*/scenarios/*my_scenario*/tmp/*my_figure*.png``.
 
-The shell script currently expects to be run from the specific scenario directory itself.
+The shell script currently expects to be run from the repository base directory.
 
 .. code-block:: console
 
-    cd path/to/my/scenario_config
-    bash automate_runs.sh
+    # to enable tab completion of the workflows and scenarios
+    source completion.sh
+    # to run the premade workflow
+    bash run_workflow.sh <my_workflow> <my_scenario>
 
 .. md-tab-set::
 
@@ -44,22 +59,21 @@ The shell script currently expects to be run from the specific scenario director
             This run might take a while and will only show feedback through the visualization actor
             after NICE has returned its first output.
             To run this scenario faster, you can lower ``N_TIMESLICES``, the amount of timeslices to be run in NICE,
-            in ``automate_runs.sh``. For 7-11 timeslices the general behavior is still very recognisable.
+            in ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env``. For 7-11 timeslices the general behavior is still very recognisable.
 
 
     .. md-tab-item:: Solution
 
         .. code-block:: console
 
-            cd scenario_configs/105092_torax_nice
-            bash automate_runs.sh
+            bash run_workflow.sh torax_nice_self_consistent_transport 105092
 
         Check if results look as expected using the visualization tool.
         You can also check the default plots: 
         
-        ``scenario_configs/105092_torax_nice/tmp/pds_coils_105092.png``
-        ``scenario_configs/105092_torax_nice/tmp/pds_equilibrium_0D_105092.png``
-        ``scenario_configs/105092_torax_nice/tmp/pds_equilibrium_1D_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_coils_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
+        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
 
         .. image:: pds_coils_105092.png
         .. image:: pds_equilibrium_0D_105092.png
@@ -78,9 +92,6 @@ This exercise is mostly relevant for developers.
 The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
-
-    # if still in scenario_configs dir:
-    cd ../..
 
     cd run/
     source imas_base_env
@@ -114,7 +125,7 @@ The ``run`` subdirectory can be used as a sandbox for installing and running man
         the ec_launchers/beam(1)/power_launched/data to ramp up to 50 kW over 10 seconds, remain constant for 30 seconds,
         and ramp down to 0 over 10 seconds again.
 
-        ``test_sink_source_actor.ymmsl`` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
+        ``test_nice_actor.ymmsl`` sends the desired plasma shape from a given IDS to NICE inverse mode to calculate the coil currents
         needed to realize this plasma shape. The equilibrium output is expected to be close to the input.
 
         Optionally, you can check if the results look as expected using the standard IMAS exploration tools.

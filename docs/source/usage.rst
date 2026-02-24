@@ -32,11 +32,17 @@ These workflows can be used as a template for your own workflows.
 Example cases
 -------------
 Example cases for actual ITER scenarios can be run for validation of the PDS workflows.
-The shell script currently assumes it is being run from the specific scenario config directory itself.
+The shell script currently assumes it is being run from the base directory of the PDS repository.
+The different workflows are contained in the ``workflows`` directory.
+The different scenarios for these workflows are contained in the ``workflows/<my_workflow>/scenarios`` directory.
+To run a preconfigured workflow, run the ``run_workflow.sh`` file with the desired workflow and scenario as arguments.
+Note that this way of running the PDS workflows will change in the future as more developments are being made.
 
 .. code-block:: bash
 
-  # prepare base environment and loaded modules
-  cd scenario_configs/105084
-  # run test workflow of choice
-  bash automate_runs.sh
+  # to enable tab completion of the workflows and scenarios
+  source completion.sh
+  # run test workflow of choice, in this case:
+  # workflow: torax-nice_self_consistent_transport
+  # scenario: 105084
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084

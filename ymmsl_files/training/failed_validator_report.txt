@@ -1,0 +1,16 @@
+Summary Report : 
+Tested URI : imas:hdf5?path=/tmp/tmpeunt8167
+Number of tests carried out : 1
+Number of successful tests : 0
+Number of failed tests : 1
+
+PASSED IDSs:
+
+FAILED IDSs:
+- IDS equilibrium occurrence 0
+	RULE: training/equilibrium.py:validate_ip
+		MESSAGE: 
+		TRACEBACK: FrameSummary file /home/ITER/sanderm/gitrepos/pds/pds_validation_tests/training/equilibrium.py, line 10 in validate_ip
+		NODES COUNT: 1
+		NODES: ['time_slice[0]/global_quantities/ip']
+

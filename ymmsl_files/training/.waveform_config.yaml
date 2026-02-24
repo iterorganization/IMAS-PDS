@@ -5,3 +5,5 @@ globals:
 equilibrium:
   equilibrium/time_slice/global_quantities/ip:
     - { type: constant, value: -1.5e7 }
+  equilibrium/vacuum_toroidal_field/b0:
+    - { type: constant, value: -2.65 }

@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<parameters>
+	<verbose>1</verbose>
+	<outputTxtFiles>1</outputTxtFiles>
+	<algoStartFromScratch>1</algoStartFromScratch>
+	<algoStartPsiFromInData>0</algoStartPsiFromInData>
+	<algoWithIp>1</algoWithIp>
+	<iterMaxDirInitInv>0</iterMaxDirInitInv>
+	<iterMaxInv>30</iterMaxInv>
+	<epsStopInv>1.0e-8</epsStopInv>
+	<iterMaxEvo>50</iterMaxEvo>
+	<epsStopEvo>1.0e-10</epsStopEvo>
+    	<useDefaultDirectInit>1</useDefaultDirectInit>
+    	<radiusInit>2.25</radiusInit>
+    	<rcenterInit>6.2</rcenterInit>
+    	<zcenterInit>0.0</zcenterInit>
+
+
+    <refinedZone1>1</refinedZone1>
+    <nPointsZone1>4</nPointsZone1>
+    <rPointsZone1>4.45 5.39 5.78 4.70</rPointsZone1>
+    <zPointsZone1>-3.5 -3.86 -3.20 -2.81</zPointsZone1>
+    <rInPointZone1>5.1</rInPointZone1>
+    <zInPointZone1>-3.3</zInPointZone1>
+    <zone1TriangleArea>0.001</zone1TriangleArea>
+    
+    <refinedZone2>0</refinedZone2>
+    <nPointsZone2>4</nPointsZone2>
+    <rPointsZone2>2.44 1.91 1.94 2.44</rPointsZone2>
+    <zPointsZone2>0.79 0.573 0.49 0.66</zPointsZone2>
+    <rInPointZone2>2.18</rInPointZone2>
+    <zInPointZone2>0.6</zInPointZone2>
+    <zone2TriangleArea>0.00003</zone2TriangleArea>
+    
+    <refinedZone3>1</refinedZone3>
+    <nPointsZone3>10</nPointsZone3>
+    <rPointsZone3>6.0 6.2 6.2 6.4 6.6 6.6 6.4 6.4 6.2 6.0</rPointsZone3>
+    <zPointsZone3>0.2 0.2 0.4 0.2 0.2 1.0 1.0 0.8 1.0 1.0</zPointsZone3>
+    <rInPointZone3>6.1</rInPointZone3>
+    <zInPointZone3>0.3</zInPointZone3>
+    <zone3TriangleArea>0.001</zone3TriangleArea>
+
+	<vacuumTriangleArea>0.008</vacuumTriangleArea>
+	<airTriangleArea>0.2</airTriangleArea>
+	<airInTriangleArea>0.02</airInTriangleArea>
+	<ironTriangleArea>0.005</ironTriangleArea>
+	<coilTriangleArea>0.05</coilTriangleArea>
+	<vesselTriangleArea>0.05</vesselTriangleArea>
+	<passiveStructTriangleArea>0.05</passiveStructTriangleArea>
+
+
+	<inoutCOCOS>17</inoutCOCOS>
+
+
+
+<!-- static inverse -->
+
+	<use_desired_psib>1</use_desired_psib>
+	
+	<!-- InverseSQP2  -->
+	<!-- Inverse old with turns  -->
+	<!--abserrIg>3e7</abserrIg-->
+	<!-- Inverse new  -->
+	<abserrIg>3e5</abserrIg>
+	<relerrIg>0</relerrIg>
+
+  <!--n_coil_group_index>14</n_coil_group_index-->
+  <!--coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 12</coil_group_index-->
+  <!--n_group_current_index>13</n_group_current_index-->
+  <!--group_current_index>0 1 2 4 5 6 7 8 9 10 11 12 13</group_current_index-->
+  <!--n_group_fixed_index>2</n_group_fixed_index-->
+	<!--group_fixed_index>11 12</group_fixed_index-->
+  <!--n_group_penalized_to_zero_index>0</n_group_penalized_to_zero_index-->
+	<!--group_penalized_to_zero_index>0 1 2 3 4 5 6 7 8 9 10</group_penalized_to_zero_index-->
+
+  <n_coil_group_index>14</n_coil_group_index>
+  <coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 25</coil_group_index>
+  <n_group_current_index>12</n_group_current_index>
+  <group_current_index>0 1 2 4 5 6 7 8 9 10 11 12</group_current_index>
+  <n_group_fixed_index>0</n_group_fixed_index>
+	<group_fixed_index>0 1 2 3 4 7 8 11</group_fixed_index>
+  <n_group_penalized_to_zero_index>12</n_group_penalized_to_zero_index>
+	<group_penalized_to_zero_index>0 1 2 3 4 5 6 7 8 9 10 11</group_penalized_to_zero_index>
+  <n_group_special_weight>1</n_group_special_weight>
+	<group_special_weight_index>11</group_special_weight_index>
+	<group_special_weight>0.01</group_special_weight>  
+
+
+  <rd_basis_choice>2</rd_basis_choice>
+  <rd_n_dof>10</rd_n_dof> 
+  <rd_basis_choice_petajnib>1</rd_basis_choice_petajnib>
+  <rd_n_dof_petajnib>20</rd_n_dof_petajnib>
+    
+  <dt>1.0e-3</dt>
+
+
+	<always_save_grids_ggd>1</always_save_grids_ggd>
+<!-- control outputs, interpolated magaxis, xpoint, gaps  -->
+	<outputForControl>0</outputForControl>
+
+  <profile_method>1</profile_method>
+	<n_profile_1d>50</n_profile_1d>
+  
+<!-- inverse (psi, theta) grid  -->
+  <outputInvGrid>0</outputInvGrid>
+  <n_theta_grid>101</n_theta_grid>
+
+<!-- profiles_2d cartesian grid  -->
+  <outputCartGrid>0</outputCartGrid>
+  <nr_cartgrid>101</nr_cartgrid>
+  <nz_cartgrid>201</nz_cartgrid>
+
+
+</parameters>
