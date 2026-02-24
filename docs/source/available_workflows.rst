@@ -8,6 +8,7 @@ Here we provide a brief explanation of the available workflows.
 
 METIS-NICE workflow
 -------------------
+
 Starting from a DINA simulation, the workflow coupling METIS and NICE static inverse computes the plasma state with METIS in two modes:
 1.	Interpretative: METIS uses the kinetic profiles for electron temperature and density and for ion temperature read from the DINA simulation and predict all other fields.
 2.	Predictive: METIS predict all the quantities
@@ -15,29 +16,31 @@ In both cases, METIS reads its inputs from the DINA simulation (mainly the plasm
 Using the result from METIS (plasma current, LCFS poloidal flux and profiles P’ and FF’) and the constraint provided by the LCFS set of points read in DINA simulation, 
 NICE inverse static computes the free boundary equilibrium and provides an updated LCFS and coil currents.
 
-* Interpretative mode
----------------------
+\* Interpretative mode
+^^^^^^^^^^^^^^^^^^^^^^
 
 To launch the workflow for the interpretative mode, the command is:
     bash run_workflow.sh metis_interpretative_nice_inverse_from_dina <simulation_Id>
 for example:
 
 .. code-block:: bash
+
     bash run_workflow.sh metis_interpretative_nice_inverse_from_dina 105084
 
-* Predictive mode
------------------
+\* Predictive mode
+^^^^^^^^^^^^^^^^^^
 
 To launch the workflow for the predictive mode, the command is:
     bash run_workflow.sh metis_predictive_nice_inverse_from_dina <simulation_Id>
 for example:
 
 .. code-block:: bash
+
     bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084
 
 
-* List of currently available <simulation_Id>
------------------------------------------
+\* List of currently available <simulation_Id>
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following simulation Id are available:
   - 105073
@@ -46,8 +49,8 @@ The following simulation Id are available:
   - 105092
   - 105099
 
-* Requirements:
----------------
+\* Requirements:
+^^^^^^^^^^^^^^^^
 
 - Requires DDv4 input data (The preprocessing convert the DINA data if needed)
 - Requires equilibrium, pf_active, pf_passive, iron_core and wall IDSs for NICE input (needs to get machine description from some reference)
