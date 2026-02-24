@@ -21,6 +21,7 @@ NICE inverse static computes the free boundary equilibrium and provides an updat
 
 To launch the workflow for the interpretative mode, the command is:
     bash run_workflow.sh metis_interpretative_nice_inverse_from_dina <simulation_Id>
+
 for example:
 
 .. code-block:: bash
@@ -32,6 +33,7 @@ for example:
 
 To launch the workflow for the predictive mode, the command is:
     bash run_workflow.sh metis_predictive_nice_inverse_from_dina <simulation_Id>
+
 for example:
 
 .. code-block:: bash
