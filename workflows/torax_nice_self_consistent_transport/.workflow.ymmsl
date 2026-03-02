@@ -19,8 +19,8 @@ model:
     acc2:
       implementation: accumulator
       ports:
-        s: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
-        o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out, core_profiles_out]
+        s: [wall_in, pf_active_in, pf_passive_in, iron_core_in]
+        o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
     torax:
       implementation: torax
       ports:
@@ -73,14 +73,12 @@ model:
     accumulator.equilibrium_out: torax.equilibrium_f_init
     accumulator.core_profiles_out: torax.core_profiles_f_init
     torax.equilibrium_o_i: visualization_torax.equilibrium_in
-    torax.equilibrium_o_f: acc2.equilibrium_in
-    torax.core_profiles_o_f: acc2.core_profiles_in
-    acc2.equilibrium_out: sink_torax.equilibrium_in
+    torax.equilibrium_o_f: sink_torax.equilibrium_in
+    torax.core_profiles_o_f: sink_torax.core_profiles_in
     acc2.pf_active_out: sink_torax.pf_active_in
     acc2.pf_passive_out: sink_torax.pf_passive_in
     acc2.iron_core_out: sink_torax.iron_core_in
     acc2.wall_out: sink_torax.wall_in
-    acc2.core_profiles_out: sink_torax.core_profiles_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
@@ -91,10 +89,10 @@ settings:
   torax.output_all_timeslices: True
   nice_inv.xml_path: [SUBDIR_PLACEHOLDER]/config_nice.xml
   python_config_module: [SUBDIR_PLACEHOLDER]/config_torax.py
-  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/nice_inv.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
-  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/torax.py
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   validator.halt_on_error: True
@@ -104,22 +102,24 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   accumulator:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   nice_inv:
     env: 
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+      IMAS_VERSION: "4.0.0"
+    base_env: CLEAN
+    modules: NICE
+    executable: nice_imas_inv_muscle3
   torax:
     script: |
       #!/bin/bash
@@ -130,11 +130,12 @@ implementations:
       export JAX_COMPILATION_CACHE_DIR="[BASEDIR_PLACEHOLDER]/run/tmp/jax_cache"
       python -u -m torax_muscle3.torax_actor
   visualization:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    base_env: CLEAN
+    modules: IMAS-Python/2.1.0-foss-2023b IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.visualization_component"
   validator:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.olc_component"
 resources:

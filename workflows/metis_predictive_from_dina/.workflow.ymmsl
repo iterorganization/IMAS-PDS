@@ -65,14 +65,15 @@ settings:
 
 implementations:
   sink_metis:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_metis:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 
+    modules: IMAS-AL-Matlab METIS
     env: 
       DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
     executable: matlab

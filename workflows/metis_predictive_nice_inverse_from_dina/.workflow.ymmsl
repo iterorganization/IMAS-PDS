@@ -93,22 +93,23 @@ settings:
 
 implementations:
   sink_metis:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   sink_nice:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_nice:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
   source_metis:
-    virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 
+    modules: IMAS-AL-Matlab METIS
     env: 
       DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
     executable: matlab
@@ -117,8 +118,8 @@ implementations:
   nice_inv:
     env: 
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+    modules: NICE
+    executable: nice_imas_inv_muscle3
 resources:
   source_nice:
     threads: 1

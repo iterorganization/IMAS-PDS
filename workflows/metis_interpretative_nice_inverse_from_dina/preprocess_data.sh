@@ -1,5 +1,10 @@
 set -euo pipefail # stop if anything doesn't work
 
+module load IMAS-Python
+module load IDStools/2.3.0
+module load METIS
+module load IMAS-AL-Matlab
+
 echo "Inputs:"
 echo "SHOT_NR=" $SHOT_NR
 echo "SOURCE_URI=" $SOURCE_URI

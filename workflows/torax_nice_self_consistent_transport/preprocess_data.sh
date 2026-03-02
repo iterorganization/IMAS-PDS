@@ -1,5 +1,8 @@
 set -euo pipefail # stop if anything doesn't work
 
+module load IMAS-Python
+module load IDStools/2.3.0
+
 next_path() {
   local base="$1"
   local n=1
