@@ -41,7 +41,7 @@ CONFIG = {
         'main_ion': {'H': 1},
     },
     'numerics': {
-        't_initial': t_initial,
+        't_initial': [TSTART_PLACEHOLDER],
         't_final': t_final,
         'exact_t_final': True,
         'fixed_dt': 0.001,

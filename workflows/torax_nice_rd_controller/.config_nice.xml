@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <parameters>
-	<verbose>0</verbose>
+	<verbose>1</verbose>
 	<outputTxtFiles>0</outputTxtFiles>
 	<outputRestartFiles>0</outputRestartFiles>
 	<algoMode>31</algoMode>
@@ -15,7 +15,7 @@
 	<algoReconPolar>0</algoReconPolar>
 	<algoReconPressure>0</algoReconPressure>
 	<algoReconMSE>0</algoReconMSE>
-	<algoStartFromScratch>0</algoStartFromScratch>
+	<algoStartFromScratch>1</algoStartFromScratch>
 	<algoStartFromScratchReconAB>1</algoStartFromScratchReconAB>
 	<algoStartPsiFromInData>0</algoStartPsiFromInData>
 	<algoWithIp>1</algoWithIp>
