@@ -19,10 +19,10 @@
 # https://torax.readthedocs.io/en/latest/installation.html
 
 INSTALL_PDS="true"
-INSTALL_IMAS_MUSCLE3="true"
+INSTALL_IMAS_MUSCLE3="false"
 INSTALL_WAVEFORM_EDITOR="true"
 INSTALL_METIS="true"
-INSTALL_NICE="true"
+INSTALL_NICE="false"
 INSTALL_TORAX="true"
 INSTALL_CHEASE="true"
 INSTALL_PCS="true"

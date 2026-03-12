@@ -73,7 +73,7 @@ implementations:
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 
-    modules: IMAS-AL-Matlab METIS
+    modules: IMAS-AL-Matlab
     env: 
       DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
     executable: matlab
