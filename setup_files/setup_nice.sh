@@ -19,5 +19,6 @@ cp Makefile.TEMPLATE Makefile
 make -j nice_imas_inv_muscle3
 make -j nice_imas_dir_muscle3
 make -j nice_imas_evo_muscle3
+make -j nice_imas_evo_rd_muscle3
 module purge
 cd ../..
