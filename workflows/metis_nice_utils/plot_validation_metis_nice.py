@@ -55,6 +55,7 @@ def main():
             "nice": args.nice_uri,
             "metis": args.metis_uri,
         }.items()
+        if path is not None
     }
 
     pf_active_plots_dina_nice(args, dbs)

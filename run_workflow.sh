@@ -60,7 +60,7 @@ source $SCENARIO_CONFIG
 [[ -f "$DIR/.workflow.ymmsl" ]] || error "Missing or non-executable workflow.ymmsl in $DIR"
 
 # ---- run the script ----------------------------------------
-echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
+echo "$(date +%H):$(date +%S) PREPROCESSING INPUT DATA"
 bash "$DIR/preprocess_data.sh" "${EXTRA_ARGS[@]}"
 echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"
 bash "$DIR/create_runnable_files.sh" "${EXTRA_ARGS[@]}"
