@@ -12,6 +12,7 @@ set -x
 
 # bash run_test_files.sh
 
+source /etc/profile.d/modules.sh
 cd run/
 mkdir TORAX-MUSCLE3
 cd TORAX-MUSCLE3
