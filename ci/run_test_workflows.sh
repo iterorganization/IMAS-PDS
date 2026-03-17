@@ -8,18 +8,24 @@ set -e -o pipefail
 set -x
 
 # setup
-bash pds_setup.sh
+# bash pds_setup.sh
 
-bash run_test_files.sh
+# bash run_test_files.sh
 
-# not realistic to cover all scenarios
+cd run/
+mkdir TORAX-MUSCLE3
+cd TORAX-MUSCLE3
+module load Python
+python -m venv ./venv
+source ./venv/bin/activate
+pip install torax-muscle3
+deactivate
+module purge
+cd ../..
 
-cd scenario_configs/105092_torax_nice
-bash automate_runs.sh
-cd ../105092_metis_predictive_nice_inverse_from_dina
-bash automate_runs.sh
-cd ..
+bash run_workflow.sh torax_nice_self_consistent_transport 105084
 
+# # not realistic to cover all scenarios
 # run self-consistent torax-nice for low number of timeslices
 # run self-consistent metis-nice for low number of timeslices
 # run magnetic-controller torax-nice for low number of timeslices
