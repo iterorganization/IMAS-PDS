@@ -12,6 +12,7 @@ You can use the actor specific test workflows or the iter scenario workflows.
     You can previsualize a scenario before running it to see which time slices will be most relevant.
     Make sure to point to where the input for the simulation is located.
     For the PDS scenarios, these can be found in the ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env`` file.
+    For more information on the Scenario Database , see the `documentation <https://confluence.iter.org/spaces/IMP/pages/151422626/Scenario+Database>`_.
 
     .. code-block:: console
 
@@ -46,7 +47,7 @@ The shell script currently expects to be run from the repository base directory.
 
     .. md-tab-item:: Exercise
 
-        Run the ``105092_torax_nice`` scenario workflow.
+        Run the ``torax_nice_self_consistent_transport`` workflow for scenario ``105092``.
         This is a simple scenario for an L-mode limiter plasma with low ECH power,
         a short ramp-up phase from t=0 to t=9,
         a flattop phase at ~ 3 MA from t=9 to t=147
