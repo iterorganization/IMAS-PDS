@@ -32,7 +32,7 @@ BRANCH_IMAS_MUSCLE3='develop'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='master'
-BRANCH_TORAX='main'
+BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
 
