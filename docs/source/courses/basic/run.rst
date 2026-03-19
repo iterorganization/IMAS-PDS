@@ -25,7 +25,7 @@ You can use the actor specific test workflows or the iter scenario workflows.
     To make sure you are not overloading the login nodes on SDCC, it is best to run the PDS simulations on compute nodes whenever possible.
     The easiest way to do this is to open a bash terminal on a compute node and work interactively from there.
     For more information on using compute nodes, see the `confluence page <https://confluence.iter.org/spaces/IMP/pages/316083236/How+to+work+interactively+on+a+batch+node+of+the+ITER+cluster>`_.
-    Do keep in mind that port forwarding to localhost, which is used in the IMAS-MUSCLE3 visualization actor for example, is no longer available from a compute node.
+    Do keep in mind that certain graphical features like the IMAS-MUSCLE3 visualization actor are no longer immediately available from a compute node.
 
     .. code-block:: console
 
