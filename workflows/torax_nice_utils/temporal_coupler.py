@@ -25,8 +25,6 @@ from imas.ids_defs import IDS_TIME_MODE_INDEPENDENT
 from libmuscle import Instance, InstanceFlags, Message
 from ymmsl import Operator
 
-from imas_muscle3.utils import get_port_list
-
 logger = logging.getLogger()
 
 
@@ -37,6 +35,16 @@ from libmuscle import Instance, InstanceFlags, Message
 from libmuscle.runner import run_simulation
 from ymmsl import (
         Component, Conduit, Configuration, Model, Operator, Ports, Settings)
+
+
+def get_port_list(instance: Instance, operator: Operator) -> List[str]:
+    """Filter list of ids_names by which ones are actually connected for
+    given instance"""
+    total_port_list = instance.list_ports().get(operator, [])
+    port_list = [
+        port for port in total_port_list if instance.is_connected(port)
+    ]
+    return port_list
 
 
 class DataCache:
