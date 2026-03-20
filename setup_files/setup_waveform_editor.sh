@@ -5,6 +5,8 @@ WAVEFORM_EDITOR_URL=${1:-"https://github.com/iterorganization/Waveform-Editor.gi
 BRANCH_WAVEFORM_EDITOR=${2:-"main"}
 
 source imas_base_env
+module load Python
+
 git clone $WAVEFORM_EDITOR_URL
 cd Waveform-Editor
 git checkout $BRANCH_WAVEFORM_EDITOR
