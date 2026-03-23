@@ -29,7 +29,7 @@ Some actors currently require a specific virtual environment, this will be taken
 
     git clone ssh://git@git.iter.org/scen/pds.git
     cd pds
-    . pds_setup.sh
+    bash pds_setup.sh
     source run/imas_base_env
 
 For this training you will need access to a graphical environment to visualize
