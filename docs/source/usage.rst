@@ -14,7 +14,7 @@ It is best to do this on a compute node as it can take a long time put a strain 
   # open interactive bash console on compute node
   srun --pty bash
   # install repos
-  . pds_setup.sh
+  bash pds_setup.sh
 
 
 Test workflows
