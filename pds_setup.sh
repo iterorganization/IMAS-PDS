@@ -36,6 +36,17 @@ BRANCH_TORAX='main'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
 
+is_sourced() {
+  [[ "${BASH_SOURCE[0]}" != "$0" ]]
+}
+
+if is_sourced; then
+  echo "Please run this script using bash:"
+  echo "'bash pds_setup.sh'"
+  echo "Do not source it."
+  return 1
+fi
+
 set -euo pipefail # stop if anything doesn't work
 
 CURR_INSTALL='START'
