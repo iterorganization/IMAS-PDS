@@ -54,6 +54,11 @@ model:
       implementation: visualization
       ports:
         s: [equilibrium_in]
+    temporal_coupler:
+      implementation: temporal_coupler
+      ports:
+        s: [a_in, b_in]
+        o_i: [a_out, b_out]
   conduits:
     source.equilibrium_out: torax.equilibrium_f_init
     source.equilibrium_out: magnetic_controller.equilibrium_f_init
@@ -65,7 +70,11 @@ model:
     source.wall_out: nice_evo.wall_f_init
     source.core_profiles_out: torax.core_profiles_f_init
     
-    torax.equilibrium_o_i: nice_evo.equilibrium_s
+    torax.equilibrium_o_i: temporal_coupler.a_in
+    nice_evo.equilibrium_o_i: temporal_coupler.b_in
+    temporal_coupler.a_out: torax.equilibrium_s
+    temporal_coupler.b_out: nice_evo.equilibrium_s
+
     torax.equilibrium_o_i: sink_source.equilibrium_in 
     torax.equilibrium_o_i: visualization_torax.equilibrium_in
     torax.equilibrium_o_i: sink_torax.equilibrium_in
@@ -77,7 +86,6 @@ model:
     sink_source.wall_out: sink_torax.wall_in
     sink_source.iron_core_out: sink_torax.iron_core_in
  
-    nice_evo.equilibrium_o_i: torax.equilibrium_s
     nice_evo.equilibrium_o_i: magnetic_controller.equilibrium_s
     nice_evo.equilibrium_o_i: sink_nice.equilibrium_in
     nice_evo.equilibrium_o_i: visualization_nice.equilibrium_in
@@ -110,8 +118,8 @@ settings:
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   muscle_remote_log_level: 'DEBUG'
-  nice_evo.t_interval: 0.001   #Need to match torax dt
-  nice_evo.dt: 0.001
+  nice_evo.t_interval: 0.01   #Need to match torax dt
+  nice_evo.dt: 0.01
   
 implementations:
   source:
@@ -164,6 +172,10 @@ implementations:
     virtual_env: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.visualization_component"
+  temporal_coupler:
+    modules: MUSCLE3
+    executable: python
+    args: "-u [BASEDIR_PLACEHOLDER]/workflows/torax_nice_utils/temporal_coupler.py"
 resources:
   source:
     threads: 1
@@ -187,3 +199,6 @@ resources:
     threads: 1
   visualization_torax:
     threads: 1
+  temporal_coupler:
+    threads: 1
+

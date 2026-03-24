@@ -44,7 +44,7 @@ CONFIG = {
         't_initial': [TSTART_PLACEHOLDER],
         't_final': t_final,
         'exact_t_final': True,
-        'fixed_dt': 0.001,
+        'fixed_dt': 0.03,
         'adaptive_dt': False,
         'resistivity_multiplier': 1,
         'evolve_current': True,

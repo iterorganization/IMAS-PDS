@@ -137,6 +137,12 @@ The given example config expects the following IDSs connected to the S port:
 - `pf_active_md_in`: connected to pf_active IDS from source for machine description of coils
 - `wall_md_in`: connected to wall IDS from source for machine description of vessel
 
+.. note::
+
+    The visualization actor is not immediately available from a compute node. While this can be circumvented,
+    it is recommended to run this exercise on a login node.
+    
+
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
