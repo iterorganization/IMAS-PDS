@@ -86,3 +86,53 @@ Requirements:
 - Requires equilibrium, pf_active, pf_passive, iron_core and wall IDS for NICE input.
 - Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
 - Requires pf_active IDS to have coil objects with resistance values for NICE input.
+
+
+
+TORAX-NICE-CONTROLLER
+---------------------
+
+This workflow starts from a plasma shape and feeds it to TORAX, NICE and the matlab controller.
+NICE runs the inverse mode to initiate the internal solver / plasma.
+TORAX is initialized and provides NICE p' and ff' at each time step given the plasma equilibrium from NICE.
+The controller sends the voltages needed to correct the plasma shape and position to NICE.
+NICE computes the equilibrium from TORAX and the controller data.
+
+Only shot 105073 available for now.
+
+.. code-block:: bash
+
+    bash run_workflow.sh torax_nice_controller 105073
+
+
+Requirements:
+- Requires DDv4 input data.
+- Requires equilibrium, pf_active, pf_passive, iron_core and wall IDS for NICE input.
+- Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
+- Requires pf_active IDS to have coil objects with resistance values for NICE input.
+- Requires to run torax_nice_self_consistent_transport for the shot 105073 before.
+
+TORAX-NICE-RD-CONTROLLER
+------------------------
+
+This workflow starts from a plasma shape and feeds it to TORAX, NICE and the matlab controller.
+NICE runs the inverse mode to initiate the internal solver / plasma.
+TORAX is initialized and provides NICE p, eta and j_ni (the pressure, the resistivity, and the non-inductive current) at each time step given the plasma equilibrium from NICE.
+The controller sends the voltages needed to correct the plasma shape and position to NICE.
+NICE computes the equilibrium from TORAX and the controller data.
+
+Only shot 105073 available for now.
+
+.. code-block:: bash
+
+    bash run_workflow.sh torax_nice_rd_controller 105073
+
+
+Requirements:
+- Requires DDv4 input data.
+- Requires equilibrium, core_profiles, pf_active, pf_passive, iron_core and wall IDS for NICE input.
+- Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
+- Requires pf_active IDS to have coil objects with resistance values for NICE input.
+- Requires to run torax_nice_self_consistent_transport for the shot 105073 before.
+
+
