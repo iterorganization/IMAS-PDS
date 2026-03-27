@@ -32,9 +32,20 @@ BRANCH_IMAS_MUSCLE3='develop'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='master'
-BRANCH_TORAX='main'
+BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
+
+is_sourced() {
+  [[ "${BASH_SOURCE[0]}" != "$0" ]]
+}
+
+if is_sourced; then
+  echo "Please run this script using bash:"
+  echo "'bash pds_setup.sh'"
+  echo "Do not source it."
+  return 1
+fi
 
 set -euo pipefail # stop if anything doesn't work
 
@@ -43,22 +54,11 @@ trap 'printf "INSTALLATION RAN INTO PROBLEM [$CURR_INSTALL]:\n\"$BASH_COMMAND\" 
 
 # TODO: turn off install arg when easybuild module available
 
-try_srun() {
-  # $1: setup file to run
-  # $n: input args for setup file
-  if command -v srun >/dev/null 2>&1; then
-    srun -n1 --pty bash "$@"
-  else
-    bash $1
-  fi
-}
-
-
 # SET UP PDS
 CURR_INSTALL='PDS FILES'
 if [ "$INSTALL_PDS" = "true" ]; then
   echo "############## INSTALLING PDS ##############"
-  try_srun bash setup_files/setup_test_files.sh
+  bash setup_files/setup_test_files.sh
   echo "############## FINISHED PDS ##############"
 fi
 
@@ -71,7 +71,7 @@ if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
    && [ ! -d "IMAS-MUSCLE3" ] \
    && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
   echo "############## INSTALLING IMAS-MUSCLE3 ##############"
-  try_srun ../setup_files/setup_imas_muscle3.sh $IMAS_MUSCLE3_URL $BRANCH_IMAS_MUSCLE3
+  bash ../setup_files/setup_imas_muscle3.sh $IMAS_MUSCLE3_URL $BRANCH_IMAS_MUSCLE3
   echo "############## FINISHED IMAS-MUSCLE3 ##############"
 else
   echo "Skipping IMAS_MUSCLE3"
@@ -84,7 +84,7 @@ if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
    && [ ! -d "Waveform-Editor" ] \
    && git ls-remote "$WAVEFORM_EDITOR_URL" &>/dev/null; then
   echo "############## INSTALLING WAVEFORM-EDITOR ##############"
-  try_srun ../setup_files/setup_waveform_editor.sh $WAVEFORM_EDITOR_URL $BRANCH_WAVEFORM_EDITOR
+  bash ../setup_files/setup_waveform_editor.sh $WAVEFORM_EDITOR_URL $BRANCH_WAVEFORM_EDITOR
   echo "############## FINISHED WAVEFORM-EDITOR ##############"
 else
   echo "Skipping WAVEFORM_EDITOR"
@@ -110,7 +110,7 @@ if [ "$INSTALL_NICE" = "true" ] \
    && [ ! -d "nice" ] \
    && git ls-remote "$NICE_URL" &>/dev/null; then
   echo "############## INSTALLING NICE ##############"
-  try_srun ../setup_files/setup_nice.sh $NICE_URL $BRANCH_NICE
+  bash ../setup_files/setup_nice.sh $NICE_URL $BRANCH_NICE
   echo "############## FINISHED NICE ##############"
 else
   echo "Skipped NICE"
@@ -149,7 +149,7 @@ if [ "$INSTALL_CHEASE" = "true" ] \
    && [ ! -d "chease" ] \
    && git ls-remote "$CHEASE_URL" &>/dev/null; then
   echo "############## INSTALLING CHEASE ##############"
-  try_srun ../setup_files/setup_chease.sh $CHEASE_URL $BRANCH_CHEASE
+  bash ../setup_files/setup_chease.sh $CHEASE_URL $BRANCH_CHEASE
   echo "############## FINISHED CHEASE ##############"
 else
   echo 'Skipping CHEASE'

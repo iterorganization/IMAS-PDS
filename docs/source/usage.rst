@@ -7,11 +7,14 @@ Setting up actors
 -----------------
 A setup script is provided with an installation of the necessary repositories.
 Make sure you have access rights to all the relevant codes.
+It is best to do this on a compute node as it can take a long time put a strain on the login nodes.
 
 .. code-block:: bash
 
+  # open interactive bash console on compute node
+  srun --pty bash
   # install repos
-  . pds_setup.sh
+  bash pds_setup.sh
 
 
 Test workflows

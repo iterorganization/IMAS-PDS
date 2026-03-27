@@ -12,11 +12,24 @@ You can use the actor specific test workflows or the iter scenario workflows.
     You can previsualize a scenario before running it to see which time slices will be most relevant.
     Make sure to point to where the input for the simulation is located.
     For the PDS scenarios, these can be found in the ``workflows/*my_workflow*/scenarios/*my_scenario*/scenario_config.env`` file.
+    For more information on the Scenario Database, see the `documentation <https://confluence.iter.org/spaces/IMP/pages/151422626/Scenario+Database>`_.
 
     .. code-block:: console
 
         module load IMAS
         plotscenario --uri "imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1"
+
+
+.. note::
+
+    To make sure you are not overloading the login nodes on SDCC, it is best to run the PDS simulations on compute nodes whenever possible.
+    The easiest way to do this is to open a bash terminal on a compute node and work interactively from there.
+    For more information on using compute nodes, see the `confluence page <https://confluence.iter.org/spaces/IMP/pages/316083236/How+to+work+interactively+on+a+batch+node+of+the+ITER+cluster>`_.
+    Do keep in mind that certain graphical features like the IMAS-MUSCLE3 visualization actor are no longer immediately available from a compute node.
+
+    .. code-block:: console
+
+        srun --pty bash
 
 
 Exercise 1
@@ -46,7 +59,7 @@ The shell script currently expects to be run from the repository base directory.
 
     .. md-tab-item:: Exercise
 
-        Run the ``105092_torax_nice`` scenario workflow.
+        Run the ``torax_nice_self_consistent_transport`` workflow for scenario ``105092``.
         This is a simple scenario for an L-mode limiter plasma with low ECH power,
         a short ramp-up phase from t=0 to t=9,
         a flattop phase at ~ 3 MA from t=9 to t=147

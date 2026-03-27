@@ -40,7 +40,7 @@ In case the installed codes are outdated, you can either update them by hand in 
 
 ```bash
 # install repos
-. pds_setup.sh
+bash pds_setup.sh
 ```
 
 # Test workflows
