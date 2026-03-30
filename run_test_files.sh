@@ -9,6 +9,7 @@ set -euo pipefail
 
 given_dir="ymmsl_files"
 source "run/imas_base_env"
+module load MUSCLE3
 
 # Recursively find all .*.ymmsl and .*.yaml files
 for f in "$given_dir"/test*.ymmsl; do
