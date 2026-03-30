@@ -74,10 +74,15 @@ and runs TORAX with current evolution enabled from start to finish.
 This workflow is meant to be rerun multiple times until the results are converged to a satisfactory degree.
 This is done by hand by the user.
 This workflow also offers the optional argument ``--rerun`` to run it from the output from the last run.
+You can also set the amount of reruns using the ``RERUN_N_TIMES`` argument in the scenario_config.env file or as an input argument.
 
 .. code-block:: bash
 
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084 --rerun
+  # Run once using the output from last time as input
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084 --rerun RERUN_N_TIMES=0
+
+  # Rerun 3 times for a total of 4 runs
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=3
 
 
 Requirements:
