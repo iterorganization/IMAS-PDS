@@ -41,12 +41,16 @@ export DIR="$PWD/workflows/$1"
 export SUBDIR="$DIR/scenarios/$2"
 shift 2
 export EXTRA_ARGS=("$@")
+
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
-export SCRIPT="$DIR/my_bash_script.sh"
-
 source "$PWD/run/imas_base_env"
-
 source $SCENARIO_CONFIG
+
+for arg in "${EXTRA_ARGS[@]}"; do
+  if [[ "$arg" != -* ]]; then
+    export "$arg"
+  fi
+done
 
 # ---- validation ---------------------------------------------
 
