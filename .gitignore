@@ -26,10 +26,9 @@ ymmsl_files/*
 !ymmsl_files/.*
 
 *.ymmsl
-!.*.ymmsl
 
 workflows/*/scenarios/*/*
 !workflows/*/scenarios/*/
 !workflows/*/scenarios/*/info.txt
 !workflows/*/scenarios/*/scenario_config.env
-!workflows/*/scenarios/*/.*
+!*.template
