@@ -24,10 +24,15 @@ deactivate
 module purge
 cd ../..
 
-bash run_workflow.sh torax_nice_self_consistent_transport 105084
+bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=1 N_TIMESLICES=10
 
-# # not realistic to cover all scenarios
-# run self-consistent torax-nice for low number of timeslices
-# run self-consistent metis-nice for low number of timeslices
-# run magnetic-controller torax-nice for low number of timeslices
-# run magnetic-controller metis-nice for low number of timeslices
+# # WAIT FOR NICE_EVO TO BE PART OF NICE EASYBUILD MODULE. 
+# # EXPECT CRASH, HOW TO HANDLE?
+# bash run_workflow.sh torax_nice_self_controller 105084
+# bash run_workflow.sh torax_nice_self_rd_controller 105084
+
+# # WAIT FOR METIS EASYBUILD MODULE
+# bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10
+# bash run_workflow.sh metis_predictive_from_dina 105084 N_TIMESLICES=10
+# bash run_workflow.sh metis_interpretative_nicne_inverse_from_dina 105084 N_TIMESLICES=10
+# bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
