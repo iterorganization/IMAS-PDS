@@ -23,7 +23,8 @@ settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_waveform_editor"
   sink.sink_mode: "w"
-  waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
+  waveform_editor.waveforms: [PWD_PLACEHOLDER]/run/Waveform-Editor/tests/muscle3_integration/waveforms.yaml
+  waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/test_waveforms_config.yaml
 implementations:
   sink:
     modules: IMAS-MUSCLE3
