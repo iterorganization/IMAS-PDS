@@ -21,12 +21,11 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   olc:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
-    modules: IDS-Validator
+    modules: IMAS-MUSCLE3
     executable: python
     args: -u -m imas_muscle3.actors.olc_component
   source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: -u -m imas_muscle3.actors.source_component
 resources:

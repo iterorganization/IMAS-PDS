@@ -61,7 +61,7 @@ done
 [[ -f "$DIR/create_runnable_files.sh" ]] || error "Missing or non-executable create_runnable_files.sh in $DIR"
 [[ -f "$DIR/run_simulation.sh" ]] || error "Missing or non-executable run_simulation.sh in $DIR"
 [[ -f "$DIR/postprocess_data.sh" ]] || error "Missing or non-executable postprocess_data.sh in $DIR"
-[[ -f "$DIR/.workflow.ymmsl" ]] || error "Missing or non-executable workflow.ymmsl in $DIR"
+[[ -f "$DIR/workflow.ymmsl.template" ]] || error "Missing or non-executable workflow.ymmsl in $DIR"
 
 # ---- run the script ----------------------------------------
 echo "$(date +%H):$(date +%S) PREPROCESSING INPUT DATA"

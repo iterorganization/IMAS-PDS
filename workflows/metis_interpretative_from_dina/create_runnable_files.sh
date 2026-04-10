@@ -1,16 +1,23 @@
 set -euo pipefail # stop if anything doesn't work
 
 # Use sed to replace the matching substrings
-files=(
-  "workflow.ymmsl"
-)
-for file in "${files[@]}"; do
-  if test -f "$SUBDIR/.$file"; then
-    cp "$SUBDIR/.$file" "$SUBDIR/$file" 
+find "$DIR" -type f -name "*.template" | while read -r template; do
+  rel="${template#$DIR/}"                 # relative path
+  sub_template="$SUBDIR/$rel"             # possible override
+  out="$SUBDIR/${rel%.template}"          # output file
+
+  if [ -f "$sub_template" ]; then
+    src="$sub_template"   # SUBDIR wins
   else
-    cp "$DIR/.$file" "$SUBDIR/$file" 
+    src="$template"       # fallback to DIR
   fi
-  sed -i "s|\[BASEDIR_PLACEHOLDER\]|$PWD|g" "$SUBDIR/$file"
-  sed -i "s|\[SUBDIR_PLACEHOLDER\]|$SUBDIR|g" "$SUBDIR/$file"
-  sed -i "s|\[SHOT_NR\]|$SHOT_NR|g" "$SUBDIR/$file"
+
+  mkdir -p "$(dirname "$out")"
+  cp "$src" "$out"
+
+  sed -i \
+    -e "s|\[BASEDIR_PLACEHOLDER\]|$PWD|g" \
+    -e "s|\[SUBDIR_PLACEHOLDER\]|$SUBDIR|g" \
+    -e "s|\[SHOT_NR\]|$SHOT_NR|g" \
+    "$out"
 done

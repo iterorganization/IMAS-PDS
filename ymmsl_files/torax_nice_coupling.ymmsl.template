@@ -66,20 +66,19 @@ settings:
   python_config_module: 'examples/basic_config.py'
 implementations:
   sink:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink_source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
   olc:
-    modules: IDS-Validator
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.olc_component"
   torax:
@@ -91,8 +90,8 @@ implementations:
       export IMAS_VERSION="4.0.0"
       python -u -m torax_muscle3.torax_actor
   nice_inv:
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+    modules: NICE
+    executable: nice_imas_inv_muscle3
 resources:
   source:
     threads: 1

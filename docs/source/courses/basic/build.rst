@@ -3,7 +3,7 @@
 Building your own workflows
 ===========================
 
-In this section we explore building our own workflow step by step.
+In this section we explore building our own muscle3 workflow step by step.
 If needed, make sure to refresh your knowledge on `MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
 It is recommended to do these exercises in the ``run`` directory or make your own directory.
 These exercises are mostly relevant for developers.
@@ -12,6 +12,8 @@ These exercises are mostly relevant for developers.
 
     cd run
     source imas_base_env
+    module load MUSCLE3
+    module load IDStools
 
 Exercise 1
 ----------
@@ -42,7 +44,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
         implementations:
         source:
-            virtual_env: <pds root>/run/IMAS-MUSCLE3/venv
+            modules: IMAS-MUSCLE3
             executable: python
             args: "-u -m imas_muscle3.actors.source_component"
 

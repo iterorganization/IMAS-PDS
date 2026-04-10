@@ -51,7 +51,7 @@ set -euo pipefail # stop if anything doesn't work
 
 CURR_INSTALL='START'
 (
-  trap 'printf "INSTALLATION RAN INTO PROBLEM [$CURR_INSTALL]:\n\"$BASH_COMMAND\" (line $LINENO)\n"' ERR
+  trap 'printf "INSTALLATION RAN INTO PROBLEM [$CURR_INSTALL]:\n\"$BASH_COMMAND\" (line $LINENO)\n REMOVE DIRECTORY BEFORE TRYING AGAIN"' ERR
 
   # TODO: turn off install arg when easybuild module available
 

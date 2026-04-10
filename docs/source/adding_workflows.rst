@@ -64,7 +64,7 @@ File Prepping
 
 A workflow needs to have configuration files for all the used actors,
 as well as a ymmsl workflow file for MUSCLE3.
-These files are prepended with a dot (i.e. ``.workflow.ymmsl``)
+These files are appended with '.template' (i.e. ``workflow.ymmsl.template``)
 and serve as the default configuration for the given workflow.
 If a scenario has its own specific files that have priority over the default ones, 
 those should be added to the scenario subdirectory.
@@ -77,7 +77,7 @@ where the placeholders are filled in. For example:
 
   # part of the .workflow.ymmsl template file in the workflow directory
   settings:
-    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
+    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/torax_nice_self_consistent_transport/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/" 
 
 .. code-block:: bash
 
