@@ -34,7 +34,7 @@ implementations:
     executable: python
     args: -u -m imas_muscle3.actors.source_component
   waveform_editor:
-    virtual_env: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv
+    modules: Waveform-Editor
     executable: waveform-editor
     args: actor
 resources:
