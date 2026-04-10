@@ -5,8 +5,7 @@ NICE_URL=${1:-"https://gitlab.inria.fr/blfauger/nice.git"}
 BRANCH_NICE=${2:-"master"}
 
 source imas_base_env
-module load SuiteSparse/7.7.0-intel-2023b
-module load libxml2
+module load NICE
 git clone $NICE_URL
 cd nice
 git checkout $BRANCH_NICE

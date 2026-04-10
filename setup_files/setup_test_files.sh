@@ -10,7 +10,7 @@ set -euo pipefail
 given_dir="ymmsl_files"
 
 # Recursively find all .*.ymmsl and .*.yaml files
-find "$given_dir" -type f \( -name ".*.ymmsl" -o -name ".*.yaml" \) | while read -r file; do
+find "$given_dir" -type f \( -name "*.template" \) | while read -r file; do
 
   # Extract filename relative to given_dir
   rel_path="${file#$given_dir/}"
@@ -18,7 +18,7 @@ find "$given_dir" -type f \( -name ".*.ymmsl" -o -name ".*.yaml" \) | while read
   # Remove the leading dot from the basename
   dir_path=$(dirname "$rel_path")
   filename=$(basename "$rel_path")
-  new_filename="${filename#.}"
+  new_filename="$given_dir/${rel_path%.template}"
 
   # Ensure target directory exists
   mkdir -p "$given_dir/$dir_path"
@@ -31,5 +31,5 @@ find "$given_dir" -type f \( -name ".*.ymmsl" -o -name ".*.yaml" \) | while read
   # echo "Processing: $file"
 
   # Use sed to replace the matching substrings
-  sed "s|\[PWD_PLACEHOLDER\]|$(pwd)|g" "$file" > "$given_dir/$dir_path/$new_filename"
+  sed "s|\[PWD_PLACEHOLDER\]|$(pwd)|g" "$file" > "$new_filename"
 done 

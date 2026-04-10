@@ -58,6 +58,7 @@ settings:
 implementations:
   source:
     virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   waveform_editor:
@@ -65,14 +66,14 @@ implementations:
     executable: waveform-editor
     args: actor
   sink:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
-    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+    modules: NICE
+    executable: nice_imas_inv_muscle3
   visualization_component:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
 resources:

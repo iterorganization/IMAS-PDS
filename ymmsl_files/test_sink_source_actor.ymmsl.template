@@ -18,11 +18,11 @@ settings:
   sink_component.sink_mode: "w"
 implementations:
   sink_component:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source_component:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
+    modules: IMAS-MUSCLE3
     executable: python
     args: -u -m imas_muscle3.actors.source_component
 resources:
