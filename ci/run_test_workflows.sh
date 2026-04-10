@@ -7,10 +7,9 @@ set -e -o pipefail
 
 set -x
 
-# setup
+# SETUP
 # bash pds_setup.sh
-
-# bash run_test_files.sh
+bash setup_files/setup_test_files.sh
 
 source /etc/profile.d/modules.sh
 cd run/
@@ -24,6 +23,17 @@ deactivate
 module purge
 cd ../..
 
+
+# RUN TEST FILES
+module load MUSCLE3
+
+# bash run_test_files.sh
+muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
+# muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
+
+# RUN WORKFLOWS
 bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=1 N_TIMESLICES=10
 
 # # WAIT FOR NICE_EVO TO BE PART OF NICE EASYBUILD MODULE. 
@@ -36,3 +46,6 @@ bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=1
 # bash run_workflow.sh metis_predictive_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_interpretative_nicne_inverse_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
+
+
+
