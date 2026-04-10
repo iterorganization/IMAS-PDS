@@ -33,6 +33,9 @@ module load MUSCLE3
 # bash run_test_files.sh
 muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_accumulator_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_olc_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_waveform_editor.ymmsl
+muscle_manager --start-all ymmsl_files/test_visualization_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
 # muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
 # muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
