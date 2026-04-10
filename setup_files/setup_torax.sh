@@ -12,7 +12,7 @@ cd TORAX-MUSCLE3
 git checkout $BRANCH_TORAX
 python -m venv ./venv
 . venv/bin/activate
-pip install --upgrade pip
+pip install --upgrade pip setuptools
 pip install build
 pip install -e .
 deactivate

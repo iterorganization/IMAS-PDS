@@ -38,7 +38,7 @@ implementations:
     script: |
       #!/bin/bash
       module purge
-      module load Python Boost HDF5 libiconv OpenBLAS
+      module load Python
       source [PWD_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION="4.0.0"
       python -u -m torax_muscle3.torax_actor

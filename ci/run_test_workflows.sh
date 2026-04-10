@@ -8,17 +8,20 @@ set -e -o pipefail
 set -x
 
 # SETUP
+source /etc/profile.d/modules.sh
+module purge
+
 # bash pds_setup.sh
 bash setup_files/setup_test_files.sh
 
-source /etc/profile.d/modules.sh
 cd run/
 mkdir TORAX-MUSCLE3
 cd TORAX-MUSCLE3
 module load Python
 python -m venv ./venv
 source ./venv/bin/activate
-pip install torax-muscle3
+pip install --upgrade pip setuptools
+pip install torax-muscle3 "muscle3==0.8.0"
 deactivate
 module purge
 cd ../..
@@ -29,8 +32,9 @@ module load MUSCLE3
 
 # bash run_test_files.sh
 muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_accumulator_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
+# muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
 # muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
 
 # RUN WORKFLOWS

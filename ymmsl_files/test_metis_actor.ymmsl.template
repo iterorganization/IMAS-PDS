@@ -40,6 +40,7 @@ implementations:
       DIR_METIS4MUSCLE3: [PWD_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
       IMAS_VERSION: '4.0.0'
     executable: matlab
+    modules: IMAS-AL-Matlab
     args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(1);"
 resources:
   source:
