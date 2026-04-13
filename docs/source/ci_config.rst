@@ -28,16 +28,3 @@ Build docs
 
     The CI script executed in this job is: ``ci/build_docs_and_dist.sh``, which expects the
     modules it needs to load as arguments.
-
-
-.. Deployment projects
-.. -------------------
-
-.. There is currently one Bamboo deployment project for PDS:
-
-.. `Deploy PDS-Doc <https://ci.iter.org/deploy/viewDeploymentProjectEnvironments.action?id=1908899843>`_
-..     Deploy the documentation created in the `Build docs` job to `Sharepoint
-..     <https://sharepoint.iter.org/departments/POP/CM/IMDesign/Code%20Documentation/PDS/index.html#>`_.
-
-..     This deployment project runs for after each successful CI build of the PDS main
-..     branch.
