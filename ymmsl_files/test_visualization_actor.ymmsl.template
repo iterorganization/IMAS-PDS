@@ -14,7 +14,7 @@ model:
     source_component.equilibrium_out: visualization_component.equilibrium_in
 settings:
   source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  visualization_component.plot_file_path: "[PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py"
+  visualization_component.plot_file_path: "[PWD_PLACEHOLDER]/visualization/torax.py"
   visualization_component.throttle_interval: 0
   visualization_component.keep_alive: false
   visualization_component.open_browser: false
