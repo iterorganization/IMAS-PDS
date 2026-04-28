@@ -300,6 +300,10 @@ class Plotter(BasePlotter):
         """
         r = equilibrium_data.grid_r.values
         z = equilibrium_data.grid_z.values
+        if len(r.shape) == 2:
+            r = r[0, :]
+        if len(z.shape) == 2:
+            z = r[0, :]
         psi = equilibrium_data.psi.values
 
         trics = plt.tricontour(r, z, psi, levels=levels)
