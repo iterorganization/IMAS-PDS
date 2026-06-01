@@ -17,8 +17,6 @@ t_initial, t_final = get_t_values(imas_uri)
 
 rhon = np.linspace(0, 1, 25)
 
-# Setting a higher time resolution between 5s and 10s.
-epsilon = 1e-5
 fixed_dt= 0.15
 
 # dbe = imas.DBEntry(imas_uri, 'r')
@@ -86,6 +84,7 @@ CONFIG = {
         'ohmic': {},
         'fusion': {},
         'ei_exchange': {},
+        # bremsstrahlung cannot be used simultaneously with impurity model mavrin_fit
         'bremsstrahlung': {'mode': 'ZERO'},
         'impurity_radiation': {
             # 'model_name': 'mavrin_fit',
