@@ -82,6 +82,13 @@ class State(BaseState):
                 "n_e0": ("time", [n_e0]),
                 "n_i0": ("time", [n_i0]),
                 "ip": ("time", [ip]),
+                "f_df_dpsi": (("time", "x_coord"), [p1d.f_df_dpsi]),
+                "dpressure_dpsi": (
+                    ("time", "x_coord"),
+                    [p1d.dpressure_dpsi],
+                ),
+                "psi_profile": (("time", "x_coord"), [p1d.psi]),
+
                 
             },
             coords={
@@ -159,10 +166,17 @@ class Plotter(BasePlotter):
                 xlabel="Time [s]", ylabel="Density [m⁻³]", show_grid=True,
             )
         )
+        f_df_dpsi = hv.DynamicMap(self.plot_f_df_dpsi_profile)
+        dpressure_dpsi = hv.DynamicMap(self.plot_dpressure_dpsi)
+
  
         return pn.Row(
             pn.Column(temperature, density),
             pn.Column(ip, temperature_waveforms, density_waveforms),
+            pn.Column(
+                pn.Row(f_df_dpsi, dpressure_dpsi),
+                pn.Row(ip),
+            ),
         )
  
     # ------------------------------------------------------------------
@@ -308,4 +322,41 @@ class Plotter(BasePlotter):
         return hv.Curve((time, ni0), kdims=["time"], vdims=["n_i0 [keV]"], label = "n_i(0)",).opts(
             framewise=True, color="blue",
         )
+    
+    @param.depends("time")
+    def plot_f_df_dpsi_profile(self):
+        xlabel = "Psi"
+        ylabel = "ff'"
+        state = self.active_state.data.get("equilibrium")
+
+        if state:
+            selected_data = state.sel(time=self.time)
+            psi = selected_data.psi_profile
+            f_df_dpsi = selected_data.f_df_dpsi
+            title = "ff' profile"
+        else:
+            psi, f_df_dpsi, title = [], [], "Waiting for data..."
+
+        return hv.Curve((psi, f_df_dpsi), xlabel, ylabel).opts(
+            framewise=True, height=200, width=600, title=title
+        )
+
+    @param.depends("time")
+    def plot_dpressure_dpsi(self):
+        xlabel = "Psi"
+        ylabel = "p'"
+        state = self.active_state.data.get("equilibrium")
+
+        if state:
+            selected_data = state.sel(time=self.time)
+            psi = selected_data.psi_profile
+            dpressure_dpsi = selected_data.dpressure_dpsi
+            title = "p' profile"
+        else:
+            psi, dpressure_dpsi, title = [], [], "Waiting for data..."
+
+        return hv.Curve((psi, dpressure_dpsi), xlabel, ylabel).opts(
+            framewise=True, height=200, width=600, title=title
+        )
+
     
