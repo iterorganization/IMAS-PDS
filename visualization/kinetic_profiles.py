@@ -82,14 +82,6 @@ class State(BaseState):
                 "n_e0": ("time", [n_e0]),
                 "n_i0": ("time", [n_i0]),
                 "ip": ("time", [ip]),
-                "f_df_dpsi": (("time", "x_coord"), [p1d.f_df_dpsi]),
-                "dpressure_dpsi": (
-                    ("time", "x_coord"),
-                    [p1d.dpressure_dpsi],
-                ),
-                "psi_profile": (("time", "x_coord"), [p1d.psi]),
-
-                
             },
             coords={
                 "time": [t],
@@ -180,9 +172,7 @@ class Plotter(BasePlotter):
             pn.Column(temperature, density),
             pn.Column(ip, temperature_waveforms, density_waveforms),
             pn.Column(
-                pn.Row(f_df_dpsi, dpressure_dpsi),
-                pn.Row(ip),
-            ),
+                f_df_dpsi, dpressure_dpsi, ip),
         )
  
     # ------------------------------------------------------------------
