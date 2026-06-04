@@ -105,10 +105,10 @@ settings:
   torax.output_all_timeslices: False
   xml_path: [SUBDIR_PLACEHOLDER]/config_nice.xml
   python_config_module: [SUBDIR_PLACEHOLDER]/config_torax.py
-  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/nice_inv.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
-  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/simple_1d_plot/simple_1d_plot.py
+  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/kinetic_profiles.py
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   muscle_remote_log_level: 'DEBUG'

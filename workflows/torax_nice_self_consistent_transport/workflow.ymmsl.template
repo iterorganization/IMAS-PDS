@@ -92,7 +92,7 @@ settings:
   visualization_nice.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/nice_inv.py
   visualization_nice.throttle_interval: 0.4
   visualization_nice.keep_alive: false
-  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/torax.py
+  visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/kinetic_profiles.py
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
   validator.halt_on_error: True

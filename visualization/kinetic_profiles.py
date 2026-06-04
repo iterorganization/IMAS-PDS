@@ -111,8 +111,14 @@ class State(BaseState):
         """Extract global Ip from equilibrium IDS (fallback scalar source)."""
         ts = ids.time_slice[0]
         t = ids.time[0]
+        p1d = ts.profiles_1d
         new_point = xr.Dataset(
-            {"ip_eq": ("time", [ts.global_quantities.ip])},
+            {
+                "ip_eq": ("time", [ts.global_quantities.ip]),
+                "psi_profile": (("time", "x_coord"), [p1d.psi]),
+                "f_df_dpsi": (("time", "x_coord"), [p1d.f_df_dpsi]),
+                "dpressure_dpsi": (("time", "x_coord"), [p1d.dpressure_dpsi]),
+            },
             coords={"time": [t]},
         )
         current_data = self.data.get("equilibrium")
