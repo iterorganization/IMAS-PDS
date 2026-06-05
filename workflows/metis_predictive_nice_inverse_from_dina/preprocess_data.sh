@@ -7,7 +7,6 @@ module load IMAS-AL-Matlab
 echo "Inputs:"
 echo "SHOT_NR=" $SHOT_NR
 echo "SOURCE_URI=" $SOURCE_URI
-echo "BACKUP_URI=" $BACKUP_URI
 echo "SINK_URI=" $SINK_URI
 echo "SINK_UPDATE_URI=" $SINK_UPDATE_URI
 echo "SINK_METIS_URI=" $SINK_METIS_URI
@@ -17,9 +16,14 @@ echo "T_LIST=" "${T_LIST[@]}"
 export matlab_path="$PWD/workflows/metis_nice_utils"
 export IMAS_AL_DISABLE_VALIDATE=1
 
-python $PWD/workflows/metis_nice_utils/convert_dina_data_to_input.py \
+SUMMARY_URI=$SOURCE_URI
+python $PWD/workflows/utils/convert_dina_data_to_input.py \
   --source_uri $SOURCE_URI \
-  --backup_uri $BACKUP_URI \
+  --summary_uri $SUMMARY_URI \
+  --md_pf_active_uri $MD_PF_ACTIVE \
+  --md_pf_passive_uri $MD_PF_PASSIVE \
+  --md_wall_uri $MD_WALL \
+  --md_iron_core_uri $MD_IRON_CORE \
   --sink_uri $SINK_URI \
   --n_timeslices $N_TIMESLICES
 

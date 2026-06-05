@@ -9,7 +9,6 @@ T_LIST=("$@")
 echo "Inputs:"
 echo "SHOT_NR=" $SHOT_NR
 echo "SOURCE_URI=" $SOURCE_URI
-echo "BACKUP_URI=" $BACKUP_URI
 echo "SINK_URI=" $SINK_URI
 echo "SINK_UPDATE_URI=" $SINK_UPDATE_URI
 echo "SINK_METIS_URI=" $SINK_METIS_URI
