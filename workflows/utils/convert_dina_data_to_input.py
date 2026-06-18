@@ -9,12 +9,13 @@ from scipy.integrate import cumulative_trapezoid as cumtrapz
 from scipy.interpolate import interp1d as interp1
 from imas import DBEntry, IDSFactory, convert_ids
 from imas.ids_defs import CLOSEST_INTERP
-from packaging import version
+from packaging.version import Version
 import datetime
 from contextlib import ExitStack
 
 
 def handle_args():
+    # make some of these optional when we get cases where they are not needed
     parser = argparse.ArgumentParser(
         description="Get preprocessed input data for NICE from DINA"
     )
@@ -91,7 +92,7 @@ def main():
                     interpolation_method=CLOSEST_INTERP,
                     autoconvert=False,
                 )
-                if version.parse(eq_orig._dd_version) < version.parse("4.0.0"):
+                if Version(eq_orig._dd_version) < Version("4.0.0"):
                     bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
                 else:
                     bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
@@ -100,7 +101,7 @@ def main():
             if bndr_len == 0:
                 skipped.append(t)
                 continue
-            if version.parse(eq_orig._dd_version) < version.parse("4.0.0"):
+            if Version(eq_orig._dd_version) < Version("4.0.0"):
                 eq_orig_ts = eq_orig.time_slice[0]
 
                 # DINA input - NICE output defined at psi_norm:
@@ -137,7 +138,7 @@ def main():
         preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list)
         preprocess_pf_passive(db_out, db_md_pf_passive, t_list)
 
-        logging.info(skipped)
+        logging.info(f"Following timeslices during preprocessing were not viable: {skipped}")
 
 
 def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
