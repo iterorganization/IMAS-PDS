@@ -97,11 +97,11 @@ model:
     magnetic_controller.pf_active_o_i: sink_controller.pf_active_in
 
 settings:
-  source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
+  source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice"
   source.iterative: false
   source.t_min: [TSTART_PLACEHOLDER]
-  sink_source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
-  sink_source_nice.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice/"
+  sink_source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in"
+  sink_source_nice.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice2"
   sink_nice.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice_evo"
   sink_controller.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_controller"
   sink_torax.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_torax"
@@ -141,7 +141,7 @@ implementations:
   nice_evo:
     env: 
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: SuiteSparse/7.7.0-intel-2023b libxml2
+    modules: NICE
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
     #executable: valgrind --leak-check=yes [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
   torax:
@@ -157,7 +157,7 @@ implementations:
       PCS_PATH: [BASEDIR_PLACEHOLDER]/run/pcs
       CONTROLLER_PATH: [BASEDIR_PLACEHOLDER]/controllers
       SCDDS_COREPATH: [BASEDIR_PLACEHOLDER]/run/pcs/pcssp/scdds
-    modules: MATLAB/2024a-r6-GCCcore-13.2.0
+    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
     executable: matlab
     # args: -r "[s,t] = unix('which python');
     args: -batch "[s,t] = unix('which python');

@@ -14,7 +14,7 @@ python -m venv ./venv
 . venv/bin/activate
 pip install --upgrade pip setuptools
 pip install build
-pip install -e .
+pip install -e . "muscle3==0.8.0"
 deactivate
 module purge
 cd ..

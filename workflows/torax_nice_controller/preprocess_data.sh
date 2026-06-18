@@ -14,9 +14,12 @@ python $PWD/workflows/torax_nice_utils/convert_dina_data_to_input.py \
 
 NICE_INPUT_PATH="$PWD/workflows/torax_nice_self_consistent_transport/scenarios/$SHOT_NR/tmp/data/${SHOT_NR}_out_nice"
 NEW_INPUT_PATH="$SUBDIR/tmp/data/${SHOT_NR}_out_nice"
+NEW_INPUT_PATH2="$SUBDIR/tmp/data/${SHOT_NR}_out_nice2"
 if [[ -d "$NICE_INPUT_PATH" ]]; then
   rm -rf "$NEW_INPUT_PATH"
+  rm -rf "$NEW_INPUT_PATH2"
   cp -r "$NICE_INPUT_PATH" "$NEW_INPUT_PATH"
+  cp -r "$NICE_INPUT_PATH" "$NEW_INPUT_PATH2"
 else
   echo "Warning: data should exist at ${NICE_INPUT_PATH}, run corresponding workflow before this one"
   exit 1

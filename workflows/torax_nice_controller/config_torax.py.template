@@ -1,6 +1,28 @@
 """Simplified config using mostly defaults for various simulation components."""
-
+import numpy as np 
+from torax._src.imas_tools.input.core_sources import sources_from_IMAS
+import imas
 imas_uri = "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
+
+def get_t_values(imas_uri):
+    import imas
+    import numpy as np
+    with imas.DBEntry(imas_uri, 'r') as db:
+        eq = db.get('equilibrium')
+        t_initial = eq.time[0]
+        t_final = eq.time[-1]
+    return t_initial, t_final
+
+t_initial, t_final = get_t_values(imas_uri)
+
+rhon = np.linspace(0, 1, 25)
+
+fixed_dt= 0.15
+
+# dbe = imas.DBEntry(imas_uri, 'r')
+# cs_ids = dbe.get('core_sources')
+# sources = sources_from_IMAS(cs_ids, t_initial)['ecrh']
+# ecrh = sources['ecrh']
 
 def get_imas_sources(imas_uri):
     import imas
@@ -23,34 +45,32 @@ def get_imas_sources(imas_uri):
             }
         }
     return sources
-
-def get_t_values(imas_uri):
-    import imas
-    import numpy as np
-    with imas.DBEntry(imas_uri, 'r') as db:
-        eq = db.get('equilibrium')
-        t_initial = eq.time[0]
-        t_final = eq.time[-1]
-    return t_initial, t_final
-
-t_initial, t_final = get_t_values(imas_uri)
+    
+sources = get_imas_sources(imas_uri)
+ecrh = sources['ecrh']
 
 CONFIG = {
     'profile_conditions': {},
     'plasma_composition': {
         'main_ion': {'H': 1},
+        "impurity": {
+            "species": {
+                "Ne": None,
+            },
+            "impurity_mode": "n_e_ratios_Z_eff",
+        },
+        "Z_eff": 1.1,
     },
     'numerics': {
-        't_initial': [TSTART_PLACEHOLDER],
+        't_initial': t_initial,
         't_final': t_final,
         'exact_t_final': True,
-        'fixed_dt': 0.03,
+        'fixed_dt': fixed_dt,
         'adaptive_dt': False,
         'resistivity_multiplier': 1,
         'evolve_current': True,
-        # 'evolve_current': False,
-        'evolve_ion_heat': False,
-        'evolve_electron_heat': False,
+        'evolve_ion_heat': True,
+        'evolve_electron_heat': True,
         'evolve_density': False,
     },
     # circular geometry is only for testing and prototyping
@@ -59,21 +79,39 @@ CONFIG = {
         'n_rho': 25,
     },
     'pedestal': {},
-    # 'sources': {
-    #     # Ion and electron heat sources (for the temp-ion and temp-el eqs).
-    #     'generic_heat': {
-    #         'gaussian_location': 0.12741589640723575,
-    #         # Gaussian width in normalized radial coordinate r
-    #         'gaussian_width': 0.07280908366127758,
-    #         # total heating (including accounting for radiation) r
-    #         'P_total': 1.0e6,
-    #         # electron heating fraction r
-    #         'electron_heat_fraction': 1.0,
-    #     },
-    # },
-    'sources': get_imas_sources(imas_uri),
-    'transport': {
+    'sources': {
+        # Physics-based sources
+        'ohmic': {},
+        'fusion': {},
+        'ei_exchange': {},
+        # bremsstrahlung cannot be used simultaneously with impurity model mavrin_fit
+        'bremsstrahlung': {'mode': 'ZERO'},
+        'impurity_radiation': {
+            # 'model_name': 'mavrin_fit',
+            # 'radiation_multiplier': 0.8,
+            'model_name': 'P_in_scaled_flat_profile',
+            'fraction_P_heating': 0.3,
+        },
+        # Actuators
+        # 'ecrh': {'mode': 'ZERO'},
+        'ecrh': ecrh,
+    },
+    "transport": {
         'model_name': 'qlknn',
+        # set inner core transport coefficients (ad-hoc MHD/EM transport)
+        'apply_inner_patch': True,
+        'D_e_inner': 0.1,
+        'V_e_inner': 0.0,
+        'chi_i_inner': 1.5,
+        'chi_e_inner': 1.5,
+        'rho_inner': 0.15,  # radius below which patch transport is applied
+        # set outer core transport coefficients (L-mode near edge region)
+        'apply_outer_patch': True,
+        'D_e_outer': 0.2,
+        'V_e_outer': -0.3,
+        'chi_i_outer': 2.0,
+        'chi_e_outer': 2.0,
+        'rho_outer': 0.93,  # radius above which patch transport is applied
     },
     'solver': {
         'solver_type': 'newton_raphson',
@@ -85,8 +123,6 @@ CONFIG = {
         'calculator_type': 'fixed',
     },
     'neoclassical': {
-        'bootstrap_current': {
-            'model_name': 'zeros',
-        },
+        'bootstrap_current': {'model_name': 'sauter'},
     },
 }

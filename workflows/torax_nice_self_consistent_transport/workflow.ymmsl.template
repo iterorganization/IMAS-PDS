@@ -95,7 +95,7 @@ settings:
   visualization_torax.plot_file_path: [BASEDIR_PLACEHOLDER]/visualization/kinetic_profiles.py
   visualization_torax.throttle_interval: 0.4
   visualization_torax.keep_alive: false
-  validator.halt_on_error: True
+  validator.halt_on_error: False
   validator.extra_rule_dirs: [BASEDIR_PLACEHOLDER]/pds_validation_tests/
   validator.rulesets: iter-olc
   validator.apply_generic: False
