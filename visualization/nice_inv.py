@@ -130,7 +130,7 @@ class State(BaseState):
 
         ip_beta_tor = xr.Dataset(
             {
-                "ip": ("time", [ts.global_quantities.ip]),
+                "ip": ("time", [-1 * ts.global_quantities.ip]),
                 "beta_tor": ("time", [ts.global_quantities.beta_tor]),
             },
             coords={
