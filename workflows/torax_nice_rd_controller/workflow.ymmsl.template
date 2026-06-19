@@ -25,9 +25,9 @@ model:
     magnetic_controller:
       implementation: magnetic_controller
       ports:
-        f_init: [equilibrium_f_init, pf_active_f_init]
-        s: [equilibrium_s, pf_active_s]
-        o_i: [pf_active_o_i]
+        f_init: [equilibrium_in_f, pf_active_in_f]
+        s: [equilibrium_in_s, pf_active_in_s]
+        o_i: [pf_active_out_i]
     nice_evo_rd:
       implementation: nice_evo_rd
       ports:
@@ -56,8 +56,8 @@ model:
         s: [equilibrium_in]
   conduits:
     source.equilibrium_out: torax.equilibrium_f_init
-    source.equilibrium_out: magnetic_controller.equilibrium_f_init
-    source.pf_active_out: magnetic_controller.pf_active_f_init
+    source.equilibrium_out: magnetic_controller.equilibrium_in_f
+    source.pf_active_out: magnetic_controller.pf_active_in_f
     source.equilibrium_out: nice_evo_rd.equilibrium_f_init
     source.pf_active_out: nice_evo_rd.pf_active_f_init
     source.pf_passive_out: nice_evo_rd.pf_passive_f_init
@@ -80,15 +80,15 @@ model:
     sink_source.iron_core_out: sink_torax.iron_core_in
  
     nice_evo_rd.equilibrium_o_i: torax.equilibrium_s
-    nice_evo_rd.equilibrium_o_i: magnetic_controller.equilibrium_s
+    nice_evo_rd.equilibrium_o_i: magnetic_controller.equilibrium_in_s
     nice_evo_rd.equilibrium_o_i: sink_nice.equilibrium_in
     nice_evo_rd.equilibrium_o_i: visualization_nice.equilibrium_in
     nice_evo_rd.equilibrium_o_i: sink_source_nice.equilibrium_in
-    nice_evo_rd.pf_active_o_i: magnetic_controller.pf_active_s
+    nice_evo_rd.pf_active_o_i: magnetic_controller.pf_active_in_s
     nice_evo_rd.pf_active_o_i: sink_nice.pf_active_in
     nice_evo_rd.pf_active_o_i: visualization_nice.pf_active_in
-    magnetic_controller.pf_active_o_i: nice_evo_rd.pf_active_s
-    magnetic_controller.pf_active_o_i: sink_controller.pf_active_in
+    magnetic_controller.pf_active_out_i: nice_evo_rd.pf_active_s
+    magnetic_controller.pf_active_out_i: sink_controller.pf_active_in
 
 settings:
   source.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice"

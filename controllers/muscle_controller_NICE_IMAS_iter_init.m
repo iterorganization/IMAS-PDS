@@ -33,9 +33,9 @@ py.logging.basicConfig( ...
 % Ports need to match the MUSCLE3 yaml description on the other side
 logger.info("Starting Simulink actor")
 ports = py.dict();
-ports{py.getattr(@py.ymmsl.Operator,"F_INIT")} = py.list({"equilibrium_f_init", "pf_active_f_init"});
-ports{py.getattr(@py.ymmsl.Operator,"S")} = py.list({"equilibrium_s", "pf_active_s"});
-ports{py.getattr(@py.ymmsl.Operator,"O_I")} = py.list({"pf_active_o_i"});
+ports{py.getattr(@py.ymmsl.Operator,"F_INIT")} = py.list({"equilibrium_in_f", "pf_active_in_f"});
+ports{py.getattr(@py.ymmsl.Operator,"S")} = py.list({"equilibrium_in_s", "pf_active_in_s"});
+ports{py.getattr(@py.ymmsl.Operator,"O_I")} = py.list({"pf_active_out_i"});
 
 %% declare muscle3 as non-codegen compatible
 coder.extrinsic('py.libmuscle.Instance');
@@ -57,11 +57,11 @@ while instance.reuse_instance()
 
 
     %% Init NICE parameters
-    msg_eq = instance.receive("equilibrium_f_init");
+    msg_eq = instance.receive("equilibrium_in_f");
     equilibrium_serial=uint8(msg_eq.data);
     equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
 
-    msg_pfa = instance.receive("pf_active_f_init");
+    msg_pfa = instance.receive("pf_active_in_f");
     pfa_serial=uint8(msg_pfa.data);
     pf_active = imas_deserialize(pfa_serial, 'pf_active');
 
