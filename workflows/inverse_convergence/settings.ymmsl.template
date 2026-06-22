@@ -1,0 +1,16 @@
+ymmsl_version: v0.2
+# Per-scenario settings for inverse_convergence, stacked onto workflow.ymmsl:
+#   muscle_manager --start-all workflow.ymmsl settings.ymmsl --run-dir <dir>
+# Paths are expanded by create_runnable_files.sh ([SUBDIR_PLACEHOLDER] = the scenario dir,
+# [SHOT_NR] = the shot). The loop writes its converged NICE result to <shot>_out_nice, which
+# the evolutive controllers consume.
+settings:
+  loop.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_in/"
+  loop.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_out_nice"
+  loop.max_slices: 10
+  loop.max_iterations: 6
+  loop.tolerance: 1000.0
+  we.waveforms: [SUBDIR_PLACEHOLDER]/waveforms.yaml
+  nice_inv.xml_path: [SUBDIR_PLACEHOLDER]/config_nice.xml
+  torax.python_config_module: [SUBDIR_PLACEHOLDER]/config_torax.py
+  torax.output_all_timeslices: True

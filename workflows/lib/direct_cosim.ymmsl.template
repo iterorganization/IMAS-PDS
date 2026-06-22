@@ -1,0 +1,165 @@
+ymmsl_version: v0.2
+
+# The `direct_cosim` subworkflow MODEL: nice_evo <-> torax direct co-simulation.
+# Translated from torax_nice_controller/workflow.ymmsl.template, MINUS the controller by
+# default. Components `transport` and `nice_evo` are interface holes; the scenario fills
+# them (transport=torax, nice_evo=nice_evo or nice_evo_rd). `temporal_coupler` and
+# `magnetic_controller` are OPTIONAL and disabled by default (custom_implementations: ...
+# null in the scenario).
+#
+# DEFAULT WIRING = direct: transport.equilibrium_o_i -> nice_evo.equilibrium_s and
+# nice_evo.equilibrium_o_i -> transport.equilibrium_s. The temporal_coupler /
+# magnetic_controller conduits below are ONLY live when those optional components are
+# enabled; when disabled (the default) the manager drops them automatically during
+# flattening (verified: a disabled optional component and all conduits attached to it are
+# removed from the final configuration).
+#
+# NOTE for a future controller/coupler variant: enabling temporal_coupler or
+# magnetic_controller leaves BOTH the direct conduits AND the coupler/controller conduits
+# pointing at the same receiving ports (transport.equilibrium_s / nice_evo.equilibrium_s /
+# nice_evo.pf_active_s). The ymmsl consistency check does not flag this, but it is a
+# double-wire at runtime. The clean way to ship that variant is a separate
+# direct_cosim_controlled.ymmsl model (without the two direct conduits) imported in its
+# place. For the default direct workflow this file is correct and self-consistent.
+#
+# The hard-wired (non-hole) component implementations used below must be importable from
+# within this file, because the resolver eagerly resolves a submodel's component
+# implementations when this model is itself imported. The hole/optional components
+# (source, transport, nice_evo, temporal_coupler, magnetic_controller, sink_controller,
+# visualization_*) are filled or disabled by the scenario's custom_implementations.
+
+imports:
+- from lib.programs import implementation sink
+- from lib.programs import implementation sink_source
+
+models:
+  direct_cosim:
+    description: nice_evo <-> torax direct co-simulation (controller/coupler optional).
+    ports: {}
+    components:
+
+      source:
+        description: Source of initial IDSs (interface hole; fill = source).
+        ports:
+          o_i: [equilibrium_out, pf_active_out, wall_out, pf_passive_out, iron_core_out, core_profiles_out]
+
+      transport:
+        description: Transport co-sim peer (interface hole; fill = torax).
+        ports:
+          f_init: [equilibrium_f_init, core_profiles_f_init]
+          s: [equilibrium_s]
+          o_i: [equilibrium_o_i, core_profiles_o_i]
+
+      nice_evo:
+        description: NICE evolutive co-sim peer (interface hole/swap; fill = nice_evo | nice_evo_rd).
+        ports:
+          f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init]
+          s: [equilibrium_s, pf_active_s]
+          o_i: [equilibrium_o_i, pf_active_o_i]
+
+      sink_source:
+        description: Re-emit static machine-description IDSs into the torax sink.
+        implementation: sink_source
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
+
+      sink_source_nice:
+        description: Re-emit machine-description IDSs for NICE-side visualization.
+        implementation: sink_source
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [wall_out, pf_active_out]
+
+      sink_nice:
+        description: Sink for the NICE-evo outputs.
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in, pf_active_in]
+
+      sink_torax:
+        description: Sink for the transport outputs.
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]
+
+      sink_controller:
+        description: Optional sink for the PCS controller outputs.
+        optional: true
+        ports:
+          f_init: [equilibrium_in, pf_active_in]
+
+      temporal_coupler:
+        description: Optional PCS temporal coupler between transport and nice_evo.
+        optional: true
+        ports:
+          s: [a_in, b_in]
+          o_i: [a_out, b_out]
+
+      magnetic_controller:
+        description: Optional PCS magnetic (SCDDS) controller.
+        optional: true
+        ports:
+          f_init: [equilibrium_f_init, pf_active_f_init]
+          s: [equilibrium_s, pf_active_s]
+          o_i: [pf_active_o_i]
+
+      visualization_nice:
+        description: Optional live plotting of the NICE side.
+        optional: true
+        ports:
+          s: [equilibrium_in, pf_active_in, wall_md_in, pf_active_md_in]
+
+      visualization_torax:
+        description: Optional live plotting of the transport side.
+        optional: true
+        ports:
+          s: [equilibrium_in]
+
+    conduits:
+      # --- F_INIT fan-out from source ---
+      source.equilibrium_out: transport.equilibrium_f_init
+      source.equilibrium_out: magnetic_controller.equilibrium_f_init
+      source.pf_active_out: magnetic_controller.pf_active_f_init
+      source.equilibrium_out: nice_evo.equilibrium_f_init
+      source.pf_active_out: nice_evo.pf_active_f_init
+      source.pf_passive_out: nice_evo.pf_passive_f_init
+      source.iron_core_out: nice_evo.iron_core_f_init
+      source.wall_out: nice_evo.wall_f_init
+      source.core_profiles_out: transport.core_profiles_f_init
+
+      # --- DEFAULT direct co-sim loop (live when temporal_coupler is disabled) ---
+      transport.equilibrium_o_i: nice_evo.equilibrium_s
+      nice_evo.equilibrium_o_i: transport.equilibrium_s
+
+      # --- temporal_coupler-mediated loop (live only when temporal_coupler enabled) ---
+      transport.equilibrium_o_i: temporal_coupler.a_in
+      nice_evo.equilibrium_o_i: temporal_coupler.b_in
+      temporal_coupler.a_out: transport.equilibrium_s
+      temporal_coupler.b_out: nice_evo.equilibrium_s
+
+      # --- transport outputs to sinks / sink_source / viz ---
+      transport.equilibrium_o_i: sink_source.equilibrium_in
+      transport.equilibrium_o_i: visualization_torax.equilibrium_in
+      transport.equilibrium_o_i: sink_torax.equilibrium_in
+
+      # --- machine-description re-emission and NICE-side viz metadata ---
+      sink_source_nice.wall_out: visualization_nice.wall_md_in
+      sink_source_nice.pf_active_out: visualization_nice.pf_active_md_in
+      sink_source.pf_active_out: sink_torax.pf_active_in
+      sink_source.pf_passive_out: sink_torax.pf_passive_in
+      sink_source.wall_out: sink_torax.wall_in
+      sink_source.iron_core_out: sink_torax.iron_core_in
+
+      # --- nice_evo outputs to controller / sinks / viz / sink_source_nice ---
+      nice_evo.equilibrium_o_i: magnetic_controller.equilibrium_s
+      nice_evo.equilibrium_o_i: sink_nice.equilibrium_in
+      nice_evo.equilibrium_o_i: visualization_nice.equilibrium_in
+      nice_evo.equilibrium_o_i: sink_source_nice.equilibrium_in
+      nice_evo.pf_active_o_i: magnetic_controller.pf_active_s
+      nice_evo.pf_active_o_i: sink_nice.pf_active_in
+      nice_evo.pf_active_o_i: visualization_nice.pf_active_in
+
+      # --- controller output back to nice_evo (live only when controller enabled) ---
+      magnetic_controller.pf_active_o_i: nice_evo.pf_active_s
+      magnetic_controller.pf_active_o_i: sink_controller.pf_active_in

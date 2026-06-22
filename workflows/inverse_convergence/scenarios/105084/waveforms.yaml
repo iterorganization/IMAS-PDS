@@ -1,0 +1,31 @@
+# Waveform-Editor configuration driving the designed plasma-current target Ip(t) for the
+# inverse_convergence loop (scenario 105084). The loop sends the waveform actor the target
+# equilibrium each Picard iteration; the actor reads its /time array (time_ids: equilibrium)
+# and interpolates this waveform onto every slice, returning a whole-trace equilibrium whose
+# time_slice(:)/global_quantities/ip the loop holds as the NICE-inverse target.
+#
+# The piecewise below reproduces the DINA-preprocessed Ip(t) of 105084 at its 10 slice times
+# (ramp from -1.27 MA to a ~-3.5 MA flat-top); edit it here to redesign the current waveform
+# without touching the input IDS. Durations are the gaps between successive slice times.
+globals:
+  dd_version: 4.0.0
+
+Plasma current:
+  equilibrium/time_slice/global_quantities/ip:
+    - {type: constant, value: -1.26633e6, duration: 2.4176}
+    - {type: linear, to: -2.73902e6, duration: 7.1}
+    - {type: linear, to: -3.46928e6, duration: 7.0}
+    - {type: linear, to: -3.51553e6, duration: 7.1}
+    - {type: linear, to: -3.50052e6, duration: 7.0}
+    - {type: linear, to: -3.51242e6, duration: 7.1}
+    - {type: linear, to: -3.50790e6, duration: 7.0}
+    - {type: linear, to: -3.51630e6, duration: 7.1}
+    - {type: linear, to: -3.50919e6, duration: 7.0}
+    - {type: linear, to: -3.52348e6, duration: 7.1}
+
+# Vacuum toroidal field B0 at R0=6.2 m (NICE-inverse reads vacuum_toroidal_field.b0). Flat
+# at -2.65 T for 105084; overlaying it guarantees the designed field every iteration. R0
+# itself is static machine data (read once from the input IDS), so it is not a waveform.
+Toroidal field:
+  equilibrium/vacuum_toroidal_field/b0:
+    - {type: constant, value: -2.65}

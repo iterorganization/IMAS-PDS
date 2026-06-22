@@ -1,0 +1,125 @@
+ymmsl_version: v0.2
+
+# Consolidated program (implementation) definitions for the two PDS v0.2 workflows
+# (inverse_convergence and evolutive). Translated 1:1 from the v0.1 `implementations:`
+# blocks of the original per-workflow templates. Placeholders [BASEDIR_PLACEHOLDER] /
+# [SUBDIR_PLACEHOLDER] / [SHOT_NR] are expanded by create_runnable_files.sh; hence the
+# .template suffix.
+#
+# Import into a workflow with e.g.:
+#   imports:
+#   - from lib.programs import implementation torax
+# and run the manager with YMMSL_PATH pointing at the workflows/ directory so that
+# `lib.programs` resolves to <workflows>/lib/programs.ymmsl.
+
+programs:
+
+  # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
+  source:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.source_component"
+
+  sink:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_component"
+
+  accumulator:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.accumulator_component"
+
+  sink_source:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.sink_source_component"
+
+  visualization:
+    base_env: clean
+    modules: IMAS-Python/2.1.0-foss-2023b IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.visualization_component"
+
+  # olc / validator actor (open-loop-check rule validation)
+  olc:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.olc_component"
+
+  # ----- NICE free-boundary equilibrium binaries ------------------------------------
+  nice_inv:
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    base_env: clean
+    modules: NICE
+    executable: nice_imas_inv_muscle3
+
+  # New-style S/O_I micro-model evo (uses the locally built master binary, see CLAUDE.md)
+  nice_evo:
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+    modules: NICE
+    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
+
+  # Resistive-diffusion evo variant (adds core_profiles coupling)
+  nice_evo_rd:
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+    modules: NICE
+    executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_rd_muscle3
+
+  # ----- TORAX transport actor (own venv + module loads via a script) ---------------
+  torax:
+    script: |
+      #!/bin/bash
+      module purge
+      module load Python
+      source [BASEDIR_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
+      export IMAS_VERSION="4.0.0"
+      export JAX_COMPILATION_CACHE_DIR="[BASEDIR_PLACEHOLDER]/run/tmp/jax_cache"
+      python -u -m torax_muscle3.torax_actor
+
+  # ----- METIS transport (documented alternative transport fill; needs MATLAB) ------
+  metis:
+    modules: IMAS-AL-Matlab
+    env:
+      DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
+    executable: matlab
+    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+
+  # ----- PCS temporal coupler (plain python helper) ---------------------------------
+  temporal_coupler:
+    modules: MUSCLE3
+    executable: python
+    args: "-u [BASEDIR_PLACEHOLDER]/workflows/torax_nice_utils/temporal_coupler.py"
+
+  # ----- PCS magnetic controller (SCDDS / MATLAB) -----------------------------------
+  magnetic_controller:
+    env:
+      PCS_PATH: [BASEDIR_PLACEHOLDER]/run/pcs
+      CONTROLLER_PATH: [BASEDIR_PLACEHOLDER]/controllers
+      SCDDS_COREPATH: [BASEDIR_PLACEHOLDER]/run/pcs/pcssp/scdds
+    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
+    executable: matlab
+    args: -batch "[s,t] = unix('which python');
+                  pyenv('Version',strtrim(t),'ExecutionMode','InProcess');
+                  addpath(getenv('PCS_PATH'));
+                  run('[BASEDIR_PLACEHOLDER]/run/nice/runmatlab/initNice4matlab.m');
+                  pcssp_pcs_add_paths;
+                  comparisons.ExternalSCMLink.setupGitConfig();
+                  addpath(getenv('CONTROLLER_PATH'));
+                  muscle_controller_NICE_IMAS_iter_init;"
+
+  # ----- convergence driver (macro Picard reuse-loop controller) --------------------
+  convergence_driver:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.convergence_driver_component"
+
+  # ----- vector-port scatter/gather dispatcher for the parallel inverse --------------
+  dispatcher:
+    modules: IMAS-MUSCLE3
+    executable: python
+    args: "-u -m imas_muscle3.actors.dispatcher_component"

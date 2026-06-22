@@ -12,7 +12,7 @@ python $PWD/workflows/torax_nice_utils/convert_dina_data_to_input.py \
   --sink_uri $SINK_URI \
   --n_timeslices $N_TIMESLICES
 
-NICE_INPUT_PATH="$PWD/workflows/torax_nice_self_consistent_transport/scenarios/$SHOT_NR/tmp/data/${SHOT_NR}_out_nice"
+NICE_INPUT_PATH="$PWD/workflows/inverse_convergence/scenarios/$SHOT_NR/tmp/data/${SHOT_NR}_out_nice"
 NEW_INPUT_PATH="$SUBDIR/tmp/data/${SHOT_NR}_out_nice"
 NEW_INPUT_PATH2="$SUBDIR/tmp/data/${SHOT_NR}_out_nice2"
 if [[ -d "$NICE_INPUT_PATH" ]]; then
