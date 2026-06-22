@@ -14,13 +14,14 @@ models:
   inverse_convergence:
     components:
       loop:     {description: outer convergence loop (SEL submodel), implementation: loop, ports: {o_i: [target_out, wall_out, pf_active_out, pf_passive_out, iron_core_out, core_profiles_out], s: [coils_in, equilibrium_result_in, core_profiles_result_in]}}
-      we:       {description: waveform editor (overlays designed Ip/B0), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out]}}
+      we:       {description: waveform editor (designed Ip/B0 + imported heating), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, core_sources_out]}}
       lb:       {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_trace, pf_active_trace]}}
       nice_inv: {description: nice, implementation: nice_inv, multiplicity: [8], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
-      torax:    {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
+      torax:    {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
     conduits:
       loop.target_out: we.equilibrium_in
       we.equilibrium_out: lb.equilibrium_in
+      we.core_sources_out: torax.core_sources_in_f
       loop.wall_out: lb.wall_in
       loop.pf_active_out: lb.pf_active_in
       loop.pf_passive_out: lb.pf_passive_in
