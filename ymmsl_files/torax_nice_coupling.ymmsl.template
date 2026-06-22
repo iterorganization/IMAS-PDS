@@ -28,10 +28,10 @@ model:
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init]
-        o_i: [equilibrium_o_i]
-        s: [equilibrium_s]
-        o_f: [equilibrium_o_f]
+        f_init: [equilibrium_in_f]
+        o_i: [equilibrium_out_i]
+        s: [equilibrium_in_s]
+        o_f: [equilibrium_out_f]
     olc:
       implementation: olc
       ports:
@@ -42,16 +42,16 @@ model:
     source.pf_passive_out: nice_inv_init.pf_passive_in
     source.iron_core_out: nice_inv_init.iron_core_in
     source.wall_out: nice_inv_init.wall_in
-    nice_inv_init.equilibrium_out: torax.equilibrium_f_init
-    torax.equilibrium_o_i: nice_inv.equilibrium_in
-    torax.equilibrium_o_i: sink_source.equilibrium_in
+    nice_inv_init.equilibrium_out: torax.equilibrium_in_f
+    torax.equilibrium_out_i: nice_inv.equilibrium_in
+    torax.equilibrium_out_i: sink_source.equilibrium_in
     sink_source.pf_passive_out: nice_inv.pf_passive_in
     sink_source.pf_active_out: nice_inv.pf_active_in
     sink_source.iron_core_out: nice_inv.iron_core_in
     sink_source.wall_out: nice_inv.wall_in
-    nice_inv.equilibrium_out: torax.equilibrium_s
+    nice_inv.equilibrium_out: torax.equilibrium_in_s
     nice_inv.pf_active_out: olc.pf_active_in
-    torax.equilibrium_o_f: sink.equilibrium_in
+    torax.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink_source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"

@@ -9,9 +9,9 @@ model:
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init, core_profiles_f_init]
-        s: [equilibrium_s]
-        o_i: [equilibrium_o_i, core_profiles_o_i]
+        f_init: [equilibrium_in_f, core_profiles_in_f]
+        s: [equilibrium_in_s]
+        o_i: [equilibrium_out_i, core_profiles_out_i]
     sink_source:
       implementation: sink_source
       ports:
@@ -60,7 +60,7 @@ model:
         s: [a_in, b_in]
         o_i: [a_out, b_out]
   conduits:
-    source.equilibrium_out: torax.equilibrium_f_init
+    source.equilibrium_out: torax.equilibrium_in_f
     source.equilibrium_out: magnetic_controller.equilibrium_in_f
     source.pf_active_out: magnetic_controller.pf_active_in_f
     source.equilibrium_out: nice_evo.equilibrium_f_init
@@ -68,16 +68,16 @@ model:
     source.pf_passive_out: nice_evo.pf_passive_f_init
     source.iron_core_out: nice_evo.iron_core_f_init
     source.wall_out: nice_evo.wall_f_init
-    source.core_profiles_out: torax.core_profiles_f_init
-    
-    torax.equilibrium_o_i: temporal_coupler.a_in
+    source.core_profiles_out: torax.core_profiles_in_f
+
+    torax.equilibrium_out_i: temporal_coupler.a_in
     nice_evo.equilibrium_o_i: temporal_coupler.b_in
-    temporal_coupler.a_out: torax.equilibrium_s
+    temporal_coupler.a_out: torax.equilibrium_in_s
     temporal_coupler.b_out: nice_evo.equilibrium_s
 
-    torax.equilibrium_o_i: sink_source.equilibrium_in 
-    torax.equilibrium_o_i: visualization_torax.equilibrium_in
-    torax.equilibrium_o_i: sink_torax.equilibrium_in
+    torax.equilibrium_out_i: sink_source.equilibrium_in
+    torax.equilibrium_out_i: visualization_torax.equilibrium_in
+    torax.equilibrium_out_i: sink_torax.equilibrium_in
 
     sink_source_nice.wall_out: visualization_nice.wall_md_in
     sink_source_nice.pf_active_out: visualization_nice.pf_active_md_in
