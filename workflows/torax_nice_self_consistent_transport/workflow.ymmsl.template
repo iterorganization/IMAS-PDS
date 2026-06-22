@@ -24,9 +24,9 @@ model:
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init, core_profiles_f_init]
-        o_i: [equilibrium_o_i]
-        o_f: [equilibrium_o_f, core_profiles_o_f]
+        f_init: [equilibrium_in_f, core_profiles_in_f]
+        o_i: [equilibrium_out_i]
+        o_f: [equilibrium_out_f, core_profiles_out_f]
     sink_nice:
       implementation: sink
       ports:
@@ -70,11 +70,11 @@ model:
     nice_inv.pf_active_out: acc2.pf_active_in
     nice_inv.pf_active_out: visualization_nice.pf_active_in
     nice_inv.pf_active_out: validator.pf_active_in
-    accumulator.equilibrium_out: torax.equilibrium_f_init
-    accumulator.core_profiles_out: torax.core_profiles_f_init
-    torax.equilibrium_o_i: visualization_torax.equilibrium_in
-    torax.equilibrium_o_f: sink_torax.equilibrium_in
-    torax.core_profiles_o_f: sink_torax.core_profiles_in
+    accumulator.equilibrium_out: torax.equilibrium_in_f
+    accumulator.core_profiles_out: torax.core_profiles_in_f
+    torax.equilibrium_out_i: visualization_torax.equilibrium_in
+    torax.equilibrium_out_f: sink_torax.equilibrium_in
+    torax.core_profiles_out_f: sink_torax.core_profiles_in
     acc2.pf_active_out: sink_torax.pf_active_in
     acc2.pf_passive_out: sink_torax.pf_passive_in
     acc2.iron_core_out: sink_torax.iron_core_in
