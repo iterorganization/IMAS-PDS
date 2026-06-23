@@ -25,10 +25,11 @@ run/*
 ymmsl_files/*
 !ymmsl_files/.*
 
-*.ymmsl
-
 workflows/*/scenarios/*/*
 !workflows/*/scenarios/*/
 !workflows/*/scenarios/*/info.txt
 !workflows/*/scenarios/*/scenario_config.env
 !*.template
+
+# Per-scenario settings.ymmsl is a committed static file (the de-templated workflow style).
+!workflows/*/scenarios/*/settings.ymmsl

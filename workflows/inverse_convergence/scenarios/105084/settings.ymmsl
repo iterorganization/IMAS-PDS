@@ -1,0 +1,9 @@
+ymmsl_version: v0.2
+# Per-scenario knobs for inverse_convergence, stacked onto the shared workflow.ymmsl.
+# Portable (no machine paths): scenario data URIs/paths are derived from the scenario dir
+# and generated at run time by run_job.sbatch, then stacked last.
+settings:
+  loop.max_slices: 10
+  loop.max_iterations: 6
+  loop.tolerance: 1000.0
+  torax.output_all_timeslices: True
