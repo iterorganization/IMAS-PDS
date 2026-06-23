@@ -1,8 +1,6 @@
 ymmsl_version: v0.2
-# Shared knobs for inverse_convergence, stacked onto the static workflow.ymmsl. Portable
-# (no machine paths): scenario data URIs/paths are derived from the scenario dir and
-# generated at run time by run_job.sbatch, then stacked last. A scenario may drop its own
-# scenarios/<shot>/settings.ymmsl to override any of these (it is stacked after this file).
+# Shared knobs for inverse_convergence, stacked onto the static workflow.ymmsl. The
+# scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
 settings:
   loop.max_slices: 10
   loop.max_iterations: 6

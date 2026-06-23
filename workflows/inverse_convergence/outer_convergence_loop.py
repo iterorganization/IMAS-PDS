@@ -1,22 +1,12 @@
-"""Outer Picard driver as a clean MUSCLE3 submodel: one full-pulse exchange per iteration.
+"""Outer Picard driver as a MUSCLE3 submodel: one full-pulse exchange per iteration.
 
-This driver is a Submodel-Execution-Loop component: each Picard iteration it sends a full
-whole-trace pulse on its O_I ports, then receives a full whole-trace pulse on its S ports --
-no interleaved request/response, so it needs no MMSF sequence-check waiver. The actual
-coupling is a pipeline, not a star through this driver:
-
-    loop --target--> we --(+Ip)--> nice (lb) --equilibrium--> torax --evolved--> loop
-                                          \--coils------------------------------> loop
-
-The loop emits the designed target (held boundary + evolved profiles), the machine-
-description lanes, and the core_profiles; the waveform editor overlays the designed Ip(t)
-onto the target in place; the parallel NICE inverse solves it; its equilibrium goes
-*directly* to TORAX (with core_profiles from the loop); TORAX evolves the profiles and
-returns them to the loop, which restores the prescribed boundary and iterates. Convergence
-is the max coil-current change between iterations.
-
-The boundary outline is held from the input IDS until the shape-editor is wired in; Ip is
-held by the waveform editor (preparation for variable timestepping).
+Each iteration sends a whole-trace pulse on the O_I ports (designed target, machine-
+description lanes, core_profiles) and receives a whole-trace pulse on the S ports (coils
+from NICE, evolved equilibrium + core_profiles from TORAX). It then restores the prescribed
+boundary outline on the evolved equilibrium and iterates until the max coil-current change
+between iterations drops below the tolerance. The driver only paces the iteration; the
+coupling itself is a pipeline (loop -> we -> nice/lb -> torax -> loop). The boundary is held
+from the input IDS until a shape editor is wired in; Ip is held by the waveform editor.
 """
 import logging
 import numpy as np
