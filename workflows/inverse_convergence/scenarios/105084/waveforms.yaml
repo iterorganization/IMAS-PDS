@@ -6,7 +6,9 @@
 # `references` names the scenario input IDS; `reference` tendencies read designed quantities
 # from it (resampled onto /time). Edit the analytic Ip/B0 below to redesign the pulse.
 references:
-  input: "imas:hdf5?path=/home/ITER/vanvugd/pds/pds/workflows/inverse_convergence/scenarios/105084/tmp/data/105084_in"
+  # ${SCEN} (this scenario dir) is expanded by bin/pds-inverse before the `we` actor reads
+  # this file; it resolves to the preprocessed input, same as loop.source_uri.
+  input: "imas:hdf5?path=${SCEN}/tmp/data/105084_in"
 globals:
   dd_version: 4.0.0
 

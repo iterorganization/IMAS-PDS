@@ -31,5 +31,14 @@ for f in "$WF/workflow.ymmsl" "$WF/settings.ymmsl" "$SCEN/settings.ymmsl"; do
   stack+=("$out"); i=$((i + 1))
 done
 
+# The `we` actor reads its waveform config by path (the we.waveforms setting), not as a
+# stacked file, but that config also contains ${SCEN}; expand it too and override
+# we.waveforms to point at the expanded copy (last in the stack wins).
+if [[ -f "$SCEN/waveforms.yaml" ]]; then
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$SCEN/waveforms.yaml" > "$gen/waveforms.yaml"
+  printf 'ymmsl_version: v0.2\nsettings: {we.waveforms: %s}\n' "$gen/waveforms.yaml" > "$gen/99_we.ymmsl"
+  stack+=("$gen/99_we.ymmsl")
+fi
+
 mkdir -p "$RUNS"; cd "$RUNS"   # manager creates run_<model>_<timestamp>/ here
 "$MANAGER" --start-all "${stack[@]}"
