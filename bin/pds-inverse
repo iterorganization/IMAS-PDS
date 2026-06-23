@@ -9,7 +9,8 @@
 #   pds-inverse [shot]           # shot defaults to $SHOT_NR, else 105084
 #
 # PDS_REPO defaults to this script's repo (its parent dir); export it to pin a fixed install.
-# Runs land in $PDS_RUNS (default ~/runs/pds_inverse) -- kept outside the repo, not scratch.
+# Runs land in $PDS_RUNS (default <repo>/../runs/pds_inverse) -- alongside the repo on the
+# shared filesystem, kept out of the repo tree but not under node-local $HOME.
 set -euo pipefail
 
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -18,7 +19,7 @@ WF="$PDS_REPO/workflows/inverse_convergence"
 export SHOT="${1:-${SHOT_NR:-105084}}"
 export SCEN="$WF/scenarios/$SHOT"
 MANAGER="${MANAGER:-$PDS_REPO/../opt/venv-m3091-actors/bin/muscle_manager}"
-RUNS="${PDS_RUNS:-$HOME/runs/pds_inverse}"
+RUNS="${PDS_RUNS:-$(dirname "$PDS_REPO")/runs/pds_inverse}"
 [[ -d "$SCEN" ]] || { echo "pds-inverse: no scenario dir $SCEN" >&2; exit 1; }
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
