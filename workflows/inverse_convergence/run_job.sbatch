@@ -19,9 +19,9 @@ set -euo pipefail
 # instances inherit this environment; their start scripts are bash and expand it). MUSCLE3
 # does NOT interpolate settings values, so the per-scenario data paths are written here as a
 # concrete paths.ymmsl overlay and stacked last:
-#   workflow.ymmsl  (structure + programs, static)
-#   settings.ymmsl  (per-scenario knobs, committed)
-#   paths.ymmsl     (scenario data URIs/paths, generated below)
+#   workflow.ymmsl           (structure + programs, static)
+#   settings.ymmsl           (shared knobs; + optional scenarios/<shot>/settings.ymmsl)
+#   paths.ymmsl              (scenario data URIs/paths, generated below)
 
 REPO="${SLURM_SUBMIT_DIR:-$PWD}"
 # PDS_REPO is the single absolute anchor the actors resolve at launch (workflow.ymmsl uses
@@ -34,8 +34,12 @@ SCEN="$WF/scenarios/$SCEN_NAME"
 SHOT="$SCEN_NAME"
 MANAGER="$REPO/../opt/venv-m3091-actors/bin/muscle_manager"
 
-[[ -f "$WF/workflow.ymmsl" ]]   || { echo "Missing $WF/workflow.ymmsl" >&2; exit 1; }
-[[ -f "$SCEN/settings.ymmsl" ]] || { echo "Missing $SCEN/settings.ymmsl" >&2; exit 1; }
+[[ -f "$WF/workflow.ymmsl" ]] || { echo "Missing $WF/workflow.ymmsl" >&2; exit 1; }
+[[ -f "$WF/settings.ymmsl" ]] || { echo "Missing $WF/settings.ymmsl" >&2; exit 1; }
+
+# Shared knobs, with an optional scenario-local override stacked after them (so it wins).
+SETTINGS=("$WF/settings.ymmsl")
+if [[ -f "$SCEN/settings.ymmsl" ]]; then SETTINGS+=("$SCEN/settings.ymmsl"); fi
 
 # NICE/TORAX configs: a scenario-local override wins, else the shared workflow default.
 NICE_CFG="$SCEN/config_nice.xml";  [[ -f "$NICE_CFG" ]]  || NICE_CFG="$WF/config_nice.xml"
@@ -57,6 +61,6 @@ settings:
 EOF
 
 "$MANAGER" --start-all \
-  "$WF/workflow.ymmsl" "$SCEN/settings.ymmsl" "$RUNDIR/paths.ymmsl" \
+  "$WF/workflow.ymmsl" "${SETTINGS[@]}" "$RUNDIR/paths.ymmsl" \
   --run-dir "$RUNDIR"
 echo "MANAGER_EXIT=$?"
