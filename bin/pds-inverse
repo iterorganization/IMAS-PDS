@@ -4,11 +4,12 @@
 # Stacks the static workflow.ymmsl, the shared settings.ymmsl knobs and the scenario's
 # settings.ymmsl data paths, expanding ${PDS_REPO} and ${SCEN} in each (MUSCLE3 does not
 # interpolate settings and runs each instance in its own work_dir, so paths must be
-# absolute). The manager creates its own run_<model>_<timestamp>/ in the current directory.
+# absolute). The manager creates its own run_<model>_<timestamp>/ in the runs directory.
 #
 #   pds-inverse [shot]           # shot defaults to $SHOT_NR, else 105084
 #
 # PDS_REPO defaults to this script's repo (its parent dir); export it to pin a fixed install.
+# Runs land in $PDS_RUNS (default ~/runs/pds_inverse) -- kept outside the repo, not scratch.
 set -euo pipefail
 
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -17,6 +18,7 @@ WF="$PDS_REPO/workflows/inverse_convergence"
 export SHOT="${1:-${SHOT_NR:-105084}}"
 export SCEN="$WF/scenarios/$SHOT"
 MANAGER="${MANAGER:-$PDS_REPO/../opt/venv-m3091-actors/bin/muscle_manager}"
+RUNS="${PDS_RUNS:-$HOME/runs/pds_inverse}"
 [[ -d "$SCEN" ]] || { echo "pds-inverse: no scenario dir $SCEN" >&2; exit 1; }
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
@@ -28,4 +30,5 @@ for f in "$WF/workflow.ymmsl" "$WF/settings.ymmsl" "$SCEN/settings.ymmsl"; do
   stack+=("$out"); i=$((i + 1))
 done
 
+mkdir -p "$RUNS"; cd "$RUNS"   # manager creates run_<model>_<timestamp>/ here
 "$MANAGER" --start-all "${stack[@]}"
