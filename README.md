@@ -30,9 +30,9 @@ make -C docs html
 - [IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
 - [WAVEFORM-EDITOR](https://github.com/iterorganization/Waveform-Editor): Generate pre built waveform data
 - [NICE](https://gitlab.inria.fr/blfauger/nice/-/wikis/home): Free Boundary Equilibrium code
-- [METIS](https://git.iter.org/projects/SCEN/repos/metis/browse): Transport code
+- [METIS](https://gitlab.eufus.psnc.pl/g2jfa/metis): Transport code
 - [TORAX](https://github.com/google-deepmind/torax): Transport code
-- [TORAX-M3](https://git.iter.org/projects/SCEN/repos/torax-m3/browse): MUSCLE3 actor for TORAX
+- [TORAX-M3](https://github.com/iterorganization/TORAX-MUSCLE3): MUSCLE3 actor for TORAX
 - [CHEASE](https://gitlab.epfl.ch/spc/chease): Fixed-boundary axisymmetric tokamak equilibrium code
 
 
