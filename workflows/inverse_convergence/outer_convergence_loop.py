@@ -20,8 +20,9 @@ logger = logging.getLogger()
 # Machine-description lanes the loop sends straight to the NICE load balancer (the
 # equilibrium target goes to `we` instead). pf_active carries the coil-current seed and is
 # refreshed from NICE each iteration; the other three are static.
-LB_LANES = ["wall", "pf_active", "pf_passive", "iron_core"]
 STATIC = {"wall", "pf_passive", "iron_core"}
+IDS_LIST = ['equilibrium', 'core_profiles', 'pf_active', 'pf_passive', 'wall', 'iron_core']
+S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
 
 
 def _split(trace, name, times):
@@ -57,39 +58,41 @@ def _coils(pf_trace):
 
 def main() -> None:
     inst = Instance({
-        Operator.O_I: ["target_out"] + [f"{l}_out" for l in LB_LANES] + ["core_profiles_out"],
-        Operator.S: ["coils_in", "equilibrium_result_in", "core_profiles_result_in"],
+        Operator.F_INIT: [f"{l}_in_f" for l in IDS_LIST],
+        Operator.O_I: [f"{l}_out_i" for l in IDS_LIST],
+        Operator.S: [f"{l}_in_s" for l in S_LIST],
+        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f"],
     })
     while inst.reuse_instance():
-        src_uri = inst.get_setting("source_uri"); sink_uri = inst.get_setting("sink_uri")
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
         max_slices = int(get_setting_optional(inst, "max_slices", 0))
 
-        with DBEntry(src_uri, "r") as src:
-            times = [float(t) for t in src.get("equilibrium").time]
-            if max_slices:
-                times = times[:max_slices]
-            statics = {l: src.get(l).serialize() for l in STATIC}
-            boundary = [src.get_slice("equilibrium", t, CLOSEST_INTERP).serialize() for t in times]
-            cp = _assemble([src.get_slice("core_profiles", t, CLOSEST_INTERP).serialize() for t in times], "core_profiles")
-            pf = _assemble([src.get_slice("pf_active", t, CLOSEST_INTERP).serialize() for t in times], "pf_active")
+        init = {l: inst.receive(f"{l}_in_f").data for l in IDS_LIST}
+        eq_ids = IDSFactory().new("equilibrium"); eq_ids.deserialize(init["equilibrium"])
+        times = [float(t) for t in eq_ids.time]
+        if max_slices:
+            times = times[:max_slices]
+        statics = {l: init[l] for l in STATIC}
+        boundary = _split(init["equilibrium"], "equilibrium", times)
+        cp = _assemble(_split(init["core_profiles"], "core_profiles", times), "core_profiles")
+        pf = _assemble(_split(init["pf_active"], "pf_active", times), "pf_active")
         t0 = times[0]
         target = _assemble(boundary, "equilibrium")
         prev = None; torax_eq = coilr = None
 
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
-            inst.send("target_out", Message(t0, data=target))          # -> we (+Ip) -> nice
-            inst.send("pf_active_out", Message(t0, data=pf))           # -> nice (coil seed)
+            inst.send("equilibrium_out_i", Message(t0, data=target))          # -> we (+Ip) -> nice
+            inst.send("pf_active_out_i", Message(t0, data=pf))           # -> nice (coil seed)
             for l in STATIC:
-                inst.send(f"{l}_out", Message(t0, data=statics[l]))    # -> nice
-            inst.send("core_profiles_out", Message(t0, data=cp))       # -> torax
+                inst.send(f"{l}_out_i", Message(t0, data=statics[l]))    # -> nice
+            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
-            coilr = inst.receive("coils_in").data
-            torax_eq = inst.receive("equilibrium_result_in").data
-            torax_cp = inst.receive("core_profiles_result_in").data
+            coilr = inst.receive("pf_active_in_s").data
+            torax_eq = inst.receive("equilibrium_in_s").data
+            torax_cp = inst.receive("core_profiles_in_s").data
 
             cur = _coils(coilr)
             dI = None if prev is None else float(np.max(np.abs(cur - prev)))
@@ -107,12 +110,9 @@ def main() -> None:
             if it == max_iter - 1:
                 logger.info("reached max_iterations=%d", max_iter); break
 
-        with DBEntry(sink_uri, "w") as snk:
-            for s in _split(torax_eq, "equilibrium", times):
-                ids = IDSFactory().new("equilibrium"); ids.deserialize(s); snk.put_slice(ids)
-            for s in _split(coilr, "pf_active", times):
-                ids = IDSFactory().new("pf_active"); ids.deserialize(s); snk.put_slice(ids)
-        logger.info("wrote %d final slices", len(times))
+        inst.send("equilibrium_out_f", Message(t0, data=torax_eq))
+        inst.send("pf_active_out_f", Message(t0, data=coilr))
+        logger.info("sent %d final slices", len(times))
 
 
 if __name__ == "__main__":

@@ -45,3 +45,6 @@ python $PWD/workflows/torax_nice_utils/convert_dina_data_to_input.py \
   --backup_uri $BACKUP_URI \
   --sink_uri $SINK_URI \
   --n_timeslices $N_TIMESLICES
+
+# until IMAS-AL bug is fixed where hdf5 backend does not respect read mode
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_we"

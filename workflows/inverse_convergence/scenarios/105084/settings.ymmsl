@@ -2,8 +2,16 @@ ymmsl_version: v0.2
 # Scenario-local data paths for shot 105084 (pds expands ${SCEN} = this scenario dir and
 # ${PDS_REPO} = repo root). Stacked after the shared workflows/inverse_convergence/settings.ymmsl.
 settings:
-  loop.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/105084_in/"
-  loop.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/105084_out_nice"
+  source.iterative: False
+  sink_nice.sink_mode: "w"
+  sink_torax.sink_mode: "w"
+  source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in/"
+  sink_nice.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
+  sink_torax.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_torax"
   we.waveforms: ${SCEN}/waveforms.yaml
   nice_inv.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
   torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
+  validator.halt_on_error: False
+  validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests/
+  validator.rulesets: iter-olc
+  validator.apply_generic: False

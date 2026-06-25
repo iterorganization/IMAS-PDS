@@ -2,7 +2,7 @@ ymmsl_version: v0.2
 # Shared knobs for inverse_convergence, stacked onto the static workflow.ymmsl. The
 # scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
 settings:
-  loop.max_slices: 10
+  loop.max_slices: 0
   loop.max_iterations: 6
   loop.tolerance: 1000.0
   torax.output_all_timeslices: True

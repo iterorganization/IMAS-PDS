@@ -18,8 +18,8 @@ export PDS_REPO
 WF="$PDS_REPO/workflows/inverse_convergence"
 export SHOT="${1:-${SHOT_NR:-105084}}"
 export SCEN="$WF/scenarios/$SHOT"
-MANAGER="${MANAGER:-$PDS_REPO/../opt/venv-m3091-actors/bin/muscle_manager}"
-RUNS="${PDS_RUNS:-$(dirname "$PDS_REPO")/runs/pds_inverse}"
+MANAGER="${MANAGER:-$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager}"
+RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
 [[ -d "$SCEN" ]] || { echo "pds-inverse: no scenario dir $SCEN" >&2; exit 1; }
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT

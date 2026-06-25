@@ -8,23 +8,13 @@
 references:
   # ${SCEN} (this scenario dir) is expanded by bin/pds-inverse before the `we` actor reads
   # this file; it resolves to the preprocessed input, same as loop.source_uri.
-  input: "imas:hdf5?path=${SCEN}/tmp/data/105084_in"
+  input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
 globals:
   dd_version: 4.0.0
 
-# Plasma current Ip(t): ramp from -1.27 MA to a ~-3.5 MA flat-top (105084 slice times).
 Plasma current:
   equilibrium/time_slice/global_quantities/ip:
-    - {type: constant, value: -1.26633e6, duration: 2.4176}
-    - {type: linear, to: -2.73902e6, duration: 7.1}
-    - {type: linear, to: -3.46928e6, duration: 7.0}
-    - {type: linear, to: -3.51553e6, duration: 7.1}
-    - {type: linear, to: -3.50052e6, duration: 7.0}
-    - {type: linear, to: -3.51242e6, duration: 7.1}
-    - {type: linear, to: -3.50790e6, duration: 7.0}
-    - {type: linear, to: -3.51630e6, duration: 7.1}
-    - {type: linear, to: -3.50919e6, duration: 7.0}
-    - {type: linear, to: -3.52348e6, duration: 7.1}
+    - {ref: input}
 
 # Vacuum toroidal field B0 at R0=6.2 m, flat at -2.65 T (R0 is static, read from the input).
 Toroidal field:
