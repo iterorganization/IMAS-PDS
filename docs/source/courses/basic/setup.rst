@@ -27,8 +27,8 @@ Some actors currently require a specific virtual environment, this will be taken
 
 .. code-block:: console
 
-    git clone ssh://git@git.iter.org/scen/pds.git
-    cd pds
+    git clone https://github.com/iterorganization/IMAS-PDS.git
+    cd IMAS-PDS
     bash pds_setup.sh
     source run/imas_base_env
 

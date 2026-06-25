@@ -13,7 +13,7 @@ IMAS PDS is an integrated modeling tool for IMAS simulations.
 README
 ------
 
-The README is best read on the `git page <https://git.iter.org/projects/SCEN/repos/pds/browse>`_.
+The README is best read on the `git page <https://github.com/iterorganization/IMAS-PDS>`_.
 
 Manual
 ------
