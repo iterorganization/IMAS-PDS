@@ -1,6 +1,10 @@
 # README
 IMAS PDS is an integrated modeling tool.
 
+It is licensed under the GNU Lesser General Public License v3.0 or later
+(`LGPL-3.0-or-later`); see [LICENSE.md](LICENSE.md), [COPYING.LESSER](COPYING.LESSER)
+and [COPYING](COPYING) for details.
+
 # Installation
 Installation guide can be found [here](https://gray-stone-049577203.3.azurestaticapps.net/installing.html)
 Note that the IMAS PDS repository currently functions as a hub for combining different codes and tools, and does not need an installation of its own to function. 
@@ -22,7 +26,7 @@ make -C docs html
 ```
 
 # Repositories
-- [PDS](https://git.iter.org/projects/SCEN/repos/pds/browse): Pulse Design Simulator workflow files
+- [PDS](https://github.com/iterorganization/IMAS-PDS): Pulse Design Simulator workflow files
 - [IMAS-M3](https://github.com/iterorganization/IMAS-MUSCLE3): General utility MUSCLE3 actors
 - [WAVEFORM-EDITOR](https://github.com/iterorganization/Waveform-Editor): Generate pre built waveform data
 - [NICE](https://gitlab.inria.fr/blfauger/nice/-/wikis/home): Free Boundary Equilibrium code

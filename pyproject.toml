@@ -29,9 +29,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Intended Audience :: System Administrators",
-# The license is prepended by private which makes it a valid trove classifier,
-# it will also prevent uploading to package indices such as PyPI
-    "Private :: License :: ITER License",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Natural Language :: English",
     "Operating System :: POSIX",
     "Operating System :: POSIX :: Linux",
@@ -80,7 +78,8 @@ linting = [
 ]
 
 [project.urls]
-homepage = "https://git.iter.org/projects/SCEN/repos/pds"
+homepage = "https://github.com/iterorganization/IMAS-PDS"
+repository = "https://github.com/iterorganization/IMAS-PDS"
 
 [tool.setuptools.packages.find]
 where = ["."]
