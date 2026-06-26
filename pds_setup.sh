@@ -89,7 +89,8 @@ CURR_INSTALL='START'
 
   # SET UP METIS
   CURR_INSTALL='METIS'
-  METIS_URL="https://gitlab.eufus.psnc.pl/g2jfa/metis.git"
+  # METIS_URL="https://gitlab.eufus.psnc.pl/g2jfa/metis.git"
+  METIS_URL="ssh://git@git.iter.org/scen/metis.git" # Temporary until latest changes pushed to GitLab
   if [ "$INSTALL_METIS" = "true" ] \
     && [ ! -d "metis" ] \
     && git ls-remote "$METIS_URL" &>/dev/null; then
