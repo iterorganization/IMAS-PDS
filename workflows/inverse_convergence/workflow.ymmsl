@@ -21,11 +21,11 @@ models:
       source:     {description: source, implementation: source, ports: {o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out, core_profiles_out]}}
       sink_torax: {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
       sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
-      validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
+      # validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
       loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, pf_active_in_f, pf_passive_in_f, wall_in_f, iron_core_in_f], o_i: [equilibrium_out_i, wall_out_i, pf_active_out_i, pf_passive_out_i, iron_core_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f]}}
       we:         {description: waveform editor (designed Ip/B0 + imported heating), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, core_sources_out]}}
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
-      nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [8], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
+      nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
       # Distill recorders: terminal sinks that tap (fan-out) the solver outputs
       # and distill each whole-trace IDS into a compact Zarr store -- one file
@@ -67,9 +67,9 @@ models:
       # Loop final results → sinks (O_F)
       loop.equilibrium_out_f: sink_torax.equilibrium_in
       loop.pf_active_out_f: sink_torax.pf_active_in
-      loop.pf_active_out_f: validator.pf_active_in
+      # loop.pf_active_out_f: validator.pf_active_in
 programs:
-  validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  # validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
   source:      {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
   sink:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
   loop:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}

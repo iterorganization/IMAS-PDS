@@ -6,6 +6,7 @@ import argparse
 import os
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 from imas import DBEntry, IDSFactory
 from imas.ids_defs import CLOSEST_INTERP
@@ -67,17 +68,18 @@ def main():
 
 def pf_active_plots_dina_nice(args, dbs):
     """Plot pf_active IDS output data for dina-nice"""
+    active_keys = ["dina", "nice"]
     # init data
     coil_figure_path = f"{args.output_dir}/pds_coils_{args.shot_nr}.png"
     coil_dict = {}
     pfas = {
-        key: db.get("pf_active") for key, db in dbs.items() if key in ["dina", "nice"]
+        key: db.get("pf_active") for key, db in dbs.items() if key in active_keys
     }
 
     # init figure
     nrows, ncols = (7, 2)
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 22))
-    fig.suptitle(f"{args.shot_nr}: {'-'.join(dbs.keys()).upper()}", fontsize=16)
+    fig.suptitle(f"{args.shot_nr}: {'-'.join(active_keys).upper()}", fontsize=16)
     axes = axes.flatten()
 
     # plot data
@@ -193,6 +195,8 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                         eqs[key].time_slice[0].profiles_1d, field[-1]
                     ).value
                     nice_psi = eqs[key].time_slice[0].profiles_1d.psi.value
+                    if len(nice_psi) == 0:
+                        continue
                     nice_psi_norm = abs(nice_psi - nice_psi[0]) / abs(
                         nice_psi[-1] - nice_psi[0]
                     )
@@ -223,12 +227,21 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                 eq = dbs[key].get_slice("equilibrium", time_requested=t, **GET_KWARGS)
                 val = nested_getattr(eq.time_slice[0], field)
                 psi = eq.time_slice[0].profiles_1d.psi
+                if len(psi) == 0:
+                    continue
                 psi_norm = abs(psi - psi[0]) / abs(psi[-1] - psi[0])
                 if num == 0:
                     axes[idx].plot(psi_norm, val, label=f"t={t}", color=colors[i_t])
                 else:
                     axes[idx].scatter(psi_norm, val, color=colors[i_t], marker=".")
-        axes[idx].legend()
+        handles, labels = axes[idx].get_legend_handles_labels()
+        db_keys = list(dbs.keys())
+        if len(db_keys) > 1:
+            handles += [
+                Line2D([0], [0], color="k", label=f"{db_keys[0]} (line)"),
+                Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{db_keys[1]} (scatter)"),
+            ]
+        axes[idx].legend(handles=handles)
 
     # # plot ratio between core pressure values to check b_tor difference
     # if 'dina' in dbs.keys():

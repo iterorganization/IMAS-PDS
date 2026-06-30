@@ -1,9 +1,0 @@
-ymmsl_version: v0.2
-# Scenario-local data paths for shot 105073 (pds expands ${SCEN} = this scenario dir and
-# ${PDS_REPO} = repo root). Stacked after the shared workflows/inverse_convergence/settings.ymmsl.
-settings:
-  loop.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/105073_in/"
-  loop.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/105073_out_nice"
-  we.waveforms: ${SCEN}/waveforms.yaml
-  nice_inv.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
-  torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py

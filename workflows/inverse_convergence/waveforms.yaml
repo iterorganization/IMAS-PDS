@@ -12,20 +12,30 @@ references:
 globals:
   dd_version: 4.0.0
 
-Plasma current:
-  equilibrium/time_slice/global_quantities/ip:
+# Plasma current:
+#   equilibrium/time_slice/global_quantities/ip:
+#     - {ref: input}
+
+# # Vacuum toroidal field B0 at R0=6.2 m, flat at -2.65 T (R0 is static, read from the input).
+# Toroidal field:
+#   equilibrium/vacuum_toroidal_field/b0:
+#     - {ref: input}
+
+# # ECRH heating: import the DINA electron-heating profiles from the scenario input (the `*`
+# # pulls every filled leaf under profiles_1d, resampled onto /time) and name the source 'ec'
+# # so TORAX's sources_from_IMAS maps it. The waveform editor emits this core_sources to TORAX.
+# Heating:
+#   core_sources/source(1)/profiles_1d/*:
+#     - {ref: input}
+#   core_sources/source(1)/identifier/name:
+#     - {value: ec}
+
+beep:
+  equilibrium/*:
     - {ref: input}
-
-# Vacuum toroidal field B0 at R0=6.2 m, flat at -2.65 T (R0 is static, read from the input).
-Toroidal field:
-  equilibrium/vacuum_toroidal_field/b0:
-    - {type: constant, value: -2.65}
-
-# ECRH heating: import the DINA electron-heating profiles from the scenario input (the `*`
-# pulls every filled leaf under profiles_1d, resampled onto /time) and name the source 'ec'
-# so TORAX's sources_from_IMAS maps it. The waveform editor emits this core_sources to TORAX.
-Heating:
-  core_sources/source(1)/profiles_1d/*:
+  core_profiles/*:
+    - {ref: input}
+  core_sources/*:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
