@@ -26,9 +26,20 @@ S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
 
 
 def _split(trace, name, times):
+    # Skip any t whose CLOSEST_INTERP result has a time already in the list; this prevents
+    # duplicate timestamps when a downstream solver (e.g. TORAX) produces fewer output
+    # slices than the input and the last slice is reused for many requested times.
     with DBEntry("imas:memory?path=/", "w") as db:
         ids = IDSFactory().new(name); ids.deserialize(trace); db.put(ids)
-        return [db.get_slice(name, t, CLOSEST_INTERP).serialize() for t in times]
+        slices, seen = [], set()
+        for t in times:
+            s = db.get_slice(name, t, CLOSEST_INTERP)
+            actual_t = float(s.time[0])
+            if actual_t in seen:
+                continue
+            seen.add(actual_t)
+            slices.append(s.serialize())
+        return slices
 
 
 def _assemble(slices, name):
@@ -67,10 +78,13 @@ def main() -> None:
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
         max_slices = int(get_setting_optional(inst, "max_slices", 0))
+        t_min = get_setting_optional(inst, "t_min")
 
         init = {l: inst.receive(f"{l}_in_f").data for l in IDS_LIST}
         eq_ids = IDSFactory().new("equilibrium"); eq_ids.deserialize(init["equilibrium"])
         times = [float(t) for t in eq_ids.time]
+        if t_min is not None:
+            times = [t for t in times if t >= float(t_min)]
         if max_slices:
             times = times[:max_slices]
         statics = {l: init[l] for l in STATIC}
@@ -100,8 +114,14 @@ def main() -> None:
             prev = cur
 
             # Feedback: next target = TORAX-evolved profiles with the prescribed boundary.
+            # _split deduplicates CLOSEST_INTERP results, so ev is shorter than boundary
+            # when TORAX stops early (SimError). Pad to the full boundary length so the
+            # next iteration receives a full target and TORAX runs the full pulse.
             ev = _split(torax_eq, "equilibrium", times)
-            target = _assemble([_hold_boundary(ev[i], boundary[i]) for i in range(len(times))], "equilibrium")
+            if len(ev) < len(boundary):
+                logger.info("iter %d: TORAX covered %d/%d slices; padding remaining from boundary", it, len(ev), len(boundary))
+                ev = ev + boundary[len(ev):]
+            target = _assemble([_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))], "equilibrium")
             cp = _assemble(_split(torax_cp, "core_profiles", times), "core_profiles")
             pf = coilr
 
