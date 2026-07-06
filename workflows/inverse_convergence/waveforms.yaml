@@ -31,7 +31,9 @@ globals:
 #     - {value: ec}
 
 beep:
-  equilibrium/*:
+  equilibrium/vacuum_toroidal_field/b0:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/ip:
     - {ref: input}
   core_profiles/*:
     - {ref: input}

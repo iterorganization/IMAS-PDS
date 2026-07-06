@@ -33,8 +33,8 @@ models:
       # Pure observers: they add no conduit the producers wait on, so they never
       # change the result. To disable, comment these two components, their four
       # recorder conduits below, the `recorder` program and the resources.
-      rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
-      rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
+      # rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
+      # rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
     conduits:
       # Source → loop initialisation (F_INIT)
       source.equilibrium_out: loop.equilibrium_in_f
@@ -60,10 +60,14 @@ models:
       loop.core_profiles_out_i: torax.core_profiles_in_f
       # Each O_F below fans out (list value) to its normal consumer AND a distill
       # recorder tap -- the recorder is an extra receiver, not a new key.
-      lb.equilibrium_out_f: [torax.equilibrium_in_f, rec_nice.equilibrium_in, sink_nice.equilibrium_in]
-      lb.pf_active_out_f: [loop.pf_active_in_s, rec_nice.pf_active_in, sink_nice.pf_active_in]
-      torax.equilibrium_out_f: [loop.equilibrium_in_s, rec_torax.equilibrium_in]
-      torax.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
+      # lb.equilibrium_out_f: [torax.equilibrium_in_f, rec_nice.equilibrium_in, sink_nice.equilibrium_in]
+      lb.equilibrium_out_f: [torax.equilibrium_in_f, sink_nice.equilibrium_in]
+      # lb.pf_active_out_f: [loop.pf_active_in_s, rec_nice.pf_active_in, sink_nice.pf_active_in]
+      lb.pf_active_out_f: [loop.pf_active_in_s, sink_nice.pf_active_in]
+      # torax.equilibrium_out_f: [loop.equilibrium_in_s, rec_torax.equilibrium_in]
+      torax.equilibrium_out_f: [loop.equilibrium_in_s]
+      # torax.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
+      torax.core_profiles_out_f: [loop.core_profiles_in_s]
       # Loop final results → sinks (O_F)
       loop.equilibrium_out_f: sink_torax.equilibrium_in
       loop.pf_active_out_f: sink_torax.pf_active_in
@@ -81,7 +85,6 @@ programs:
       #!/bin/bash
       source /usr/share/lmod/lmod/init/bash
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
-      source $PDS_REPO/muscle3-0.10.0-intel/bin/muscle3.env
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
   torax:
@@ -92,4 +95,5 @@ programs:
       source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache
       exec python -u -m torax_muscle3.torax_actor "$@"
-resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}}
+# resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}}
+resources: {nice_inv: {threads: 2}, torax: {threads: 8}}
