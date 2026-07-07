@@ -1,15 +1,18 @@
 """Outer Picard driver as a MUSCLE3 submodel: one full-pulse exchange per iteration.
 
-Each iteration sends a whole-trace pulse on the O_I ports (designed target, machine-
-description lanes, core_profiles) and receives a whole-trace pulse on the S ports (coils
-from NICE, evolved equilibrium + core_profiles from TORAX). It then restores the prescribed
-boundary outline on the evolved equilibrium and iterates until the max coil-current change
-between iterations drops below the tolerance. The driver only paces the iteration; the
-coupling itself is a pipeline (loop -> we -> nice/lb -> torax -> loop). The boundary is held
-from the input IDS until a shape editor is wired in; Ip is held by the waveform editor. Both
-the equilibrium target and core_profiles go to `we` (equilibrium drives its export time
-base; core_profiles is a straight port-import, mirrored through unchanged) before reaching
-TORAX -- there is no longer a direct loop -> TORAX core_profiles conduit.
+Each iteration sends a whole-trace pulse on the O_I ports (designed target, core_profiles,
+coil-current seed) and receives a whole-trace pulse on the S ports (coils from NICE, evolved
+equilibrium + core_profiles from TORAX). It then restores the prescribed boundary outline on
+the evolved equilibrium and iterates until the max coil-current change between iterations
+drops below the tolerance. The driver only paces the iteration; the coupling itself is a
+pipeline (loop -> we -> nice/lb -> torax -> loop). The boundary is held from the input IDS
+until a shape editor is wired in; Ip is held by the waveform editor. Both the equilibrium
+target and core_profiles go to `we` (equilibrium drives its export time base; core_profiles
+is a straight port-import, mirrored through unchanged) before reaching TORAX -- there is no
+longer a direct loop -> TORAX core_profiles conduit. The static machine-description lanes
+(wall, pf_passive, iron_core) never change across the pulse or across iterations, so `we`
+re-exports the scenario's reference copy straight to the NICE load balancer; the loop never
+sees them at all.
 """
 import logging
 import numpy as np
@@ -20,11 +23,7 @@ from ymmsl import Operator
 from imas_muscle3.utils import get_setting_optional
 
 logger = logging.getLogger()
-# Machine-description lanes the loop sends straight to the NICE load balancer (the
-# equilibrium target and core_profiles go to `we` instead). pf_active carries the coil-
-# current seed and is refreshed from NICE each iteration; the other three are static.
-STATIC = {"wall", "pf_passive", "iron_core"}
-IDS_LIST = ['equilibrium', 'core_profiles', 'pf_active', 'pf_passive', 'wall', 'iron_core']
+IDS_LIST = ['equilibrium', 'core_profiles', 'pf_active']
 S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
 
 
@@ -93,7 +92,6 @@ def main() -> None:
             times = [t for t in times if t <= float(t_max)]
         if max_slices:
             times = times[:max_slices]
-        statics = {l: init[l] for l in STATIC}
         boundary = _split(init["equilibrium"], "equilibrium", times)
         cp = _assemble(_split(init["core_profiles"], "core_profiles", times), "core_profiles")
         pf = _assemble(_split(init["pf_active"], "pf_active", times), "pf_active")
@@ -105,8 +103,6 @@ def main() -> None:
             # --- O_I: emit the full pulse (no receives yet) ---
             inst.send("equilibrium_out_i", Message(t0, data=target))          # -> we (+Ip) -> nice
             inst.send("pf_active_out_i", Message(t0, data=pf))           # -> nice (coil seed)
-            for l in STATIC:
-                inst.send(f"{l}_out_i", Message(t0, data=statics[l]))    # -> nice
             inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> we -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---

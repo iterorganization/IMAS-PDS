@@ -4,11 +4,14 @@
 # equilibrium's /time (the first-declared F_INIT port in workflow.ymmsl, so it is the export
 # time base): the equilibrium with the designed Ip(t)/B0 overlaid (the NICE-inverse target),
 # core_profiles mirrored straight through (resampled onto the equilibrium time base) on to
-# TORAX, and a core_sources IDS with the designed ECRH heating for TORAX.
+# TORAX, a core_sources IDS with the designed ECRH heating for TORAX, and the static
+# machine-description IDSs (wall, pf_passive, iron_core) NICE needs -- these three never
+# change across the pulse or across iterations, so `we` just re-exports the scenario's
+# reference copy straight through to the NICE load balancer.
 #
-# `input` names the scenario's static reference IDS (the designed heating only); `eq` and
-# `cp` are the two live port-imports above. Edit the analytic Ip/B0 below to redesign the
-# pulse.
+# `input` names the scenario's static reference IDS (the designed heating plus the static
+# machine description); `eq` and `cp` are the two live port-imports above. Edit the analytic
+# Ip/B0 below to redesign the pulse.
 globals:
   dd_version: 4.0.0
   imports:
@@ -31,6 +34,12 @@ targets:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  wall/*:
+    - {ref: input}
+  pf_passive/*:
+    - {ref: input}
+  iron_core/*:
+    - {ref: input}
 
 state:
   equilibrium/time_slice/profiles_1d/psi:
