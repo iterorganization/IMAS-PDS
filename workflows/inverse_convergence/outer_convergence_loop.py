@@ -6,7 +6,10 @@ from NICE, evolved equilibrium + core_profiles from TORAX). It then restores the
 boundary outline on the evolved equilibrium and iterates until the max coil-current change
 between iterations drops below the tolerance. The driver only paces the iteration; the
 coupling itself is a pipeline (loop -> we -> nice/lb -> torax -> loop). The boundary is held
-from the input IDS until a shape editor is wired in; Ip is held by the waveform editor.
+from the input IDS until a shape editor is wired in; Ip is held by the waveform editor. Both
+the equilibrium target and core_profiles go to `we` (equilibrium drives its export time
+base; core_profiles is a straight port-import, mirrored through unchanged) before reaching
+TORAX -- there is no longer a direct loop -> TORAX core_profiles conduit.
 """
 import logging
 import numpy as np
@@ -18,8 +21,8 @@ from imas_muscle3.utils import get_setting_optional
 
 logger = logging.getLogger()
 # Machine-description lanes the loop sends straight to the NICE load balancer (the
-# equilibrium target goes to `we` instead). pf_active carries the coil-current seed and is
-# refreshed from NICE each iteration; the other three are static.
+# equilibrium target and core_profiles go to `we` instead). pf_active carries the coil-
+# current seed and is refreshed from NICE each iteration; the other three are static.
 STATIC = {"wall", "pf_passive", "iron_core"}
 IDS_LIST = ['equilibrium', 'core_profiles', 'pf_active', 'pf_passive', 'wall', 'iron_core']
 S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
@@ -104,7 +107,7 @@ def main() -> None:
             inst.send("pf_active_out_i", Message(t0, data=pf))           # -> nice (coil seed)
             for l in STATIC:
                 inst.send(f"{l}_out_i", Message(t0, data=statics[l]))    # -> nice
-            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> torax
+            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> we -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
             coilr = inst.receive("pf_active_in_s").data

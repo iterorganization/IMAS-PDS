@@ -10,11 +10,12 @@ ymmsl_version: v0.2
 # The loop driver is a clean Submodel-Execution-Loop component -- one full whole-trace pulse
 # out (O_I), one full pulse in (S) per Picard iteration -- so the coupling is a pipeline:
 #   loop --target--> we --(+Ip,B0)--> lb(nice) --equilibrium--> torax --evolved--> loop
-#                                          \--coils-----------------------------> loop
+#                    \--core_profiles-------------------------------^  \--coils--> loop
 # The waveform editor (we) overlays the designed Ip(t)/B0 onto the target equilibrium in
-# place (its input port equilibrium_in selects overlay mode); nice's equilibrium goes
-# DIRECTLY to torax; nice's coils return to the loop for the convergence check. nice_lb.py
-# does slice -> scatter[W] -> gather -> assemble.
+# place (its equilibrium_in port selects overlay mode) and passes the loop's core_profiles
+# through unchanged (a straight core_profiles/* mirror, imported from its core_profiles_in
+# port) on to torax; nice's equilibrium goes DIRECTLY to torax; nice's coils return to the
+# loop for the convergence check. nice_lb.py does slice -> scatter[W] -> gather -> assemble.
 models:
   inverse_convergence:
     components:
@@ -23,7 +24,7 @@ models:
       sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
       # validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
       loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, pf_active_in_f, pf_passive_in_f, wall_in_f, iron_core_in_f], o_i: [equilibrium_out_i, wall_out_i, pf_active_out_i, pf_passive_out_i, iron_core_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f]}}
-      we:         {description: waveform editor (designed Ip/B0 + imported heating), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, core_sources_out]}}
+      we:         {description: waveform editor (designed Ip/B0 + imported heating), implementation: we, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out]}}
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
@@ -57,7 +58,8 @@ models:
       lb.iron_core_scatter: nice_inv.iron_core_in
       nice_inv.equilibrium_out: lb.equilibrium_gather
       nice_inv.pf_active_out: lb.pf_active_gather
-      loop.core_profiles_out_i: torax.core_profiles_in_f
+      loop.core_profiles_out_i: we.core_profiles_in
+      we.core_profiles_out: torax.core_profiles_in_f
       # Each O_F below fans out (list value) to its normal consumer AND a distill
       # recorder tap -- the recorder is an extra receiver, not a new key.
       # lb.equilibrium_out_f: [torax.equilibrium_in_f, rec_nice.equilibrium_in, sink_nice.equilibrium_in]

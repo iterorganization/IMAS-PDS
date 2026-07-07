@@ -1,24 +1,54 @@
 # Waveform-Editor configuration for the inverse_convergence loop (scenario 105084). Each
-# Picard iteration the loop sends the waveform actor the target equilibrium; the actor reads
-# its /time and returns: the equilibrium with the designed Ip(t)/B0 overlaid (the NICE-inverse
-# target), and a core_sources IDS with the designed ECRH heating for TORAX.
+# Picard iteration the loop sends the waveform actor its two live F_INIT ports -- the target
+# equilibrium and the (TORAX-evolved) core_profiles -- and the actor exports on the
+# equilibrium's /time (the first-declared F_INIT port in workflow.ymmsl, so it is the export
+# time base): the equilibrium with the designed Ip(t)/B0 overlaid (the NICE-inverse target),
+# core_profiles mirrored straight through (resampled onto the equilibrium time base) on to
+# TORAX, and a core_sources IDS with the designed ECRH heating for TORAX.
 #
-# `references` names the scenario input IDS; `reference` tendencies read designed quantities
-# from it (resampled onto /time). Edit the analytic Ip/B0 below to redesign the pulse.
-references:
-  # ${SCEN} (this scenario dir) is expanded by bin/pds-inverse before the `we` actor reads
-  # this file; it resolves to the preprocessed input, same as loop.source_uri.
-  input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+# `input` names the scenario's static reference IDS (the designed heating only); `eq` and
+# `cp` are the two live port-imports above. Edit the analytic Ip/B0 below to redesign the
+# pulse.
 globals:
   dd_version: 4.0.0
+  imports:
+    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+    eq: {port: equilibrium_in}
+    cp: {port: core_profiles_in}
 
-beep:
-  equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
+targets:
+  equilibrium/vacuum_toroidal_field/r0:
+    - {ref: eq}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  core_profiles/*:
-    - {ref: input}
+    - {ref: eq}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: eq}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: eq}
+  core_profiles/global_quantities/ip:
+    - {ref: cp}
+  core_profiles/global_quantities/v_loop:
+    - {ref: cp}
+  core_profiles/profiles_1d/time:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/rho_tor_norm:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/psi:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/temperature:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/density:
+    - {ref: cp}
+  core_profiles/profiles_1d/t_i_average:
+    - {ref: cp}
   core_sources/*:
     - {ref: input}
   core_sources/source(1)/identifier/name:
