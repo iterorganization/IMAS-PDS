@@ -63,27 +63,19 @@ The following simulation Id are available:
 - Requires pulse_schedule filled for METIS code (see METIS documentation for details: https://github.com/IRFM/METIS/tree/main/doc/METIS_inputs_from_IMAS_IDSs.pdf, the preproccessing create it from DINA data if needed)
 
 
-TORAX-NICE self-consistent transport
+TORAX-NICE inverse_convergence
 ------------------------------------
 
 This workflow takes a dataset with a preconfigured plasma shape.
 It first runs the NICE code in inverse mode to obtain the coil currents necessary to obtain the desired shape
 and recalculates the obtained plasma shape for these coil currents.
 It then uses the NICE equilibrium IDS output to initialize the TORAX geometry provider
-and runs TORAX with current evolution enabled from start to finish.
+and runs TORAX with current, ion temperature and electron temperature transport enabled from start to finish.
 This workflow is meant to be rerun multiple times until the results are converged to a satisfactory degree.
-This is done by hand by the user.
-This workflow also offers the optional argument ``--rerun`` to run it from the output from the last run.
-You can also set the amount of reruns using the ``RERUN_N_TIMES`` argument in the scenario_config.env file or as an input argument.
 
 .. code-block:: bash
 
-  # Run once using the output from last time as input
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084 --rerun RERUN_N_TIMES=0
-
-  # Rerun 3 times for a total of 4 runs
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=3
-
+  bash run_workflow.sh torax_nice_self_consistent_transport 105084
 
 Requirements:
 

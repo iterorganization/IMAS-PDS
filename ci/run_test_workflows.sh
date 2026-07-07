@@ -41,7 +41,7 @@ muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
 # muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
 
 # RUN WORKFLOWS
-bash run_workflow.sh torax_nice_self_consistent_transport 105084 RERUN_N_TIMES=1 N_TIMESLICES=41
+bash run_workflow.sh inverse_convergence 105084
 
 # # WAIT FOR NICE_EVO TO BE PART OF NICE EASYBUILD MODULE. 
 # # EXPECT CRASH, HOW TO HANDLE?
