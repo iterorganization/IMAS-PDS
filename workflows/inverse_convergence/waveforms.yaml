@@ -17,21 +17,27 @@ globals:
     cp: {port: core_profiles_in}
 
 targets:
-  equilibrium/vacuum_toroidal_field/r0:
-    - {ref: eq}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: eq}
+    - {ref: input}
+  equilibrium/vacuum_toroidal_field/r0:
+    - {ref: input}
   equilibrium/vacuum_toroidal_field/b0:
-    - {ref: eq}
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  core_sources/*:
+    - {ref: input}
+  core_sources/source(1)/identifier/name:
+    - {value: ec}
+
+state:
   equilibrium/time_slice/profiles_1d/psi:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/f_df_dpsi:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
-    - {ref: eq}
-  equilibrium/time_slice/boundary/outline/r:
-    - {ref: eq}
-  equilibrium/time_slice/boundary/outline/z:
     - {ref: eq}
   core_profiles/global_quantities/ip:
     - {ref: cp}
@@ -49,7 +55,3 @@ targets:
     - {ref: cp}
   core_profiles/profiles_1d/t_i_average:
     - {ref: cp}
-  core_sources/*:
-    - {ref: input}
-  core_sources/source(1)/identifier/name:
-    - {value: ec}
