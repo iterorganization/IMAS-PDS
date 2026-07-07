@@ -45,6 +45,7 @@ export EXTRA_ARGS=("$@")
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
 source "$PWD/run/imas_base_env"
 source $SCENARIO_CONFIG
+source "$MD_COLLECTION"
 
 for arg in "${EXTRA_ARGS[@]}"; do
   if [[ "$arg" != -* ]]; then

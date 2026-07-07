@@ -21,7 +21,7 @@ module load Python
 python -m venv ./venv
 source ./venv/bin/activate
 pip install --upgrade pip setuptools
-pip install torax-muscle3 "muscle3==0.8.0"
+pip install "git+https://github.com/iterorganization/torax-muscle3.git@develop" "muscle3==0.8.0"
 deactivate
 module purge
 cd ../..

@@ -9,15 +9,15 @@ model:
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init]
-        o_f: [equilibrium_o_f]
+        f_init: [equilibrium_in_f]
+        o_f: [equilibrium_out_f]
     sink:
       implementation: sink
       ports:
         f_init: [equilibrium_in]
   conduits:
-    source.equilibrium_out: torax.equilibrium_f_init
-    torax.equilibrium_o_f: sink.equilibrium_in
+    source.equilibrium_out: torax.equilibrium_in_f
+    torax.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids_torax"
   source.iterative: False

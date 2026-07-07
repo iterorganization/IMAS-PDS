@@ -31,27 +31,25 @@ src_group = GROUP = "IMEX"
 copyright = f"2020-{datetime.datetime.now().year}, ITER Organization"
 # The author name(s) of the document
 author = "ITER Organization"
-src_host = "git.iter.org"
+src_host = "github.com"
 
 # Parse urls here for convenience, to be re-used
 
-# ITER docs
-iter_projects = "https://git.iter.org/projects/"
-imas_repos = urljoin(iter_projects, "IMAS/")
-imex_repos = urljoin(iter_projects, "IMEX/")
-issue_url = jira_url = "https://jira.iter.org/browse/"
+# ITER GitHub organization
+iter_github = "https://github.com/iterorganization/"
 
 # PDS
-repository_url = f"{iter_projects}/{src_group}/repos/{src_project}/"
-blob_url = urljoin(repository_url, "browse/")
-mr_url = urljoin(repository_url, "/pull-requests")
+repository_url = urljoin(iter_github, "IMAS-PDS/")
+blob_url = urljoin(repository_url, "blob/master/")
+issue_url = urljoin(repository_url, "issues/")
+mr_url = urljoin(repository_url, "pulls")
 
 
 # Configuration of sphinx.ext.extlinks
 # See https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
 # unique name: (base URL, label prefix)
 extlinks = {
-    "src": (blob_url + "%s", f"{src_group}/{src_project}/%s"),
+    "src": (blob_url + "%s", "IMAS-PDS/%s"),
 }
 
 full_version = Version(pds.__version__)
@@ -128,10 +126,10 @@ html_theme = "sphinx_immaterial"
 # and
 # https://sphinx-immaterial.readthedocs.io/en/latest/customization.html#confval-html_theme_options
 html_theme_options = {
-    "repo_url": "https://git.iter.org/projects/SCEN/repos/pds",
-    "repo_name": "pds",
+    "repo_url": "https://github.com/iterorganization/IMAS-PDS",
+    "repo_name": "IMAS-PDS",
     "icon": {
-        "repo": "fontawesome/brands/bitbucket",
+        "repo": "fontawesome/brands/github",
     },
     "features": [
         # "navigation.expand",

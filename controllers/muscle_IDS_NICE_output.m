@@ -15,8 +15,8 @@ zgeo=0;
 ip=0;
 coils_current=zeros(14,1);
 
-msg_eq = instance.receive("equilibrium_s");
-msg_pfa = instance.receive("pf_active_s");
+msg_eq = instance.receive("equilibrium_in_s");
+msg_pfa = instance.receive("pf_active_in_s");
 
 t_out = msg_eq.timestamp;
 t_next = msg_eq.next_timestamp;

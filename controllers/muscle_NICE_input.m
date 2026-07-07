@@ -32,4 +32,4 @@ s = sprintf('%d ' ,uint8(pfa_serialized));
 x = py.numpy.fromstring(s, py.numpy.int8, int8(-1), char(' '));
 pfa_serialized=py.bytes(x);
 msg =  py.libmuscle.Message(t_cur,py.None,pfa_serialized);
-instance.send("pf_active_o_i", msg);
+instance.send("pf_active_out_i", msg);

@@ -28,8 +28,8 @@ model:
     torax:
       implementation: torax
       ports:
-        f_init: [equilibrium_f_init]
-        o_f: [equilibrium_o_f, core_profiles_o_f]
+        f_init: [equilibrium_in_f]
+        o_f: [equilibrium_out_f, core_profiles_out_f]
     visualization:
       implementation: visualization_component
       ports:
@@ -62,9 +62,9 @@ model:
     nice.pf_active_out:
     - sink.pf_active_in
     - visualization.pf_active_in
-    accumulator.equilibrium_out: torax.equilibrium_f_init
-    torax.equilibrium_o_f: sink.equilibrium_in
-    torax.core_profiles_o_f: sink.core_profiles_in
+    accumulator.equilibrium_out: torax.equilibrium_in_f
+    torax.equilibrium_out_f: sink.equilibrium_in
+    torax.core_profiles_out_f: sink.core_profiles_in
     
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"

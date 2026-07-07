@@ -2,19 +2,11 @@
 # This is only a means to guide users in the right way,
 # not a maintained install script.
 
-# For use on SDCC
-# User needs to have access to:
-# github.com:iterorganization/IMAS-MUSCLE3.git
-# gitlab.inria.fr:blfauger/nice.git
-# git.iter.org/scen/metis.git
-# git.iter.org/scen/torax-m3.git
-# git.iter.org/scen/pds.git
-
 # installation guides
-# https://git.iter.org/projects/SCEN/repos/pds/browse
+# https://github.com/iterorganization/IMAS-PDS
 # https://github.com/iterorganization/IMAS-MUSCLE3
 # https://github.com/iterorganization/Waveform-Editor
-# https://git.iter.org/projects/SCEN/repos/metis/browse/doc/METIS_installation_guide.pdf
+# https://gitlab.eufus.psnc.pl/g2jfa/metis/-/tree/master/doc
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
 # https://torax.readthedocs.io/en/latest/installation.html
 
@@ -97,7 +89,8 @@ CURR_INSTALL='START'
 
   # SET UP METIS
   CURR_INSTALL='METIS'
-  METIS_URL="ssh://git@git.iter.org/scen/metis.git"
+  # METIS_URL="https://gitlab.eufus.psnc.pl/g2jfa/metis.git"
+  METIS_URL="ssh://git@git.iter.org/scen/metis.git" # Temporary until latest changes pushed to GitLab
   if [ "$INSTALL_METIS" = "true" ] \
     && [ ! -d "metis" ] \
     && git ls-remote "$METIS_URL" &>/dev/null; then
