@@ -7,14 +7,25 @@ BRANCH_TORAX=${2:-"main"}
 module purge
 module load Python
 module load CMake/3.27.6-GCCcore-13.2.0 UDA
-git clone "$TORAX_URL"
+
+if [[ ! -d "TORAX-MUSCLE3/.git" ]]; then
+  git clone "$TORAX_URL" TORAX-MUSCLE3
+fi
 cd TORAX-MUSCLE3
+git fetch --quiet origin
 git checkout $BRANCH_TORAX
-python -m venv ./venv
+if [[ ! -d venv ]]; then
+  python -m venv ./venv
+fi
 . venv/bin/activate
 pip install --upgrade pip setuptools
 pip install build
-pip install -e . "muscle3==0.8.0"
+pip install -e .
+# TORAX-MUSCLE3's pyproject.toml pins a stale muscle3==0.8.0; override so the
+# actor is compatible with the 0.10.0 manager (IMAS-MUSCLE3/Waveform-Editor
+# already resolve to 0.10.0 on their own).
+pip install "muscle3==0.10.0"
+echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..

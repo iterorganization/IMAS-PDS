@@ -65,7 +65,6 @@ CURR_INSTALL='START'
   CURR_INSTALL='IMAS-MUSCLE3'
   IMAS_MUSCLE3_URL="https://github.com/iterorganization/IMAS-MUSCLE3.git"
   if [ "$INSTALL_IMAS_MUSCLE3" = "true" ] \
-    && [ ! -d "IMAS-MUSCLE3" ] \
     && git ls-remote "$IMAS_MUSCLE3_URL" &>/dev/null; then
     echo "############## INSTALLING IMAS-MUSCLE3 ##############"
     bash ../setup_files/setup_imas_muscle3.sh $IMAS_MUSCLE3_URL $BRANCH_IMAS_MUSCLE3
@@ -78,7 +77,6 @@ CURR_INSTALL='START'
   CURR_INSTALL='WAVEFORM-EDITOR'
   WAVEFORM_EDITOR_URL="https://github.com/iterorganization/Waveform-Editor.git"
   if [ "$INSTALL_WAVEFORM_EDITOR" = "true" ] \
-    && [ ! -d "Waveform-Editor" ] \
     && git ls-remote "$WAVEFORM_EDITOR_URL" &>/dev/null; then
     echo "############## INSTALLING WAVEFORM-EDITOR ##############"
     bash ../setup_files/setup_waveform_editor.sh $WAVEFORM_EDITOR_URL $BRANCH_WAVEFORM_EDITOR
@@ -101,11 +99,18 @@ CURR_INSTALL='START'
     echo "Skipping METIS"
   fi
 
+  # SET UP MUSCLE3 (C++ library, needed to build the NICE muscle3 binaries)
+  CURR_INSTALL='MUSCLE3'
+  if [ "$INSTALL_NICE" = "true" ]; then
+    echo "############## SETTING UP MUSCLE3 C++ LIBRARY ##############"
+    bash ../setup_files/setup_muscle3.sh
+    echo "############## FINISHED MUSCLE3 ##############"
+  fi
+
   # SET UP NICE
   CURR_INSTALL='NICE'
   NICE_URL="https://gitlab.inria.fr/blfauger/nice.git"
   if [ "$INSTALL_NICE" = "true" ] \
-    && [ ! -d "nice" ] \
     && git ls-remote "$NICE_URL" &>/dev/null; then
     echo "############## INSTALLING NICE ##############"
     bash ../setup_files/setup_nice.sh $NICE_URL $BRANCH_NICE
@@ -118,7 +123,6 @@ CURR_INSTALL='START'
   CURR_INSTALL='TORAX-MUSCLE3'
   TORAX_URL=https://github.com/iterorganization/TORAX-MUSCLE3.git
   if [ "$INSTALL_TORAX" = "true" ] \
-    && [ ! -d "TORAX-MUSCLE3" ] \
     && git ls-remote "$TORAX_URL" &>/dev/null; then
     echo "############## INSTALLING TORAX ##############"
     bash ../setup_files/setup_torax.sh $TORAX_URL $BRANCH_TORAX

@@ -33,3 +33,5 @@ workflows/*/scenarios/*/*
 
 # Per-scenario settings.ymmsl is a committed static file (the de-templated workflow style).
 !workflows/*/scenarios/*/settings.ymmsl
+
+.claude

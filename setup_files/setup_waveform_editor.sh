@@ -7,12 +7,18 @@ BRANCH_WAVEFORM_EDITOR=${2:-"main"}
 source imas_base_env
 module load Python
 
-git clone $WAVEFORM_EDITOR_URL
+if [[ ! -d "Waveform-Editor/.git" ]]; then
+  git clone $WAVEFORM_EDITOR_URL Waveform-Editor
+fi
 cd Waveform-Editor
+git fetch --quiet origin
 git checkout $BRANCH_WAVEFORM_EDITOR
-python3 -m venv ./venv
+if [[ ! -d venv ]]; then
+  python3 -m venv ./venv
+fi
 . venv/bin/activate
 pip install -e .[muscle3]
+echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..

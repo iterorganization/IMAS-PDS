@@ -6,14 +6,21 @@ module load Python
 
 IMAS_MUSCLE3_URL=${1:-"https://github.com/iterorganization/IMAS-MUSCLE3.git"}
 BRANCH_IMAS_MUSCLE3=${2:-"develop"}
-git clone $IMAS_MUSCLE3_URL
+
+if [[ ! -d "IMAS-MUSCLE3/.git" ]]; then
+  git clone $IMAS_MUSCLE3_URL IMAS-MUSCLE3
+fi
 cd IMAS-MUSCLE3
+git fetch --quiet origin
 git checkout $BRANCH_IMAS_MUSCLE3
-python3 -m venv ./venv
+if [[ ! -d venv ]]; then
+  python3 -m venv ./venv
+fi
 . venv/bin/activate
 pip install --upgrade pip
 pip install --upgrade setuptools wheel
 pip install -e .
+echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..
