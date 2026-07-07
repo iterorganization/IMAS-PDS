@@ -20,6 +20,8 @@ globals:
     cp: {port: core_profiles_in}
 
 targets:
+  core_profiles/global_quantities/ip:
+    - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
     - {ref: input}
   equilibrium/vacuum_toroidal_field/r0:
@@ -48,8 +50,6 @@ state:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
     - {ref: eq}
-  core_profiles/global_quantities/ip:
-    - {ref: cp}
   core_profiles/global_quantities/v_loop:
     - {ref: cp}
   core_profiles/profiles_1d/time:

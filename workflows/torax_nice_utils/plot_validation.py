@@ -19,7 +19,7 @@ def handle_args():
     parser = argparse.ArgumentParser(
         description="Get preprocessed input data for NICE from DINA"
     )
-    parser.add_argument("--shot_nr", type=int, help="Shot number")
+    parser.add_argument("--shot_nr", type=str, help="Shot number")
     parser.add_argument(
         "--dina_uri", type=str, help="URI to load DINA output data from"
     )
