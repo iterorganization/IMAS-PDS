@@ -1,0 +1,6 @@
+ymmsl_version: v0.2
+settings:
+  loop.t_min: 10
+  # t=207.764 is the last slice; NICE segfaults on it (NaN divergence, "no valid PL and
+  # no valid PX") after the develop-branch rebuild. Exclude it until upstream fixes it.
+  loop.t_max: 205

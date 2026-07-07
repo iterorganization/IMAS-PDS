@@ -79,12 +79,15 @@ def main() -> None:
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
         max_slices = int(get_setting_optional(inst, "max_slices", 0))
         t_min = get_setting_optional(inst, "t_min")
+        t_max = get_setting_optional(inst, "t_max")
 
         init = {l: inst.receive(f"{l}_in_f").data for l in IDS_LIST}
         eq_ids = IDSFactory().new("equilibrium"); eq_ids.deserialize(init["equilibrium"])
         times = [float(t) for t in eq_ids.time]
         if t_min is not None:
             times = [t for t in times if t >= float(t_min)]
+        if t_max is not None:
+            times = [t for t in times if t <= float(t_max)]
         if max_slices:
             times = times[:max_slices]
         statics = {l: init[l] for l in STATIC}
@@ -123,7 +126,7 @@ def main() -> None:
                 ev = ev + boundary[len(ev):]
             target = _assemble([_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))], "equilibrium")
             cp = _assemble(_split(torax_cp, "core_profiles", times), "core_profiles")
-            pf = coilr
+            # pf = coilr
 
             if dI is not None and dI < tol:
                 logger.info("converged at iteration %d", it); break

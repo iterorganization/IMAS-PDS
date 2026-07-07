@@ -19,4 +19,4 @@ settings:
   # validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests/
   # validator.rulesets: iter-olc
   # validator.apply_generic: False
-  muscle_remote_log_level: 'DEBUG'
+  muscle_remote_log_level: 'INFO'
