@@ -18,7 +18,22 @@ export PDS_REPO
 WF="$PDS_REPO/workflows/inverse_convergence"
 export SHOT="${1:-${SHOT_NR:-105084}}"
 export SCEN="$WF/scenarios/$SHOT"
-MANAGER="${MANAGER:-$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager}"
+
+# muscle_manager 0.10.0 (to match the actors) comes from the EasyBuild MUSCLE3
+# module -- but it's only published under the not-yet-default modules-2025b
+# tree, so `module use` it explicitly. Falls back to the IMAS-MUSCLE3 venv
+# (built by setup_imas_muscle3.sh) if that tree isn't there.
+if [[ -z "${MANAGER:-}" ]]; then
+  LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+  if [[ -f "$LMOD_INIT" ]]; then
+    # shellcheck source=/usr/share/lmod/lmod/init/bash
+    source "$LMOD_INIT"
+    module use /work/imas/etc/modules-2025b/all 2>/dev/null || true
+    module load MUSCLE3/0.10.0-intel-2025b 2>/dev/null || true
+  fi
+  MANAGER="${EBROOTMUSCLE3:+$EBROOTMUSCLE3/bin/muscle_manager}"
+  MANAGER="${MANAGER:-$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager}"
+fi
 RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
 [[ -d "$SCEN" ]] || { echo "pds-inverse: no scenario dir $SCEN" >&2; exit 1; }
 
