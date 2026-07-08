@@ -23,13 +23,16 @@ SUMMARY_URI=$SOURCE_URI
 # check if --rerun is among arguments
 if [[ " $* " == *" --rerun "* ]]; then
   old_in="$SUBDIR/tmp/data/${SHOT_NR}_in"
+  old_in_md="$SUBDIR/tmp/data/${SHOT_NR}_in_md"
   old_out_nice="$SUBDIR/tmp/data/${SHOT_NR}_out_nice"
   old_out_torax="$SUBDIR/tmp/data/${SHOT_NR}_out_torax"
-  if [[ -e "$old_in" && -e "$old_out_nice" && -e "$old_out_torax" ]]; then
+  if [[ -e "$old_in" && -e "$old_in_md" && -e "$old_out_nice" && -e "$old_out_torax" ]]; then
     new_in=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_in")
+    new_in_md=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_in_md")
     new_out_nice=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_nice")
     new_out_torax=$(next_path "$SUBDIR/tmp/data/${SHOT_NR}_out_torax")
     mv "$old_in" "$new_in"
+    mv "$old_in_md" "$new_in_md"
     mv "$old_out_nice" "$new_out_nice"
     mv "$old_out_torax" "$new_out_torax"
     SOURCE_URI="imas:hdf5?path=$new_out_torax"
@@ -47,7 +50,9 @@ python $PWD/workflows/utils/convert_dina_data_to_input.py \
   --md_wall_uri $MD_WALL \
   --md_iron_core_uri $MD_IRON_CORE \
   --sink_uri $SINK_URI \
+  --md_sink_uri $MD_SINK_URI \
   --n_timeslices $N_TIMESLICES
 
 # until IMAS-AL bug is fixed where hdf5 backend does not respect read mode
 cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_we"
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in_md" "$SUBDIR/tmp/data/${SHOT_NR}_in_md_we"

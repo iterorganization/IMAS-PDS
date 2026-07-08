@@ -10,41 +10,30 @@
 # iterations (the coil-current seed is never fed back from NICE's own result), so `we` just
 # re-exports the scenario's reference copy straight through to the NICE load balancer.
 #
-# `input` names the scenario's static reference IDS (the designed heating plus the static
-# machine description); `eq` and `cp` are the two live port-imports above. Edit the analytic
-# Ip/B0 below to redesign the pulse.
+# `input` names the scenario's DINA-derived static reference IDS (the designed heating
+# plus Ip/B0/boundary); `input_md` names the machine-description reference IDS (wall,
+# pf_passive, iron_core, pf_active) written separately during preprocessing; `eq` and
+# `cp` are the two live port-imports above. Edit the analytic Ip/B0 below to redesign
+# the pulse.
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
-targets:
-  core_profiles/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
-  equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
-  core_sources/*:
-    - {ref: input}
-  core_sources/source(1)/identifier/name:
-    - {value: ec}
+# Static machine-description reference (see input_md above): wall, pf_passive,
+# iron_core, and the pf_active coil-current seed NICE needs.
+machine_description:
   wall/*:
-    - {ref: input}
+    - {ref: input_md}
   pf_passive/*:
-    - {ref: input}
+    - {ref: input_md}
   iron_core/*:
-    - {ref: input}
+    - {ref: input_md}
   pf_active/*:
-    - {ref: input}
+    - {ref: input_md}
 
 state:
   equilibrium/time_slice/profiles_1d/psi:
@@ -67,3 +56,21 @@ state:
     - {ref: cp}
   core_profiles/profiles_1d/t_i_average:
     - {ref: cp}
+
+targets:
+  core_profiles/global_quantities/ip:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/ip:
+    - {ref: input}
+  equilibrium/vacuum_toroidal_field/r0:
+    - {ref: input}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  core_sources/*:
+    - {ref: input}
+  core_sources/source(1)/identifier/name:
+    - {value: ec}

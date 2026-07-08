@@ -43,11 +43,22 @@ def handle_args():
         type=str,
         help="URI to load machine description data for iron_core",
     )
-    parser.add_argument("--sink_uri", type=str, help="URI to write NICE input data to")
+    parser.add_argument(
+        "--sink_uri", type=str, help="URI to write the DINA-derived input data to"
+    )
+    parser.add_argument(
+        "--md_sink_uri",
+        type=str,
+        default=None,
+        help="URI to write the machine-description reference data to "
+        "(defaults to --sink_uri, i.e. the same file as the DINA-derived data)",
+    )
     parser.add_argument(
         "--n_timeslices", type=int, default=51, help="Number of timeslices"
     )
     args = parser.parse_args()
+    if args.md_sink_uri is None:
+        args.md_sink_uri = args.sink_uri
     return args
 
 
@@ -67,86 +78,191 @@ def main():
         db_md_wall = stack.enter_context(DBEntry(args.md_wall_uri, "r"))
         db_md_iron_core = stack.enter_context(DBEntry(args.md_iron_core_uri, "r"))
         db_out = stack.enter_context(DBEntry(args.sink_uri, "w"))
-
-        summary = db_sum.get("summary", autoconvert=False)
-        time_array = summary.time
-        interesting_time_slices = find_interesting_time_slices(
-            summary, args.n_timeslices
+        db_md_out = (
+            db_out
+            if args.md_sink_uri == args.sink_uri
+            else stack.enter_context(DBEntry(args.md_sink_uri, "w"))
         )
-        skipped = []
-        t_list = []
 
-        # time independent
-        preprocess_wall(db_out, db_md_wall)
-        preprocess_iron_core(db_out, db_md_iron_core)
+        write_dina_data(db_out, db_in, db_sum, db_md_pf_active, args.n_timeslices)
+        write_machine_description_data(
+            db_md_out,
+            db_md_wall,
+            db_md_iron_core,
+            db_md_pf_passive,
+            db_md_pf_active,
+            # If the MD sink is the same file as the DINA sink, the DINA-derived
+            # pf_active (see write_dina_data/preprocess_pf_active) already covers
+            # this IDS -- writing the pure machine-description version too would
+            # duplicate its timeslices in the same file.
+            write_pf_active=db_md_out is not db_out,
+        )
 
-        for idx in interesting_time_slices:
-            # equilibrium ids
-            for i in range(10):
-                if idx + i >= len(time_array):
-                    break
-                t = time_array[idx + i]
-                eq_orig = db_in.get_slice(
-                    "equilibrium",
-                    time_requested=t,
-                    interpolation_method=CLOSEST_INTERP,
-                    autoconvert=False,
-                )
-                if Version(eq_orig._dd_version) < Version("4.0.0"):
-                    bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
-                else:
-                    bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
-                if bndr_len >= 1:
-                    break
-            if bndr_len == 0:
-                skipped.append(t)
-                continue
-            if Version(eq_orig._dd_version) < Version("4.0.0"):
-                eq_orig_ts = eq_orig.time_slice[0]
 
-                # DINA input - NICE output defined at psi_norm:
-                # profiles_1d.psi: 0..0.995 - 0..1
-                # boundary: 0.995 - 1
-                # boundary_separatrix: 1 - na
-                eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
-                eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
-                eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
-            eq = convert_ids(eq_orig, "4.0.0")
-            psi = eq.time_slice[0].profiles_1d.psi
-            psi_a = psi[0]
-            psi_b = eq.time_slice[0].boundary.psi
-            eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(
-                psi_b - psi_a
+def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
+    """Write the data derived from the DINA source run: equilibrium, core_profiles and
+    core_sources at the selected timeslices, plus a pf_active trace that merges DINA's
+    actual coil currents onto machine-description geometry (kept for later validation
+    plots comparing DINA's currents against NICE's inverse solution).
+
+    Returns the list of selected timeslices.
+    """
+    summary = db_sum.get("summary", autoconvert=False)
+    time_array = summary.time
+    interesting_time_slices = find_interesting_time_slices(
+        summary, n_timeslices
+    )
+    skipped = []
+    t_list = []
+
+    for idx in interesting_time_slices:
+        # equilibrium ids
+        for i in range(10):
+            if idx + i >= len(time_array):
+                break
+            t = time_array[idx + i]
+            eq_orig = db_in.get_slice(
+                "equilibrium",
+                time_requested=t,
+                interpolation_method=CLOSEST_INTERP,
+                autoconvert=False,
             )
-            db_out.put_slice(eq)
+            if Version(eq_orig._dd_version) < Version("4.0.0"):
+                bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
+            else:
+                bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
+            if bndr_len >= 1:
+                break
+        if bndr_len == 0:
+            skipped.append(t)
+            continue
+        if Version(eq_orig._dd_version) < Version("4.0.0"):
+            eq_orig_ts = eq_orig.time_slice[0]
 
-            # time dependent standard
-            for ids_name, db in [
-                ("core_profiles", db_in),
-                ("core_sources", db_sum),
-            ]:
-                slice_orig = db.get_slice(
-                    ids_name,
-                    time_requested=t,
-                    interpolation_method=CLOSEST_INTERP,
-                    autoconvert=False,
-                )
-                slice = convert_ids(slice_orig, "4.0.0")
-                db_out.put_slice(slice)
-            t_list.append(t)
+            # DINA input - NICE output defined at psi_norm:
+            # profiles_1d.psi: 0..0.995 - 0..1
+            # boundary: 0.995 - 1
+            # boundary_separatrix: 1 - na
+            eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
+            eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
+            eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
+        eq = convert_ids(eq_orig, "4.0.0")
+        psi = eq.time_slice[0].profiles_1d.psi
+        psi_a = psi[0]
+        psi_b = eq.time_slice[0].boundary.psi
+        eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(
+            psi_b - psi_a
+        )
+        db_out.put_slice(eq)
 
-        preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list)
-        preprocess_pf_passive(db_out, db_md_pf_passive, t_list)
+        # time dependent standard
+        for ids_name, db in [
+            ("core_profiles", db_in),
+            ("core_sources", db_sum),
+        ]:
+            slice_orig = db.get_slice(
+                ids_name,
+                time_requested=t,
+                interpolation_method=CLOSEST_INTERP,
+                autoconvert=False,
+            )
+            slice = convert_ids(slice_orig, "4.0.0")
+            db_out.put_slice(slice)
+        t_list.append(t)
 
-        logging.info(f"Following timeslices during preprocessing were not viable: {skipped}")
+    preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list)
+
+    logging.info(f"Following timeslices during preprocessing were not viable: {skipped}")
+    return t_list
+
+
+def write_machine_description_data(
+    db_out,
+    db_md_wall,
+    db_md_iron_core,
+    db_md_pf_passive,
+    db_md_pf_active,
+    write_pf_active=True,
+):
+    """Write the machine-description reference data the waveform editor uses for
+    wall, pf_passive, iron_core, and (when write_pf_active) the NICE coil-current
+    seed pf_active."""
+    preprocess_wall(db_out, db_md_wall)
+    preprocess_iron_core(db_out, db_md_iron_core)
+    preprocess_pf_passive(db_out, db_md_pf_passive)
+    if write_pf_active:
+        preprocess_pf_active_md(db_out, db_md_pf_active)
+
+
+def _fix_pf_active_md_geometry(slice_backup):
+    """
+    Fix up a machine-description pf_active slice in place:
+    -The resistance for coils 0 to 11 were missing, I added them by hand as 5e-4
+    -I modified the representation of coils 12 and 13 to fit Nice requirements (see doxygen)
+    - https://blfauger.gitlabpages.inria.fr/nice/
+    """
+    # add missing coils resistance values
+    for i in range(12):
+        slice_backup.coil[i].resistance = 5.0e-4
+    # modify representation of coils 12 and 13
+    for i in (12, 13):
+        coil = slice_backup.coil[i]
+        rc = np.zeros(4)
+        zc = np.zeros(4)
+        radius = coil.element[0].geometry.annulus.radius_outer
+        r = np.zeros(4)
+        z = np.zeros(4)  # new contour points
+        for j in range(4):
+            rc[j] = coil.element[j].geometry.annulus.r
+            zc[j] = coil.element[j].geometry.annulus.z
+        index = [0, 2, 3, 1]  # anticlockwise reordering
+        rc = rc[index]
+        zc = zc[index]
+        for j in range(4):
+            if j == 0:
+                jp1 = j + 1
+                jm1 = 3
+            elif j == 3:
+                jp1 = 0
+                jm1 = j - 1
+            else:
+                jp1 = j + 1
+                jm1 = j - 1
+            tm1 = np.array([rc[j] - rc[jm1], zc[j] - zc[jm1]])
+            tm1 = tm1 / np.linalg.norm(tm1)
+
+            tp1 = np.array([rc[j] - rc[jp1], zc[j] - zc[jp1]])
+            tp1 = tp1 / np.linalg.norm(tp1)
+
+            r[j] = rc[j] + radius * (tm1[0] + tp1[0])
+            z[j] = zc[j] + radius * (tm1[1] + tp1[1])
+
+        # resize from 4 to 1 element
+        coil.element.resize(1)
+        # fill the element
+        coil.element[0].turns_with_sign = 4.0
+        coil.element[0].geometry.geometry_type = 1
+        coil.element[0].geometry.outline.r = r
+        coil.element[0].geometry.outline.z = z
+
+
+def preprocess_pf_active_md(db_out, db_md_pf_active):
+    """Write the machine-description pf_active reference (corrected geometry and
+    resistance, no DINA current data) that the waveform editor uses as NICE's
+    coil-current seed. Like wall/pf_passive/iron_core, the machine-description
+    pf_active source is time-independent, so it is read/written once with get/put
+    rather than per-timeslice with get_slice/put_slice."""
+    backup = db_md_pf_active.get("pf_active", autoconvert=False)
+    _fix_pf_active_md_geometry(backup)
+    db_out.put(convert_ids(backup, "4.0.0"))
 
 
 def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
     """
-    -The resistance for coils 0 to 11 were missing, I added them by hand as 5e-4
+    Merge DINA's actual per-timeslice coil currents onto machine-description geometry
+    (kept for later validation plots comparing DINA's currents against NICE's inverse
+    solution -- not used by the waveform editor, see preprocess_pf_active_md):
     -size(time) was different from size(current.data) for coils 0 to 7, I corrected this
-    -I modified the representation of coils 12 and 13 to fit Nice requirements (see doxygen)
-    - https://blfauger.gitlabpages.inria.fr/nice/
     """
     for t in t_list:
         # pf_active ids
@@ -162,50 +278,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
             interpolation_method=CLOSEST_INTERP,
             autoconvert=False,
         )
-
-        # add missing coils resistance values
-        for i in range(12):
-            slice_backup.coil[i].resistance = 5.0e-4
-        # modify representation of coils 12 and 13
-        for i in (12, 13):
-            coil = slice_backup.coil[i]
-            rc = np.zeros(4)
-            zc = np.zeros(4)
-            radius = coil.element[0].geometry.annulus.radius_outer
-            r = np.zeros(4)
-            z = np.zeros(4)  # new contour points
-            for j in range(4):
-                rc[j] = coil.element[j].geometry.annulus.r
-                zc[j] = coil.element[j].geometry.annulus.z
-            index = [0, 2, 3, 1]  # anticlockwise reordering
-            rc = rc[index]
-            zc = zc[index]
-            for j in range(4):
-                if j == 0:
-                    jp1 = j + 1
-                    jm1 = 3
-                elif j == 3:
-                    jp1 = 0
-                    jm1 = j - 1
-                else:
-                    jp1 = j + 1
-                    jm1 = j - 1
-                tm1 = np.array([rc[j] - rc[jm1], zc[j] - zc[jm1]])
-                tm1 = tm1 / np.linalg.norm(tm1)
-
-                tp1 = np.array([rc[j] - rc[jp1], zc[j] - zc[jp1]])
-                tp1 = tp1 / np.linalg.norm(tp1)
-
-                r[j] = rc[j] + radius * (tm1[0] + tp1[0])
-                z[j] = zc[j] + radius * (tm1[1] + tp1[1])
-
-            # resize from 4 to 1 element
-            coil.element.resize(1)
-            # fill the element
-            coil.element[0].turns_with_sign = 4.0
-            coil.element[0].geometry.geometry_type = 1
-            coil.element[0].geometry.outline.r = r
-            coil.element[0].geometry.outline.z = z
+        _fix_pf_active_md_geometry(slice_backup)
 
         # VS coils have incompatible geometry_type for NICE in input,
         # should be identical across shots so getting geometry from backup is fine
@@ -235,7 +308,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
         db_out.put_slice(slice)
 
 
-def preprocess_pf_passive(db_out, db_md_pf_passive, t_list):
+def preprocess_pf_passive(db_out, db_md_pf_passive):
     """
     -I kept only the first 2 loops. The others are another more complicated representation of the vessel which we already have in wall.
     -added the resistivity by hand

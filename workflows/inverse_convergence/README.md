@@ -29,9 +29,13 @@ location), so a different install only needs `export PDS_REPO=<repo>` (and optio
 ## Run a scenario (e.g. 105084)
 
 First preprocess the DINA input once — the shared SDCC database
-(`/work/imas/shared/imasdb/ITER/3/<shot>/1`) is DD 3.x, so it must be converted to the DD4
-`<shot>_in` the actors read: `bash run_workflow.sh inverse_convergence 105084` runs preprocess
-→ run → postprocess, or run the steps individually (`bash workflows/inverse_convergence/preprocess_data.sh`).
+(`/work/imas/shared/imasdb/ITER/3/<shot>/1`) is DD 3.x, so it must be converted to DD4.
+`workflows/utils/convert_dina_data_to_input.py` writes two separate outputs: `<shot>_in`
+(DINA-derived equilibrium/core_profiles/core_sources, plus DINA's actual coil currents kept
+for validation plots) and `<shot>_in_md` (the machine-description reference: wall, pf_passive,
+iron_core, and the pf_active geometry/seed `waveforms.yaml` imports as `input_md`). Run
+`bash run_workflow.sh inverse_convergence 105084` to do preprocess → run → postprocess, or run
+the steps individually (`bash workflows/inverse_convergence/preprocess_data.sh`).
 Then launch with `bin/pds-inverse 105084` (or `sbatch workflows/inverse_convergence/run_job.sbatch 105084`).
 `pds-inverse` stacks `workflow.ymmsl + settings.ymmsl + scenarios/105084/settings.ymmsl`,
 expands `${PDS_REPO}`/`${SCEN}` (MUSCLE3 does not interpolate settings), and starts the

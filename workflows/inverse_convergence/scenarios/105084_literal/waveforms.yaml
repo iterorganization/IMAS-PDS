@@ -21,7 +21,7 @@
 # so there is no way to express a per-point array as a literal tendency -- only an import can
 # copy an already-shaped array straight from the reference IDS.
 #
-# pf_active/* is overlaid from `input` first (coil geometry/circuit description), then each
+# pf_active/* is overlaid from `input_md` first (coil geometry/circuit description), then each
 # coil's current/data leaf below overrides it with an explicit piecewise waveform -- a 7-point
 # mirror (t=2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35 s) of that coil's real 105084 trace.
 # This is the coil-current *seed* `we` now sends straight to the NICE load balancer (see
@@ -32,16 +32,52 @@
 # +-11.6 kA with no discernible trend, so a handful of piecewise points couldn't mirror them
 # meaningfully -- they'd just misrepresent noise as a designed shape.
 #
-# `input` names the scenario's static reference IDS (boundary shape, ECRH heating, coil
-# geometry, and the static machine description); `eq` and `cp` are the two live F_INIT
-# port-imports the loop sends each Picard iteration (the TORAX-evolved equilibrium and
-# core_profiles).
+# `input` names the scenario's DINA-derived static reference IDS (boundary shape, ECRH
+# heating); `input_md` names the machine-description reference IDS (wall, pf_passive,
+# iron_core, coil geometry) written separately during preprocessing; `eq` and `cp` are
+# the two live F_INIT port-imports the loop sends each Picard iteration (the
+# TORAX-evolved equilibrium and core_profiles).
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
+
+# Static machine-description reference (see input_md above) plus the designed
+# coil-current seed.
+machine_description:
+  wall/*:
+    - {ref: input_md}
+  pf_passive/*:
+    - {ref: input_md}
+  iron_core/*:
+    - {ref: input_md}
+  pf_active/*:
+    - {ref: input_md}
+
+state:
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  core_profiles/global_quantities/v_loop:
+    - {ref: cp}
+  core_profiles/profiles_1d/time:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/rho_tor_norm:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/psi:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/temperature:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/density:
+    - {ref: cp}
+  core_profiles/profiles_1d/t_i_average:
+    - {ref: cp}
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
@@ -60,14 +96,6 @@ targets:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
-  wall/*:
-    - {ref: input}
-  pf_passive/*:
-    - {ref: input}
-  iron_core/*:
-    - {ref: input}
-  pf_active/*:
-    - {ref: input}
   pf_active/coil(1)/current/data:   # Central Solenoid 3U (CS3U)
     - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35621, -40988, -32425, -27038, -20147, -16252, -22703]}
   pf_active/coil(2)/current/data:   # Central Solenoid 2U (CS2U)
@@ -96,25 +124,3 @@ targets:
     - {value: 0}
   pf_active/coil(14)/current/data:  # Lower Vertical Stabilization Coil (VSL) -- flat, see comment above
     - {value: 0}
-
-state:
-  equilibrium/time_slice/profiles_1d/psi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/f_df_dpsi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
-    - {ref: eq}
-  core_profiles/global_quantities/v_loop:
-    - {ref: cp}
-  core_profiles/profiles_1d/time:
-    - {ref: cp}
-  core_profiles/profiles_1d/grid/rho_tor_norm:
-    - {ref: cp}
-  core_profiles/profiles_1d/grid/psi:
-    - {ref: cp}
-  core_profiles/profiles_1d/electrons/temperature:
-    - {ref: cp}
-  core_profiles/profiles_1d/electrons/density:
-    - {ref: cp}
-  core_profiles/profiles_1d/t_i_average:
-    - {ref: cp}
