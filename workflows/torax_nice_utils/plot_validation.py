@@ -312,13 +312,6 @@ def shape_comparison_plot(args, dbs):
         dina_ts = dina.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
         torax_ts = torax.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
 
-        p2d = dina_ts.profiles_2d[0]
-        r = np.array(p2d.r).flatten()
-        z = np.array(p2d.z).flatten()
-        psi = np.array(p2d.psi).flatten()
-        contour = ax.tricontour(r, z, psi, levels=20, cmap="viridis")
-        fig.colorbar(contour, ax=ax, label="Poloidal flux [Wb]")
-
         ax.plot(
             dina_ts.boundary.outline.r,
             dina_ts.boundary.outline.z,
