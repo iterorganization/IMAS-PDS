@@ -46,6 +46,19 @@ def nested_getattr(obj, name_list):
         return nested_getattr(new_obj, name_list[1:])
 
 
+def nice_output_flags(db):
+    """Per-slice NICE solver status for a whole-trace equilibrium IDS: -1 means NICE failed
+    to converge that slice (profiles_1d/global_quantities left as IMAS empty-value sentinels,
+    e.g. 9e40), 0 means success. Indices line up 1:1 with the slice ordering used everywhere
+    else in this workflow (the same `times` list the outer loop split/assembled from), so
+    callers can index this array directly instead of matching by time value."""
+    equilibrium = db.get("equilibrium", lazy=True)
+    flags = equilibrium.code.output_flag
+    if not flags:
+        return np.zeros(len(equilibrium.time))
+    return np.asarray(flags)
+
+
 def main():
     """Plot simulation output data for PDS nice_torax coupling"""
     args = handle_args()
@@ -83,8 +96,17 @@ def pf_active_plots_dina_nice(args, dbs):
     fig.suptitle(f"{args.shot_nr}: {'-'.join(active_keys).upper()}", fontsize=16)
     axes = axes.flatten()
 
+    # pf_active carries no output_flag of its own; it shares the equilibrium's slice
+    # ordering (both assembled from the same per-slice NICE calls in nice_lb.py), so a
+    # failed equilibrium slice's coil currents are unreliable at the same index too.
+    valid = {
+        key: nice_output_flags(dbs[key]) != -1 for key in active_keys if key in dbs
+    }
+
     # plot data
     for key, pfa in pfas.items():
+        mask = valid.get(key)
+        full_time = np.asarray(pfa.time)
         for coil in pfa.coil:
             coil_name = str(coil.name)
             if coil_name not in coil_dict:
@@ -92,8 +114,11 @@ def pf_active_plots_dina_nice(args, dbs):
                 axes[coil_dict[coil_name]].set_title(coil_name)
                 axes[coil_dict[coil_name]].set_ylabel("current")
                 axes[coil_dict[coil_name]].set_xlabel("time")
+            time, current = full_time, np.asarray(coil.current.data)
+            if mask is not None and len(mask) == len(time):
+                time, current = time[mask], current[mask]
             axes[coil_dict[coil_name]].plot(
-                pfa.time, coil.current.data, label=key, **PLOT_KWARGS
+                time, current, label=key, **PLOT_KWARGS
             )
             axes[coil_dict[coil_name]].legend()
     for ax in axes[len(pfa.coil) :]:
@@ -173,11 +198,20 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     # gather values over time of 0D profiles
+    kept_times = []
     for t in equilibrium.time:
         eqs = {
             key: db.get_slice("equilibrium", time_requested=t, **GET_KWARGS)
             for key, db in dbs.items()
         }
+        # Skip slices where NICE failed to converge: global_quantities is left as the IMAS
+        # empty-value sentinel (+-9e40) rather than a real result, which would otherwise
+        # show up as spurious spikes in these 0D traces. Also drop the time itself so the
+        # x/y arrays plotted below stay the same length.
+        nice_flag = "nice" in eqs and eqs["nice"].code.output_flag
+        if nice_flag and nice_flag[0] == -1:
+            continue
+        kept_times.append(t)
         for field in fields_0d:
             if field[-1] not in eq_dict:
                 eq_dict[field[-1]] = {key: [] for key in dbs.keys()}
@@ -213,7 +247,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
         axes[i].set_xlabel("time")
         for key in dbs.keys():
             axes[i].plot(
-                equilibrium.time, eq_dict[field_key][key], label=key, **PLOT_KWARGS
+                kept_times, eq_dict[field_key][key], label=key, **PLOT_KWARGS
             )
         axes[i].legend()
 
