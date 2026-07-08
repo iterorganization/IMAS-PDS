@@ -58,13 +58,13 @@ state:
     - {ref: cp}
 
 targets:
-  core_profiles/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
   equilibrium/vacuum_toroidal_field/r0:
     - {ref: input}
   equilibrium/vacuum_toroidal_field/b0:
+    - {ref: input}
+  core_profiles/global_quantities/ip:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/ip:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}
@@ -74,3 +74,6 @@ targets:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  pf_active/coil(*)/current/data:
+    - {ref: input}
+
