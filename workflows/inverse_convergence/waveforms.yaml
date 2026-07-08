@@ -5,9 +5,10 @@
 # time base): the equilibrium with the designed Ip(t)/B0 overlaid (the NICE-inverse target),
 # core_profiles mirrored straight through (resampled onto the equilibrium time base) on to
 # TORAX, a core_sources IDS with the designed ECRH heating for TORAX, and the static
-# machine-description IDSs (wall, pf_passive, iron_core) NICE needs -- these three never
-# change across the pulse or across iterations, so `we` just re-exports the scenario's
-# reference copy straight through to the NICE load balancer.
+# machine-description IDSs (wall, pf_passive, iron_core) plus the coil-current seed
+# (pf_active) NICE needs -- none of these four ever change across the pulse or across
+# iterations (the coil-current seed is never fed back from NICE's own result), so `we` just
+# re-exports the scenario's reference copy straight through to the NICE load balancer.
 #
 # `input` names the scenario's static reference IDS (the designed heating plus the static
 # machine description); `eq` and `cp` are the two live port-imports above. Edit the analytic
@@ -41,6 +42,8 @@ targets:
   pf_passive/*:
     - {ref: input}
   iron_core/*:
+    - {ref: input}
+  pf_active/*:
     - {ref: input}
 
 state:

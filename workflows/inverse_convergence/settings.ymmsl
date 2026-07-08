@@ -5,6 +5,7 @@ settings:
   loop.max_slices: 0
   loop.max_iterations: 2
   loop.tolerance: 1000.0
+  loop.rel_tolerance: 0.03
   torax.output_all_timeslices: True
   source.iterative: False
   sink_nice.sink_mode: "w"

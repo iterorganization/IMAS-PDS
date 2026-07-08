@@ -1,18 +1,23 @@
 """Outer Picard driver as a MUSCLE3 submodel: one full-pulse exchange per iteration.
 
-Each iteration sends a whole-trace pulse on the O_I ports (designed target, core_profiles,
-coil-current seed) and receives a whole-trace pulse on the S ports (coils from NICE, evolved
-equilibrium + core_profiles from TORAX). It then restores the prescribed boundary outline on
-the evolved equilibrium and iterates until the max coil-current change between iterations
-drops below the tolerance. The driver only paces the iteration; the coupling itself is a
-pipeline (loop -> we -> nice/lb -> torax -> loop). The boundary is held from the input IDS
-until a shape editor is wired in; Ip is held by the waveform editor. Both the equilibrium
-target and core_profiles go to `we` (equilibrium drives its export time base; core_profiles
-is a straight port-import, mirrored through unchanged) before reaching TORAX -- there is no
-longer a direct loop -> TORAX core_profiles conduit. The static machine-description lanes
-(wall, pf_passive, iron_core) never change across the pulse or across iterations, so `we`
-re-exports the scenario's reference copy straight to the NICE load balancer; the loop never
-sees them at all.
+Each iteration sends a whole-trace pulse on the O_I ports (designed target, core_profiles)
+and receives a whole-trace pulse on the S ports (coils from NICE, evolved equilibrium +
+core_profiles from TORAX). It then restores the prescribed boundary outline on the evolved
+equilibrium and iterates until the max coil-current change between iterations drops below
+the tolerance, or its relative change between iterations stalls below rel_tolerance. The
+driver only paces the iteration; the coupling itself is a pipeline
+(loop -> we -> nice/lb -> torax -> loop). The boundary is held from the input IDS until a
+shape editor is wired in; Ip is held by the waveform editor. Both the equilibrium target and
+core_profiles go to `we` (equilibrium drives its export time base; core_profiles is a
+straight port-import, mirrored through unchanged) before reaching TORAX -- there is no longer
+a direct loop -> TORAX core_profiles conduit. The static machine-description lanes (wall,
+pf_passive, iron_core) never change across the pulse or across iterations, so `we` re-exports
+the scenario's reference copy straight to the NICE load balancer; the loop never sees them.
+The coil-current seed sent to NICE each iteration is likewise never fed back from the
+previous iteration's result (there is no `pf_active` in the F_INIT/O_I lanes below), so it is
+also produced by `we` (its own reference copy, or an explicit per-coil waveform) and sent
+straight to the NICE load balancer -- only the *result* NICE returns for pf_active still
+flows through the loop (S, then O_F), since that is what the convergence check watches.
 """
 import logging
 import numpy as np
@@ -23,7 +28,7 @@ from ymmsl import Operator
 from imas_muscle3.utils import get_setting_optional
 
 logger = logging.getLogger()
-IDS_LIST = ['equilibrium', 'core_profiles', 'pf_active']
+IDS_LIST = ['equilibrium', 'core_profiles']
 S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
 
 
@@ -79,6 +84,7 @@ def main() -> None:
     while inst.reuse_instance():
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
+        rel_tol = float(get_setting_optional(inst, "rel_tolerance", 0.03))
         max_slices = int(get_setting_optional(inst, "max_slices", 0))
         t_min = get_setting_optional(inst, "t_min")
         t_max = get_setting_optional(inst, "t_max")
@@ -94,15 +100,13 @@ def main() -> None:
             times = times[:max_slices]
         boundary = _split(init["equilibrium"], "equilibrium", times)
         cp = _assemble(_split(init["core_profiles"], "core_profiles", times), "core_profiles")
-        pf = _assemble(_split(init["pf_active"], "pf_active", times), "pf_active")
         t0 = times[0]
         target = _assemble(boundary, "equilibrium")
-        prev = None; torax_eq = coilr = None
+        prev = None; prev_dI = None; torax_eq = coilr = None
 
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
             inst.send("equilibrium_out_i", Message(t0, data=target))          # -> we (+Ip) -> nice
-            inst.send("pf_active_out_i", Message(t0, data=pf))           # -> nice (coil seed)
             inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> we -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
@@ -125,10 +129,19 @@ def main() -> None:
                 ev = ev + boundary[len(ev):]
             target = _assemble([_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))], "equilibrium")
             cp = _assemble(_split(torax_cp, "core_profiles", times), "core_profiles")
-            # pf = coilr
+
+            stalled = False
+            if dI is not None and prev_dI is not None and prev_dI != 0:
+                rel_change = abs(dI - prev_dI) / prev_dI
+                stalled = rel_change < rel_tol
+                if stalled:
+                    logger.info("iter %d: relative change in max|dI| = %.4f < %.4f, stalled", it, rel_change, rel_tol)
+            prev_dI = dI
 
             if dI is not None and dI < tol:
                 logger.info("converged at iteration %d", it); break
+            if stalled:
+                logger.info("converged (stalled) at iteration %d", it); break
             if it == max_iter - 1:
                 logger.info("reached max_iterations=%d", max_iter); break
 

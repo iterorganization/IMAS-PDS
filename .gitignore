@@ -34,4 +34,7 @@ workflows/*/scenarios/*/*
 # Per-scenario settings.ymmsl is a committed static file (the de-templated workflow style).
 !workflows/*/scenarios/*/settings.ymmsl
 
+# Per-scenario waveforms.yaml is a committed static file too.
+!workflows/*/scenarios/*/waveforms.yaml
+
 .claude

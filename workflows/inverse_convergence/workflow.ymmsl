@@ -11,24 +11,25 @@ ymmsl_version: v0.2
 # out (O_I), one full pulse in (S) per Picard iteration -- so the coupling is a pipeline:
 #   loop --target--> we --(+Ip,B0)--> lb(nice) --equilibrium--> torax --evolved--> loop
 #                    \--core_profiles-------------------------------^  \--coils--> loop
-#                    \--wall,pf_passive,iron_core-------------------^
+#                    \--wall,pf_passive,iron_core,pf_active(seed)---^
 # The waveform editor (we) overlays the designed Ip(t)/B0 onto the target equilibrium in
 # place (its equilibrium_in port selects overlay mode), passes the loop's core_profiles
 # through unchanged (a straight core_profiles/* mirror, imported from its core_profiles_in
-# port) on to torax, and re-exports the scenario's static wall/pf_passive/iron_core straight
-# to the NICE load balancer -- these never change across the pulse or across iterations, so
-# the loop no longer carries them at all; nice's equilibrium goes DIRECTLY to torax; nice's
-# coils return to the loop for the convergence check. nice_lb.py does slice -> scatter[W] ->
-# gather -> assemble.
+# port) on to torax, and re-exports the scenario's static wall/pf_passive/iron_core plus the
+# coil-current seed (pf_active) straight to the NICE load balancer -- none of these four ever
+# change across the pulse or across iterations (the coil-current seed is never fed back from
+# NICE's own result -- see outer_convergence_loop.py), so the loop no longer carries them at
+# all; nice's equilibrium goes DIRECTLY to torax; nice's *resulting* coils still return to the
+# loop for the convergence check. nice_lb.py does slice -> scatter[W] -> gather -> assemble.
 models:
   inverse_convergence:
     components:
-      source:     {description: source, implementation: source, ports: {o_i: [equilibrium_out, pf_active_out, core_profiles_out]}}
+      source:     {description: source, implementation: source, ports: {o_i: [equilibrium_out, core_profiles_out]}}
       sink_torax: {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
       sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
       # validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
-      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, pf_active_in_f], o_i: [equilibrium_out_i, pf_active_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f]}}
-      we:         {description: waveform editor (designed Ip/B0 + imported heating + static machine description), implementation: we, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out]}}
+      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f]}}
+      we:         {description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed), implementation: we, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
@@ -44,16 +45,16 @@ models:
       # Source → loop initialisation (F_INIT)
       source.equilibrium_out: loop.equilibrium_in_f
       source.core_profiles_out: loop.core_profiles_in_f
-      source.pf_active_out: loop.pf_active_in_f
       loop.equilibrium_out_i: we.equilibrium_in
       we.equilibrium_out: lb.equilibrium_in
       we.core_sources_out: torax.core_sources_in_f
-      # Static machine description: straight from `we` to the NICE load balancer, bypassing
-      # source/loop entirely -- these three never change across the pulse or iterations.
+      # Static machine description + coil-current seed: straight from `we` to the NICE load
+      # balancer, bypassing source/loop entirely -- none of these four ever change across the
+      # pulse or iterations.
       we.wall_out: lb.wall_in
       we.pf_passive_out: lb.pf_passive_in
       we.iron_core_out: lb.iron_core_in
-      loop.pf_active_out_i: lb.pf_active_in
+      we.pf_active_out: lb.pf_active_in
       lb.equilibrium_scatter: nice_inv.equilibrium_in
       lb.wall_scatter: nice_inv.wall_in
       lb.pf_active_scatter: nice_inv.pf_active_in

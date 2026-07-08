@@ -61,6 +61,7 @@ def main():
     pf_active_plots_dina_nice(args, dbs)
     equilibrium_plots_dina_nice(args, dbs)
     equilibrium_plots_nice_torax(args, dbs)
+    shape_comparison_plot(args, dbs)
 
     for db in dbs.values():
         db.close()
@@ -256,6 +257,60 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
     # save fig
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.savefig(output_path)
+
+
+def shape_comparison_plot(args, dbs):
+    """Plot the DINA input plasma boundary against the TORAX final-output
+    equilibrium boundary, overlaid on a psi contour plot (as in
+    visualization/nice_inv.py), for each time in args.t_list."""
+    shape_figure_path = f"{args.output_dir}/pds_shape_comparison_{args.shot_nr}.png"
+    dina, torax = dbs["dina"], dbs["torax"]
+
+    ncols = min(len(args.t_list), 3)
+    nrows = -(-len(args.t_list) // ncols)
+    fig, axes = plt.subplots(
+        nrows=nrows, ncols=ncols, figsize=(6 * ncols, 6 * nrows), squeeze=False
+    )
+    fig.suptitle(f"{args.shot_nr}: input vs final output plasma shape", fontsize=16)
+    axes = axes.flatten()
+
+    for ax, t in zip(axes, args.t_list):
+        dina_ts = dina.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
+        torax_ts = torax.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
+
+        p2d = dina_ts.profiles_2d[0]
+        r = np.array(p2d.r).flatten()
+        z = np.array(p2d.z).flatten()
+        psi = np.array(p2d.psi).flatten()
+        contour = ax.tricontour(r, z, psi, levels=20, cmap="viridis")
+        fig.colorbar(contour, ax=ax, label="Poloidal flux [Wb]")
+
+        ax.plot(
+            dina_ts.boundary.outline.r,
+            dina_ts.boundary.outline.z,
+            color="tab:blue",
+            linewidth=2,
+            label="input (dina)",
+        )
+        ax.plot(
+            torax_ts.boundary.outline.r,
+            torax_ts.boundary.outline.z,
+            color="tab:red",
+            linewidth=2,
+            label="final output (torax)",
+        )
+
+        ax.set_title(f"t={t}")
+        ax.set_xlabel("r [m]")
+        ax.set_ylabel("z [m]")
+        ax.set_aspect("equal")
+        ax.legend()
+
+    for ax in axes[len(args.t_list):]:
+        fig.delaxes(ax)
+
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.savefig(shape_figure_path)
 
 
 if __name__ == "__main__":

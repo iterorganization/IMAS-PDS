@@ -1,0 +1,120 @@
+# Waveform-Editor configuration for the inverse_convergence loop -- literal-waveform variant
+# of scenario 105084 (see scenarios/105084_literal/info.txt). This overrides the shared
+# workflows/inverse_convergence/waveforms.yaml for this scenario only.
+#
+# Unlike the shared file, the equilibrium ip/r0/b0 and core_profiles ip targets below are
+# explicit analytic tendencies instead of {ref: input} imports -- the numbers mirror 105084's
+# actual reference trace (r0=6.2 m, b0=-2.65 T, Ip = -1.266 MA at the pulse's first modeled
+# slice t=2.42s, ramping to -3.5 MA by t=16.5s, flat-top at -3.5 MA, ramping down to -1.04 MA
+# by the end of the pulse at t=280.35s), so the pulse design is readable directly here rather
+# than pointing at an external IDS. The point at t=2.42s matters: TORAX's config is tuned to
+# 105084's actual initial current, and an under-ramped Ip there (e.g. extrapolating linearly
+# from a 0-at-t=0 anchor instead of passing through the real t=2.42s value) makes the initial
+# current profile too hollow and drives TORAX to NaN within its first step -- the same
+# early-ramp failure mode documented for scenario 105099. core_profiles/global_quantities/ip
+# reuses the same points as the equilibrium ip -- they are identical in the 105084 reference.
+#
+# The boundary outline (r/z) is left as {ref: input}: each time slice needs a variable-length
+# array of contour points (168-310 points across the 105084 pulse), and Waveform-Editor's
+# tendency system only ever produces one scalar per time step (ConfigurationExporter._fill_
+# explicit calls waveform.get_value(times), which must return one value per requested time),
+# so there is no way to express a per-point array as a literal tendency -- only an import can
+# copy an already-shaped array straight from the reference IDS.
+#
+# pf_active/* is overlaid from `input` first (coil geometry/circuit description), then each
+# coil's current/data leaf below overrides it with an explicit piecewise waveform -- a 7-point
+# mirror (t=2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35 s) of that coil's real 105084 trace.
+# This is the coil-current *seed* `we` now sends straight to the NICE load balancer (see
+# workflow.ymmsl / outer_convergence_loop.py) -- it is never fed back from NICE's own result,
+# so, like the equilibrium ip/r0/b0 above, it can be hardcoded here instead of imported. The
+# two vertical-stabilization coils (VSU=coil(13), VSL=coil(14)) are left at a flat 0 A instead:
+# their real traces are a fast feedback-control response oscillating noisily within roughly
+# +-11.6 kA with no discernible trend, so a handful of piecewise points couldn't mirror them
+# meaningfully -- they'd just misrepresent noise as a designed shape.
+#
+# `input` names the scenario's static reference IDS (boundary shape, ECRH heating, coil
+# geometry, and the static machine description); `eq` and `cp` are the two live F_INIT
+# port-imports the loop sends each Picard iteration (the TORAX-evolved equilibrium and
+# core_profiles).
+globals:
+  dd_version: 4.0.0
+  imports:
+    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+    eq: {port: equilibrium_in}
+    cp: {port: core_profiles_in}
+
+targets:
+  equilibrium/vacuum_toroidal_field/r0:
+    - {value: 6.2}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {value: -2.65}
+  equilibrium/time_slice/global_quantities/ip:
+    - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
+  core_profiles/global_quantities/ip:
+    - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  core_sources/*:
+    - {ref: input}
+  core_sources/source(1)/identifier/name:
+    - {value: ec}
+  wall/*:
+    - {ref: input}
+  pf_passive/*:
+    - {ref: input}
+  iron_core/*:
+    - {ref: input}
+  pf_active/*:
+    - {ref: input}
+  pf_active/coil(1)/current/data:   # Central Solenoid 3U (CS3U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35621, -40988, -32425, -27038, -20147, -16252, -22703]}
+  pf_active/coil(2)/current/data:   # Central Solenoid 2U (CS2U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35456, -23772, -23414, -19091, -13188, -8970, -8089]}
+  pf_active/coil(3)/current/data:   # Central Solenoid 1U (CS1U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32894, -21170, -13679, -8023, -3125, -415, -10428]}
+  pf_active/coil(4)/current/data:   # Central Solenoid 1L (CS1L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32894, -21170, -13679, -8023, -3125, -415, -10428]}
+  pf_active/coil(5)/current/data:   # Central Solenoid 2L (CS2L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-34884, -28171, -23687, -19075, -14646, -12078, -17030]}
+  pf_active/coil(6)/current/data:   # Central Solenoid 3L (CS3L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32453, -36492, -36788, -31730, -23271, -18155, -4607]}
+  pf_active/coil(7)/current/data:   # Poloidal Field Coil 1 (PF1)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-21769, -23002, -14642, -10555, -8924, -7553, -15270]}
+  pf_active/coil(8)/current/data:   # Poloidal Field Coil 2 (PF2)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-5714, -1854, -9449, -6862, -3694, -2533, 4546]}
+  pf_active/coil(9)/current/data:   # Poloidal Field Coil 3 (PF3)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [651, 5082, 9812, 8950, 8390, 8010, 602]}
+  pf_active/coil(10)/current/data:  # Poloidal Field Coil 4 (PF4)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-1015, 3476, 5615, 7523, 8456, 9231, 716]}
+  pf_active/coil(11)/current/data:  # Poloidal Field Coil 5 (PF5)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [896, 7957, -104, -2234, -1748, -1643, 7266]}
+  pf_active/coil(12)/current/data:  # Poloidal Field Coil 6 (PF6)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-14528, -20569, -11322, -7633, -6560, -5751, -13988]}
+  pf_active/coil(13)/current/data:  # Upper Vertical Stabilization Coil (VSU) -- flat, see comment above
+    - {value: 0}
+  pf_active/coil(14)/current/data:  # Lower Vertical Stabilization Coil (VSL) -- flat, see comment above
+    - {value: 0}
+
+state:
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  core_profiles/global_quantities/v_loop:
+    - {ref: cp}
+  core_profiles/profiles_1d/time:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/rho_tor_norm:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/psi:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/temperature:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/density:
+    - {ref: cp}
+  core_profiles/profiles_1d/t_i_average:
+    - {ref: cp}
