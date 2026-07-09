@@ -15,30 +15,33 @@ module purge
 bash setup_files/setup_test_files.sh
 
 cd run/
-mkdir TORAX-MUSCLE3
-cd TORAX-MUSCLE3
-module load Python
-python -m venv ./venv
-source ./venv/bin/activate
-pip install --upgrade pip setuptools
-pip install "git+https://github.com/iterorganization/torax-muscle3.git@develop" "muscle3==0.8.0"
-deactivate
-module purge
-cd ../..
+bash ../setup_files/setup_waveform_editor.sh
+bash ../setup_files/setup_muscle3.sh
+bash ../setup_files/setup_nice.sh
+# setup_torax.sh defaults to the main branch; CI tests develop.
+bash ../setup_files/setup_torax.sh "https://github.com/iterorganization/TORAX-MUSCLE3.git" develop
+bash ../setup_files/setup_imas_muscle3.sh
+# imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
+# (removed has_imas attribute); the olc actor needs the develop fix.
+./IMAS-MUSCLE3/venv/bin/pip install "git+https://github.com/iterorganization/imas-validator.git@develop"
+cd ..
 
 
 # RUN TEST FILES
-module load MUSCLE3
+# All actors run from the repo-local muscle3 0.10 stack (the venvs and the
+# source-built NICE binaries set up above), so the manager must be 0.10 too:
+# the site MUSCLE3 module (0.8.0) cannot talk to 0.10 actors or vice versa.
+MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 
 # bash run_test_files.sh
-muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_accumulator_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_olc_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_waveform_editor.ymmsl
-muscle_manager --start-all ymmsl_files/test_visualization_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
-# muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
-# muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_visualization_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
+# "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
 
 # RUN WORKFLOWS
 bash run_workflow.sh inverse_convergence 105084

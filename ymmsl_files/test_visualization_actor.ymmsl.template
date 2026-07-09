@@ -20,12 +20,10 @@ settings:
   visualization_component.open_browser: false
 implementations:
   visualization_component:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.visualization_component
   source_component:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.source_component
 resources:
   source_component:

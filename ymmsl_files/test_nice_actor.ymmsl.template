@@ -1,4 +1,13 @@
 ymmsl_version: v0.1
+# Smoke test for the source-built NICE actors (run/nice/run/nice_imas_*_muscle3,
+# built by setup_files/setup_nice.sh against muscle3 0.10.0).
+#
+# Only nice_inv and nice_dir are tested here: they are one-shot actors
+# (F_INIT in, O_F out) that fit this source -> actor -> sink topology.
+# nice_evo is NOT tested: on the NICE master branch it became an iterative
+# actor (O_I/S ports exchanging equilibrium/pf_active with a peer every
+# t_interval), so it needs a feedback loop (temporal coupler + controller) to
+# run at all -- see workflows/torax_nice_controller for its real coupling.
 model:
   name: test_nice_actor
   components:
@@ -11,21 +20,12 @@ model:
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
         o_f: [equilibrium_out, pf_active_out]
-    nice_evo:
-      implementation: nice_evo
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out, pf_active_out]
     nice_dir:
       implementation: nice_dir
       ports:
         f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
         o_f: [equilibrium_out]
     sink_inv:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in, pf_active_in]
-    sink_evo:
       implementation: sink
       ports:
         f_init: [equilibrium_in, pf_active_in]
@@ -37,72 +37,50 @@ model:
     source.equilibrium_out: nice_inv.equilibrium_in
     source.pf_active_out: nice_inv.pf_active_in
     source.wall_out: nice_inv.wall_in
-    source.wall_out: nice_evo.wall_in
     source.wall_out: nice_dir.wall_in
     source.pf_passive_out: nice_inv.pf_passive_in
-    source.pf_passive_out: nice_evo.pf_passive_in
     source.pf_passive_out: nice_dir.pf_passive_in
     source.iron_core_out: nice_inv.iron_core_in
-    source.iron_core_out: nice_evo.iron_core_in
     source.iron_core_out: nice_dir.iron_core_in
-    nice_inv.equilibrium_out: nice_evo.equilibrium_in
     nice_inv.equilibrium_out: nice_dir.equilibrium_in
     nice_inv.equilibrium_out: sink_inv.equilibrium_in
-    nice_inv.pf_active_out: nice_evo.pf_active_in
     nice_inv.pf_active_out: nice_dir.pf_active_in
     nice_inv.pf_active_out: sink_inv.pf_active_in
-    nice_evo.equilibrium_out: sink_evo.equilibrium_in
-    nice_evo.pf_active_out: sink_evo.pf_active_in
     nice_dir.equilibrium_out: sink_dir.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink_inv.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_inv"
   sink_inv.sink_mode: "w"
-  sink_evo.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_evo"
-  sink_evo.sink_mode: "w"
   sink_dir.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_dir"
   sink_dir.sink_mode: "w"
-  nice_inv.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
-  nice_dir.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
-  nice_evo.xml_path: [PWD_PLACEHOLDER]/run/nice/run/input/param.xml
+  nice_inv.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
+  nice_dir.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
-    env: 
+    env:
       IMAS_AL_DISABLE_VALIDATE: 1
     modules: NICE
-    executable: nice_imas_inv_muscle3
-  nice_evo:
-    env: 
-      IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
-    executable: nice_imas_evo_muscle3
+    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   nice_dir:
-    env: 
+    env:
       IMAS_AL_DISABLE_VALIDATE: 1
     modules: NICE
-    executable: nice_imas_dir_muscle3
+    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_dir_muscle3
 resources:
   source:
     threads: 1
   sink_inv:
     threads: 1
-  sink_evo:
-    threads: 1
   sink_dir:
     threads: 1
   nice_inv:
     threads: 1
-  nice_evo:
-    threads: 1
   nice_dir:
     threads: 1
-

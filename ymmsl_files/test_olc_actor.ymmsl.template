@@ -21,12 +21,10 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   olc:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.olc_component
   source:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.source_component
 resources:
   source:

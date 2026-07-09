@@ -27,12 +27,10 @@ settings:
   python_config_module: 'examples/basic_config.py'
 implementations:
   source:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: "-u -m imas_muscle3.actors.sink_component"
   torax:
     script: |

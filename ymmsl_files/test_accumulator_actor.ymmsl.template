@@ -38,16 +38,13 @@ settings:
   sink_optional_port.sink_mode: "w"
 implementations:
   sink:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.source_component
   accumulator:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.accumulator_component
 resources:
   source:

@@ -27,16 +27,13 @@ settings:
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/test_waveforms_config.yaml
 implementations:
   sink:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    modules: IMAS-MUSCLE3
-    executable: python
+    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
     args: -u -m imas_muscle3.actors.source_component
   waveform_editor:
-    modules: Waveform-Editor
-    executable: waveform-editor
+    executable: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv/bin/waveform-editor
     args: actor
 resources:
   source:
