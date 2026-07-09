@@ -9,7 +9,7 @@ actor overwrites at run time.
 import numpy as np
 
 rhon = np.linspace(0, 1, 25)
-fixed_dt = 0.15
+fixed_dt = 0.3
 
 CONFIG = {
     'profile_conditions': {},
