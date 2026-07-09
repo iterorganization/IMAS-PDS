@@ -2,7 +2,7 @@
 set -euo pipefail # stop if anything doesn't work
 
 TORAX_URL=${1:-"https://github.com/iterorganization/TORAX-MUSCLE3.git"}
-BRANCH_TORAX=${2:-"main"}
+BRANCH_TORAX=${2:-"develop"}
 
 module purge
 module load Python

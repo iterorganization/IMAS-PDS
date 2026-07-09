@@ -2,7 +2,7 @@
 set -euo pipefail # stop if anything doesn't work
 
 WAVEFORM_EDITOR_URL=${1:-"https://github.com/iterorganization/Waveform-Editor.git"}
-BRANCH_WAVEFORM_EDITOR=${2:-"main"}
+BRANCH_WAVEFORM_EDITOR=${2:-"develop"}
 
 source imas_base_env
 module load Python

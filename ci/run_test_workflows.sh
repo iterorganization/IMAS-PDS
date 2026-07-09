@@ -18,8 +18,7 @@ cd run/
 bash ../setup_files/setup_waveform_editor.sh
 bash ../setup_files/setup_muscle3.sh
 bash ../setup_files/setup_nice.sh
-# setup_torax.sh defaults to the main branch; CI tests develop.
-bash ../setup_files/setup_torax.sh "https://github.com/iterorganization/TORAX-MUSCLE3.git" develop
+bash ../setup_files/setup_torax.sh
 bash ../setup_files/setup_imas_muscle3.sh
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
