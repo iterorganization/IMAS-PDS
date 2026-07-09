@@ -39,7 +39,9 @@ for target in $NICE_MUSCLE3_TARGETS; do
     echo "  $target already built -- skipping (delete run/nice/run/$target to force a rebuild)."
     continue
   fi
-  make -j "$target"
+  # Cap parallelism: a bare `make -j` spawns one job per source file, which
+  # gets the compilers OOM-killed on memory-limited CI agents.
+  make -j "$(nproc)" "$target"
   # Bake $MUSCLE3_HOME/lib into the binary's RPATH so it finds libmuscle.so/
   # libymmsl.so at run time without sourcing muscle3.env (the actor scripts
   # that exec these binaries don't).
