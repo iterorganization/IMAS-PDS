@@ -32,14 +32,14 @@ class State(BaseState):
             self._extract_pf_active(ids)
 
     def _extract_pf_active(self, ids):
+        # (ncoil, ntime): a single slice and a whole trace both work.
         currents = np.array([c.current.data for c in ids.coil])
         coil_names = np.array([c.name.value for c in ids.coil])
-        ncoils = len(ids.coil)
         new_point = xr.Dataset(
             {
-                "currents": (("time", "coil"), currents.reshape(1, ncoils)),
+                "currents": (("time", "coil"), currents.T),
             },
-            coords={"time": [ids.time[0]], "coil": coil_names},
+            coords={"time": np.asarray(ids.time), "coil": coil_names},
         )
 
         current_data = self.data.get("pf_active")
@@ -51,8 +51,12 @@ class State(BaseState):
             )
 
     def _extract_equilibrium(self, ids):
-        ts = ids.time_slice[0]
+        # A live stream sends one slice per message; the recorder receives a
+        # whole trace per Picard iteration. Handle both.
+        for itime, ts in enumerate(ids.time_slice):
+            self._extract_equilibrium_slice(ids, itime, ts)
 
+    def _extract_equilibrium_slice(self, ids, itime, ts):
         # Extract separatrix data
         separatrix_data = xr.Dataset(
             {
@@ -60,7 +64,7 @@ class State(BaseState):
                 "z": (("time", "point"), [ts.boundary.outline.z]),
             },
             coords={
-                "time": [ids.time[0]],
+                "time": [ids.time[itime]],
                 "point": range(len(ts.boundary.outline.r)),
             },
         )
@@ -79,7 +83,7 @@ class State(BaseState):
                 "boundary_psi": (("time",), [ts.boundary.psi]),
             },
             coords={
-                "time": [ids.time[0]],
+                "time": [ids.time[itime]],
                 "grid_point": range(len(r_vals)),
             },
         )
@@ -106,7 +110,7 @@ class State(BaseState):
                 "o_points_z": (("time", "o_point"), [o_points_z]),
             },
             coords={
-                "time": [ids.time[0]],
+                "time": [ids.time[itime]],
                 "x_point": range(len(x_points_r)),
                 "o_point": range(len(o_points_r)),
             },
@@ -123,7 +127,7 @@ class State(BaseState):
                 "psi_profile": (("time", "profile"), [ts.profiles_1d.psi]),
             },
             coords={
-                "time": [ids.time[0]],
+                "time": [ids.time[itime]],
                 "profile": np.arange(len(ts.profiles_1d.f_df_dpsi)),
             },
         )
@@ -134,7 +138,7 @@ class State(BaseState):
                 "beta_tor": ("time", [ts.global_quantities.beta_tor]),
             },
             coords={
-                "time": [ids.time[0]],
+                "time": [ids.time[itime]],
             },
         )
 

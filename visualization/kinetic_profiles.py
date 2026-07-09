@@ -36,16 +36,39 @@ class State(BaseState):
             self._extract_equilibrium(ids)
 
     def _extract_core_profiles(self, ids):
-        """Extract 1D radial profiles and global scalars from a core_profiles IDS slice."""
+        """Extract 1D radial profiles and global scalars from a core_profiles IDS.
+
+        A live stream sends one slice per message; the recorder receives a
+        whole trace per outer-loop iteration. Handle both.
+        """
         if not ids.profiles_1d:
             logger.warning("core_profiles IDS has no profiles_1d data, skipping.")
             return
-        p1d = ids.profiles_1d[0]
-        t = ids.time[0]
+        # One dataset per slice, one concat per message: a TORAX whole trace
+        # holds every internal step, so per-slice concat would be quadratic.
+        parts = [
+            ds
+            for itime, p1d in enumerate(ids.profiles_1d)
+            if (ds := self._extract_core_profiles_slice(ids, itime, p1d))
+            is not None
+        ]
+        if not parts:
+            return
+        existing = self.data.get("core_profiles")
+        if existing is not None:
+            parts.insert(0, existing)
+        self.data["core_profiles"] = (
+            parts[0]
+            if len(parts) == 1
+            else xr.concat(parts, dim="time", join="outer")
+        )
+
+    def _extract_core_profiles_slice(self, ids, itime, p1d):
+        t = ids.time[itime]
         rho = np.asarray(p1d.grid.rho_tor_norm)
         if rho.size == 0:
             logger.warning("rho_tor_norm is empty at t=%.4f, skipping.", t)
-            return
+            return None
 
         n_rho = rho.size
 
@@ -68,7 +91,7 @@ class State(BaseState):
         n_i = np.sum(n_i_list, axis=0) # [m^-3]
         n_i0 = n_i[0]
 
-        ip = -1 * ids.global_quantities.ip[0] / 1e6 # [MA]
+        ip = -1 * ids.global_quantities.ip[itime] / 1e6 # [MA]
 
         profiles = xr.Dataset(
             {
@@ -89,22 +112,29 @@ class State(BaseState):
             },
         )
 
-        # Accumulate profiles over time
-        existing_profiles = self.data.get("core_profiles")
-        if existing_profiles is None:
-            self.data["core_profiles"] = profiles
-        else:
-            self.data["core_profiles"] = xr.concat(
-                [existing_profiles, profiles], dim="time", join="outer"
-            )
-
+        return profiles
 
     def _extract_equilibrium(self, ids):
         """Extract global Ip from equilibrium IDS (fallback scalar source)."""
-        ts = ids.time_slice[0]
-        t = ids.time[0]
+        parts = [
+            self._extract_equilibrium_slice(ids, itime, ts)
+            for itime, ts in enumerate(ids.time_slice)
+        ]
+        if not parts:
+            return
+        existing = self.data.get("equilibrium")
+        if existing is not None:
+            parts.insert(0, existing)
+        self.data["equilibrium"] = (
+            parts[0]
+            if len(parts) == 1
+            else xr.concat(parts, dim="time", join="outer")
+        )
+
+    def _extract_equilibrium_slice(self, ids, itime, ts):
+        t = ids.time[itime]
         p1d = ts.profiles_1d
-        new_point = xr.Dataset(
+        return xr.Dataset(
             {
                 "ip_eq": ("time", [ts.global_quantities.ip]),
                 "psi_profile": (("time", "x_coord"), [p1d.psi]),
@@ -113,13 +143,6 @@ class State(BaseState):
             },
             coords={"time": [t]},
         )
-        current_data = self.data.get("equilibrium")
-        if current_data is None:
-            self.data["equilibrium"] = new_point
-        else:
-            self.data["equilibrium"] = xr.concat(
-                [current_data, new_point], dim="time", join="outer"
-            )
 
 class Plotter(BasePlotter):
     """Dashboard with time-evolving 1D profile plots and source waveforms."""

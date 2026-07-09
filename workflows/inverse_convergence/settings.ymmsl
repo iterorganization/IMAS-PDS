@@ -14,6 +14,19 @@ settings:
   sink_nice.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
   sink_torax.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_torax"
   we.waveforms: ${SCEN}/waveforms.yaml
+  # NICE recorder: distill via the State class in the (shared) plot file, so
+  # the stored quantities and the dashboard plots that read them stay in
+  # lockstep. auto off: only the plot file's groups, no auto-discovered ones.
+  # `md` (read by muscle3-dashboard, ignored by the recorder) locates the
+  # static machine-description IDSs the Plotter overlays (wall, coil geometry).
+  rec_nice.format: distill
+  rec_nice.auto: False
+  rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
+  # TORAX recorder: same one-file contract, no geometry overlays (no md).
+  rec_torax.format: distill
+  rec_torax.auto: False
+  rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
   nice_inv.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
   torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
   # validator.halt_on_error: False
