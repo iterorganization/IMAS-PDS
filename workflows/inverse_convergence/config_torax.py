@@ -41,6 +41,16 @@ CONFIG = {
         'n_rho': 25,
     },
     'pedestal': {},
+    # Sawtooth crashes clamp q0 near 1; without them the core current over-peaks
+    # during flattop (q0 drops well below 1 in all DINA scenarios), driving the
+    # axis f/b_field_phi away from DINA. The trigger only fires where a q=1
+    # surface exists, so phases/scenarios without q<1 are unaffected.
+    'mhd': {
+        'sawtooth': {
+            'trigger_model': {'model_name': 'simple'},
+            'redistribution_model': {'model_name': 'simple'},
+        },
+    },
     'sources': {
         # Physics-based sources
         'ohmic': {},
