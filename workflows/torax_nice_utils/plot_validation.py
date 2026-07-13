@@ -46,6 +46,36 @@ def nested_getattr(obj, name_list):
         return nested_getattr(new_obj, name_list[1:])
 
 
+# Fields recomputed from each code's own profiles instead of read from
+# global_quantities: DINA's stored beta_pol is ~19% above and beta_tor ~5% below what
+# the IMAS DD formulas give on its own stored pressure/Ip/B0 (different internal
+# conventions), while NICE fills them exactly per the DD definitions — so the stored
+# values of the two codes are not comparable. Recomputing both sides makes the panels
+# apples-to-apples.
+RECOMPUTED_0D = {"beta_pol", "beta_tor"}
+_trapz = getattr(np, "trapezoid", None) or np.trapz
+
+
+def recomputed_beta(eq, which):
+    """beta_pol / beta_tor per the IMAS DD definitions from a single-slice
+    equilibrium IDS; falls back to the stored value if profiles are absent."""
+    ts = eq.time_slice[0]
+    p = np.asarray(ts.profiles_1d.pressure)
+    volume = np.asarray(ts.profiles_1d.volume)
+    if len(p) == 0 or len(volume) != len(p):
+        return nested_getattr(ts, ("global_quantities", which)).value
+    mu0 = 4e-7 * np.pi
+    p_dV = _trapz(p, volume)
+    if which == "beta_pol":
+        # beta_pol = 4 * int(p dV) / (mu0 * Ip^2 * R0)
+        ip = float(ts.global_quantities.ip)
+        r0 = float(eq.vacuum_toroidal_field.r0)
+        return 4 * p_dV / (mu0 * ip**2 * r0)
+    # beta_tor = <p>_V / (B0^2 / 2 mu0)
+    b0 = float(np.asarray(eq.vacuum_toroidal_field.b0)[0])
+    return (p_dV / volume[-1]) / (b0**2 / (2 * mu0))
+
+
 def nice_output_flags(db):
     """Per-slice NICE solver status for a whole-trace equilibrium IDS: -1 means NICE failed
     to converge that slice (profiles_1d/global_quantities left as IMAS empty-value sentinels,
@@ -216,7 +246,9 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
             if field[-1] not in eq_dict:
                 eq_dict[field[-1]] = {key: [] for key in dbs.keys()}
             vals = {
-                key: nested_getattr(eqs[key].time_slice[0], field).value
+                key: recomputed_beta(eqs[key], field[-1])
+                if field[-1] in RECOMPUTED_0D
+                else nested_getattr(eqs[key].time_slice[0], field).value
                 for key in dbs.keys()
             }
 
@@ -242,7 +274,10 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
 
     # plot 0d profiles over time
     for i, (field_key, val) in enumerate(eq_dict.items()):
-        axes[i].set_title(field_key)
+        title = field_key
+        if field_key in RECOMPUTED_0D:
+            title += " (recomputed, DD def.)"
+        axes[i].set_title(title)
         axes[i].set_ylabel(field_key)
         axes[i].set_xlabel("time")
         for key in dbs.keys():
