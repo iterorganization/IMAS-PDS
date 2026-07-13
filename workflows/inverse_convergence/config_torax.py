@@ -52,17 +52,15 @@ CONFIG = {
         },
     },
     'sources': {
-        # Physics-based sources
-        'ohmic': {},
+        # The "ec" source injected from the received core_sources IDS is DINA's
+        # source(1), identifier index=1 = TOTAL, relabeled to ec by the waveform
+        # editor: it is the NET electron power balance (EC + ohmic - radiation,
+        # verified against the DINA summary IDS power balance for 105073/105099).
+        # TORAX must therefore not add its own ohmic or subtract its own radiation
+        # on top - that double-counts terms already inside the imported source.
         'fusion': {},
-        'ei_exchange': {},
-        # bremsstrahlung cannot be used simultaneously with impurity model mavrin_fit
+        'ei_exchange': {},  # internal e<->i transfer; DINA gives no ion source at all
         'bremsstrahlung': {'mode': 'ZERO'},
-        'impurity_radiation': {
-            'model_name': 'P_in_scaled_flat_profile',
-            'fraction_P_heating': 0.3,
-        },
-        # Actuators (e.g. ecrh) are injected from the received core_sources IDS.
     },
     "transport": {
         'model_name': 'qlknn',
