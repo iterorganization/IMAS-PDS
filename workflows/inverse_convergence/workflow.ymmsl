@@ -28,7 +28,7 @@ models:
       sink_torax: {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
       sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
       # validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
-      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f]}}
+      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]}}
       we:         {description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed), implementation: we, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
@@ -41,6 +41,20 @@ models:
       # recorder conduits below, the `recorder` program and the resources.
       rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
       rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
+      # Final linear-model pass: after the loop converges, re-solve the converged target
+      # (loop.equilibrium_target_out_f -- the loop's slice grid, prescribed boundary)
+      # once per slice through a second NICE whose xml has outputForControl=1, so NICE
+      # writes the linear-model A,B,C matrices grouped per timestamp under
+      # instances/nice_final/workdir/output/linearModel_t<time>/. The static machine
+      # description comes from a sink_source: its o_f send is gated on the f_init
+      # receive (the loop's converged coils), so it fires exactly once, after the loop
+      # (a tap on `we`'s exports would instead queue one message per Picard iteration).
+      # lb_final's own o_f lanes stay unconnected (libmuscle discards those sends): the
+      # product of this pass is the matrix files, and the converged pulse is already in
+      # sink_torax.
+      md_final:   {description: machine description for the final pass (coils-triggered), implementation: sink_source, ports: {f_init: [pf_active_in], o_f: [wall_out, pf_passive_out, iron_core_out]}}
+      lb_final:   {description: NICE load balancer (final linear-model pass), implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
+      nice_final: {description: nice with linear-model output, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
     conduits:
       # Source → loop initialisation (F_INIT)
       source.equilibrium_out: loop.equilibrium_in_f
@@ -72,13 +86,26 @@ models:
       torax.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
       # Loop final results → sinks (O_F)
       loop.equilibrium_out_f: sink_torax.equilibrium_in
-      loop.pf_active_out_f: sink_torax.pf_active_in
+      loop.pf_active_out_f: [sink_torax.pf_active_in, lb_final.pf_active_in, md_final.pf_active_in]
       loop.core_profiles_out_f: sink_torax.core_profiles_in
       # loop.pf_active_out_f: validator.pf_active_in
+      # Final linear-model pass (see the component comment above)
+      loop.equilibrium_target_out_f: lb_final.equilibrium_in
+      md_final.wall_out: lb_final.wall_in
+      md_final.pf_passive_out: lb_final.pf_passive_in
+      md_final.iron_core_out: lb_final.iron_core_in
+      lb_final.equilibrium_scatter: nice_final.equilibrium_in
+      lb_final.wall_scatter: nice_final.wall_in
+      lb_final.pf_active_scatter: nice_final.pf_active_in
+      lb_final.pf_passive_scatter: nice_final.pf_passive_in
+      lb_final.iron_core_scatter: nice_final.iron_core_in
+      nice_final.equilibrium_out: lb_final.equilibrium_gather
+      nice_final.pf_active_out: lb_final.pf_active_gather
 programs:
   # validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
   source:      {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
   sink:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
   loop:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}
   lb:          {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_lb.py}
   recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
@@ -98,4 +125,4 @@ programs:
       source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache
       exec python -u -m torax_muscle3.torax_actor "$@"
-resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}}
+resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}, nice_final: {threads: 2}}

@@ -79,7 +79,8 @@ def main() -> None:
         Operator.F_INIT: [f"{l}_in_f" for l in IDS_LIST],
         Operator.O_I: [f"{l}_out_i" for l in IDS_LIST],
         Operator.S: [f"{l}_in_s" for l in S_LIST],
-        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f", "core_profiles_out_f"],
+        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f", "core_profiles_out_f",
+                       "equilibrium_target_out_f"],
     })
     while inst.reuse_instance():
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
@@ -151,6 +152,12 @@ def main() -> None:
         # loop's `times` (reassigned after the last S receive), so the sink stores Te/Ti
         # on the same slice grid as the equilibrium for the validation plots.
         inst.send("core_profiles_out_f", Message(t0, data=cp))
+        # `target` is the converged operating point on the loop's slice grid (evolved
+        # profiles + prescribed boundary) -- what NICE would receive on iteration N+1.
+        # It feeds the final linear-model NICE pass (lb_final/nice_final); the raw
+        # torax_eq above is unsuitable for that: it is on TORAX's internal dt grid
+        # (every step, not the loop's slices) and its boundary outline has drifted.
+        inst.send("equilibrium_target_out_f", Message(t0, data=target))
         logger.info("sent %d final slices", len(times))
 
 

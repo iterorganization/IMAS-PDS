@@ -28,6 +28,15 @@ settings:
   rec_torax.auto: False
   rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
   nice_inv.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
+  # Final linear-model pass: md_final serves the static machine description to
+  # lb_final (its o_f fires once, gated on the loop's converged coils; no
+  # sink_uri, so it stores nothing). nice_final runs the same NICE xml as the
+  # in-loop nice_inv but with outputForControl switched on through the actor's
+  # output_for_control setting, so it writes the linear-model A,B,C matrices
+  # per timestamp in its instance workdir (output/linearModel_t<time>/).
+  md_final.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
+  nice_final.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
+  nice_final.output_for_control: 1
   torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
   # validator.halt_on_error: False
   # validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests/
