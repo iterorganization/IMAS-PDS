@@ -104,6 +104,7 @@ def main():
     pf_active_plots_dina_nice(args, dbs)
     equilibrium_plots_dina_nice(args, dbs)
     equilibrium_plots_nice_torax(args, dbs)
+    core_profiles_plots_dina_torax(args, dbs)
     shape_comparison_plot(args, dbs)
 
     for db in dbs.values():
@@ -204,6 +205,8 @@ def equilibrium_plots_nice_torax(args, dbs):
         ("profiles_1d", "gm2"),
         ("profiles_1d", "volume"),
         ("profiles_1d", "elongation"),
+        # Te/Ti are core_profiles quantities (equilibrium/profiles_1d has no
+        # t_i_average or electrons node) -- see core_profiles_plots_dina_torax.
     ]
     equilibrium_plot_func(
         args,
@@ -212,6 +215,83 @@ def equilibrium_plots_nice_torax(args, dbs):
         equilibrium_fields_1d,
         equilibrium_1d_figure_path,
     )
+
+
+def core_profiles_plots_dina_torax(args, dbs):
+    """Plot Te/Ti from core_profiles: DINA input vs the final TORAX-evolved output.
+
+    The evolved core_profiles only reach sink_torax since the loop grew a
+    core_profiles_out_f lane (same change as this plot); for older data dirs the
+    torax entry has no core_profiles, and the panels fall back to DINA-only.
+    """
+    figure_path = f"{args.output_dir}/pds_core_profiles_{args.shot_nr}.png"
+    cps = {}
+    for key in ["dina", "torax"]:
+        try:
+            cps[key] = dbs[key].get("core_profiles", lazy=True)
+        except Exception:
+            continue
+
+    fields = [("electrons", "temperature"), ("t_i_average",)]
+    labels = ["t_e", "t_i"]
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15, 10))
+    fig.suptitle(
+        f"{args.shot_nr}: {'-'.join(cps).upper()} core_profiles", fontsize=16
+    )
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    # profiles at t_list: first db as line, second as scatter (same convention
+    # as the equilibrium 1D panels)
+    for col, (field, label) in enumerate(zip(fields, labels)):
+        ax = axes[0][col]
+        ax.set_title(label)
+        ax.set_ylabel(label)
+        ax.set_xlabel("rho_tor_norm")
+        for i_t, t in enumerate(args.t_list):
+            for num, key in enumerate(cps):
+                cp = dbs[key].get_slice(
+                    "core_profiles", time_requested=t, **GET_KWARGS
+                )
+                p1 = cp.profiles_1d[0]
+                rho = np.asarray(p1.grid.rho_tor_norm)
+                val = np.asarray(nested_getattr(p1, field).value)
+                if len(val) == 0 or len(rho) != len(val):
+                    continue
+                if num == 0:
+                    ax.plot(rho, val, label=f"t={t}", color=colors[i_t])
+                else:
+                    ax.scatter(rho, val, color=colors[i_t], marker=".")
+        handles, _ = ax.get_legend_handles_labels()
+        keys = list(cps)
+        if len(keys) > 1:
+            handles += [
+                Line2D([0], [0], color="k", label=f"{keys[0]} (line)"),
+                Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{keys[1]} (scatter)"),
+            ]
+        ax.legend(handles=handles)
+
+    # central values over time
+    for col, (field, label) in enumerate(zip(fields, labels)):
+        ax = axes[1][col]
+        ax.set_title(f"central {label}")
+        ax.set_ylabel(label)
+        ax.set_xlabel("time")
+        for key, cp_full in cps.items():
+            times, vals = [], []
+            for t in np.asarray(cp_full.time):
+                p1 = dbs[key].get_slice(
+                    "core_profiles", time_requested=t, **GET_KWARGS
+                ).profiles_1d[0]
+                val = np.asarray(nested_getattr(p1, field).value)
+                if len(val) == 0:
+                    continue
+                times.append(t)
+                vals.append(val[0])
+            ax.plot(times, vals, label=key, **PLOT_KWARGS)
+        ax.legend()
+
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.savefig(figure_path)
 
 
 def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):

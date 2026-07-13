@@ -79,7 +79,7 @@ def main() -> None:
         Operator.F_INIT: [f"{l}_in_f" for l in IDS_LIST],
         Operator.O_I: [f"{l}_out_i" for l in IDS_LIST],
         Operator.S: [f"{l}_in_s" for l in S_LIST],
-        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f"],
+        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f", "core_profiles_out_f"],
     })
     while inst.reuse_instance():
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
@@ -147,6 +147,10 @@ def main() -> None:
 
         inst.send("equilibrium_out_f", Message(t0, data=torax_eq))
         inst.send("pf_active_out_f", Message(t0, data=coilr))
+        # `cp` here is the final TORAX-evolved core_profiles already resampled onto the
+        # loop's `times` (reassigned after the last S receive), so the sink stores Te/Ti
+        # on the same slice grid as the equilibrium for the validation plots.
+        inst.send("core_profiles_out_f", Message(t0, data=cp))
         logger.info("sent %d final slices", len(times))
 
 

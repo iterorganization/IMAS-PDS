@@ -28,7 +28,7 @@ models:
       sink_torax: {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
       sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
       # validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
-      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f]}}
+      loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f]}}
       we:         {description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed), implementation: we, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
@@ -73,6 +73,7 @@ models:
       # Loop final results → sinks (O_F)
       loop.equilibrium_out_f: sink_torax.equilibrium_in
       loop.pf_active_out_f: sink_torax.pf_active_in
+      loop.core_profiles_out_f: sink_torax.core_profiles_in
       # loop.pf_active_out_f: validator.pf_active_in
 programs:
   # validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
