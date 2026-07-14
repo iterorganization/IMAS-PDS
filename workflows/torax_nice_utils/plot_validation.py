@@ -105,6 +105,7 @@ def main():
     equilibrium_plots_dina_nice(args, dbs)
     equilibrium_plots_nice_torax(args, dbs)
     core_profiles_plots_dina_torax(args, dbs)
+    rlte_plots_dina_torax(args, dbs)
     shape_comparison_plot(args, dbs)
 
     for db in dbs.values():
@@ -289,6 +290,100 @@ def core_profiles_plots_dina_torax(args, dbs):
                 vals.append(val[0])
             ax.plot(times, vals, label=key, **PLOT_KWARGS)
         ax.legend()
+
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.savefig(figure_path)
+
+
+def _rlte_profile(p1, r_geo, a_geo):
+    """R/LTe = -(R0/Te) dTe/dr with r = rho_tor_norm * a_minor.
+
+    TORAX itself uses r_mid = (R_out - R_in)/2 as the gradient coordinate; the
+    rho*a approximation differs by O(Shafranov shift), mostly near the edge.
+    """
+    rho = np.asarray(p1.grid.rho_tor_norm)
+    te = np.asarray(p1.electrons.temperature)
+    if len(te) == 0 or len(rho) != len(te):
+        return None, None
+    return rho, -r_geo * np.gradient(te, rho * a_geo) / te
+
+
+def rlte_plots_dina_torax(args, dbs):
+    """Plot the normalized electron temperature gradient R/LTe: DINA vs TORAX.
+
+    R/LTe is the drive/limit parameter for the stiff QLKNN transport: the model
+    clamps it near the ITG/TEM critical gradient, while DINA's prescribed
+    profiles can hold R/LTe well above it (the main source of the core Te gap).
+    Geometry (R0, a) is taken per-slice from each side's own equilibrium: DINA's
+    for the DINA profiles, NICE's for the TORAX-evolved profiles.
+    """
+    figure_path = f"{args.output_dir}/pds_rlte_{args.shot_nr}.png"
+    cps = {}
+    for key in ["dina", "torax"]:
+        try:
+            cps[key] = dbs[key].get("core_profiles", lazy=True)
+        except Exception:
+            continue
+    eq_of = {"dina": "dina", "torax": "nice"}
+
+    def geo_at(key, t):
+        ts = dbs[eq_of[key]].get_slice(
+            "equilibrium", time_requested=t, **GET_KWARGS
+        ).time_slice[0]
+        return ts.boundary.geometric_axis.r, ts.boundary.minor_radius
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 5))
+    fig.suptitle(f"{args.shot_nr}: {'-'.join(cps).upper()} R/LTe", fontsize=16)
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    # R/LTe(rho) at t_list: first db as line, second as scatter (same
+    # convention as the core_profiles panels)
+    ax = axes[0]
+    ax.set_title("R/LTe")
+    ax.set_ylabel("R/LTe")
+    ax.set_xlabel("rho_tor_norm")
+    ax.set_ylim(0, 40)
+    for i_t, t in enumerate(args.t_list):
+        for num, key in enumerate(cps):
+            p1 = dbs[key].get_slice(
+                "core_profiles", time_requested=t, **GET_KWARGS
+            ).profiles_1d[0]
+            rho, rlte = _rlte_profile(p1, *geo_at(key, t))
+            if rho is None:
+                continue
+            if num == 0:
+                ax.plot(rho, rlte, label=f"t={t}", color=colors[i_t])
+            else:
+                ax.scatter(rho, rlte, color=colors[i_t], marker=".")
+    ax.axhline(16, color="k", ls=":", lw=1, label="QLKNN training max")
+    handles, _ = ax.get_legend_handles_labels()
+    keys = list(cps)
+    if len(keys) > 1:
+        handles += [
+            Line2D([0], [0], color="k", label=f"{keys[0]} (line)"),
+            Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{keys[1]} (scatter)"),
+        ]
+    ax.legend(handles=handles)
+
+    # mid-radius value over time
+    ax = axes[1]
+    ax.set_title("R/LTe at rho=0.6")
+    ax.set_ylabel("R/LTe")
+    ax.set_xlabel("time")
+    for key, cp_full in cps.items():
+        times, vals = [], []
+        for t in np.asarray(cp_full.time):
+            p1 = dbs[key].get_slice(
+                "core_profiles", time_requested=t, **GET_KWARGS
+            ).profiles_1d[0]
+            rho, rlte = _rlte_profile(p1, *geo_at(key, t))
+            if rho is None:
+                continue
+            times.append(t)
+            vals.append(float(np.interp(0.6, rho, rlte)))
+        ax.plot(times, vals, label=key, **PLOT_KWARGS)
+    ax.axhline(16, color="k", ls=":", lw=1)
+    ax.legend()
 
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.savefig(figure_path)
