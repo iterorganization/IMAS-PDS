@@ -66,6 +66,8 @@ targets:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
     - {ref: input}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: input}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:

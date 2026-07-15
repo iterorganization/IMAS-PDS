@@ -3,9 +3,11 @@ ymmsl_version: v0.2
 # scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
 settings:
   loop.max_slices: 0
-  loop.max_iterations: 2
+  loop.max_iterations: 4
   loop.tolerance: 1000.0
   loop.rel_tolerance: 0.03
+  # loop.cold_start: True
+  loop.cold_start: False
   torax.output_all_timeslices: True
   source.iterative: False
   sink_nice.sink_mode: "w"

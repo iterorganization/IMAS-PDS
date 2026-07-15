@@ -69,6 +69,70 @@ def _hold_boundary(evolved_ser, ref_ser):
     return ev.serialize()
 
 
+MU0 = 4e-7 * np.pi
+R0, A_MINOR = 6.2, 2.0  # ITER scale lengths, used only to size the cold-start guess
+
+
+def _cold_equilibrium(ser):
+    """Replace the DINA profile state on one target slice with a neutral guess.
+
+    The design part of the slice (time, boundary outline, Ip) is kept; the
+    profiles_1d state the waveform editor forwards to NICE (psi, dpressure_dpsi,
+    f_df_dpsi) is replaced by a generic low-beta guess: a linear psi coordinate
+    spanning the internal flux of a li~1 current channel at this slice's Ip, and
+    (1 - psi_norm) shaped p'/ff'. Only the sign conventions (one bit each) and the
+    boundary-flux anchor (one scalar, the design gauge -- without it TORAX evolves
+    the whole pulse ~100 Wb off the DINA level and every psi plot shifts) are taken
+    from the DINA slice, so no profile information survives; NICE rescales the
+    amplitude pair to match Ip (algoWithIp), so only the shapes and the p'/ff'
+    ratio (~beta_p 0.05 here) matter.
+    """
+    eq = IDSFactory().new("equilibrium"); eq.deserialize(ser)
+    ts = eq.time_slice[0]
+    p1 = ts.profiles_1d
+    ip = abs(float(ts.global_quantities.ip))
+    s_psi = 1.0 if p1.psi[-1] >= p1.psi[0] else -1.0
+    s_ffp = -1.0 if np.mean(p1.f_df_dpsi) < 0 else 1.0
+    psib = float(ts.global_quantities.psi_boundary) \
+        if ts.global_quantities.psi_boundary.has_value else float(p1.psi[-1])
+    dpsi = 0.5 * MU0 * R0 * ip
+    # Keep the original grid size: the slice's other profiles_1d arrays (psi_norm,
+    # pressure, q, ...) are coordinated on psi, so resizing psi would invalidate them.
+    x = np.linspace(0.0, 1.0, len(p1.psi))
+    b_pol = MU0 * ip / (2 * np.pi * A_MINOR)
+    p_axis = 0.05 * b_pol**2 / MU0
+    p1.psi = psib - s_psi * dpsi * (1.0 - x)
+    if p1.psi_norm.has_value:
+        p1.psi_norm = x.copy()
+    p1.dpressure_dpsi = -2 * p_axis * (1 - x) / (s_psi * dpsi)
+    p1.f_df_dpsi = s_ffp * MU0 * R0 * ip / (np.pi * A_MINOR**2) * (1 - x)
+    return eq.serialize()
+
+
+def _cold_core_profiles(ser):
+    """Same, for one core_profiles slice: generic parabolic Te/Ti (2 keV core,
+    100 eV edge), flat-current parabolic psi(rho) sized like _cold_equilibrium
+    and anchored on the slice's own edge flux (the design gauge -- TORAX keeps
+    its initial psi level for the whole pulse), v_loop zeroed. Density is
+    deliberately kept: with evolve_density=False it is a prescription of the run
+    (like Ip or the heating), not an evolved initial state, so removing it would
+    change the physics target rather than the start.
+    """
+    cp = IDSFactory().new("core_profiles"); cp.deserialize(ser)
+    p1 = cp.profiles_1d[0]
+    ip = abs(float(cp.global_quantities.ip[0]))
+    rho = np.asarray(p1.grid.rho_tor_norm)
+    s_psi = 1.0 if p1.grid.psi[-1] >= p1.grid.psi[0] else -1.0
+    psib = float(p1.grid.psi[-1])
+    te = 100.0 + 1900.0 * (1 - rho**2)
+    p1.grid.psi = psib - s_psi * 0.5 * MU0 * R0 * ip * (1 - rho**2)
+    p1.electrons.temperature = te
+    p1.t_i_average = te.copy()
+    if cp.global_quantities.v_loop.has_value:
+        cp.global_quantities.v_loop = np.zeros(len(cp.global_quantities.v_loop))
+    return cp.serialize()
+
+
 def _coils(pf_trace):
     pf = IDSFactory().new("pf_active"); pf.deserialize(pf_trace)
     return np.array([[c.current.data[i] for c in pf.coil] for i in range(len(pf.time))])
@@ -87,6 +151,7 @@ def main() -> None:
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
         rel_tol = float(get_setting_optional(inst, "rel_tolerance", 0.03))
         max_slices = int(get_setting_optional(inst, "max_slices", 0))
+        cold_start = bool(get_setting_optional(inst, "cold_start", False))
         t_min = get_setting_optional(inst, "t_min")
         t_max = get_setting_optional(inst, "t_max")
 
@@ -100,7 +165,16 @@ def main() -> None:
         if max_slices:
             times = times[:max_slices]
         boundary = _split(init["equilibrium"], "equilibrium", times)
-        cp = _assemble(_split(init["core_profiles"], "core_profiles", times), "core_profiles")
+        cp_slices = _split(init["core_profiles"], "core_profiles", times)
+        if cold_start:
+            # No DINA warm start: iteration 0 gets a generic, Ip-scaled state
+            # instead of the DINA profiles (see _cold_equilibrium/_cold_core_profiles).
+            # `boundary` itself is replaced so the padding path can't reintroduce
+            # DINA profiles either; _hold_boundary only ever reads its outline.
+            logger.info("cold_start: replacing the DINA initial state with generic profiles")
+            boundary = [_cold_equilibrium(s) for s in boundary]
+            cp_slices = [_cold_core_profiles(s) for s in cp_slices]
+        cp = _assemble(cp_slices, "core_profiles")
         t0 = times[0]
         target = _assemble(boundary, "equilibrium")
         prev = None; prev_dI = None; torax_eq = coilr = None

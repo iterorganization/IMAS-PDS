@@ -14,12 +14,20 @@
 # early-ramp failure mode documented for scenario 105099. core_profiles/global_quantities/ip
 # reuses the same points as the equilibrium ip -- they are identical in the 105084 reference.
 #
-# The boundary outline (r/z) is left as {ref: input}: each time slice needs a variable-length
-# array of contour points (168-310 points across the 105084 pulse), and Waveform-Editor's
+# psi_boundary is likewise an explicit piecewise mirror of the 105084 reference trace: the
+# 7 coil-anchor times below plus 5 extra points (9.52 s for the early-ramp curvature, 44.72,
+# 108.22 and 178.72 s for the slow flat-top curvature, 266.2 s for the end-of-pulse turn),
+# which keeps the piecewise-linear interpolation within 0.6 Wb of the full 40-slice reference
+# trace (whose total swing is ~71 Wb, from -104.6 Wb at t=2.42 s to -33.4 Wb at flat-top end).
+#
+# The boundary outline (r/z) and core_sources are left as {ref: input}: Waveform-Editor's
 # tendency system only ever produces one scalar per time step (ConfigurationExporter._fill_
 # explicit calls waveform.get_value(times), which must return one value per requested time),
 # so there is no way to express a per-point array as a literal tendency -- only an import can
-# copy an already-shaped array straight from the reference IDS.
+# copy an already-shaped array straight from the reference IDS. For the outline that array is
+# a variable-length contour (168-310 points across the 105084 pulse); for core_sources it is
+# the ec source's 50-point rho profiles per slice (electrons/energy, total_ion_energy,
+# j_parallel -- the profiles TORAX actually injects, see config_torax.py).
 #
 # pf_active/* is overlaid from `input_md` first (coil geometry/circuit description), then each
 # coil's current/data leaf below overrides it with an explicit piecewise waveform -- a 7-point
@@ -88,6 +96,8 @@ targets:
     - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
   core_profiles/global_quantities/ip:
     - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {time: [2.42, 9.52, 16.5, 44.72, 72.9, 108.22, 143.5, 178.72, 214.0, 256.4, 266.2, 280.35], value: [-104.64, -94.14, -88.18, -78.97, -72.44, -64.89, -57.36, -49.92, -42.40, -33.40, -32.77, -38.36]}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:
