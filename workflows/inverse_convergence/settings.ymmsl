@@ -2,12 +2,12 @@ ymmsl_version: v0.2
 # Shared knobs for inverse_convergence, stacked onto the static workflow.ymmsl. The
 # scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
 settings:
-  loop.max_slices: 0
-  loop.max_iterations: 4
-  loop.tolerance: 1000.0
-  loop.rel_tolerance: 0.03
   # loop.cold_start: True
   loop.cold_start: False
+  loop.max_iterations: 2
+  loop.max_slices: 0
+  loop.tolerance: 1000.0
+  loop.rel_tolerance: 0.03
   torax.output_all_timeslices: True
   source.iterative: False
   sink_nice.sink_mode: "w"
@@ -40,8 +40,8 @@ settings:
   nice_final.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
   nice_final.output_for_control: 1
   torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
-  # validator.halt_on_error: False
-  # validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests/
-  # validator.rulesets: iter-olc
-  # validator.apply_generic: False
+  validator.halt_on_error: False
+  validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
+  validator.rulesets: iter-olc
+  validator.apply_generic: False
   muscle_remote_log_level: 'INFO'
