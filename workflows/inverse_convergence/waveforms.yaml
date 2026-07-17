@@ -1,20 +1,4 @@
-# Waveform-Editor configuration for the inverse_convergence loop (scenario 105084). Each
-# Picard iteration the loop sends the waveform actor its two live F_INIT ports -- the target
-# equilibrium and the (TORAX-evolved) core_profiles -- and the actor exports on the
-# equilibrium's /time (the first-declared F_INIT port in workflow.ymmsl, so it is the export
-# time base): the equilibrium with the designed Ip(t)/B0 overlaid (the NICE-inverse target),
-# core_profiles mirrored straight through (resampled onto the equilibrium time base) on to
-# TORAX, a core_sources IDS with the designed ECRH heating for TORAX, and the static
-# machine-description IDSs (wall, pf_passive, iron_core) plus the coil-current seed
-# (pf_active) NICE needs -- none of these four ever change across the pulse or across
-# iterations (the coil-current seed is never fed back from NICE's own result), so `we` just
-# re-exports the scenario's reference copy straight through to the NICE load balancer.
-#
-# `input` names the scenario's DINA-derived static reference IDS (the designed heating
-# plus Ip/B0/boundary); `input_md` names the machine-description reference IDS (wall,
-# pf_passive, iron_core, pf_active) written separately during preprocessing; `eq` and
-# `cp` are the two live port-imports above. Edit the analytic Ip/B0 below to redesign
-# the pulse.
+# Waveform-Editor configuration for the inverse_convergence loop
 globals:
   dd_version: 4.0.0
   imports:
@@ -23,8 +7,7 @@ globals:
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
-# Static machine-description reference (see input_md above): wall, pf_passive,
-# iron_core, and the pf_active coil-current seed NICE needs.
+# Static machine-description referencemachine_description:
 machine_description:
   wall/*:
     - {ref: input_md}
@@ -35,6 +18,7 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
+# Needed to kick-start NICE and TORAX
 state:
   equilibrium/time_slice/profiles_1d/psi:
     - {ref: eq}
@@ -57,6 +41,7 @@ state:
   core_profiles/profiles_1d/t_i_average:
     - {ref: cp}
 
+# Targets for workflow. Main values to tweak
 targets:
   equilibrium/vacuum_toroidal_field/r0:
     - {ref: input}

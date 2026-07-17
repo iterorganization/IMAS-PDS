@@ -46,12 +46,8 @@ def nested_getattr(obj, name_list):
         return nested_getattr(new_obj, name_list[1:])
 
 
-# Fields recomputed from each code's own profiles instead of read from
-# global_quantities: DINA's stored beta_pol is ~19% above and beta_tor ~5% below what
-# the IMAS DD formulas give on its own stored pressure/Ip/B0 (different internal
-# conventions), while NICE fills them exactly per the DD definitions — so the stored
-# values of the two codes are not comparable. Recomputing both sides makes the panels
-# apples-to-apples.
+# Fields recomputed from each code's own profiles according to DD definition instead of
+# read from global_quantities since definitions differ per code
 RECOMPUTED_0D = {"beta_pol", "beta_tor"}
 _trapz = getattr(np, "trapezoid", None) or np.trapz
 
@@ -408,10 +404,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
             key: db.get_slice("equilibrium", time_requested=t, **GET_KWARGS)
             for key, db in dbs.items()
         }
-        # Skip slices where NICE failed to converge: global_quantities is left as the IMAS
-        # empty-value sentinel (+-9e40) rather than a real result, which would otherwise
-        # show up as spurious spikes in these 0D traces. Also drop the time itself so the
-        # x/y arrays plotted below stay the same length.
+        # Skip slices where NICE failed to converge
         nice_flag = "nice" in eqs and eqs["nice"].code.output_flag
         if nice_flag and nice_flag[0] == -1:
             continue
@@ -486,16 +479,6 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                 Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{db_keys[1]} (scatter)"),
             ]
         axes[idx].legend(handles=handles)
-
-    # # plot ratio between core pressure values to check b_tor difference
-    # if 'dina' in dbs.keys():
-    #   vals = []
-    #   for t in equilibrium.time:
-    #     dina_eq = dbs['dina'].get_slice('equilibrium', time_requested=t, **GET_KWARGS).time_slice[0]
-    #     nice_eq = dbs['nice'].get_slice('equilibrium', time_requested=t, **GET_KWARGS).time_slice[0]
-    #     vals.append(nice_eq.profiles_1d.pressure[0] / dina_eq.profiles_1d.pressure[0])
-    #   axes[idx + 1].plot(equilibrium.time, vals, color=colors[0])
-    #   axes[idx + 1].plot(equilibrium.time, np.array(eq_dict['beta_tor']['nice']) / np.array(eq_dict['beta_tor']['dina']), color=colors[1])
 
     # save fig
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])

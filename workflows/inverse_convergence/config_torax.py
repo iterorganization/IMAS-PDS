@@ -41,10 +41,6 @@ CONFIG = {
         'n_rho': 25,
     },
     'pedestal': {},
-    # Sawtooth crashes clamp q0 near 1; without them the core current over-peaks
-    # during flattop (q0 drops well below 1 in all DINA scenarios), driving the
-    # axis f/b_field_phi away from DINA. The trigger only fires where a q=1
-    # surface exists, so phases/scenarios without q<1 are unaffected.
     'mhd': {
         'sawtooth': {
             'trigger_model': {'model_name': 'simple'},
@@ -52,12 +48,8 @@ CONFIG = {
         },
     },
     'sources': {
-        # The "ec" source injected from the received core_sources IDS is DINA's
-        # source(1), identifier index=1 = TOTAL, relabeled to ec by the waveform
-        # editor: it is the NET electron power balance (EC + ohmic - radiation,
-        # verified against the DINA summary IDS power balance for 105073/105099).
         # TORAX must therefore not add its own ohmic or subtract its own radiation
-        # on top - that double-counts terms already inside the imported source.
+        # through config - that double-counts terms already inside the imported source.
         'fusion': {},
         'ei_exchange': {},  # internal e<->i transfer; DINA gives no ion source at all
         'bremsstrahlung': {'mode': 'ZERO'},

@@ -14,7 +14,9 @@ Extra suffixes plot additional TORAX variants, e.g.:
 Writes <scenarios>/<shot>/tmp/pds_rlte_<shot>.png with two panels:
 left R/LTe(rho) at a few times, right R/LTe at rho=0.6 vs time.
 """
+import os
 import sys
+from pathlib import Path
 
 import imas
 import matplotlib
@@ -23,7 +25,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-SCEN = "/home/ITER/sanderm/gitrepos/pds/workflows/inverse_convergence/scenarios"
+PDS_REPO = os.environ.get("PDS_REPO", str(Path(__file__).resolve().parents[2]))
+SCEN = f"{PDS_REPO}/workflows/inverse_convergence/scenarios"
 
 
 def load_rlte(path):

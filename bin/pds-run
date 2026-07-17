@@ -1,21 +1,31 @@
 #!/bin/bash
-# pds-prescribed_transport -- run the prescribed_transport workflow for one scenario (shot).
+# pds-run -- run a MUSCLE3 workflow for one scenario (shot).
 #
-# Stacks the static workflow.ymmsl, the shared settings.ymmsl knobs and the scenario's
-# settings.ymmsl (if present), expanding ${PDS_REPO} and ${SCEN} in each (MUSCLE3 does not
-# interpolate settings and runs each instance in its own work_dir, so paths must be absolute).
-# The manager creates its own run_<model>_<timestamp>/ in the runs directory.
+# Stacks the workflow's static workflow.ymmsl, its shared settings.ymmsl knobs and the
+# scenario's settings.ymmsl (if present), expanding ${PDS_REPO}, ${SCEN} and ${SHOT} in each
+# (MUSCLE3 does not interpolate settings and runs each instance in its own work_dir, so paths
+# must be absolute). The manager creates its own run_<model>_<timestamp>/ in the runs directory.
 #
-#   pds-prescribed_transport [shot]           # shot defaults to $SHOT_NR, else 105073
+#   pds-run <workflow> [shot]        # shot defaults to $SHOT_NR if unset
+#
+# e.g. pds-run inverse_convergence 105084
+#      pds-run prescribed_transport 105073
 #
 # PDS_REPO defaults to this script's repo (its parent dir); export it to pin a fixed install.
 # Runs land in $PDS_RUNS (default <scenario>/tmp/runs).
 set -euo pipefail
 
+if [[ $# -lt 1 ]]; then
+  echo "usage: pds-run <workflow> [shot]" >&2
+  exit 1
+fi
+
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PDS_REPO
-WF="$PDS_REPO/workflows/prescribed_transport"
-export SHOT="${1:-${SHOT_NR:-105073}}"
+WF_NAME="$1"
+WF="$PDS_REPO/workflows/$WF_NAME"
+export SHOT="${2:-${SHOT_NR:-}}"
+[[ -n "$SHOT" ]] || { echo "pds-run: no shot given and \$SHOT_NR unset" >&2; exit 1; }
 export SCEN="$WF/scenarios/$SHOT"
 
 # muscle_manager 0.10.0 (to match the actors) comes from the self-contained
@@ -42,7 +52,8 @@ if [[ -z "${MANAGER:-}" ]]; then
   fi
 fi
 RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
-[[ -d "$SCEN" ]] || { echo "pds-prescribed_transport: no scenario dir $SCEN" >&2; exit 1; }
+[[ -d "$WF" ]] || { echo "pds-run: no workflow dir $WF" >&2; exit 1; }
+[[ -d "$SCEN" ]] || { echo "pds-run: no scenario dir $SCEN" >&2; exit 1; }
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 stack=()

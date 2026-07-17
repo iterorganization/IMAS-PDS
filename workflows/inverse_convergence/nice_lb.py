@@ -36,14 +36,6 @@ RES_LANES = ["equilibrium", "pf_active"]
 STATIC = {"wall", "pf_passive", "iron_core"}  # forwarded whole to each call, not sliced
 
 
-# _split/_assemble round-trip each slice through the IMAS in-memory backend (serialize ->
-# put/put_slice -> get_slice/get). This reuses IMAS' own homogeneous-time handling and
-# CLOSEST_INTERP resampling, so it is correct for any IDS, at the cost of a
-# serialize/deserialize plus a DBEntry call per slice. A pure-Python alternative (indexing
-# .time_slice[] and copying nodes directly) would avoid the backend round-trip, but would
-# have to reimplement slice selection / time-mode handling per IDS and is more fragile. The
-# per-slice cost here is small next to a NICE solve, so the backend round-trip is the
-# deliberate default; revisit only if slice (de)serialization shows up in a profile.
 def _split(trace, name, times):
     with DBEntry("imas:memory?path=/", "w") as db:
         ids = IDSFactory().new(name); ids.deserialize(trace); db.put(ids)
@@ -80,10 +72,6 @@ def main() -> None:
         Operator.O_F: [f"{l}_out_f" for l in RES_LANES],
     })
     while inst.reuse_instance():
-        # Receive the whole-trace inputs (F_INIT) before sending results (O_F): we can't
-        # slice and scatter what we haven't received, and MUSCLE3's submodel operator order
-        # (F_INIT -> O_I/S -> O_F) enforces receive-before-send regardless. Inside the loop
-        # below it's the opposite -- send scatter, then gather -- to keep W solves in flight.
         traces = {l: inst.receive(f"{l}_in").data for l in FWD_LANES}
         with DBEntry("imas:memory?path=/", "w") as db:
             eq = IDSFactory().new("equilibrium"); eq.deserialize(traces["equilibrium"])

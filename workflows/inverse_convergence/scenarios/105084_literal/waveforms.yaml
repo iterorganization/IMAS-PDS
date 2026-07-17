@@ -1,50 +1,4 @@
-# Waveform-Editor configuration for the inverse_convergence loop -- literal-waveform variant
-# of scenario 105084 (see scenarios/105084_literal/info.txt). This overrides the shared
-# workflows/inverse_convergence/waveforms.yaml for this scenario only.
-#
-# Unlike the shared file, the equilibrium ip/r0/b0 and core_profiles ip targets below are
-# explicit analytic tendencies instead of {ref: input} imports -- the numbers mirror 105084's
-# actual reference trace (r0=6.2 m, b0=-2.65 T, Ip = -1.266 MA at the pulse's first modeled
-# slice t=2.42s, ramping to -3.5 MA by t=16.5s, flat-top at -3.5 MA, ramping down to -1.04 MA
-# by the end of the pulse at t=280.35s), so the pulse design is readable directly here rather
-# than pointing at an external IDS. The point at t=2.42s matters: TORAX's config is tuned to
-# 105084's actual initial current, and an under-ramped Ip there (e.g. extrapolating linearly
-# from a 0-at-t=0 anchor instead of passing through the real t=2.42s value) makes the initial
-# current profile too hollow and drives TORAX to NaN within its first step -- the same
-# early-ramp failure mode documented for scenario 105099. core_profiles/global_quantities/ip
-# reuses the same points as the equilibrium ip -- they are identical in the 105084 reference.
-#
-# psi_boundary is likewise an explicit piecewise mirror of the 105084 reference trace: the
-# 7 coil-anchor times below plus 5 extra points (9.52 s for the early-ramp curvature, 44.72,
-# 108.22 and 178.72 s for the slow flat-top curvature, 266.2 s for the end-of-pulse turn),
-# which keeps the piecewise-linear interpolation within 0.6 Wb of the full 40-slice reference
-# trace (whose total swing is ~71 Wb, from -104.6 Wb at t=2.42 s to -33.4 Wb at flat-top end).
-#
-# The boundary outline (r/z) and core_sources are left as {ref: input}: Waveform-Editor's
-# tendency system only ever produces one scalar per time step (ConfigurationExporter._fill_
-# explicit calls waveform.get_value(times), which must return one value per requested time),
-# so there is no way to express a per-point array as a literal tendency -- only an import can
-# copy an already-shaped array straight from the reference IDS. For the outline that array is
-# a variable-length contour (168-310 points across the 105084 pulse); for core_sources it is
-# the ec source's 50-point rho profiles per slice (electrons/energy, total_ion_energy,
-# j_parallel -- the profiles TORAX actually injects, see config_torax.py).
-#
-# pf_active/* is overlaid from `input_md` first (coil geometry/circuit description), then each
-# coil's current/data leaf below overrides it with an explicit piecewise waveform -- a 7-point
-# mirror (t=2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35 s) of that coil's real 105084 trace.
-# This is the coil-current *seed* `we` now sends straight to the NICE load balancer (see
-# workflow.ymmsl / outer_convergence_loop.py) -- it is never fed back from NICE's own result,
-# so, like the equilibrium ip/r0/b0 above, it can be hardcoded here instead of imported. The
-# two vertical-stabilization coils (VSU=coil(13), VSL=coil(14)) are left at a flat 0 A instead:
-# their real traces are a fast feedback-control response oscillating noisily within roughly
-# +-11.6 kA with no discernible trend, so a handful of piecewise points couldn't mirror them
-# meaningfully -- they'd just misrepresent noise as a designed shape.
-#
-# `input` names the scenario's DINA-derived static reference IDS (boundary shape, ECRH
-# heating); `input_md` names the machine-description reference IDS (wall, pf_passive,
-# iron_core, coil geometry) written separately during preprocessing; `eq` and `cp` are
-# the two live F_INIT port-imports the loop sends each Picard iteration (the
-# TORAX-evolved equilibrium and core_profiles).
+# Waveform-Editor configuration for the inverse_convergence loop
 globals:
   dd_version: 4.0.0
   imports:
@@ -53,9 +7,7 @@ globals:
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
-# Static machine-description reference (see input_md above) plus the designed
-# coil-current seed.
-machine_description:
+# Static machine-description referencemachine_description:
   wall/*:
     - {ref: input_md}
   pf_passive/*:
@@ -65,6 +17,7 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
+# Needed to kick-start NICE and TORAX
 state:
   equilibrium/time_slice/profiles_1d/psi:
     - {ref: eq}
@@ -87,6 +40,7 @@ state:
   core_profiles/profiles_1d/t_i_average:
     - {ref: cp}
 
+# Targets for workflow. Main values to tweak
 targets:
   equilibrium/vacuum_toroidal_field/r0:
     - {value: 6.2}

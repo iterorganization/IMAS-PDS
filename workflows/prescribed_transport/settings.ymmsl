@@ -2,10 +2,6 @@ ymmsl_version: v0.2
 # Shared knobs for prescribed_transport, stacked onto the static workflow.ymmsl. The
 # scenario-local scenarios/<shot>/settings.ymmsl (if present) is stacked after this.
 settings:
-  # Whole-trace single message (not per-slice): we and nice_inv only have f_init/o_f
-  # ports (no s port), so each loops over all time slices internally in one
-  # instantiation -- same convention as torax_nice_rd_controller/torax_nice_controller
-  # (source -> nice_inv, no waveform editor) and inverse_convergence's `we` stage.
   source.iterative: true
   source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in/"
   we.waveforms: ${SCEN}/waveforms.yaml

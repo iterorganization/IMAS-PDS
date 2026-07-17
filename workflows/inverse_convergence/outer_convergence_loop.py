@@ -194,10 +194,6 @@ def main() -> None:
             logger.info("iter %d: NICE+TORAX done (%d slices), max|dI|=%s", it, len(times), dI)
             prev = cur
 
-            # Feedback: next target = TORAX-evolved profiles with the prescribed boundary.
-            # _split deduplicates CLOSEST_INTERP results, so ev is shorter than boundary
-            # when TORAX stops early (SimError). Pad to the full boundary length so the
-            # next iteration receives a full target and TORAX runs the full pulse.
             ev = _split(torax_eq, "equilibrium", times)
             if len(ev) < len(boundary):
                 logger.info("iter %d: TORAX covered %d/%d slices; padding remaining from boundary", it, len(ev), len(boundary))
@@ -222,15 +218,7 @@ def main() -> None:
 
         inst.send("equilibrium_out_f", Message(t0, data=torax_eq))
         inst.send("pf_active_out_f", Message(t0, data=coilr))
-        # `cp` here is the final TORAX-evolved core_profiles already resampled onto the
-        # loop's `times` (reassigned after the last S receive), so the sink stores Te/Ti
-        # on the same slice grid as the equilibrium for the validation plots.
         inst.send("core_profiles_out_f", Message(t0, data=cp))
-        # `target` is the converged operating point on the loop's slice grid (evolved
-        # profiles + prescribed boundary) -- what NICE would receive on iteration N+1.
-        # It feeds the final linear-model NICE pass (lb_final/nice_final); the raw
-        # torax_eq above is unsuitable for that: it is on TORAX's internal dt grid
-        # (every step, not the loop's slices) and its boundary outline has drifted.
         inst.send("equilibrium_target_out_f", Message(t0, data=target))
         logger.info("sent %d final slices", len(times))
 

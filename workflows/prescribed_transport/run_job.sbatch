@@ -8,8 +8,8 @@
 #SBATCH --time=00:20:00
 set -euo pipefail
 
-# SLURM wrapper around bin/pds-prescribed_transport (which writes runs to
+# SLURM wrapper around bin/pds-run (which writes runs to
 # scenarios/<shot>/tmp/runs). Submit from the repo root, e.g.:
 #   sbatch workflows/prescribed_transport/run_job.sbatch 105073   (or run with bash)
 REPO="${SLURM_SUBMIT_DIR:-$PWD}"
-exec "$REPO/bin/pds-prescribed_transport" "$@"
+exec "$REPO/bin/pds-run" prescribed_transport "$@"

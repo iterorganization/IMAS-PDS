@@ -27,9 +27,7 @@ cd ..
 
 
 # RUN TEST FILES
-# All actors run from the repo-local muscle3 0.10 stack (the venvs and the
-# source-built NICE binaries set up above), so the manager must be 0.10 too:
-# the site MUSCLE3 module (0.8.0) cannot talk to 0.10 actors or vice versa.
+# All actorn run on muscle3 0.10 so the manager also needs to run on 0.10.
 MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 
 # bash run_test_files.sh

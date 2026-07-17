@@ -1,26 +1,6 @@
 ymmsl_version: v0.2
 # Consolidated inverse_convergence workflow -- structure + programs only; no scenario data.
-# This file is STATIC and checkout-independent: the only absolute anchor is $PDS_REPO. The
-# `bin/pds-inverse` launcher stacks this with the shared settings.ymmsl knobs and the
-# scenario's settings.ymmsl data paths, expands ${PDS_REPO}/${SCEN} in them, and starts the
-# manager:  bin/pds-inverse <shot>   (MUSCLE3 does not interpolate settings values, hence the
-# expansion). Even launched directly it works if PDS_REPO is exported: base_env defaults to
-# MANAGER, so instances inherit it and their generated bash start scripts expand $PDS_REPO.
-#
-# The loop driver is a clean Submodel-Execution-Loop component -- one full whole-trace pulse
-# out (O_I), one full pulse in (S) per Picard iteration -- so the coupling is a pipeline:
-#   loop --target--> we --(+Ip,B0)--> lb(nice) --equilibrium--> torax --evolved--> loop
-#                    \--core_profiles-------------------------------^  \--coils--> loop
-#                    \--wall,pf_passive,iron_core,pf_active(seed)---^
-# The waveform editor (we) overlays the designed Ip(t)/B0 onto the target equilibrium in
-# place (its equilibrium_in port selects overlay mode), passes the loop's core_profiles
-# through unchanged (a straight core_profiles/* mirror, imported from its core_profiles_in
-# port) on to torax, and re-exports the scenario's static wall/pf_passive/iron_core plus the
-# coil-current seed (pf_active) straight to the NICE load balancer -- none of these four ever
-# change across the pulse or across iterations (the coil-current seed is never fed back from
-# NICE's own result -- see outer_convergence_loop.py), so the loop no longer carries them at
-# all; nice's equilibrium goes DIRECTLY to torax; nice's *resulting* coils still return to the
-# loop for the convergence check. nice_lb.py does slice -> scatter[W] -> gather -> assemble.
+# Also needs settings from somewhere else.
 models:
   inverse_convergence:
     components:
@@ -33,38 +13,17 @@ models:
       lb:         {description: IMAS-aware NICE load balancer, implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
-      # Distill recorders: terminal sinks that tap (fan-out) the solver outputs
-      # and distill each whole-trace IDS into a compact Zarr store -- one file
-      # per Picard iteration (occurrence) -- for the muscle3-dashboard viewer.
-      # Pure observers: they add no conduit the producers wait on, so they never
-      # change the result. To disable, comment these two components, their four
-      # recorder conduits below, the `recorder` program and the resources.
       rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
       rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
-      # Final linear-model pass: after the loop converges, re-solve the converged target
-      # (loop.equilibrium_target_out_f -- the loop's slice grid, prescribed boundary)
-      # once per slice through a second NICE whose xml has outputForControl=1, so NICE
-      # writes the linear-model A,B,C matrices grouped per timestamp under
-      # instances/nice_final/workdir/output/linearModel_t<time>/. The static machine
-      # description comes from a sink_source: its o_f send is gated on the f_init
-      # receive (the loop's converged coils), so it fires exactly once, after the loop
-      # (a tap on `we`'s exports would instead queue one message per Picard iteration).
-      # lb_final's own o_f lanes stay unconnected (libmuscle discards those sends): the
-      # product of this pass is the matrix files, and the converged pulse is already in
-      # sink_torax.
       md_final:   {description: machine description for the final pass (coils-triggered), implementation: sink_source, ports: {f_init: [pf_active_in], o_f: [wall_out, pf_passive_out, iron_core_out]}}
       lb_final:   {description: NICE load balancer (final linear-model pass), implementation: lb, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_final: {description: nice with linear-model output, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
     conduits:
-      # Source → loop initialisation (F_INIT)
       source.equilibrium_out: loop.equilibrium_in_f
       source.core_profiles_out: loop.core_profiles_in_f
       loop.equilibrium_out_i: we.equilibrium_in
       we.equilibrium_out: lb.equilibrium_in
       we.core_sources_out: torax.core_sources_in_f
-      # Static machine description + coil-current seed: straight from `we` to the NICE load
-      # balancer, bypassing source/loop entirely -- none of these four ever change across the
-      # pulse or iterations.
       we.wall_out: lb.wall_in
       we.pf_passive_out: lb.pf_passive_in
       we.iron_core_out: lb.iron_core_in
@@ -78,17 +37,13 @@ models:
       nice_inv.pf_active_out: lb.pf_active_gather
       loop.core_profiles_out_i: we.core_profiles_in
       we.core_profiles_out: torax.core_profiles_in_f
-      # Each O_F below fans out (list value) to its normal consumer AND a distill
-      # recorder tap -- the recorder is an extra receiver, not a new key.
       lb.equilibrium_out_f: [torax.equilibrium_in_f, rec_nice.equilibrium_in, sink_nice.equilibrium_in]
       lb.pf_active_out_f: [loop.pf_active_in_s, rec_nice.pf_active_in, sink_nice.pf_active_in]
       torax.equilibrium_out_f: [loop.equilibrium_in_s, rec_torax.equilibrium_in]
       torax.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
-      # Loop final results → sinks (O_F)
       loop.equilibrium_out_f: sink_torax.equilibrium_in
       loop.pf_active_out_f: [sink_torax.pf_active_in, lb_final.pf_active_in, md_final.pf_active_in, validator.pf_active_in]
       loop.core_profiles_out_f: sink_torax.core_profiles_in
-      # Final linear-model pass (see the component comment above)
       loop.equilibrium_target_out_f: lb_final.equilibrium_in
       md_final.wall_out: lb_final.wall_in
       md_final.pf_passive_out: lb_final.pf_passive_in

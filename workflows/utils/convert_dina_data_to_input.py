@@ -88,10 +88,6 @@ def main():
             db_md_iron_core,
             db_md_pf_passive,
             db_md_pf_active,
-            # If the MD sink is the same file as the DINA sink, the DINA-derived
-            # pf_active (see write_dina_data/preprocess_pf_active) already covers
-            # this IDS -- writing the pure machine-description version too would
-            # duplicate its timeslices in the same file.
             write_pf_active=db_md_out is not db_out,
         )
 

@@ -1,17 +1,8 @@
 """Scenario-specific TORAX config for 105099 (inverse_convergence loop).
 
 Same structure as the shared config_torax.py, but with Bohm-gyroBohm transport and
-time-dependent chi multipliers. The multiplier VALUES (x1.8 flattop -> x4 ramp-down)
-are transferred from the 105073 calibration and are NOT yet validated against 105099's
-DINA trace; only the time knots are adapted to this pulse (Ip peaks ~7.4 MA at t~35s,
-ramp-down t~40-77s). Compare W_th/R/LTe vs DINA (plot_validation.py) and retune before
-relying on it. Selected over the shared config via torax.python_config_module in this
-scenario's settings.ymmsl.
-
-The simulated time window is taken from the equilibrium sequence the actor receives
-(t_initial/t_final = first/last /time), and the prescribed actuator sources (e.g. ECRH)
-come from the core_sources IDS sent to the actor's core_sources_in_f port.
-"""
+time-dependent chi multipliers. The time knots are adapted to this pulse (Ip peaks ~7.4 MA at t~35s,
+ramp-down t~40-77s)."""
 import numpy as np
 
 rhon = np.linspace(0, 1, 25)
@@ -47,10 +38,6 @@ CONFIG = {
         'n_rho': 25,
     },
     'pedestal': {},
-    # Sawtooth crashes clamp q0 near 1; without them the core current over-peaks
-    # during flattop (q0 drops well below 1 in all DINA scenarios), driving the
-    # axis f/b_field_phi away from DINA. The trigger only fires where a q=1
-    # surface exists, so phases/scenarios without q<1 are unaffected.
     'mhd': {
         'sawtooth': {
             'trigger_model': {'model_name': 'simple'},
@@ -58,22 +45,14 @@ CONFIG = {
         },
     },
     'sources': {
-        # The "ec" source injected from the received core_sources IDS is DINA's
-        # source(1), identifier index=1 = TOTAL, relabeled to ec by the waveform
-        # editor: it is the NET electron power balance (EC + ohmic - radiation,
-        # verified against the DINA summary IDS power balance for 105073/105099).
-        # TORAX must therefore not add its own ohmic or subtract its own radiation
-        # on top - that double-counts terms already inside the imported source.
+        # TORAX must not add its own ohmic or subtract its own radiation
+        # through config - that double-counts terms already inside the imported source.
         'fusion': {},
         'ei_exchange': {},  # internal e<->i transfer; DINA gives no ion source at all
         'bremsstrahlung': {'mode': 'ZERO'},
     },
     "transport": {
         'model_name': 'bohm-gyrobohm',
-        # Multiplier values transferred from the 105073 calibration (x1.8
-        # flattop -> x4 ramp-down), knots adapted to the 105099 pulse: flattop
-        # ends ~t=40s, ramp-down runs to ~77s. NOT yet validated on 105099 -
-        # check W_th vs DINA and retune.
         'chi_e_bohm_multiplier': {0: 1.8, 40: 1.8, 60: 4.0, 80: 4.0},
         'chi_i_bohm_multiplier': {0: 1.8, 40: 1.8, 60: 4.0, 80: 4.0},
         'chi_e_gyrobohm_multiplier': {0: 1.8, 40: 1.8, 60: 4.0, 80: 4.0},
