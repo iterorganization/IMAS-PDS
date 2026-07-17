@@ -1,0 +1,74 @@
+#!/bin/bash
+# pds-prescribed_transport -- run the prescribed_transport workflow for one scenario (shot).
+#
+# Stacks the static workflow.ymmsl, the shared settings.ymmsl knobs and the scenario's
+# settings.ymmsl (if present), expanding ${PDS_REPO} and ${SCEN} in each (MUSCLE3 does not
+# interpolate settings and runs each instance in its own work_dir, so paths must be absolute).
+# The manager creates its own run_<model>_<timestamp>/ in the runs directory.
+#
+#   pds-prescribed_transport [shot]           # shot defaults to $SHOT_NR, else 105073
+#
+# PDS_REPO defaults to this script's repo (its parent dir); export it to pin a fixed install.
+# Runs land in $PDS_RUNS (default <scenario>/tmp/runs).
+set -euo pipefail
+
+PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+export PDS_REPO
+WF="$PDS_REPO/workflows/prescribed_transport"
+export SHOT="${1:-${SHOT_NR:-105073}}"
+export SCEN="$WF/scenarios/$SHOT"
+
+# muscle_manager 0.10.0 (to match the actors) comes from the self-contained
+# IMAS-MUSCLE3 venv (built by setup_imas_muscle3.sh) whenever it's present --
+# its python has a clean sys.path, so it can't leak a foreign numpy build into
+# the actor subprocesses it spawns (each of which activates its own venv via
+# `. venv/bin/activate`, which only prepends PATH and does not touch
+# PYTHONPATH). Falls back to the EasyBuild MUSCLE3 module -- published under
+# the not-yet-default modules-2025b tree -- if that venv isn't there; in that
+# case its PYTHONPATH (a python3.13 SciPy-bundle tree) does leak into and break
+# the python3.11 actor venvs, so this path is best avoided.
+if [[ -z "${MANAGER:-}" ]]; then
+  MANAGER="$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
+  if [[ ! -x "$MANAGER" ]]; then
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    if [[ -f "$LMOD_INIT" ]]; then
+      # shellcheck source=/usr/share/lmod/lmod/init/bash
+      source "$LMOD_INIT"
+      module use /work/imas/etc/modules-2025b/all 2>/dev/null || true
+      module load MUSCLE3/0.10.0-intel-2025b 2>/dev/null || true
+    fi
+    MANAGER="${EBROOTMUSCLE3:+$EBROOTMUSCLE3/bin/muscle_manager}"
+    MANAGER="${MANAGER:-$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager}"
+  fi
+fi
+RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
+[[ -d "$SCEN" ]] || { echo "pds-prescribed_transport: no scenario dir $SCEN" >&2; exit 1; }
+
+gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
+stack=()
+i=0
+for f in "$WF/workflow.ymmsl" "$WF/settings.ymmsl"; do
+  out="$gen/$(printf '%02d_%s' "$i" "$(basename "$f")")"
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$f" > "$out"
+  stack+=("$out"); i=$((i + 1))
+done
+if [[ -f "$SCEN/settings.ymmsl" ]]; then
+  out="$gen/$(printf '%02d_%s' "$i" "settings.ymmsl")"
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$SCEN/settings.ymmsl" > "$out"
+  stack+=("$out"); i=$((i + 1))
+fi
+
+# The `we` actor reads its waveform config by path (the we.waveforms setting), not as a
+# stacked file, but that config also contains ${SCEN}; expand it too and override
+# we.waveforms to point at the expanded copy (last in the stack wins).
+waveforms_src=""
+[[ -f "$SCEN/waveforms.yaml" ]] && waveforms_src="$SCEN/waveforms.yaml"
+[[ -z "$waveforms_src" ]] && [[ -f "$WF/waveforms.yaml" ]] && waveforms_src="$WF/waveforms.yaml"
+if [[ -n "$waveforms_src" ]]; then
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$waveforms_src" > "$gen/waveforms.yaml"
+  printf 'ymmsl_version: v0.2\nsettings: {we.waveforms: %s}\n' "$gen/waveforms.yaml" > "$gen/99_we.ymmsl"
+  stack+=("$gen/99_we.ymmsl")
+fi
+
+mkdir -p "$RUNS"; cd "$RUNS"   # manager creates run_<model>_<timestamp>/ here
+"$MANAGER" --start-all "${stack[@]}"

@@ -1,0 +1,51 @@
+# Waveform-Editor configuration for prescribed_transport. The `we` actor receives the
+# source's raw equilibrium on its single F_INIT port (equilibrium_in, the export time base)
+# and re-exports it with the designed Ip(t)/B0 boundary overlaid -- the NICE-inverse target --
+# plus the static machine-description IDSs (wall, pf_passive, iron_core) and the coil-current
+# seed (pf_active) NICE needs. `input` is the scenario's DINA-derived static reference (the
+# designed Ip/B0/boundary trace); `input_md` is the machine-description reference (wall,
+# pf_passive, iron_core, pf_active) written separately during preprocessing; `eq` is the live
+# port-import. Edit the analytic Ip/B0 targets below to redesign the pulse, or override
+# per-scenario with scenarios/<shot>/waveforms.yaml.
+globals:
+  dd_version: 4.0.0
+  imports:
+    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
+    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
+    eq: {port: equilibrium_in}
+
+# Static machine-description reference (see input_md above): wall, pf_passive,
+# iron_core, and the pf_active coil-current seed NICE needs.
+machine_description:
+  wall/*:
+    - {ref: input_md}
+  pf_passive/*:
+    - {ref: input_md}
+  iron_core/*:
+    - {ref: input_md}
+  pf_active/*:
+    - {ref: input_md}
+
+state:
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+
+targets:
+  equilibrium/vacuum_toroidal_field/r0:
+    - {ref: input}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/ip:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  pf_active/coil(*)/current/data:
+    - {ref: input}

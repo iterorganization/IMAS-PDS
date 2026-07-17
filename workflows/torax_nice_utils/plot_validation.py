@@ -92,21 +92,20 @@ def nice_output_flags(db):
 def main():
     """Plot simulation output data for PDS nice_torax coupling"""
     args = handle_args()
-    dbs = {
-        key: DBEntry(f"imas:hdf5?path={path}", "r")
-        for key, path in {
-            "dina": args.dina_uri,
-            "nice": args.nice_uri,
-            "torax": args.torax_uri,
-        }.items()
-    }
+    uris = {"dina": args.dina_uri, "nice": args.nice_uri}
+    if args.torax_uri:
+        uris["torax"] = args.torax_uri
+    dbs = {key: DBEntry(f"imas:hdf5?path={path}", "r") for key, path in uris.items()}
 
     pf_active_plots_dina_nice(args, dbs)
     equilibrium_plots_dina_nice(args, dbs)
-    equilibrium_plots_nice_torax(args, dbs)
-    core_profiles_plots_dina_torax(args, dbs)
-    rlte_plots_dina_torax(args, dbs)
-    shape_comparison_plot(args, dbs)
+    # The remaining panels all compare against TORAX output, which workflows without a
+    # transport stage (e.g. prescribed_transport) never produce.
+    if "torax" in dbs:
+        equilibrium_plots_nice_torax(args, dbs)
+        core_profiles_plots_dina_torax(args, dbs)
+        rlte_plots_dina_torax(args, dbs)
+        shape_comparison_plot(args, dbs)
 
     for db in dbs.values():
         db.close()

@@ -1,0 +1,47 @@
+ymmsl_version: v0.2
+# Consolidated prescribed_transport workflow -- structure + programs only; no scenario data.
+# This file is STATIC and checkout-independent: the only absolute anchor is $PDS_REPO.
+# `bin/pds-prescribed_transport` stacks this with the shared settings.ymmsl knobs and the
+# scenario's settings.ymmsl (if present), expands ${PDS_REPO}/${SCEN} in them, and starts the
+# manager:  bin/pds-prescribed_transport <shot>   (MUSCLE3 does not interpolate settings,
+# hence the expansion). Even launched directly it works if PDS_REPO is exported: base_env
+# defaults to MANAGER, so instances inherit it and their generated bash start scripts expand
+# $PDS_REPO.
+#
+# Minimal chain, no outer Picard loop / TORAX coupling / validator -- just:
+#   source --equilibrium--> we --(+md,coil seed)--> nice_inv --equilibrium,coils--> sink
+# The waveform editor (we) overlays the designed Ip(t)/B0 boundary target onto the source's
+# raw equilibrium (its equilibrium_in port selects overlay mode) and re-exports the scenario's
+# static wall/pf_passive/iron_core plus the coil-current seed (pf_active) -- all imported from
+# waveforms.yaml, not carried through source -- straight to NICE-inverse, which solves the
+# free-boundary equilibrium per time slice; sink stores its resulting equilibrium and coil
+# currents. This is the "prescribed" (not self-consistently coupled to transport) NICE dataset
+# that downstream transport workflows (e.g. torax_nice_controller) consume as input.
+models:
+  prescribed_transport:
+    components:
+      source:   {description: source, implementation: source, ports: {o_i: [equilibrium_out]}}
+      we:       {description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]}}
+      nice_inv: {description: nice, implementation: nice_inv, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
+      sink:     {description: sink, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
+    conduits:
+      source.equilibrium_out: we.equilibrium_in
+      we.equilibrium_out: nice_inv.equilibrium_in
+      we.wall_out: nice_inv.wall_in
+      we.pf_active_out: nice_inv.pf_active_in
+      we.pf_passive_out: nice_inv.pf_passive_in
+      we.iron_core_out: nice_inv.iron_core_in
+      nice_inv.equilibrium_out: sink.equilibrium_in
+      nice_inv.pf_active_out: sink.pf_active_in
+programs:
+  source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  we:     {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
+  nice_inv:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+resources: {nice_inv: {threads: 2}}

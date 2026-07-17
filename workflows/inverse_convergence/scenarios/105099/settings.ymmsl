@@ -1,7 +1,4 @@
 ymmsl_version: v0.2
 settings:
   loop.t_min: 5
-  # Scenario-specific TORAX config: Bohm-gyroBohm with the 105073-calibrated
-  # multiplier values and knots adapted to this pulse (NOT yet validated on 105099).
-  # Overrides the shared config_torax.py (qlknn) from the workflow-level settings.
   torax.python_config_module: ${SCEN}/config_torax.py

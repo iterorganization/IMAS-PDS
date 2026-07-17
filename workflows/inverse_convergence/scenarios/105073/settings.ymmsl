@@ -1,11 +1,5 @@
 ymmsl_version: v0.2
 settings:
   loop.t_min: 10
-  # t=207.764 is the last slice; NICE segfaults on it (NaN divergence, "no valid PL and
-  # no valid PX") after the develop-branch rebuild. Exclude it until upstream fixes it.
   loop.t_max: 205
-  # Scenario-specific TORAX config: Bohm-gyroBohm calibrated onto this shot's DINA
-  # trace (chi multiplier time knots are 105073 pulse times). Overrides the shared
-  # ${PDS_REPO}/workflows/inverse_convergence/config_torax.py (qlknn) set in the
-  # workflow-level settings.ymmsl.
   torax.python_config_module: ${SCEN}/config_torax.py
