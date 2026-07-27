@@ -1,6 +1,16 @@
 ymmsl_version: v0.2
 # Consolidated prescribed_transport workflow -- structure + programs only; no scenario data.
 # Also needs settings from somewhere else.
+#
+# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl); resolve
+# with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this). Swap to
+# lib.easybuild_programs for EasyBuild-module-based implementations, but see that file's
+# header -- none of its IMAS-MUSCLE3/NICE-module entries work with the 0.10.0 manager yet.
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+- from lib.local_programs import implementation we
+- from lib.local_programs import implementation nice_inv
 models:
   prescribed_transport:
     components:
@@ -17,15 +27,4 @@ models:
       we.iron_core_out: nice_inv.iron_core_in
       nice_inv.equilibrium_out: sink.equilibrium_in
       nice_inv.pf_active_out: sink.pf_active_in
-programs:
-  source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
-  sink:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
-  we:     {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
-  nice_inv:
-    script: |
-      #!/bin/bash
-      source /usr/share/lmod/lmod/init/bash
-      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
-      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
-      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
 resources: {nice_inv: {threads: 2}}

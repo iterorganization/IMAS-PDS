@@ -22,6 +22,12 @@ fi
 
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PDS_REPO
+
+# Workflows resolve `imports: - from lib.<...> import implementation <...>` (e.g.
+# lib.local_programs) against YMMSL_PATH, which the manager consults when it loads the
+# stacked config files below -- so lib.local_programs resolves to
+# $PDS_REPO/workflows/lib/local_programs.ymmsl. Prepended so a caller can still extend it.
+export YMMSL_PATH="$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
 export SHOT="${2:-${SHOT_NR:-}}"

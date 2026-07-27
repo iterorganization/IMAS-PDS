@@ -1,0 +1,69 @@
+ymmsl_version: v0.2
+
+# EasyBuild-module program (implementation) definitions -- counterpart to
+# local_programs.ymmsl (locally-built venvs/binaries under $PDS_REPO/run). Same set of
+# implementation names, sourced from published Lmod modules instead. To use this file in
+# a workflow instead of local_programs.ymmsl, point its `imports:` block at
+# lib.easybuild_programs -- there is no automatic switch in bin/pds-run.
+#
+# CURRENT STATUS: every entry below that loads the IMAS-MUSCLE3 or NICE module is NOT
+# usable with pds-run today. pds-run's manager is muscle3 0.10.0, built from the
+# site-wide EasyBuild install directly because no modulefile is published for it -- only
+# 0.7.x/0.8.0 are reachable via `module load MUSCLE3` (see setup_muscle3.sh). 0.8.0 and
+# 0.10.0 actors/managers are wire-incompatible in both directions (see setup_nice.sh's
+# manual 0.10.0 linking, and the MATLAB pyenv() workaround in
+# torax_nice_self_rd_controller/workflow.ymmsl for the same issue on the magnetic
+# controller) -- an actor started from one of these entries will fail to register with
+# the manager. Kept here, and commented per-entry, so a future muscle3-0.10.0 module
+# publication can flip PDS_PROGRAM_SOURCE=easybuild back on without re-deriving these.
+#
+# $PDS_REPO is left as a literal shell variable, not expanded here, for the same reason
+# as in local_programs.ymmsl: these files are loaded directly by the ymmsl import
+# resolver (via YMMSL_PATH), bypassing pds-run's envsubst pass over
+# workflow.ymmsl/settings.ymmsl. It still resolves correctly because libmuscle writes
+# each program into a real bash script and runs it with $PDS_REPO inherited from the
+# manager's environment (pds-run exports it).
+#
+# Import into a workflow with e.g.:
+#   imports:
+#   - from lib.easybuild_programs import implementation torax
+# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+
+programs:
+  # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
+  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager, see status note above.
+  source:      {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:        {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  validator:   {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+
+  # Workflow-specific helper scripts (inverse_convergence only), run under the module's
+  # python -- same muscle3-0.8.0 caveat as the actors above.
+  loop:        {modules: IMAS-MUSCLE3, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}
+  lb:          {modules: IMAS-MUSCLE3, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_lb.py}
+
+  # recorder_component is not part of any released IMAS-MUSCLE3 build yet (see CLAUDE
+  # memory "Recorder->dashboard viz pipeline"). Not just currently unusable -- there is
+  # no module version to import at all, so no entry is possible here.
+
+  # ----- NICE free-boundary equilibrium binary ---------------------------------------
+  # The published NICE module ships a prebuilt nice_imas_inv_muscle3, built against
+  # whichever muscle3 was available when the module was published (0.7.x/0.8.0) -- same
+  # wire-incompatibility as the python actors above. Contrast with local_programs.ymmsl,
+  # where pds's own NICE build links the site-wide 0.10.0 install explicitly instead
+  # (setup_nice.sh sources tmp/muscle3-0.10.0-intel/bin/muscle3.env before compiling).
+  nice_inv:
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    base_env: clean
+    modules: NICE
+    executable: nice_imas_inv_muscle3
+
+  # Waveform-Editor (`we`) has no published EasyBuild module -- setup_waveform_editor.sh
+  # only ever git-clones it into its own repo-local venv. No entry possible.
+
+  # torax_muscle3 (the muscle3 actor wrapper) is this repo's own package, pip-installed
+  # into its own venv on top of a locally installed torax -- there's no EasyBuild module
+  # for it either (the TORAX module only ships the bare torax physics library). No entry
+  # possible.

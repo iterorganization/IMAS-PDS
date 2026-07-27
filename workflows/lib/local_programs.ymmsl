@@ -1,0 +1,58 @@
+ymmsl_version: v0.2
+
+# Local-installation program (implementation) definitions shared by the
+# inverse_convergence and prescribed_transport workflows: locally-built venvs/binaries
+# under $PDS_REPO/run, exactly as they were inlined in each workflow's `programs:` block
+# before this file existed. Counterpart to easybuild_programs.ymmsl (EasyBuild-module
+# based) -- both workflows import from this file today; switch a workflow to the
+# EasyBuild source by pointing its `imports:` at lib.easybuild_programs instead (see that
+# file's header for why that's not currently usable end-to-end).
+#
+# $PDS_REPO is left as a literal shell variable, not expanded here: these files are
+# loaded directly by the ymmsl import resolver (via YMMSL_PATH), bypassing pds-run's
+# envsubst pass over workflow.ymmsl/settings.ymmsl. It still resolves correctly because
+# libmuscle writes each program into a real bash script and runs it with $PDS_REPO
+# inherited from the manager's environment (pds-run exports it).
+#
+# Import into a workflow with e.g.:
+#   imports:
+#   - from lib.local_programs import implementation torax
+# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+
+programs:
+  source:      {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+
+  # recorder_component is not part of any released IMAS-MUSCLE3 build yet (see CLAUDE
+  # memory "Recorder->dashboard viz pipeline"), so this one has no easybuild counterpart.
+  recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
+
+  # Workflow-specific helper scripts (inverse_convergence only), run under the shared
+  # IMAS-MUSCLE3 venv.
+  loop:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}
+  lb:          {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_lb.py}
+
+  we:          {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
+
+  nice_inv:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+
+  # torax_muscle3 (the muscle3 actor wrapper) is this repo's own package, pip-installed
+  # into its own venv on top of a locally installed torax -- there's no EasyBuild module
+  # for it, so this one has no easybuild counterpart either (the TORAX module only ships
+  # the bare torax physics library).
+  torax:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load Python 2>/dev/null)"
+      source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
+      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+      exec python -u -m torax_muscle3.torax_actor "$@"
