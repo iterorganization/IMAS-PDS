@@ -1,11 +1,13 @@
 ymmsl_version: v0.2
-# Consolidated prescribed_transport workflow -- structure + programs only; no scenario data.
-# Also needs settings from somewhere else.
+# Consolidated prescribed_transport workflow structure; no scenario data.
+# Also needs programs and settings from somewhere else.
 #
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl); resolve
-# with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this). Swap to
-# lib.easybuild_programs for EasyBuild-module-based implementations, but see that file's
-# header -- none of its IMAS-MUSCLE3/NICE-module entries work with the 0.10.0 manager yet.
+# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
+# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+# Swap to lib.easybuild_programs for EasyBuild-module-based implementations 
+#
+# Settings come from workflows/prescribed_transport/settings.ymmsl
+
 imports:
 - from lib.local_programs import implementation source
 - from lib.local_programs import implementation sink

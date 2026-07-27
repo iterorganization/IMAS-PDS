@@ -1,4 +1,13 @@
 ymmsl_version: v0.2
+# Consolidated inverse_convergence workflow structure; no scenario data.
+# Also needs programs and settings from somewhere else.
+#
+# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
+# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+# Swap to lib.easybuild_programs for EasyBuild-module-based implementations 
+#
+# Settings come from workflows/inverse_convergence/settings.ymmsl
+
 # Consolidated inverse_convergence workflow -- structure + programs only; no scenario data.
 # Also needs settings from somewhere else.
 #
