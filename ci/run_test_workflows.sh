@@ -19,7 +19,7 @@ bash ../setup_files/setup_waveform_editor.sh
 bash ../setup_files/setup_muscle3.sh
 bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" develop
 bash ../setup_files/setup_torax.sh
-bash ../setup_files/setup_imas_muscle3.sh "https://github.com/iterorganization/IMAS-MUSCLE3.git" feat/distill-recorder
+bash ../setup_files/setup_imas_muscle3.sh
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
 ./IMAS-MUSCLE3/venv/bin/pip install "git+https://github.com/iterorganization/imas-validator.git@develop"
