@@ -1,0 +1,36 @@
+ymmsl_version: v0.2
+
+# Local-installation program (implementation) definitions
+# Import into a workflow with e.g.:
+#   imports:
+#   - from lib.local_programs import implementation torax
+# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+
+programs:
+  source:      {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
+  waveform_editor: {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
+
+  nice_inv:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+
+  torax:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load Python 2>/dev/null)"
+      source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
+      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+      exec python -u -m torax_muscle3.torax_actor "$@"
+
+  # inverse_convergence specific:
+  loop:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}
+  load_balancer: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py}

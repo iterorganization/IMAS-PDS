@@ -56,6 +56,27 @@ class State(BaseState):
         for itime, ts in enumerate(ids.time_slice):
             self._extract_equilibrium_slice(ids, itime, ts)
 
+    @staticmethod
+    def _concat_time(current, new):
+        """Concat along "time", NaN-padding ragged non-time dims to a
+        common width first instead of relying on an index-based outer join.
+        """
+        widths = {}
+        for ds in (current, new):
+            for dim, size in ds.sizes.items():
+                if dim != "time":
+                    widths[dim] = max(widths.get(dim, 0), size)
+
+        def _pad(ds):
+            pad = {
+                dim: (0, widths[dim] - ds.sizes[dim])
+                for dim in widths
+                if dim in ds.sizes and ds.sizes[dim] < widths[dim]
+            }
+            return ds.pad(pad, constant_values=np.nan) if pad else ds
+
+        return xr.concat([_pad(current), _pad(new)], dim="time")
+
     def _extract_equilibrium_slice(self, ids, itime, ts):
         # Extract separatrix data
         separatrix_data = xr.Dataset(
@@ -65,7 +86,6 @@ class State(BaseState):
             },
             coords={
                 "time": [ids.time[itime]],
-                "point": range(len(ts.boundary.outline.r)),
             },
         )
 
@@ -84,7 +104,6 @@ class State(BaseState):
             },
             coords={
                 "time": [ids.time[itime]],
-                "grid_point": range(len(r_vals)),
             },
         )
 
@@ -111,8 +130,6 @@ class State(BaseState):
             },
             coords={
                 "time": [ids.time[itime]],
-                "x_point": range(len(x_points_r)),
-                "o_point": range(len(o_points_r)),
             },
         )
 
@@ -128,7 +145,6 @@ class State(BaseState):
             },
             coords={
                 "time": [ids.time[itime]],
-                "profile": np.arange(len(ts.profiles_1d.f_df_dpsi)),
             },
         )
 
@@ -157,8 +173,8 @@ class State(BaseState):
         if current_data is None:
             self.data["equilibrium"] = new_data
         else:
-            self.data["equilibrium"] = xr.concat(
-                [current_data, new_data], dim="time", join="outer"
+            self.data["equilibrium"] = self._concat_time(
+                current_data, new_data
             )
 
 
@@ -307,7 +323,7 @@ class Plotter(BasePlotter):
         if len(r.shape) == 2:
             r = r[0, :]
         if len(z.shape) == 2:
-            z = r[0, :]
+            z = z[0, :]
         psi = equilibrium_data.psi.values
 
         trics = plt.tricontour(r, z, psi, levels=levels)

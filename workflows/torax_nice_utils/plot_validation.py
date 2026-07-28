@@ -124,7 +124,7 @@ def pf_active_plots_dina_nice(args, dbs):
     axes = axes.flatten()
 
     # pf_active carries no output_flag of its own; it shares the equilibrium's slice
-    # ordering (both assembled from the same per-slice NICE calls in nice_lb.py), so a
+    # ordering (both assembled from the same per-slice NICE calls in nice_load_balancer.py), so a
     # failed equilibrium slice's coil currents are unreliable at the same index too.
     valid = {
         key: nice_output_flags(dbs[key]) != -1 for key in active_keys if key in dbs

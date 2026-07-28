@@ -6,17 +6,18 @@ core_profiles from TORAX). It then restores the prescribed boundary outline on t
 equilibrium and iterates until the max coil-current change between iterations drops below
 the tolerance, or its relative change between iterations stalls below rel_tolerance. The
 driver only paces the iteration; the coupling itself is a pipeline
-(loop -> we -> nice/lb -> torax -> loop). The boundary is held from the input IDS until a
-shape editor is wired in; Ip is held by the waveform editor. Both the equilibrium target and
-core_profiles go to `we` (equilibrium drives its export time base; core_profiles is a
-straight port-import, mirrored through unchanged) before reaching TORAX -- there is no longer
-a direct loop -> TORAX core_profiles conduit. The static machine-description lanes (wall,
-pf_passive, iron_core) never change across the pulse or across iterations, so `we` re-exports
-the scenario's reference copy straight to the NICE load balancer; the loop never sees them.
-The coil-current seed sent to NICE each iteration is likewise never fed back from the
-previous iteration's result (there is no `pf_active` in the F_INIT/O_I lanes below), so it is
-also produced by `we` (its own reference copy, or an explicit per-coil waveform) and sent
-straight to the NICE load balancer -- only the *result* NICE returns for pf_active still
+(loop -> waveform_editor -> nice/load_balancer -> torax -> loop). The boundary is
+held from the input IDS until a shape editor is wired in; Ip is held by the waveform_editor.
+Both the equilibrium target and core_profiles go to `waveform_editor` (equilibrium drives
+its export time base; core_profiles is a straight port-import, mirrored through unchanged)
+before reaching TORAX -- there is no longer a direct loop -> TORAX core_profiles conduit. The
+static machine-description lanes (wall, pf_passive, iron_core) never change across the pulse
+or across iterations, so `waveform_editor` re-exports the scenario's reference copy
+straight to the NICE load_balancer; the loop never sees them. The coil-current seed sent to
+NICE each iteration is likewise never fed back from the previous iteration's result (there is
+no `pf_active` in the F_INIT/O_I lanes below), so it is also produced by `waveform_editor`
+(its own reference copy, or an explicit per-coil waveform) and sent straight to the NICE
+load_balancer -- only the *result* NICE returns for pf_active still
 flows through the loop (S, then O_F), since that is what the convergence check watches.
 """
 import logging
@@ -181,8 +182,8 @@ def main() -> None:
 
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
-            inst.send("equilibrium_out_i", Message(t0, data=target))          # -> we (+Ip) -> nice
-            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> we -> torax
+            inst.send("equilibrium_out_i", Message(t0, data=target))          # -> waveform_editor (+Ip) -> nice
+            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> waveform_editor -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
             coilr = inst.receive("pf_active_in_s").data

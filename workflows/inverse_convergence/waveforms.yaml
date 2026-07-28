@@ -2,8 +2,8 @@
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_we"
-    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
+    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_waveform_editor"
+    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
