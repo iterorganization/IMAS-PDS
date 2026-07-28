@@ -83,7 +83,7 @@ def main() -> None:
         per["equilibrium"] = [s for s, _ in anchored]
         shifts = [sh for _, sh in anchored if sh is not None]
         w = inst.get_port_length(f"{FWD_LANES[0]}_scatter")
-        logger.info("nice_lb: %d slices over %d workers; psi re-gauged on %d/%d slices"
+        logger.info("nice_load_balancer: %d slices over %d workers; psi re-gauged on %d/%d slices"
                     " (max |shift| %.3g Wb)", n, w, len(shifts), n,
                     max((abs(s) for s in shifts), default=0.0))
 

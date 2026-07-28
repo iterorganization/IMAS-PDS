@@ -4,12 +4,12 @@ ymmsl_version: v0.2
 settings:
   source.iterative: true
   source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in/"
-  we.waveforms: ${SCEN}/waveforms.yaml
+  waveform_editor.waveforms: ${SCEN}/waveforms.yaml
   nice_inv.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice.xml
   sink.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
   sink.sink_mode: "w"
   rec_nice.format: distill
   rec_nice.auto: False
   rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
-  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_we"
+  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
   muscle_remote_log_level: 'INFO'

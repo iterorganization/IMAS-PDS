@@ -12,7 +12,7 @@ programs:
   sink_source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
   validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
   recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
-  we:          {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
+  waveform_editor: {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
 
   nice_inv:
     script: |
@@ -33,4 +33,4 @@ programs:
 
   # inverse_convergence specific:
   loop:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py}
-  lb:          {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_lb.py}
+  load_balancer: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py}

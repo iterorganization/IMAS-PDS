@@ -60,13 +60,6 @@ class State(BaseState):
     def _concat_time(current, new):
         """Concat along "time", NaN-padding ragged non-time dims to a
         common width first instead of relying on an index-based outer join.
-
-        The point counts on the separatrix outline and the x/o-point lists
-        vary between NICE solves, and those dims deliberately carry no
-        coordinate (see below) -- so plain `xr.concat(..., join="outer")`
-        has no index to align on and raises. Padding first sidesteps that,
-        the same way imas_muscle3's distill zarr_recorder's `_combine`
-        pads across messages.
         """
         widths = {}
         for ds in (current, new):
