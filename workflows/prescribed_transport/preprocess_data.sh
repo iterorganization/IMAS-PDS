@@ -5,6 +5,8 @@ module load IDStools/2.3.0
 
 SUMMARY_URI=$SOURCE_URI
 
+export IMAS_LOGLEVEL=WARNING
+
 python $PWD/workflows/utils/convert_dina_data_to_input.py \
   --source_uri $SOURCE_URI \
   --summary_uri $SUMMARY_URI \

@@ -20,6 +20,8 @@ next_path() {
 
 SUMMARY_URI=$SOURCE_URI
 
+export IMAS_LOGLEVEL=WARNING
+
 # check if --rerun is among arguments
 if [[ " $* " == *" --rerun "* ]]; then
   old_in="$SUBDIR/tmp/data/${SHOT_NR}_in"

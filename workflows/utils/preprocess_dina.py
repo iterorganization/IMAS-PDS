@@ -12,7 +12,10 @@ from imas import convert_ids
 from imas.ids_defs import CLOSEST_INTERP
 from packaging.version import Version
 
-from preprocess_machine_description import _fix_pf_active_md_geometry
+from preprocess_machine_description import (
+    _fix_pf_active_md_geometry,
+    quiet_expected_conversion_drops,
+)
 
 
 def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
@@ -62,7 +65,8 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
             eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
             eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
             eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
-        eq = convert_ids(eq_orig, "4.0.0")
+        with quiet_expected_conversion_drops():
+            eq = convert_ids(eq_orig, "4.0.0")
         psi = eq.time_slice[0].profiles_1d.psi
         psi_a = psi[0]
         psi_b = eq.time_slice[0].boundary.psi
@@ -82,7 +86,8 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
                 interpolation_method=CLOSEST_INTERP,
                 autoconvert=False,
             )
-            slice = convert_ids(slice_orig, "4.0.0")
+            with quiet_expected_conversion_drops():
+                slice = convert_ids(slice_orig, "4.0.0")
             db_out.put_slice(slice)
         t_list.append(t)
 
@@ -117,7 +122,8 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
 
         # VS coils have incompatible geometry_type for NICE in input,
         # should be identical across shots so getting geometry from backup is fine
-        slice = convert_ids(slice_orig, "4.0.0")
+        with quiet_expected_conversion_drops():
+            slice = convert_ids(slice_orig, "4.0.0")
         for i, coil in enumerate(slice.coil):
             if len(slice.coil) == len(slice_backup.coil):
                 assert slice.coil[i].name == slice_backup.coil[i].name

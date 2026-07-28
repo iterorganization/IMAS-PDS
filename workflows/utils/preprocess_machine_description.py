@@ -4,9 +4,32 @@ pf_passive and the pf_active coil-current seed) into valid PDS coupling input.
 """
 
 import datetime
+import logging
+from contextlib import contextmanager
 
 import numpy as np
 from imas import IDSFactory, convert_ids
+
+
+@contextmanager
+def quiet_expected_conversion_drops():
+    """convert_ids() warns on every call about source fields that have no home in the
+    target DD version (its missing-path dedup only covers a single call). Here that's
+    pf_active identifiers/vertical_force and similar fields this preprocessing already
+    accounts for and does not use downstream, so silence just those "Data is not
+    copied." messages, the same way imas.ids_convert itself scopes a logging filter
+    around its own special-case calls.
+    """
+    convert_logger = logging.getLogger("imas.ids_convert")
+
+    def _drop_filter(record):
+        return not record.getMessage().endswith("Data is not copied.")
+
+    convert_logger.addFilter(_drop_filter)
+    try:
+        yield
+    finally:
+        convert_logger.removeFilter(_drop_filter)
 
 
 def write_machine_description_data(
@@ -87,7 +110,8 @@ def preprocess_pf_active_md(db_out, db_md_pf_active):
     rather than per-timeslice with get_slice/put_slice."""
     backup = db_md_pf_active.get("pf_active", autoconvert=False)
     _fix_pf_active_md_geometry(backup)
-    db_out.put(convert_ids(backup, "4.0.0"))
+    with quiet_expected_conversion_drops():
+        db_out.put(convert_ids(backup, "4.0.0"))
 
 
 def preprocess_pf_passive(db_out, db_md_pf_passive):
@@ -106,7 +130,8 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
     # add missing resistivity
     pf_passive.loop[0].resistivity = 2.703e-8
     pf_passive.loop[1].resistivity = 9.001e-7
-    ids = convert_ids(pf_passive, "4.0.0")
+    with quiet_expected_conversion_drops():
+        ids = convert_ids(pf_passive, "4.0.0")
     db_out.put(ids)
 
 
@@ -115,7 +140,8 @@ def preprocess_iron_core(db_out, db_md_iron_core):
     -ids needed for WEST, created an empty one for ITER.
     """
     ids_orig = db_md_iron_core.get("iron_core", autoconvert=False)
-    ids = convert_ids(ids_orig, "4.0.0")
+    with quiet_expected_conversion_drops():
+        ids = convert_ids(ids_orig, "4.0.0")
     db_out.put(ids)
 
 
