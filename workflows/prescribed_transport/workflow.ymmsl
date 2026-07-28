@@ -11,6 +11,7 @@ ymmsl_version: v0.2
 imports:
 - from lib.local_programs import implementation source
 - from lib.local_programs import implementation sink
+- from lib.local_programs import implementation recorder
 - from lib.local_programs import implementation we
 - from lib.local_programs import implementation nice_inv
 models:
@@ -20,6 +21,7 @@ models:
       we:       {description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed), implementation: we, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]}}
       nice_inv: {description: nice, implementation: nice_inv, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       sink:     {description: sink, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
+      rec_nice: {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
     conduits:
       source.equilibrium_out: we.equilibrium_in
       we.equilibrium_out: nice_inv.equilibrium_in
@@ -27,6 +29,6 @@ models:
       we.pf_active_out: nice_inv.pf_active_in
       we.pf_passive_out: nice_inv.pf_passive_in
       we.iron_core_out: nice_inv.iron_core_in
-      nice_inv.equilibrium_out: sink.equilibrium_in
-      nice_inv.pf_active_out: sink.pf_active_in
-resources: {nice_inv: {threads: 2}}
+      nice_inv.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
+      nice_inv.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
+resources: {nice_inv: {threads: 2}, rec_nice: {threads: 1}}
