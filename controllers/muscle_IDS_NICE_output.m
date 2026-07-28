@@ -37,3 +37,6 @@ for ii=1:length(pf_active.coil)
    coil=struct(pf_active.coil{ii});
    coils_current(ii)=coil.current.data;
 end
+
+fprintf('DEBUG muscle_IDS_NICE_output t=%g ip=%g rgeo=%g zgeo=%g\n', t_out, ip, rgeo, zgeo);
+fprintf('DEBUG muscle_IDS_NICE_output coils_current=%s\n', mat2str(coils_current));
