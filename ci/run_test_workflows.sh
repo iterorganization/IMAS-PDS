@@ -15,11 +15,11 @@ module purge
 bash setup_files/setup_test_files.sh
 
 cd run/
-bash ../setup_files/setup_waveform_editor.sh
 bash ../setup_files/setup_muscle3.sh
-bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" develop
-bash ../setup_files/setup_torax.sh
 bash ../setup_files/setup_imas_muscle3.sh
+bash ../setup_files/setup_waveform_editor.sh "https://github.com/iterorganization/Waveform-Editor.git" feature/reference-tendency-old
+bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" bugfix/non_converge_handling
+bash ../setup_files/setup_torax.sh
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
 ./IMAS-MUSCLE3/venv/bin/pip install "git+https://github.com/iterorganization/imas-validator.git@develop"
@@ -43,11 +43,8 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 # RUN WORKFLOWS
 bash run_workflow.sh prescribed_transport 105084
 bash run_workflow.sh inverse_convergence 105084
-
-# # WAIT FOR NICE_EVO TO BE PART OF NICE EASYBUILD MODULE. 
 # # EXPECT CRASH, HOW TO HANDLE?
-# bash run_workflow.sh torax_nice_self_controller 105084
-# bash run_workflow.sh torax_nice_self_rd_controller 105084
+# bash run_workflow.sh  torax_nice_self_rd_controller 105084
 
 # # WAIT FOR METIS EASYBUILD MODULE
 # bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10
