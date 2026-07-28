@@ -18,7 +18,7 @@ cd run/
 bash ../setup_files/setup_muscle3.sh
 bash ../setup_files/setup_imas_muscle3.sh
 bash ../setup_files/setup_waveform_editor.sh "https://github.com/iterorganization/Waveform-Editor.git" feature/reference-tendency-old
-bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" bugfix/non_converge_handling
+bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" develop
 bash ../setup_files/setup_torax.sh
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
