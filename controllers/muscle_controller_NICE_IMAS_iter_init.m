@@ -81,26 +81,37 @@ while instance.reuse_instance()
     reference_current_ts = timeseries(reference_current,equilibrium.time)
     %Init Simulink object
 
-    % bunch of hardcoded ref settings for now since this controller is only for
-    % workflow showcase purposes
-    % Ipl_ref should be from equilibrium IDS and time bound, disable IP control for now.
+    % Ipl_ref/Rpl_ref/Zpl_ref track the F_INIT equilibrium (the un-controlled
+    % target trajectory) over the whole run, same as CSPF_curr_ref above --
+    % fed to the model via FromWorkspace blocks (not Constant), so they vary
+    % over the simulation instead of pinning to a single scalar.
+    n_slices = length(equilibrium.time_slice);
+    ip_ref = zeros(1,n_slices);
+    rgeo_ref = zeros(1,n_slices);
+    zgeo_ref = zeros(1,n_slices);
+    for i=1:n_slices
+        ip_ref(i) = abs(equilibrium.time_slice{i}.global_quantities.ip);
+        rgeo_ref(i) = equilibrium.time_slice{i}.boundary.geometric_axis.r;
+        zgeo_ref(i) = equilibrium.time_slice{i}.boundary.geometric_axis.z;
+    end
+
     enable_KCURR=1;
     IpControlMode_KCURR=0;
     schedulingVar_KCURR=0; %Ip
 
-    Ipl_ref= 3.5e6;
+    Ipl_ref = timeseries(ip_ref,equilibrium.time);
     CSPF_curr_ref= reference_current_ts;
-    CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out 
+    CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out
 
     enable_RZIp=1;
     IpControlMode_RZIp=0;
     schedulingVar_RZIp=0; %Ip
     schedulingVar_RZIp =[50, 1, 1.2]'; %[50, 1, 1.2]'
 
-    Rpl_ref= 6.2;
-    Zpl_ref= 0.3;
+    Rpl_ref = timeseries(rgeo_ref,equilibrium.time);
+    Zpl_ref = timeseries(zgeo_ref,equilibrium.time);
 
-    %%  Simulink controller 
+    %%  Simulink controller
 
     obj = pcssp_KCURR_PFPO1_obj;
     obj.init;
@@ -114,7 +125,6 @@ while instance.reuse_instance()
     in = Simulink.SimulationInput('pcssp_KCURR_RZIp_MUSCLE3');
     in = in.setModelParameter('StartTime',num2str(t_start),'StopTime',num2str(t_max));
     in = in.setModelParameter('SaveOutput', 'on');
-
 
     fprintf('Start closed loop\n')
     tic;
