@@ -17,6 +17,7 @@ from preprocess_machine_description import (
     quiet_expected_conversion_drops,
 )
 
+DD_VERSION = "4.0.0"
 
 def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
     """Write the data derived from the DINA source run: equilibrium, core_profiles and
@@ -46,7 +47,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
                 interpolation_method=CLOSEST_INTERP,
                 autoconvert=False,
             )
-            if Version(eq_orig._dd_version) < Version("4.0.0"):
+            if Version(eq_orig._dd_version) < Version(DD_VERSION):
                 bndr_len = len(eq_orig.time_slice[0].boundary_separatrix.outline.r)
             else:
                 bndr_len = len(eq_orig.time_slice[0].boundary.outline.r)
@@ -55,7 +56,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
         if bndr_len == 0:
             skipped.append(t)
             continue
-        if Version(eq_orig._dd_version) < Version("4.0.0"):
+        if Version(eq_orig._dd_version) < Version(DD_VERSION):
             eq_orig_ts = eq_orig.time_slice[0]
 
             # DINA input - NICE output defined at psi_norm:
@@ -66,7 +67,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
             eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
             eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
         with quiet_expected_conversion_drops():
-            eq = convert_ids(eq_orig, "4.0.0")
+            eq = convert_ids(eq_orig, DD_VERSION)
         psi = eq.time_slice[0].profiles_1d.psi
         psi_a = psi[0]
         psi_b = eq.time_slice[0].boundary.psi
@@ -87,7 +88,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
                 autoconvert=False,
             )
             with quiet_expected_conversion_drops():
-                slice = convert_ids(slice_orig, "4.0.0")
+                slice = convert_ids(slice_orig, DD_VERSION)
             db_out.put_slice(slice)
         t_list.append(t)
 
@@ -123,7 +124,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
         # VS coils have incompatible geometry_type for NICE in input,
         # should be identical across shots so getting geometry from backup is fine
         with quiet_expected_conversion_drops():
-            slice = convert_ids(slice_orig, "4.0.0")
+            slice = convert_ids(slice_orig, DD_VERSION)
         for i, coil in enumerate(slice.coil):
             if len(slice.coil) == len(slice_backup.coil):
                 assert slice.coil[i].name == slice_backup.coil[i].name

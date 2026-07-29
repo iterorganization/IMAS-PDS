@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import numpy as np
 from imas import IDSFactory, convert_ids
 
+DD_VERSION = "4.0.0"
 
 @contextmanager
 def quiet_expected_conversion_drops():
@@ -22,14 +23,18 @@ def quiet_expected_conversion_drops():
     """
     convert_logger = logging.getLogger("imas.ids_convert")
 
-    def _drop_filter(record):
-        return not record.getMessage().endswith("Data is not copied.")
+    def _downgrade_filter(record):
+        if record.getMessage().endswith("Data is not copied."):
+            record.levelno = logging.DEBUG
+            record.levelname = "DEBUG"
+            return record.levelno >= convert_logger.getEffectiveLevel()
+        return True
 
-    convert_logger.addFilter(_drop_filter)
+    convert_logger.addFilter(_downgrade_filter)
     try:
         yield
     finally:
-        convert_logger.removeFilter(_drop_filter)
+        convert_logger.removeFilter(_downgrade_filter)
 
 
 def write_machine_description_data(
@@ -111,7 +116,7 @@ def preprocess_pf_active_md(db_out, db_md_pf_active):
     backup = db_md_pf_active.get("pf_active", autoconvert=False)
     _fix_pf_active_md_geometry(backup)
     with quiet_expected_conversion_drops():
-        db_out.put(convert_ids(backup, "4.0.0"))
+        db_out.put(convert_ids(backup, DD_VERSION))
 
 
 def preprocess_pf_passive(db_out, db_md_pf_passive):
@@ -131,7 +136,7 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
     pf_passive.loop[0].resistivity = 2.703e-8
     pf_passive.loop[1].resistivity = 9.001e-7
     with quiet_expected_conversion_drops():
-        ids = convert_ids(pf_passive, "4.0.0")
+        ids = convert_ids(pf_passive, DD_VERSION)
     db_out.put(ids)
 
 
@@ -141,7 +146,7 @@ def preprocess_iron_core(db_out, db_md_iron_core):
     """
     ids_orig = db_md_iron_core.get("iron_core", autoconvert=False)
     with quiet_expected_conversion_drops():
-        ids = convert_ids(ids_orig, "4.0.0")
+        ids = convert_ids(ids_orig, DD_VERSION)
     db_out.put(ids)
 
 
@@ -151,7 +156,7 @@ def preprocess_wall(db_out, db_md_wall):
     -vessel. I kept only the first 2 units. Don't remember what the others are, but not needed by Nice.
     """
     wallIn = db_md_wall.get("wall", autoconvert=False)
-    wall = IDSFactory(version="4.0.0").wall()
+    wall = IDSFactory(version=DD_VERSION).wall()
     wall.ids_properties.homogeneous_time = 2  # static
     wall.ids_properties.creation_date = datetime.datetime.now().strftime("%y-%m-%d")
     wall.description_2d.resize(1)
