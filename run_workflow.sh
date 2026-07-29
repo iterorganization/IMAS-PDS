@@ -66,7 +66,7 @@ done
   error "Missing run_job.sbatch or run_simulation.sh in $DIR"
 
 # ---- run the script ----------------------------------------
-echo "$(date +%H):$(date +%S) PREPROCESSING INPUT DATA"
+echo "$(date +%H):$(date +%M):$(date +%S) PREPROCESSING INPUT DATA"
 bash "$DIR/preprocess_data.sh" "${EXTRA_ARGS[@]}"
 if [[ -f "$DIR/create_runnable_files.sh" ]]; then
   echo "$(date +%H):$(date +%M):$(date +%S) CREATING RUNNABLE YMMSL FILE"

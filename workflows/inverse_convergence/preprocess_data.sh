@@ -56,5 +56,5 @@ python $PWD/workflows/utils/convert_dina_data_to_input.py \
   --n_timeslices $N_TIMESLICES
 
 # until IMAS-AL bug is fixed where hdf5 backend does not respect read mode
-cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_we"
-cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in_md" "$SUBDIR/tmp/data/${SHOT_NR}_in_md_we"
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_waveform_editor"
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in_md" "$SUBDIR/tmp/data/${SHOT_NR}_in_md_waveform_editor"

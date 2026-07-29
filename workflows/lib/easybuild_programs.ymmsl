@@ -1,0 +1,24 @@
+ymmsl_version: v0.2
+
+# EasyBuild-module program (implementation) definitions# Import into a workflow with e.g.:
+#   imports:
+#   - from lib.easybuild_programs import implementation torax
+# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+
+programs:
+  # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
+  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
+  source:      {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:        {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  validator:   {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+
+  # ----- NICE python actors --------------------------------------------------
+  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
+  nice_inv:
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    base_env: clean
+    modules: NICE
+    executable: nice_imas_inv_muscle3

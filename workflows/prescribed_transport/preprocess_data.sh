@@ -18,5 +18,5 @@ python $PWD/workflows/utils/convert_dina_data_to_input.py \
   --md_sink_uri $MD_SINK_URI \
   --n_timeslices $N_TIMESLICES
 
-cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_we"
-cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in_md" "$SUBDIR/tmp/data/${SHOT_NR}_in_md_we"
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in" "$SUBDIR/tmp/data/${SHOT_NR}_in_waveform_editor"
+cp -r "$SUBDIR/tmp/data/${SHOT_NR}_in_md" "$SUBDIR/tmp/data/${SHOT_NR}_in_md_waveform_editor"
