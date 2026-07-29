@@ -13,9 +13,6 @@ Vmin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -5
 
 resistances= [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0057 0.00791];
 
-fprintf('DEBUG muscle_NICE_input t=%g size(voltage)=%s raw_voltage=%s\n', t_cur, mat2str(size(voltage)), mat2str(voltage));
-fprintf('DEBUG muscle_NICE_input coil_current=%s\n', mat2str(coil_current));
-
 % KCURR_PFPO1's CSPF vector is 11-wide, sorted CS3U CS2U CS1 CS2L CS3L
 % P1..P6, with CS1U/CS1L ganged into a single "CS1" circuit (see
 % pcssp_KCURR_PFPO1_obj.m). pf_active carries CS1U/CS1L as separate coils
@@ -41,8 +38,6 @@ voltage = voltage_full;
 
 voltage=max(voltage,Vmin);
 voltage=min(voltage,Vmax);
-
-fprintf('DEBUG muscle_NICE_input expanded_clamped_voltage=%s\n', mat2str(voltage));
 
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
