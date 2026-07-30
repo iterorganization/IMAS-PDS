@@ -12,6 +12,7 @@
 
 INSTALL_PDS="true"
 INSTALL_IMAS_MUSCLE3="false"
+INSTALL_MUSCLE3_DASHBOARD="true"
 INSTALL_WAVEFORM_EDITOR="false"
 INSTALL_METIS="true"
 INSTALL_NICE="false"
@@ -21,6 +22,7 @@ INSTALL_PCS="true"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
+BRANCH_MUSCLE3_DASHBOARD='main'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='master'
@@ -71,6 +73,18 @@ CURR_INSTALL='START'
     echo "############## FINISHED IMAS-MUSCLE3 ##############"
   else
     echo "Skipping IMAS_MUSCLE3"
+  fi
+
+  # SET UP MUSCLE3-DASHBOARD
+  CURR_INSTALL='MUSCLE3-DASHBOARD'
+  MUSCLE3_DASHBOARD_URL="https://github.com/multiscale/muscle3-dashboard.git"
+  if [ "$INSTALL_MUSCLE3_DASHBOARD" = "true" ] \
+    && git ls-remote "$MUSCLE3_DASHBOARD_URL" &>/dev/null; then
+    echo "############## INSTALLING MUSCLE3-DASHBOARD ##############"
+    bash ../setup_files/setup_muscle3_dashboard.sh $MUSCLE3_DASHBOARD_URL $BRANCH_MUSCLE3_DASHBOARD
+    echo "############## FINISHED MUSCLE3-DASHBOARD ##############"
+  else
+    echo "Skipping MUSCLE3-DASHBOARD"
   fi
 
   # SET UP WAVEFORM-EDITOR

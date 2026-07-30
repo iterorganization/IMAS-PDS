@@ -21,6 +21,9 @@ import xarray as xr
 from imas_muscle3.visualization.base_plotter import BasePlotter
 from imas_muscle3.visualization.base_state import BaseState
 
+# Picked up by name (not called here) by the dashboard's recorder viewer.
+from imas_muscle3.visualization.md_loader import init_state  # noqa: F401
+
 logger = logging.getLogger()
 
 
