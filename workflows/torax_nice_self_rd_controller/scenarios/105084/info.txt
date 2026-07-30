@@ -1,0 +1,9 @@
+Evolutive TORAX + NICE(evo_rd) + magnetic controller coupling, seeded from DINA shot 105084.
+Requires a completed inverse_convergence/105084 run to seed the starting equilibrium (see
+preprocess_data.sh).
+
+Last tested for versions:
+- Nice:     *git commit* (nice_imas_evo_rd_muscle3 not yet built via the NICE easybuild module,
+            see ci/run_test_workflows.sh)
+- Torax:    *git commit*
+- PCS/PCSSP: *git commit* (ssh-gated, see setup_files/setup_pcs.sh)

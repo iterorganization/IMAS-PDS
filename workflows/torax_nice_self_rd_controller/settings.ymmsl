@@ -1,0 +1,41 @@
+ymmsl_version: v0.2
+# Shared knobs for torax_nice_self_rd_controller, stacked onto the static workflow.ymmsl. The
+# scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
+#
+# nice_evo_rd.t_interval/dt MUST match torax's fixed_dt (both step the coupled system forward
+# in lockstep -- see run/nice/src/main_imas_evo_rd_muscle3.cc's outer while(has_t_next) loop).
+# Not yet validated end-to-end (needs nice_imas_evo_rd_muscle3 + the ssh-gated PCS/PCSSP
+# controller); 0.01s is a starting point ported from workflows/evolutive's nice_evo default,
+# not a tuned value for this scenario.
+settings:
+  source.iterative: False
+  source.t_min: 0.0
+  torax.output_all_timeslices: True
+  torax.fixed_dt: 0.01
+  # If nice_evo_rd keeps rejecting a Newton step and resending its last-valid (rolled-back)
+  # equilibrium/pf_active (output_flag=-1), tolerate a few in a row (the reject/rollback
+  # mechanism is allowed to retry) but abort once it's clearly stuck rather than silently
+  # running to completion on a frozen/stale coupling forever -- see torax_muscle3/utils.py's
+  # ToraxActorSettings.max_consecutive_invalid_input.
+  torax.max_consecutive_invalid_input: 20
+  nice_evo_rd.t_interval: 0.01
+  nice_evo_rd.dt: 0.01
+  nice_evo_rd.xml_path: ${PDS_REPO}/workflows/torax_nice_self_rd_controller/config_nice.xml
+  torax.python_config_module: ${PDS_REPO}/workflows/torax_nice_self_rd_controller/config_torax.py
+  # NICE-reconstructed equilibrium (has the full flux-surface geometry TORAX needs), not raw
+  # DINA -- copied from a completed inverse_convergence run by preprocess_data.sh.
+  source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
+  sink_nice.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice_evo_rd"
+  sink_torax.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_torax"
+  sink_controller.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_controller"
+  sink_nice.sink_mode: "w"
+  sink_torax.sink_mode: "w"
+  sink_controller.sink_mode: "w"
+  rec_nice.format: distill
+  rec_nice.auto: False
+  rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md"
+  rec_torax.format: distill
+  rec_torax.auto: False
+  rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+  muscle_remote_log_level: 'INFO'
