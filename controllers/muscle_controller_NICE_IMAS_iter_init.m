@@ -101,7 +101,8 @@ while instance.reuse_instance()
 
     Ipl_ref = timeseries(ip_ref,equilibrium.time);
     CSPF_curr_ref= reference_current_ts;
-    CSPF_volt_cmd_FF=zeros(11,1); %take scenario to smooth this out
+    cspf_coil_idx = [1 2 3 5 6 7 8 9 10 11 12]; % Selector3's indices, 1-based
+    CSPF_volt_cmd_FF = (coils_resistance(cspf_coil_idx) .* reference_current(1,cspf_coil_idx))';
 
     enable_RZIp=1;
     IpControlMode_RZIp=0;
