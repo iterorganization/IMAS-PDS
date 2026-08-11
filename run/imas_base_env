@@ -1,17 +1,11 @@
+# Sourced by run_workflow.sh before every workflow run. `module load PDS`
+# (setup_files/PDS.lua) is now expected to already be done before this runs --
+# it sets up IMAS-Python/IDStools/NICE/IMAS-MUSCLE3/Waveform-Editor/
+# TORAX-MUSCLE3/etc., which workflows/lib/local_programs.ymmsl depends on via
+# $EBROOT* vars. Do NOT `module purge` here: that would wipe those out from
+# under the actors this workflow is about to launch.
+
 # ENV VARIABLES
 ulimit -s unlimited
 unset MPLBACKEND
 export IMAS_VERSION="4.0.0"
-
-# MODULE LOAD
-module purge
-
-# module load Python
-# module load Boost
-# module load HDF5
-# module load MUSCLE3
-
-# module load IDStools/2.3.0
-# module load IMAS-AL-Fortran
-# module load IMAS-AL-Cpp
-# module load IMAS-AL-Matlab

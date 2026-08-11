@@ -27,10 +27,18 @@ bash ../setup_files/setup_torax.sh
 "$UV" pip install --python ./IMAS-MUSCLE3/venv/bin/python "git+https://github.com/iterorganization/imas-validator.git@develop"
 cd ..
 
+# workflows/lib/local_programs.ymmsl resolves actors via $EBROOT<NAME>, same
+# as the custom modules setup_files/custom_modules/build_*.sh produce -- CI
+# builds fresh into run/ every time instead, so just export the same names
+# pointing at what was just built above.
+export EBROOTIMASMUSCLE3="$PWD/run/IMAS-MUSCLE3"
+export EBROOTWAVEFORMEDITOR="$PWD/run/Waveform-Editor"
+export EBROOTNICE="$PWD/run/nice"
+export EBROOTTORAXMUSCLE3="$PWD/run/TORAX-MUSCLE3"
 
 # RUN TEST FILES
 # All actorn run on muscle3 0.10 so the manager also needs to run on 0.10.
-MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
+MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
 
 # bash run_test_files.sh
 "$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl

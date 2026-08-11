@@ -1,8 +1,14 @@
 set -euo pipefail # stop if anything doesn't work
 
-module load IMAS-Python
-module load IDStools/2.3.0
-module load IMAS-AL-Matlab
+# IMAS-Python/IDStools already provided by `module load PDS`. Loading the
+# stale IDStools/2.3.0 (intel-2023b) here used to silently downgrade the
+# whole 2025b toolchain back to 2023b -- see setup_files/PDS.lua.
+# NOTE: IMAS-AL-Matlab has no 2025b build at all yet (newest is
+# 5.4.0-intel-2023b-DD-4.0.0) -- this workflow's Matlab IDS access is an
+# unresolved gap, not something PDS.lua/module load PDS currently covers
+# (ci/run_test_workflows.sh already treats METIS *_from_dina workflows as
+# blocked pending a proper module, see its "WAIT FOR METIS EASYBUILD MODULE"
+# comment).
 
 echo "Inputs:"
 echo "SHOT_NR=" $SHOT_NR
