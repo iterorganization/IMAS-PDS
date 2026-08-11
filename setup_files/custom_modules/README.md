@@ -22,14 +22,23 @@ full reasoning; in short:
   `intel-2025b` stack) and doesn't include the MUSCLE3 actor wrapper anyway,
   so it's built the same from-source-venv way for consistency.
 
-`build_imas_muscle3.sh` also installs `muscle3-dashboard` (`muscle_dashboard`/
-`m3dash`) into the *same* venv as `IMAS-MUSCLE3`, rather than a separate one.
-Per `docs/source/courses/basic/muscle3_dashboard.rst`, a recorder tab's plot
-file imports `imas_muscle3.visualization`, which needs `imas_muscle3` and the
-full IMAS stack installed in the dashboard's own venv to render -- a lean,
+`muscle_dashboard`/`m3dash` land in the *same* venv as `IMAS-MUSCLE3`, rather
+than a separate one, for free: IMAS-MUSCLE3's `develop` branch declares
+`muscle3-dashboard[recording]` as a core dependency (see its
+`pyproject.toml`), so the plain `pip install -e .` `build_venv_actor_module`
+already does is enough. Per
+`docs/source/courses/basic/muscle3_dashboard.rst`, a recorder tab's plot file
+imports `imas_muscle3.visualization`, which needs `imas_muscle3` and the full
+IMAS stack installed in the dashboard's own venv to render -- a lean,
 separate `muscle3-dashboard` venv doesn't have that, but the `IMAS-MUSCLE3`
-venv already does. So there's no separate dashboard module: loading
-`IMAS-MUSCLE3` is enough to get `muscle_dashboard`/`m3dash` on `PATH` too.
+venv already does. `build_imas_muscle3.sh` additionally installs the optional
+per-run graph card (`ymmsl2svg`), using the exact pin IMAS-MUSCLE3's own
+`pyproject.toml` documents, then reasserts the correct `ymmsl` afterward
+(that pin's own dependency chain wants an older, incompatible one -- see the
+comment in the script). **Do not** clone/install `muscle3-dashboard` itself
+separately here -- that overwrites the correct feature-branch install
+`pip install -e .` already resolved with one missing the `recorder` submodule
+entirely (this happened once; see the script's header comment).
 
 ## Usage
 
@@ -39,14 +48,10 @@ modulefile under `$PDS_MODULES_ROOT` (default `~/public/modules`):
 
 ```bash
 bash build_nice.sh              3.0.0-pds-intel-2025b   master
-bash build_imas_muscle3.sh      1.0.0-pds-2026-08-10    develop   main
+bash build_imas_muscle3.sh      1.0.0-pds-2026-08-10    develop
 bash build_waveform_editor.sh   0.3.1-pds-2026-08-10    main
 bash build_torax_muscle3.sh     develop-2026-08-10      develop
 ```
-
-`build_imas_muscle3.sh`'s third argument is the `muscle3-dashboard` branch to
-install (default `main`) -- unrelated to IMAS-MUSCLE3's own branch, the
-second argument.
 
 Then uncomment the matching `load(...)` line in `../PDS.lua` with the version
 string you passed. Old and new versions coexist side by side under Lmod --

@@ -88,7 +88,10 @@ setup_files/custom_modules/), and wires this checkout into PATH/PYTHONPATH.
 Also puts muscle_dashboard/m3dash on PATH (bundled into the IMAS-MUSCLE3
 build, not a separate module -- see this file's source comments).
 
-Checkout: @@PDS_ROOT@@
+Wires PDS_REPO/PATH/PYTHONPATH to your own clone automatically if you `cd`
+into it first (detected via bin/pds-run), or to an already-exported PDS_REPO;
+otherwise defaults to: @@PDS_ROOT@@ (run output would then land in THAT
+checkout, which only its owner can write to).
 
 Does NOT load MUSCLE3 -- pds-run and run_simulation.sh load it themselves.
 Does NOT load the official NICE/TORAX/IMAS-MUSCLE3/Waveform-Editor modules --
@@ -123,10 +126,31 @@ load("IMAS-MUSCLE3/1.0.0-pds-2026-08-10")
 load("Waveform-Editor/0.3.1-pds-ref-tendency-old")
 load("TORAX-MUSCLE3/develop-2026-08-10")
 
--- Wire this checkout in, so `pds-run` and `import pds` work immediately
-prepend_path("PATH", pathJoin(pds_root, "bin"))
-prepend_path("PYTHONPATH", pds_root)
-setenv("PDS_REPO", pds_root)
+-- Wire a checkout in, so `pds-run` and `import pds` work immediately.
+-- Picks, in order:
+--   1. An already-exported PDS_REPO (explicit override, e.g. set in your
+--      shell profile before `module load PDS` runs anywhere).
+--   2. The current directory, if it looks like a PDS checkout (has
+--      bin/pds-run) -- covers the natural `cd ~/my-pds-clone && module load
+--      PDS` case with no extra steps.
+--   3. This file's own checkout (@@PDS_ROOT@@), as a last-resort default.
+--
+-- Without this, everyone loading this shared module would get run output
+-- (workflows/*/scenarios/*/tmp/runs/...) forced into @@PDS_ROOT@@ regardless
+-- of where they're actually working, which only its owner can write to --
+-- confirmed: a second user hit exactly this as a permission-denied error.
+local pds_repo = os.getenv("PDS_REPO")
+if not pds_repo then
+  local cwd = os.getenv("PWD")
+  if cwd and isFile(pathJoin(cwd, "bin/pds-run")) then
+    pds_repo = cwd
+  else
+    pds_repo = pds_root
+  end
+end
+prepend_path("PATH", pathJoin(pds_repo, "bin"))
+prepend_path("PYTHONPATH", pds_repo)
+setenv("PDS_REPO", pds_repo)
 
 -- Match run/imas_base_env
 execute{cmd="ulimit -s unlimited", modeA={"load"}}
