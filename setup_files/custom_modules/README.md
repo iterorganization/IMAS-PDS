@@ -22,6 +22,15 @@ full reasoning; in short:
   `intel-2025b` stack) and doesn't include the MUSCLE3 actor wrapper anyway,
   so it's built the same from-source-venv way for consistency.
 
+`build_imas_muscle3.sh` also installs `muscle3-dashboard` (`muscle_dashboard`/
+`m3dash`) into the *same* venv as `IMAS-MUSCLE3`, rather than a separate one.
+Per `docs/source/courses/basic/muscle3_dashboard.rst`, a recorder tab's plot
+file imports `imas_muscle3.visualization`, which needs `imas_muscle3` and the
+full IMAS stack installed in the dashboard's own venv to render -- a lean,
+separate `muscle3-dashboard` venv doesn't have that, but the `IMAS-MUSCLE3`
+venv already does. So there's no separate dashboard module: loading
+`IMAS-MUSCLE3` is enough to get `muscle_dashboard`/`m3dash` on `PATH` too.
+
 ## Usage
 
 Each script takes a version string you choose plus a branch/tag, and installs
@@ -30,10 +39,14 @@ modulefile under `$PDS_MODULES_ROOT` (default `~/public/modules`):
 
 ```bash
 bash build_nice.sh              3.0.0-pds-intel-2025b   master
-bash build_imas_muscle3.sh      1.0.0-pds-2026-08-10    develop
+bash build_imas_muscle3.sh      1.0.0-pds-2026-08-10    develop   main
 bash build_waveform_editor.sh   0.3.1-pds-2026-08-10    main
 bash build_torax_muscle3.sh     develop-2026-08-10      develop
 ```
+
+`build_imas_muscle3.sh`'s third argument is the `muscle3-dashboard` branch to
+install (default `main`) -- unrelated to IMAS-MUSCLE3's own branch, the
+second argument.
 
 Then uncomment the matching `load(...)` line in `../PDS.lua` with the version
 string you passed. Old and new versions coexist side by side under Lmod --

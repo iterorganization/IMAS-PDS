@@ -39,6 +39,14 @@
 -- confirmed to conflict with the intel-2025b stack here, and missing the
 -- MUSCLE3 actor wrapper anyway) isn't usable regardless.
 --
+-- muscle3-dashboard (muscle_dashboard/m3dash) is installed by
+-- build_imas_muscle3.sh into the SAME venv as IMAS-MUSCLE3, not its own --
+-- see docs/source/courses/basic/muscle3_dashboard.rst: a recorder tab's plot
+-- file imports imas_muscle3.visualization, which needs imas_muscle3 and the
+-- full IMAS stack in the dashboard's own venv to render, and this venv
+-- already has that. So no separate module for it: loading IMAS-MUSCLE3
+-- below is enough to get muscle_dashboard/m3dash on PATH too.
+--
 -- Building each one is a real, one-time compile/install (needs your
 -- git.iter.org / GitHub access, and for NICE, real compile time) -- see
 -- setup_files/custom_modules/README.md. Once built, fill in the version
@@ -76,6 +84,9 @@ Loads the newest verified cluster modules for the IMAS-PDS stack (IMAS-Core,
 IMAS-Python, IDStools, UDA, METIS-IRFM), pinned by exact version, plus custom
 builds of NICE/IMAS-MUSCLE3/Waveform-Editor/TORAX-MUSCLE3 (see
 setup_files/custom_modules/), and wires this checkout into PATH/PYTHONPATH.
+
+Also puts muscle_dashboard/m3dash on PATH (bundled into the IMAS-MUSCLE3
+build, not a separate module -- see this file's source comments).
 
 Checkout: @@PDS_ROOT@@
 
