@@ -125,7 +125,7 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
     -I kept only the first 2 loops. The others are another more complicated representation of the vessel which we already have in wall.
     -added the resistivity by hand
     """
-    pf_passive = db_md_pf_passive.get("pf_passive")
+    pf_passive = db_md_pf_passive.get("pf_passive", autoconvert=False)
 
     # keep only the first 2
     tmp = pf_passive.loop

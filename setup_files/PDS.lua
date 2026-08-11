@@ -105,7 +105,11 @@ load("METIS-IRFM/11.0-intel-2025b-MATLAB-2025b-r1")
 -- strings (2026-08-10).
 load("NICE/3.0.0-pds-intel-2025b")
 load("IMAS-MUSCLE3/1.0.0-pds-2026-08-10")
-load("Waveform-Editor/0.3.1-pds-2026-08-10")
+-- Built from feature/reference-tendency-old, NOT main: ci/run_test_workflows.sh
+-- pins this same branch deliberately (main is missing something these
+-- workflows' waveform configs need -- confirmed by a real failure building
+-- from main: "'imports' is not a parameter of YamlGlobals").
+load("Waveform-Editor/0.3.1-pds-ref-tendency-old")
 load("TORAX-MUSCLE3/develop-2026-08-10")
 
 -- Wire this checkout in, so `pds-run` and `import pds` work immediately
