@@ -1,9 +1,5 @@
 set -euo pipefail # stop if anything doesn't work
 
-# IMAS-Python/IDStools already provided by `module load PDS`. Loading the
-# stale IDStools/2.3.0 (intel-2023b) here used to silently downgrade the
-# whole 2025b toolchain back to 2023b -- see setup_files/PDS.lua.
-
 next_path() {
   local base="$1"
   local n=1

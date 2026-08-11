@@ -1,8 +1,5 @@
 set -euo pipefail # stop if anything doesn't work
 
-# IMAS-Python/IDStools already provided by `module load PDS`. Loading the
-# stale IDStools/2.3.0 (intel-2023b) here used to silently downgrade the
-# whole 2025b toolchain back to 2023b -- see setup_files/PDS.lua.
 # NOTE: IMAS-AL-Matlab has no 2025b build at all yet (newest is
 # 5.4.0-intel-2023b-DD-4.0.0) -- this workflow's Matlab IDS access is an
 # unresolved gap, not something PDS.lua/module load PDS currently covers
