@@ -154,11 +154,42 @@ def check_case(case: Path, errors: list) -> None:
                 f"component silently gets 1 thread. Instances: {sorted(instances)}",
             )
 
+    check_input_paths(cfg, case.name, errors)
     check_waveform_ports(cfg, flat.root_model(), case.name, errors)
 
     kind = "self-contained" if self_contained else "stacked"
     print(f"ok  {case.name} [{kind}] -> {root}: {len(instances)} instances, "
           f"{len(flat.root_model().conduits)} conduits")
+
+
+# Settings naming an input that must already exist. Outputs (sink_uri) are excluded --
+# they are created by the run.
+INPUT_SUFFIXES = (".waveforms", ".xml_path", ".python_config_module", ".config",
+                  ".extra_rule_dirs", ".source_uri")
+
+
+def check_input_paths(cfg, case_name, errors: list) -> None:
+    """Every input path a case names must exist.
+
+    A missing config or data entry is not caught by anything else here: the case resolves,
+    the model flattens, and the run dies minutes later inside whichever actor first tried
+    to open it.
+    """
+    for key in (str(k) for k in cfg.settings):
+        if not key.endswith(INPUT_SUFFIXES):
+            continue
+        value = cfg.settings[key]
+        if not isinstance(value, str):
+            continue
+        # A value may hold several whitespace-separated entries (rec_*.md does).
+        for token in value.split():
+            path = token.split("path=", 1)[1] if "path=" in token else token
+            path = path.split("?", 1)[0]
+            if not path.startswith("/"):
+                continue  # relative: resolved at run time against the instance work dir
+            if not Path(path).exists():
+                _fail(errors, f"{case_name}: setting '{key}' names "
+                              f"'{path}', which does not exist")
 
 
 def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:

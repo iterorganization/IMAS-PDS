@@ -36,11 +36,13 @@ settings:
   # open it at once; HDF5_USE_FILE_LOCKING=FALSE removes the need for the copy.
   run.sink_source_nice.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/forward_start"
 
-  # Solvers.
-  run.nice_evo.xml_path: ${PDS_REPO}/workflows/torax_nice_controller/config_nice.xml
+  # Solvers. Both configs live with the scenario: the NICE xml differs between the
+  # evo and resistive-diffusion variants, and the TORAX config reads this scenario's
+  # own data to derive its time window.
+  run.nice_evo.xml_path: ${SCENARIOS_REPO}/105073/config_nice_evo.xml
   run.nice_evo.t_interval: 0.01   # must match the transport dt
   run.nice_evo.dt: 0.01
-  run.transport.python_config_module: ${PDS_REPO}/workflows/torax_nice_controller/config_torax.py
+  run.transport.python_config_module: ${SCENARIOS_REPO}/105073/config_torax_forward.py
   run.transport.output_all_timeslices: False
 
   # Output. Relative URIs resolve against each instance's own work directory, so results
