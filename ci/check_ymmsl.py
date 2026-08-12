@@ -8,9 +8,9 @@ Catches, without needing scenario data or a running MUSCLE3:
   2. setting keys that match no instance -- SILENT at runtime: get_setting walks
      instance prefixes and falls through to the bare name, so a key at the wrong depth
      is simply never seen
-  3. resources keys that match no instance -- also SILENT: get_resources logs at debug
-     and returns 1 thread, so `torax: {threads: 8}` written at the wrong depth quietly
-     runs single-threaded
+  3. resources keys that are not exactly `<root model>.<instance>` -- also SILENT:
+     get_resources does an exact dict lookup (no prefix walk), logs at debug and returns
+     1 thread, so `run.transport: {threads: 8}` quietly runs single-threaded
   4. model ports declared in workflows/lib/*.ymmsl but not wired inside the model --
      flatten() then drops the caller's conduit with no error, and neither
      Model.check_consistent nor _check_consistent_ports objects
@@ -146,12 +146,27 @@ def check_case(case: Path, errors: list) -> None:
                 f"silently ignored. Instances: {sorted(instances)}",
             )
 
+    # Resources are looked up by EXACT dict key, with no prefix walk (unlike settings):
+    # instance_manager.py:142 calls `get_resources(model.name + component.name)` and
+    # Configuration.get_resources does a plain `self.resources.get(name)`. So the key must
+    # be the root model name followed by the instance name -- and for a self-contained
+    # case the root model name is the full dotted import path
+    # (`inverse_convergence.workflow.inverse_convergence`), because resolver.py:177 sets
+    # `impl.name = module + impl.name` and offers no way to alias it shorter.
+    #
+    # Getting this wrong costs nothing visible: get_resources logs at DEBUG and hands back
+    # 1 thread, so a TORAX asking for 8 quietly runs on one core.
+    wanted = {f"{root}.{inst}": inst for inst in instances}
     for key in (str(k) for k in cfg.resources):
-        if key not in instances:
+        if key not in wanted:
+            hint = ""
+            if key in instances:
+                hint = (f" Did you mean '{root}.{key}'? Resources keys are NOT "
+                        f"prefix-matched the way settings keys are.")
             _fail(
                 errors,
-                f"{case.name}: resources key '{key}' matches no instance -- that "
-                f"component silently gets 1 thread. Instances: {sorted(instances)}",
+                f"{case.name}: resources key '{key}' is not '{{root}}.{{instance}}' -- that "
+                f"component silently gets 1 thread.{hint}",
             )
 
     check_input_paths(cfg, case.name, errors)
