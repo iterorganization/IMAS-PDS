@@ -34,7 +34,7 @@ programs:
     script: |
       #!/bin/bash
       source /usr/share/lmod/lmod/init/bash
-      eval "$($LMOD_CMD bash load Python)"
+      eval "$($LMOD_CMD bash load Python 2>/dev/null)"
       source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
       exec python -u -m torax_muscle3.torax_actor "$@"
