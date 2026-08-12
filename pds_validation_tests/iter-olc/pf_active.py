@@ -61,7 +61,7 @@ def validate_force_limits_cs(ids):
         for key in cs_force_dict:
             if key in coil.name:
                 cs_force_dict[key] = coil.force_vertical.data.value
-    if all(val is not None for val in cs_force_dict.values()):
+    if any(val is None for val in cs_force_dict.values()):
         return
 
     F_z = [
