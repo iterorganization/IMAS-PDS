@@ -2,8 +2,9 @@
 
 Build scripts that produce Lmod modules for the PDS actor codes
 (`NICE`, `IMAS-MUSCLE3`, `Waveform-Editor`, `TORAX-MUSCLE3`), instead of using
-SDCC's official modules for them. See `../PDS.lua`'s header comment for the
-full reasoning; in short:
+SDCC's official modules for them. Exposed as `PDS-NICE`, `PDS-IMAS-MUSCLE3`,
+`PDS-Waveform-Editor`, `PDS-TORAX-MUSCLE3` -- see `../PDS.lua`'s header
+comment for the full reasoning; in short:
 
 - `NICE`'s official module is RPATH-linked to `MUSCLE3/0.9.1`, which conflicts
   with `IMAS-MUSCLE3`/`Waveform-Editor`'s `MUSCLE3/0.10.0` dependency. RPATH
@@ -21,6 +22,17 @@ full reasoning; in short:
   is `-foss-2025b` only (confirmed to conflict with this cluster's
   `intel-2025b` stack) and doesn't include the MUSCLE3 actor wrapper anyway,
   so it's built the same from-source-venv way for consistency.
+- The `PDS-` prefix itself is not cosmetic: several workflow
+  `.ymmsl(.template)` files (`torax_nice_controller`, the
+  `metis_*_from_dina` workflows, `workflows/lib/easybuild_programs.ymmsl`)
+  specify actor implementations via a bare `modules: NICE` /
+  `modules: IMAS-MUSCLE3` key -- MUSCLE3's own per-actor module-load
+  mechanism, unrelated to `local_programs.ymmsl`'s `$EBROOT*`-based
+  `virtual_env:` approach. If our builds used the same bare names, those
+  actors' `module load NICE` could resolve to the official (broken) module
+  instead of ours, depending on Lmod's tie-breaking across merged module
+  trees -- a real collision risk. Those workflow files reference
+  `PDS-<Name>` now too.
 
 `muscle_dashboard`/`m3dash` land in the *same* venv as `IMAS-MUSCLE3`, rather
 than a separate one, for free: IMAS-MUSCLE3's `develop` branch declares

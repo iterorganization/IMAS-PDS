@@ -42,6 +42,24 @@ export SUBDIR="$DIR/scenarios/$2"
 shift 2
 export EXTRA_ARGS=("$@")
 
+# ---- module environment ---------------------------------------
+
+# Ensure the PDS module stack (setup_files/PDS.lua) is loaded, so this script
+# is self-contained regardless of what the caller already has loaded --
+# workflows/lib/local_programs.ymmsl's actors resolve via the $EBROOT* vars
+# this module sets. Run from this checkout's root (required below anyway),
+# so PDS.lua's own PWD-detection picks this checkout as PDS_REPO.
+# PDS_MODULEPATH points at wherever PDS.lua was deployed; override it if
+# yours differs from the default shared location.
+if ! command -v module >/dev/null 2>&1; then
+  LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+  # shellcheck source=/usr/share/lmod/lmod/init/bash
+  [[ -f "$LMOD_INIT" ]] && source "$LMOD_INIT"
+fi
+: "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules}"
+module use "$PDS_MODULEPATH"
+module load PDS
+
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
 source "$PWD/run/imas_base_env"
 source $SCENARIO_CONFIG

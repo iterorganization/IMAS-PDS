@@ -9,10 +9,19 @@
 # IMAS-MUSCLE3/Waveform-Editor both require MUSCLE3/0.10.0. The only real fix
 # is rebuilding NICE from source against 0.10.0, which is what this does.
 #
-# We still `module load NICE` first purely to pull in its OTHER build
-# dependencies for free (IMAS-Cpp, SuiteSparse, Eigen, libxml2) via its own
-# depends_on chain; MUSCLE3/0.10.0 loaded right after overrides just the
-# MUSCLE3 piece for the actual build/link step.
+# Named PDS-NICE, not bare NICE: several workflow .ymmsl(.template) files
+# (torax_nice_controller, the metis_*_from_dina workflows,
+# workflows/lib/easybuild_programs.ymmsl) specify `modules: NICE` directly --
+# MUSCLE3's own per-actor module-load mechanism, separate from
+# local_programs.ymmsl's $EBROOT*-based approach. If this were also just
+# "NICE", those actors' bare `module load NICE` could resolve to the official
+# (RPATH-broken) one instead of this build, depending on Lmod's tie-breaking
+# across merged module trees -- not hypothetical, a real collision risk.
+#
+# We still `module load NICE` (the official one) first purely to pull in its
+# OTHER build dependencies for free (IMAS-Cpp, SuiteSparse, Eigen, libxml2)
+# via its own depends_on chain; MUSCLE3/0.10.0 loaded right after overrides
+# just the MUSCLE3 piece for the actual build/link step.
 #
 # Usage: bash build_nice.sh <module-version> [branch] [git-url]
 # e.g:   bash build_nice.sh 3.0.0-pds-intel-2025b master
@@ -25,10 +34,10 @@ BRANCH="${2:-master}"
 NICE_URL="${3:-https://gitlab.inria.fr/blfauger/nice.git}"
 
 CHECKOUT="$PDS_SOFTWARE_ROOT/NICE/$MODULE_VERSION"
-MODULE_DIR="$PDS_MODULES_ROOT/NICE"
+MODULE_DIR="$PDS_MODULES_ROOT/PDS-NICE"
 MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 
-echo "############## Building NICE/$MODULE_VERSION (branch: $BRANCH) ##############"
+echo "############## Building PDS-NICE/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
 # Loading NICE then overriding its MUSCLE3 dependency to 0.10.0 leaves NICE's
@@ -116,7 +125,7 @@ cat > "$MODULE_FILE" << EOF
 -- Rebuild/update: bash setup_files/custom_modules/build_nice.sh <new-version> <branch>
 
 help([[
-NICE (custom PDS build, MUSCLE3/0.10.0-linked)
+PDS-NICE (custom PDS build of NICE, MUSCLE3/0.10.0-linked)
 
 Source: $NICE_URL @ $BRANCH
 Installed: $CHECKOUT
@@ -128,7 +137,7 @@ prepend_path("PATH", "$CHECKOUT/run")
 setenv("EBROOTNICE", "$CHECKOUT")
 EOF
 
-echo "Installed NICE/$MODULE_VERSION -> $CHECKOUT/run"
+echo "Installed PDS-NICE/$MODULE_VERSION -> $CHECKOUT/run"
 echo "Module:    $MODULE_FILE"
 echo ""
 echo "NOTE: verify $CHECKOUT/run/nice_imas_inv_muscle3 actually runs and links"

@@ -7,7 +7,7 @@ globals:
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
-# Static machine-description referencemachine_description:
+# Static machine-description reference
 machine_description:
   wall/*:
     - {ref: input_md}

@@ -7,18 +7,21 @@ ymmsl_version: v0.2
 
 programs:
   # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
-  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
-  source:      {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.source_component}
-  sink:        {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
-  sink_source: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
-  validator:   {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  # PDS-IMAS-MUSCLE3 is a custom PDS build (see setup_files/custom_modules/), not the
+  # official IMAS-MUSCLE3 module -- the official module ships muscle3 0.8.0, not usable
+  # with the 0.10.0 manager the rest of this stack runs.
+  source:      {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink:        {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source: {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  validator:   {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
 
   # ----- NICE python actors --------------------------------------------------
-  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
+  # PDS-NICE is a custom PDS build, rebuilt against MUSCLE3/0.10.0 -- the official NICE
+  # module is RPATH-linked to MUSCLE3/0.9.1 (see setup_files/custom_modules/build_nice.sh).
   nice_inv:
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
     base_env: clean
-    modules: NICE
+    modules: PDS-NICE
     executable: nice_imas_inv_muscle3

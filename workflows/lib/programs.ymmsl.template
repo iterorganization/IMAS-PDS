@@ -16,34 +16,34 @@ programs:
 
   # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
   source:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
 
   sink:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
 
   accumulator:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
 
   sink_source:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
 
   visualization:
     base_env: clean
-    modules: IMAS-Python/2.1.0-foss-2023b IMAS-MUSCLE3
+    modules: IMAS-Python/2.1.0-foss-2023b PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.visualization_component"
 
   # olc / validator actor (open-loop-check rule validation)
   olc:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.olc_component"
 
@@ -53,21 +53,21 @@ programs:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
     base_env: clean
-    modules: NICE
+    modules: PDS-NICE
     executable: nice_imas_inv_muscle3
 
   # New-style S/O_I micro-model evo (uses the locally built master binary, see CLAUDE.md)
   nice_evo:
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: PDS-NICE
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_muscle3
 
   # Resistive-diffusion evo variant (adds core_profiles coupling)
   nice_evo_rd:
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: PDS-NICE
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_rd_muscle3
 
   # ----- TORAX transport actor (own venv + module loads via a script) ---------------
@@ -114,12 +114,12 @@ programs:
 
   # ----- convergence driver (macro Picard reuse-loop controller) --------------------
   convergence_driver:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.convergence_driver_component"
 
   # ----- vector-port scatter/gather dispatcher for the parallel inverse --------------
   dispatcher:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.dispatcher_component"

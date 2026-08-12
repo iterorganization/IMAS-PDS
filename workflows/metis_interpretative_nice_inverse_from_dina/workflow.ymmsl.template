@@ -93,19 +93,19 @@ settings:
 
 implementations:
   sink_metis:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   sink_nice:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_nice:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_source_component"
   source_metis:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 
@@ -118,7 +118,7 @@ implementations:
   nice_inv:
     env: 
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: PDS-NICE
     executable: nice_imas_inv_muscle3
 resources:
   source_nice:

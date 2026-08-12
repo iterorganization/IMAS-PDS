@@ -3,6 +3,7 @@ Validate output of simulations in FBE + Transport coupling
 """
 
 import argparse
+import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -137,7 +138,24 @@ def pf_active_plots_dina_nice(args, dbs):
         for coil in pfa.coil:
             coil_name = str(coil.name)
             if coil_name not in coil_dict:
-                coil_dict[coil_name] = max(coil_dict.values(), default=-1) + 1
+                next_slot = max(coil_dict.values(), default=-1) + 1
+                if next_slot >= len(axes):
+                    # dina/nice are expected to agree on all 14 physical coils'
+                    # name strings (the grid is sized for exactly that many);
+                    # if they disagree on even one coil for this scenario, a
+                    # 15th unique name shows up here. Skip it rather than
+                    # crash the whole plot -- see also the analogous
+                    # dina/machine-description coil-name mismatch handled in
+                    # workflows/utils/preprocess_dina.py.
+                    logging.warning(
+                        "pf_active coil name %r (%s) has no free plot slot "
+                        "(dina/nice disagree on coil naming for this "
+                        "scenario) -- skipping its plot.",
+                        coil_name,
+                        key,
+                    )
+                    continue
+                coil_dict[coil_name] = next_slot
                 axes[coil_dict[coil_name]].set_title(coil_name)
                 axes[coil_dict[coil_name]].set_ylabel("current")
                 axes[coil_dict[coil_name]].set_xlabel("time")

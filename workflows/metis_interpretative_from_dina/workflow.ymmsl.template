@@ -65,11 +65,11 @@ settings:
 
 implementations:
   sink_metis:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_metis:
-    modules: IMAS-MUSCLE3
+    modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 

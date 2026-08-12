@@ -135,7 +135,7 @@ implementations:
   nice_evo_rd:
     env: 
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: PDS-NICE
     executable: [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_rd_muscle3
     #executable: valgrind --leak-check=yes [BASEDIR_PLACEHOLDER]/run/nice/run/nice_imas_evo_rd_muscle3
   torax:

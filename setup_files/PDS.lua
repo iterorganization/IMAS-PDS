@@ -12,7 +12,7 @@
 --
 -- ACTOR CODES (NICE, IMAS-MUSCLE3, Waveform-Editor, TORAX-MUSCLE3) all come
 -- from setup_files/custom_modules/build_*.sh, NOT the official SDCC modules,
--- for two independent reasons:
+-- for three independent reasons:
 --
 -- 1. RPATH conflict (NICE only): the official NICE/3.0.0-intel-2025b-DD-4.1.1
 --    module's binaries are RPATH-linked to MUSCLE3/0.9.1 (verified with
@@ -34,8 +34,22 @@
 --    build_waveform_editor.sh produce, PATH-only, same as pds-run's own
 --    preferred self-contained-venv path.
 --
--- TORAX-MUSCLE3 has neither problem itself, but is built the same way for
--- consistency, and because the official TORAX module (-foss-2025b only,
+-- 3. Bare-name collision with MUSCLE3's own per-actor module-load mechanism:
+--    several workflow .ymmsl(.template) files (torax_nice_controller, the
+--    metis_*_from_dina workflows, workflows/lib/easybuild_programs.ymmsl)
+--    specify actor implementations via a bare `modules: NICE` /
+--    `modules: IMAS-MUSCLE3` key -- unrelated to local_programs.ymmsl's
+--    $EBROOT*-based virtual_env: approach. If our custom builds used those
+--    same bare names, `module load NICE` inside one of those actor
+--    subprocesses could resolve to the official (broken) module instead of
+--    ours, depending on Lmod's tie-breaking across merged module trees --
+--    a real risk, not hypothetical. So all four custom builds are exposed
+--    as PDS-<Name> (PDS-NICE, PDS-IMAS-MUSCLE3, PDS-Waveform-Editor,
+--    PDS-TORAX-MUSCLE3), structurally ruling out the collision. Those
+--    workflow files were updated to reference PDS-<Name> too.
+--
+-- TORAX-MUSCLE3 has neither problem #1/#2 itself, but is built the same way
+-- for consistency, and because the official TORAX module (-foss-2025b only,
 -- confirmed to conflict with the intel-2025b stack here, and missing the
 -- MUSCLE3 actor wrapper anyway) isn't usable regardless.
 --
@@ -82,8 +96,11 @@ PDS (Pulse Design Simulator) meta-module.
 
 Loads the newest verified cluster modules for the IMAS-PDS stack (IMAS-Core,
 IMAS-Python, IDStools, UDA, METIS-IRFM), pinned by exact version, plus custom
-builds of NICE/IMAS-MUSCLE3/Waveform-Editor/TORAX-MUSCLE3 (see
-setup_files/custom_modules/), and wires this checkout into PATH/PYTHONPATH.
+builds of NICE/IMAS-MUSCLE3/Waveform-Editor/TORAX-MUSCLE3 -- exposed as
+PDS-NICE/PDS-IMAS-MUSCLE3/PDS-Waveform-Editor/PDS-TORAX-MUSCLE3 to avoid
+colliding with the (incompatible) official module of the same base name
+(see setup_files/custom_modules/) -- and wires this checkout into
+PATH/PYTHONPATH.
 
 Also puts muscle_dashboard/m3dash on PATH (bundled into the IMAS-MUSCLE3
 build, not a separate module -- see this file's source comments).
@@ -115,16 +132,17 @@ load("UDA/2.9.3-intel-compilers-2025.2.0")
 load("METIS-IRFM/11.0-intel-2025b-MATLAB-2025b-r1")
 
 -- Actor codes: custom builds only, see the comment block above for why.
+-- Named PDS-<Name>, not bare <Name> -- see reason #3 above.
 -- Built via setup_files/custom_modules/build_*.sh with these exact version
 -- strings (2026-08-10).
-load("NICE/3.0.0-pds-intel-2025b")
-load("IMAS-MUSCLE3/1.0.0-pds-2026-08-10")
+load("PDS-NICE/3.0.0-pds-intel-2025b")
+load("PDS-IMAS-MUSCLE3/1.0.0-pds-2026-08-10")
 -- Built from feature/reference-tendency-old, NOT main: ci/run_test_workflows.sh
 -- pins this same branch deliberately (main is missing something these
 -- workflows' waveform configs need -- confirmed by a real failure building
 -- from main: "'imports' is not a parameter of YamlGlobals").
-load("Waveform-Editor/0.3.1-pds-ref-tendency-old")
-load("TORAX-MUSCLE3/develop-2026-08-10")
+load("PDS-Waveform-Editor/0.3.1-pds-ref-tendency-old")
+load("PDS-TORAX-MUSCLE3/develop-2026-08-10")
 
 -- Wire a checkout in, so `pds-run` and `import pds` work immediately.
 -- Picks, in order:

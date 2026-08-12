@@ -319,7 +319,21 @@ class Plotter(BasePlotter):
             z = z[0, :]
         psi = equilibrium_data.psi.values
 
-        trics = plt.tricontour(r, z, psi, levels=levels)
+        try:
+            trics = plt.tricontour(r, z, psi, levels=levels)
+        except RuntimeError:
+            # qhull's Delaunay triangulation can fail outright (rather than just
+            # warn) on a degenerate (r, z) grid -- e.g. duplicate/collinear
+            # points, or NaNs from a not-yet-converged/cold-start timeslice.
+            # Skip this frame's contour instead of taking down the whole
+            # recorder tab callback: the plot just shows no contour for that
+            # instant rather than crashing the dashboard.
+            logger.warning(
+                "Skipping contour: Delaunay triangulation failed for this "
+                "equilibrium timeslice (likely degenerate/NaN grid points).",
+                exc_info=True,
+            )
+            return hv.Contours(([0], [0], 0), vdims="psi")
         return hv.Contours(self._extract_contour_segments(trics), vdims="psi")
 
     def _extract_contour_segments(self, tricontour):

@@ -20,6 +20,6 @@ BRANCH="${2:-develop}"
 
 # TORAX-MUSCLE3's pyproject.toml pins a stale muscle3==0.8.0; override so the
 # actor is compatible with the 0.10.0 manager (matches setup_files/setup_torax.sh).
-build_venv_actor_module "TORAX-MUSCLE3" "$MODULE_VERSION" \
+build_venv_actor_module "PDS-TORAX-MUSCLE3" "$MODULE_VERSION" \
   "https://github.com/iterorganization/TORAX-MUSCLE3.git" "$BRANCH" \
   "muscle3==0.10.0"
