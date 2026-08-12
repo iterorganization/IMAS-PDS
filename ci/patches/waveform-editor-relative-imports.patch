@@ -1,0 +1,97 @@
+diff --git a/waveform_editor/configuration.py b/waveform_editor/configuration.py
+index 276f8c5..36dcd4c 100644
+--- a/waveform_editor/configuration.py
++++ b/waveform_editor/configuration.py
+@@ -1,5 +1,6 @@
+ import io
+ import logging
++from pathlib import Path
+ 
+ import param
+ from ruamel.yaml import YAML
+@@ -36,6 +37,9 @@ class WaveformConfiguration(param.Parameterized):
+         # Reads external data for import (``{ref: ...}``) waveforms. Rebuilt lazily;
+         # invalidated when globals (imports / dd_version) change.
+         self.import_resolver = None
++        # Directory of the file this configuration was loaded from, if any. Relative
++        # import URIs are resolved against it.
++        self.base_dir = None
+ 
+         # Trigger has_changed boolean when a global param is changed
+         for param_name in self.globals.param:
+@@ -62,7 +66,7 @@ class WaveformConfiguration(param.Parameterized):
+         """
+         if self.import_resolver is None or received_idss is not None:
+             self.import_resolver = ImportResolver(
+-                self.imports, self.globals.dd_version, received_idss
++                self.imports, self.globals.dd_version, received_idss, self.base_dir
+             )
+         return self.import_resolver
+ 
+@@ -89,6 +93,11 @@ class WaveformConfiguration(param.Parameterized):
+             yaml_str: The YAML string to load YAML for.
+         """
+         self.clear()
++        # Remember where the configuration came from, so imports naming a relative path
++        # can be resolved against it. load_yaml also accepts a plain YAML string, in
++        # which case there is no base directory and relative imports stay relative.
++        if isinstance(yaml_str, Path):
++            self.base_dir = yaml_str.parent.resolve()
+         try:
+             self.parser.load_yaml(yaml_str)
+             self._calculate_bounds()
+diff --git a/waveform_editor/import_resolver.py b/waveform_editor/import_resolver.py
+index b4a5ea1..15ab5b8 100644
+--- a/waveform_editor/import_resolver.py
++++ b/waveform_editor/import_resolver.py
+@@ -1,4 +1,5 @@
+ import logging
++import os
+ import re
+ from contextlib import contextmanager
+ 
+@@ -38,11 +39,15 @@ class ImportResolver:
+     (netCDF does not support get_slice directly).
+     """
+ 
+-    def __init__(self, imports, dd_version, received_idss=None):
++    def __init__(self, imports, dd_version, received_idss=None, base_dir=None):
+         self.imports = imports or {}
+         self.dd_version = dd_version
+         # {port_name: IDS} received over MUSCLE3 ports at run time.
+         self.received_idss = received_idss or {}
++        # Directory of the configuration file, when it was loaded from one. A relative
++        # ``path=`` in an import URI is resolved against it, so a configuration can name
++        # data sitting beside it without hardcoding an absolute path.
++        self.base_dir = base_dir
+         # full source IDSs, keyed by (source_key, ids_name)
+         self._full_cache = {}
+ 
+@@ -52,7 +57,26 @@ class ImportResolver:
+         """The import spec (URI string or ``{port: ...}``) for import name ``ref``."""
+         if ref not in self.imports:
+             raise KeyError(f"unknown import '{ref}'")
+-        return self.imports[ref]
++        return self._resolve_uri(self.imports[ref])
++
++    def _resolve_uri(self, source):
++        """Make a relative ``path=`` in an IMAS URI absolute, against ``base_dir``.
++
++        Lets a configuration refer to data next to it -- ``imas:hdf5?path=data/in`` --
++        instead of an absolute path that is only correct on one machine. Absolute paths,
++        port-imports and configurations not loaded from a file are returned unchanged.
++        """
++        if self.base_dir is None or not isinstance(source, str):
++            return source
++
++        def sub(match):
++            path = match.group(2)
++            if not path or os.path.isabs(path):
++                return match.group(0)
++            resolved = os.path.normpath(os.path.join(self.base_dir, path))
++            return f"{match.group(1)}{resolved}"
++
++        return re.sub(r"(\bpath=)([^&#\s]*)", sub, source)
+ 
+     @staticmethod
+     def _port_of(source):
