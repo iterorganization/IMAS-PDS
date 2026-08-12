@@ -17,7 +17,8 @@ source imas_base_env
 # loads at run time -- an unversioned `module load NICE` floats to whatever the EasyBuild
 # tree's default is, which can drift to a newer toolchain (e.g. intel-2025b) and produce a
 # binary whose deps don't match the older module loaded at run time, failing to exec (127).
-module load NICE/3.0.0-intel-2023b-DD-4.1.0
+NICE_MODULE="NICE/3.0.0-intel-2023b-DD-4.1.0"
+module load "$NICE_MODULE"
 
 if [[ ! -d "nice/.git" ]]; then
   git clone $NICE_URL nice
@@ -38,6 +39,22 @@ cd src
 cp -f Makefile.TEMPLATE Makefile
 NICE_MUSCLE3_TARGETS="nice_imas_inv_muscle3 nice_imas_dir_muscle3 nice_imas_evo_muscle3 nice_imas_evo_rd_muscle3"
 module load patchelf
+
+# Binaries are skipped if already built (below), to avoid recompiling the whole tree on every
+# CI/dev run -- but that cache is only valid if it was built against $NICE_MODULE. Record the
+# module a binary was linked against next to it, so a bump of $NICE_MODULE above (e.g. the
+# EasyBuild default drifting to a newer toolchain) invalidates stale binaries automatically
+# instead of silently exec'ing a binary linked against a different, now-mismatched module tree.
+BUILT_WITH_FILE="../run/.nice_built_with_module"
+# No marker file at all (e.g. binaries from before this check existed) counts as a mismatch too
+# -- provenance unknown, so don't trust the cache.
+if [[ "$(cat "$BUILT_WITH_FILE" 2>/dev/null || echo unknown)" != "$NICE_MODULE" ]]; then
+  echo "  Existing build (if any) wasn't confirmed built against $NICE_MODULE -- forcing a rebuild."
+  for target in $NICE_MUSCLE3_TARGETS; do
+    rm -f "../run/$target"
+  done
+fi
+
 for target in $NICE_MUSCLE3_TARGETS; do
   if [[ -f "../run/$target" ]]; then
     echo "  $target already built -- skipping (delete run/nice/run/$target to force a rebuild)."
@@ -51,6 +68,7 @@ for target in $NICE_MUSCLE3_TARGETS; do
   # that exec these binaries don't).
   patchelf --force-rpath --add-rpath "$MUSCLE3_HOME/lib" "../run/$target"
 done
+echo "$NICE_MODULE" > "$BUILT_WITH_FILE"
 
 module purge
 cd ../..
