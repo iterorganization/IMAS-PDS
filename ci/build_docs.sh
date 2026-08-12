@@ -16,6 +16,14 @@ module load $@
 echo "Done loading modules"
 set -x
 
+# The loaded module(s) only exist to provide a `python3` to bootstrap the venv below --
+# all doc-build deps (including imas-python/imas-core) come from `.[docs]` via uv. But the
+# module's PYTHONPATH (e.g. Python-bundle-PyPI's bundled `pbr`) leaks into uv's "isolated"
+# build subprocess, so setuptools' egg_info step discovers pbr's `egg_info.writers` entry
+# point from outside the venv and fails importing pbr.git's `pkg_resources` dependency,
+# which isn't installed in the isolated build env. Drop it now that python3 is resolved.
+unset PYTHONPATH
+
 source "$(dirname "${BASH_SOURCE[0]}")/../setup_files/ensure_uv.sh"
 
 # Set up the testing venv
