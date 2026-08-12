@@ -66,12 +66,12 @@ implementations:
   nice_inv:
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: NICE/3.0.0-intel-2023b-DD-4.1.0
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
   nice_dir:
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE
+    modules: NICE/3.0.0-intel-2023b-DD-4.1.0
     executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_dir_muscle3
 resources:
   source:
