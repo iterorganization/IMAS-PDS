@@ -13,7 +13,11 @@ if [[ ! -f "$MUSCLE3_ENV_FILE" ]]; then
 fi
 
 source imas_base_env
-module load NICE
+# Pinned to match the version the nice_inv actor script (workflows/lib/local_programs.ymmsl)
+# loads at run time -- an unversioned `module load NICE` floats to whatever the EasyBuild
+# tree's default is, which can drift to a newer toolchain (e.g. intel-2025b) and produce a
+# binary whose deps don't match the older module loaded at run time, failing to exec (127).
+module load NICE/3.0.0-intel-2023b-DD-4.1.0
 
 if [[ ! -d "nice/.git" ]]; then
   git clone $NICE_URL nice
