@@ -168,10 +168,10 @@ def main() -> None:
         }
     )
     while inst.reuse_instance():
-        max_iter = int(get_setting_optional(inst, "max_iterations", 4))
-        tol = float(get_setting_optional(inst, "tolerance", 1e3))
-        rel_tol = float(get_setting_optional(inst, "rel_tolerance", 0.03))
-        max_slices = int(get_setting_optional(inst, "max_slices", 0))
+        max_iter = int(get_setting_optional(inst, "max_iterations", 4) or 4)
+        tol = float(get_setting_optional(inst, "tolerance", 1e3) or 1e3)
+        rel_tol = float(get_setting_optional(inst, "rel_tolerance", 0.03) or 0.03)
+        max_slices = int(get_setting_optional(inst, "max_slices", 0) or 0)
         cold_start = bool(get_setting_optional(inst, "cold_start", False))
         t_min = get_setting_optional(inst, "t_min")
         t_max = get_setting_optional(inst, "t_max")

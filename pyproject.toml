@@ -134,12 +134,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# `validator` is injected into these rule files' namespace at load time by
-# imas_validator; it is never imported directly.
 "pds_validation_tests/**" = ["F821"]
-# Deliberately catch-all: dashboard render errors are shown as an error card
-# instead of crashing the whole panel app, and best-effort data loaders skip
-# whichever optional file/field is missing and report why.
 "visualization/*.py" = ["BLE001"]
 "workflows/utils/plot_rlte.py" = ["BLE001"]
 "workflows/torax_nice_utils/plot_validation.py" = ["BLE001"]
@@ -147,15 +142,10 @@ ignore = [
 [[tool.ty.overrides]]
 include = ["pds_validation_tests/**"]
 [tool.ty.overrides.rules]
-# `validator` is injected into these rule files' namespace at load time by
-# imas_validator; it is never imported directly.
 unresolved-reference = "ignore"
 
 [[tool.ty.overrides]]
 include = ["visualization/*.py"]
 [tool.ty.overrides.rules]
-# BasePlotter.active_state is typed `BaseState | None` by imas_muscle3, but its
-# __init__ requires a non-None BaseState and assigns it straight to active_state,
-# so it is never actually None once a plotter is constructed.
 unresolved-attribute = "ignore"
 

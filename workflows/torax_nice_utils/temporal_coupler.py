@@ -100,6 +100,9 @@ class DataCache:
         data. This also covers the corner case of both models hitting
         the exact same timepoint.
         """
+        # By the time get_data() is called, add_data() has always populated the
+        # cache (directly, or via Peer restoring it from checkpoint state).
+        assert self.t_cur is not None and self.t_next is not None
         if self.t_next <= t:
             return self.t_next, self.data_next
         else:
@@ -166,7 +169,11 @@ class Peer:
 
     def can_receive(self) -> bool:
         """Return whether we can receive a message from this peer."""
-        return self.next is not None and self.next <= self.to_send
+        return (
+            self.next is not None
+            and self.to_send is not None
+            and self.next <= self.to_send
+        )
 
     def receive(self) -> None:
         """Receive a message from this peer and update the cache."""
@@ -261,10 +268,13 @@ def main() -> None:
                 b.receive()
             elif a.can_send(b.rcvd, b.next):
                 print("send a", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                # can_send() returning True guarantees to_send is not None.
+                assert a.to_send is not None
                 t, data = b.cache.get_data(a.to_send)
                 a.send(t, data)
             elif b.can_send(a.rcvd, a.next):
                 print("send b", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                assert b.to_send is not None
                 t, data = a.cache.get_data(b.to_send)
                 b.send(t, data)
 
