@@ -22,7 +22,7 @@ bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" de
 bash ../setup_files/setup_torax.sh
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
-./IMAS-MUSCLE3/venv/bin/pip install "git+https://github.com/iterorganization/imas-validator.git@develop"
+uv pip install --python ./IMAS-MUSCLE3/venv/bin/python "git+https://github.com/iterorganization/imas-validator.git@develop"
 cd ..
 
 

@@ -19,13 +19,12 @@ set -x
 
 # Create a venv
 rm -rf venv
-python -m venv venv
+uv venv venv
 . venv/bin/activate
 
 # Install and run linters
-pip install --upgrade .[linting]
+uv pip install --upgrade .[linting]
 
-black --check pds
-flake8 pds
-mypy pds
-isort --check-only pds
+ruff format --check pds
+ruff check pds
+ty check pds

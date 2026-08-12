@@ -18,15 +18,14 @@ set -x
 
 # Set up the testing venv
 rm -rf venv  # Environment should be clean, but remove directory to be sure
-python -m venv venv
+uv venv venv
 source venv/bin/activate
 
 # Create sdist and wheel
-pip install --upgrade pip setuptools wheel
-pip install --upgrade .[docs]
+uv pip install --upgrade .[docs]
 
 # Debugging:
-pip freeze
+uv pip freeze
 
 # Enable sphinx options:
 # - `-W`: turn warnings into errors

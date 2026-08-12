@@ -1,6 +1,6 @@
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["setuptools>=61", "wheel", "packaging", "tomli;python_version<'3.11'", "versioneer[toml]"]
+requires = ["setuptools>=61", "wheel"]
 
 build-backend = "setuptools.build_meta"
 
@@ -14,13 +14,12 @@ authors = [
 ]
 description = "Pulse Design Simulator to simulate and prepare experiments"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = {file = "LICENSE.md"}
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Environment :: Plugins",
-    "Framework :: Flake8",
     "Framework :: Pytest",
     "Framework :: Sphinx",
 # Custom trove classifiers are not allowed, and newer versions of python setuptools will fail to build
@@ -46,7 +45,7 @@ classifiers = [
     "Topic :: System :: Software Distribution",
     "Topic :: Utilities",
 ]
-dynamic = ["version"]
+version = "0.1.0"
 dependencies = [
     "packaging",
     "imas-python",
@@ -71,10 +70,8 @@ test = [
     "pytest-randomly",
 ]
 linting = [
-    "black>=24,<25",
-    "flake8",
-    "mypy",
-    "isort",
+    "ruff",
+    "ty",
 ]
 
 [project.urls]
@@ -90,36 +87,14 @@ minversion = "6.0"
 addopts = "--strict-markers"
 testpaths = "tests"
 
-[tool.versioneer]
-VCS = "git"
-style = "pep440"
-versionfile_source = "pds/_version.py"
-versionfile_build = "pds/_version.py"
-tag_prefix = ""
-parentdir_prefix = ""
+[tool.ruff]
+line-length = 88
+extend-exclude = ["docs"]
 
-[tool.black]
-# Exclude versioneer-generated file
-force-exclude = "pds/_version.py"
-
-[tool.mypy]
-packages = "pds"
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_untyped_decorators = true
-
-[[tool.mypy.overrides]]
-module = [
-    "tests.*",
+[tool.ruff.lint]
+# Same rule selection flake8 used to run with, plus isort ("I") for import sorting.
+extend-select = ["I"]
+ignore = [
+    "E701",  # multiple statements on one line (colon) -- allow one-line class/def stubs
 ]
-ignore_errors = true
 
-[[tool.mypy.overrides]]
-module = [
-    "imas.*",
-    "numpy.*",
-]
-ignore_missing_imports = true
-
-[tool.isort]
-profile = "black"

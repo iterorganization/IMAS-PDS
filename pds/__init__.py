@@ -1,8 +1,7 @@
+from importlib.metadata import version as _get_version
 from pathlib import Path
 
-from . import _version
-
-__version__ = _version.get_versions()["version"]
+__version__ = _get_version("pds")
 
 version = __version__
 

@@ -15,17 +15,15 @@ cd TORAX-MUSCLE3
 git fetch --quiet origin
 git checkout $BRANCH_TORAX
 if [[ ! -d venv ]]; then
-  python -m venv ./venv
+  uv venv ./venv
 fi
 . venv/bin/activate
-pip install --upgrade pip setuptools
-pip install build
-pip install -e .
+uv pip install -e .
 # TORAX-MUSCLE3's pyproject.toml pins a stale muscle3==0.8.0; override so the
 # actor is compatible with the 0.10.0 manager (IMAS-MUSCLE3/Waveform-Editor
 # already resolve to 0.10.0 on their own).
-pip install "muscle3==0.10.0"
-echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
+uv pip install "muscle3==0.10.0"
+echo "  muscle3 version: $(uv pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..

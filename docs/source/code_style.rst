@@ -4,103 +4,71 @@ Code style and linting
 ======================
 
 
-Code style
-----------
+Code style, linting and import sorting
+----------------------------------------
 
-PDS follows `The Black Code Style
-<https://black.readthedocs.io/en/stable/the_black_code_style/index.html>`_. All Python
-files should be formatted with the ``black`` command line tool (this is checked in
+PDS uses `Ruff <https://docs.astral.sh/ruff/>`_ for formatting, linting and import
+sorting. Ruff's formatter is a drop-in, much faster replacement for Black, and its
+linter covers the rules previously provided by flake8 and isort. All Python files
+should be formatted and free of Ruff violations (this is checked in
 :ref:`CI <ci configuration>`).
 
+In some exceptions we can ignore a violation. For example, if a violation cannot be
+avoided, or fixing it would result in less readable code. This should be avoided as much
+as possible though; see the ``[tool.ruff.lint]`` section in ``pyproject.toml`` for the
+project's ignore list.
 
-Why Black?
-''''''''''
 
-We use the black autoformatter, so the code style is uniform across all Python files,
-regardless of the developer that created the code 🙂.
+Why Ruff?
+'''''''''
+
+Ruff gives us a single, fast tool that replaces Black (formatting), flake8 (linting) and
+isort (import sorting), so code style is uniform across all Python files regardless of
+the developer that created the code 🙂.
 
 This improves efficiency of developers working on the project:
 
 -   Uniform code style makes it easier to read, review and understand other's code.
 -   Autoformatting code means that developers can save time and mental energy for the
     important matters.
+-   One tool and one configuration section instead of three.
 
-More reasons for using black can be found on `their website
-<https://black.readthedocs.io/en/stable/index.html>`_.
-
-
-Using Black
-'''''''''''
-
-The easiest way to work with Black is by using an integration with your editor. See
-https://black.readthedocs.io/en/stable/integrations/editors.html.
-
-You can also ``pip install black`` and run it every time before committing (manually or
-with pre-commit hooks):
-
-.. code-block:: console
-
-    $ black pds
-    All done! ✨ 🍰 ✨
-    66 files left unchanged.
+More reasons for using Ruff can be found on `their website
+<https://docs.astral.sh/ruff/>`_.
 
 
-Linting
--------
+Using Ruff
+''''''''''
 
-PDS uses `flake8 <https://flake8.pycqa.org/en/latest/>`_ for linting (static code
-analysis). Flake8 should not report any violations when running it on the ``pds``
-code base. Again, this is checked in CI.
+The easiest way to work with Ruff is by using an integration with your editor. See
+https://docs.astral.sh/ruff/editors/.
 
-In some exceptions we can ignore a violation. For example, if a violation cannot be
-avoided, or fixing it would result in less readable code. This should be avoided as much
-as possible though.
-
-
-Why linting?
-''''''''''''
-
-Because it results in more readable code and can prevent some types of bugs!
-
-
-Using flake8
-''''''''''''
-
-Again, the easiest way to work with the ``flake8`` linter is by using an integration
-with your editor.
-
-You can also ``pip install flake8`` and run it every time before comitting to check if
-your code introduces any violations:
+You can also install it (e.g. ``uv pip install ruff``) and run it every time before
+committing (manually or with pre-commit hooks):
 
 .. code-block:: console
 
-    $ flake8 pds
+    $ ruff format pds
+    2 files reformatted, 64 files left unchanged
+    $ ruff check pds
+    All checks passed!
+
+``ruff check --fix pds`` will also sort imports and fix other auto-fixable violations.
 
 
 Type checking
 -------------
-PDS uses typing hinting which is checked at compile time using `mypy 
-<https://www.mypy-lang.org/>`_. This tool can spot typing bugs and makes
-for easier code maintenance and debugging.
+PDS uses type hinting which is checked using `ty <https://docs.astral.sh/ty/>`_, a
+fast type checker from the same team as Ruff and uv. This tool can spot typing bugs
+and makes for easier code maintenance and debugging.
 
-Using mypy
-''''''''''
-
-.. code-block:: console
-
-    $ mypy pds
-    Success: no issues found in 66 source files
-
-Import sorting
---------------
-PDS uses `isort <https://pycqa.github.io/isort/>`_ for automatic import sorting separated by type.
-
-Using isort
-'''''''''''
+Using ty
+''''''''
 
 .. code-block:: console
 
-    $ isort pds
+    $ ty check pds
+    All checks passed!
 
 Docstring style
 ---------------

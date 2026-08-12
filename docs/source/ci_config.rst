@@ -11,9 +11,9 @@ CI Plan
 
 The `PDS CI plan <https://ci.iter.org/browse/IC-PYM>`_ consists of 3 types of jobs:
 
-Linting 
-    Run ``black``, ``flake8``, ``mypy`` and ``isort`` on the PDS code base.
-    See :ref:`code style and linting`.
+Linting
+    Run ``ruff`` (format check, lint and import sorting) and ``ty`` on the PDS code
+    base. See :ref:`code style and linting`.
 
     The CI script executed in this job is ``ci/linting.sh``.
 

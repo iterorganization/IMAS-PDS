@@ -14,13 +14,11 @@ cd IMAS-MUSCLE3
 git fetch --quiet origin
 git checkout $BRANCH_IMAS_MUSCLE3
 if [[ ! -d venv ]]; then
-  python3 -m venv ./venv
+  uv venv ./venv
 fi
 . venv/bin/activate
-pip install --upgrade pip
-pip install --upgrade setuptools wheel
-pip install -e .
-echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
+uv pip install -e .
+echo "  muscle3 version: $(uv pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..
