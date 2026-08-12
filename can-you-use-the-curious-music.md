@@ -599,7 +599,15 @@ The 8 `postprocess_data.sh` are **only** plotting (`plot_validation*.py`) — th
    The `metis` program carries no `ports:`, for the same reason as `torax` and more so — `metis4muscle3(2)` appears with two disjoint port sets in this repo.
 7. **DONE.** `lib/evolutive_{direct,coupled,rd}.ymmsl` + the three variant workflows.
 
-   **Flatten-diff is zero for both runnable predecessors:** `torax_nice_controller` 12 components / 31 conduits and `torax_nice_rd_controller` 11 / 31, each matching its old template exactly. (`evolutive` has no runnable predecessor to diff against — it flattens to 9 components / 23 conduits.)
+   ***`evolutive` has been dropped.*** It is not a valid graph: `magnetic_controller.pf_active_out_i` is the only sender to `nice_evo.pf_active_s`, NICE receives on that port unconditionally, and the workflow pruned the controller — so the run aborts with *"Tried to receive on port pf_active_s which is disconnected, and no default value was given"*. Confirmed at runtime on SDCC.
+
+   The old definition had the identical hole (`evolutive.cosim.magnetic_controller: null` in its scenario template), which is why it was never runnable and why the plan could only list this as an untested risk. Removed: `workflows/evolutive/`, `lib/evolutive_direct.ymmsl`, `cases/105073_evolutive.ymmsl`. `git show` recovers them.
+
+   To bring it back, one of: keep the controller (making it `torax_nice_controller` minus the temporal coupler, and requiring PCS); give NICE a default for `pf_active_s`; or find a sender that makes physical sense for an uncontrolled run. The first is a one-line change to the workflow — it was written and then reverted, deliberately, because it makes the *distinguishing feature* of the variant the exchange mechanism rather than the absence of a controller, and that is a design decision rather than a fix.
+
+   **Flatten-diff is zero for both runnable predecessors:** `torax_nice_controller` 12 components / 31 conduits and `torax_nice_rd_controller` 11 / 31, each matching its old template exactly.
+
+   **Both remaining variants require PCS** (`$PDS_REPO/run/pcs`, `setup_files/setup_pcs.sh`); it is not provided by `module load PDS`.
 
    **Port names came from the two working controller templates, not from `lib/direct_cosim.ymmsl.template`.** That file declares the transport hole as `equilibrium_f_init` / `equilibrium_s` / `equilibrium_o_i`, but TORAX's actual ports are `equilibrium_in_f` / `equilibrium_in_s` / `equilibrium_out_i`. It was never runnable, so the mismatch had never surfaced. Same for its `magnetic_controller` ports. Delete it in step 9 rather than migrating it.
 
