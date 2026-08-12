@@ -111,8 +111,13 @@ def check_case(case: Path, errors: list) -> None:
         return
     root = roots[0]
 
+    # `selected_model` only exists on ymmsl >= 0.17; on 0.16 check_consistent takes the
+    # sole root model, which is what we have here anyway (asserted just above).
     try:
-        cfg.check_consistent(selected_model=root)
+        try:
+            cfg.check_consistent(selected_model=root)
+        except TypeError:
+            cfg.check_consistent()
     except RuntimeError as e:
         _fail(errors, f"{case.name}: check_consistent failed:\n    {e}")
         return

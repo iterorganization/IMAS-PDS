@@ -10,7 +10,8 @@ Usage:  python ci/gate_probe.py [ci/gate_probe.ymmsl]
 
 Needs no scenario data, no actors and no IMAS -- only ymmsl and muscle3.
 
-Measured on muscle3 0.10.0 + ymmsl 0.17.0 (2026-08-12):
+Measured on muscle3 0.10.0 with ymmsl 0.17.0 and again with ymmsl 0.16.1.dev0 --
+same answers on both:
 
     instance names          run.inner          (nesting path only, no model name)
     custom_implementations  probe.run.inner    (model name REQUIRED; bare form fails)
