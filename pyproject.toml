@@ -1,6 +1,6 @@
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=64", "wheel", "setuptools_scm>=8"]
 
 build-backend = "setuptools.build_meta"
 
@@ -45,7 +45,7 @@ classifiers = [
     "Topic :: System :: Software Distribution",
     "Topic :: Utilities",
 ]
-version = "0.1.0"
+dynamic = ["version"]
 dependencies = [
     "packaging",
     "imas-python",
@@ -81,6 +81,8 @@ repository = "https://github.com/iterorganization/IMAS-PDS"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pds*"]
+
+[tool.setuptools_scm]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
