@@ -5,9 +5,6 @@ MUSCLE3_DASHBOARD_URL=${1:-"https://github.com/multiscale/muscle3-dashboard.git"
 BRANCH_MUSCLE3_DASHBOARD=${2:-"main"}
 
 module purge
-# Pinned: unversioned `module load Python` resolves to whatever the agent's
-# default Python module is, which can be older than muscle3-dashboard's
-# `requires-python = ">=3.11"` floor (seen in CI: 3.10.20).
 module load Python/3.11.5-GCCcore-13.2.0
 
 if [[ ! -d "muscle3-dashboard/.git" ]]; then

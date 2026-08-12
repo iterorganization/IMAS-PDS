@@ -13,10 +13,6 @@ if [[ ! -f "$MUSCLE3_ENV_FILE" ]]; then
 fi
 
 source imas_base_env
-# Pinned to match the version the nice_inv actor script (workflows/lib/local_programs.ymmsl)
-# loads at run time -- an unversioned `module load NICE` floats to whatever the EasyBuild
-# tree's default is, which can drift to a newer toolchain (e.g. intel-2025b) and produce a
-# binary whose deps don't match the older module loaded at run time, failing to exec (127).
 NICE_MODULE="NICE/3.0.0-intel-2023b-DD-4.1.0"
 module load "$NICE_MODULE"
 
@@ -38,11 +34,6 @@ source "$MUSCLE3_ENV_FILE"
 cd src
 cp -f Makefile.TEMPLATE Makefile
 NICE_MUSCLE3_TARGETS="nice_imas_inv_muscle3 nice_imas_dir_muscle3 nice_imas_evo_muscle3 nice_imas_evo_rd_muscle3"
-# Pinned for the same reason as $NICE_MODULE above: an unversioned `module load patchelf`
-# floats to its default build (patchelf/0.18.0-GCCcore-14.3.0), whose dependency resolution
-# swaps the already-loaded GCCcore/13.2.0 out for GCCcore/14.3.0 -- putting a GCC 14 g++ ahead
-# of the intel-2023b toolchain's in PATH for the `make` calls below, and producing a binary
-# that needs libstdc++ symbols (e.g. CXXABI_1.3.15) newer than the run-time module provides.
 module load patchelf/0.18.0-GCCcore-13.2.0
 
 # Binaries are skipped if already built (below), to avoid recompiling the whole tree on every
