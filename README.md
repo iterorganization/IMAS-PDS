@@ -91,6 +91,9 @@ muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl ./cold-start.
 
 Each run directory gets `input/`, holding the yMMSL files exactly as you passed them, and
 `configuration.ymmsl`, the fully resolved configuration actually executed.
+Sink outputs land in each sink's own work directory —
+`<run_dir>/instances/<sink>/workdir/<name>` — because relative IMAS URIs resolve against
+the instance's working directory, not the run directory.
 
 | Case | Workflow | Scenario |
 |---|---|---|

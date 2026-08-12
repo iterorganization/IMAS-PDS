@@ -63,6 +63,10 @@ The last value given for a key wins:
 The run directory receives ``input/``, holding the yMMSL files exactly as passed, and
 ``configuration.ymmsl``, the fully resolved configuration that was executed.
 
+Sink outputs land in each sink's own work directory,
+``<run_dir>/instances/<sink>/workdir/<name>``: relative IMAS URIs resolve against the
+instance's working directory, not the run directory.
+
 Two unmerged upstream patches are required; ``setup_files/apply_patches.sh`` applies and
 verifies them.
 

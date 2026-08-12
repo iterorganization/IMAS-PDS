@@ -37,7 +37,9 @@ settings:
   run.transport.python_config_module: ${PDS_REPO}/workflows/evolutive/config_torax.py
   run.transport.output_all_timeslices: False
 
-  # Output. Relative, so results land in the run directory.
+  # Output. Relative URIs resolve against each instance's own work directory, so results
+  # land in <run_dir>/instances/<sink>/workdir/<name> -- contained per run, no absolute
+  # paths, but one level deeper than the run dir itself.
   run.sink_nice.sink_uri: "imas:hdf5?path=out_nice_evo"
   run.sink_nice.sink_mode: "w"
   run.sink_torax.sink_uri: "imas:hdf5?path=out_torax"

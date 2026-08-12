@@ -29,7 +29,9 @@ settings:
   # ever needs its own NICE settings.
   solve.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice.xml
 
-  # Output. Relative, so results land in the run directory.
+  # Output. Relative URIs resolve against each instance's own work directory, so results
+  # land in <run_dir>/instances/<sink>/workdir/<name> -- contained per run, no absolute
+  # paths, but one level deeper than the run dir itself.
   sink.sink_uri: "imas:hdf5?path=out_nice"
   sink.sink_mode: "w"
 
