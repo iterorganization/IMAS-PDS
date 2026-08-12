@@ -18,8 +18,12 @@ resources:
   run.magnetic_controller: {threads: 1}
 
 settings:
-  # Scenario: initial state is the earlier inverse-design result.
-  run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/from_inverse_convergence"
+  # Scenario: the forward start state. `source` emits six lanes -- equilibrium, pf_active,
+  # wall, pf_passive, iron_core, core_profiles -- and reads all of them from ONE entry, so
+  # it cannot point at the raw inverse-design output, which holds only the first two.
+  # data/forward_start is that output merged onto the DINA-prepared machine description
+  # and kinetic profiles.
+  run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/forward_start"
   run.source.iterative: false
   run.source.t_min: 75
   # Machine description for the transport sink: re-emitted out of the prepared DINA entry,
@@ -29,7 +33,7 @@ settings:
   # NICE-side visualization metadata: re-sliced from the same earlier NICE output that
   # seeds `source`. The old templates used a second copy of it purely so two readers could
   # open it at once; HDF5_USE_FILE_LOCKING=FALSE removes the need for the copy.
-  run.sink_source_nice.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/from_inverse_convergence"
+  run.sink_source_nice.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/forward_start"
 
   # Solvers.
   run.nice_evo_rd.xml_path: ${PDS_REPO}/workflows/torax_nice_rd_controller/config_nice.xml
