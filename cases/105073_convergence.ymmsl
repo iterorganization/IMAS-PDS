@@ -23,7 +23,7 @@ resources:
 settings:
   # Scenario: the pulse design and its input data.
   run.waveform_editor.waveforms: ${SCENARIOS_REPO}/105073/waveforms.yaml
-  run.we_final.waveforms: ${SCENARIOS_REPO}/105073/waveforms.yaml
+  run.we_final.waveforms: ${SCENARIOS_REPO}/105073/waveforms_md_only.yaml
   run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105073/data/in"
   run.source.iterative: False
 

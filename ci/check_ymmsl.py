@@ -171,11 +171,12 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
     """
     import yaml as _yaml
 
-    ports = {}
+    ports, in_ports = {}, {}
     for comp in flat_model.components.values():
         names = [str(p) for p in comp.ports.sending_port_names()]
         if names:
             ports[str(comp.name)] = names
+        in_ports[str(comp.name)] = {str(p) for p in comp.ports.receiving_port_names()}
 
     for key in (str(k) for k in cfg.settings):
         if not key.endswith(".waveforms"):
@@ -199,6 +200,24 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
                 _fail(errors, f"{case_name}: '{instance}' declares output port "
                               f"'{port}', but {path.name} produces no '{ids}' IDS "
                               f"(it produces {sorted(produced)})")
+
+        # And the reverse: every port-import the config reads from must be an input port
+        # on this instance. The exporter builds every IDS the config mentions, not just
+        # the ones whose output ports are connected, so an unreachable port-import fails
+        # the run with KeyError: no IDS received on import port '<name>'.
+        imports = (doc.get("globals") or {}).get("imports") or {}
+        needed = {
+            spec["port"]
+            for spec in imports.values()
+            if isinstance(spec, dict) and "port" in spec
+        }
+        missing_in = sorted(needed - in_ports.get(instance, set()))
+        if missing_in:
+            _fail(errors, f"{case_name}: {path.name} imports from port(s) "
+                          f"{missing_in}, but '{instance}' has no such input port "
+                          f"(it has {sorted(in_ports.get(instance, set()))}). The editor "
+                          f"resolves every import in the config, so this fails at run "
+                          f"time with \"no IDS received on import port\".")
 
 
 def check_lib_ports(errors: list) -> None:
