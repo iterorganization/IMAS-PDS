@@ -7,6 +7,8 @@ set -e -o pipefail
 
 set -x
 
+source "$(dirname "${BASH_SOURCE[0]}")/../setup_files/ensure_uv.sh"
+
 # SETUP
 source /etc/profile.d/modules.sh
 module purge
@@ -20,18 +22,6 @@ bash ../setup_files/setup_imas_muscle3.sh
 bash ../setup_files/setup_waveform_editor.sh "https://github.com/iterorganization/Waveform-Editor.git" feature/reference-tendency-old
 bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" develop
 bash ../setup_files/setup_torax.sh
-# uv isn't guaranteed to be present on the CI agent; bootstrap it via a disposable
-# venv if missing (not `pip install --user`: the agent's home directory may not be
-# writable, and the shared module Python's site-packages usually isn't either).
-if command -v uv >/dev/null 2>&1; then
-  UV="$(command -v uv)"
-else
-  rm -rf .uv-bootstrap
-  python3 -m venv .uv-bootstrap
-  .uv-bootstrap/bin/pip install --quiet uv
-  UV="$(.uv-bootstrap/bin/python -c 'import uv; print(uv.find_uv_bin())')"
-fi
-
 # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
 # (removed has_imas attribute); the olc actor needs the develop fix.
 "$UV" pip install --python ./IMAS-MUSCLE3/venv/bin/python "git+https://github.com/iterorganization/imas-validator.git@develop"
