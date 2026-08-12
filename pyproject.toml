@@ -123,6 +123,7 @@ select = [
     "RUF",
 ]
 ignore = [
-    "E701",  # multiple statements on one line (colon) -- allow one-line class/def stubs
+    "E701",
+    "E501",
 ]
 
