@@ -94,8 +94,34 @@ line-length = 88
 extend-exclude = ["docs"]
 
 [tool.ruff.lint]
-# Same rule selection flake8 used to run with, plus isort ("I") for import sorting.
-extend-select = ["I"]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # flake8-comprehensions
+    "C4",
+    # flake8-logging
+    "LOG",
+    # flake8-logging-format
+    "G",
+    # flake8-tidy-imports
+    "TID",
+    # flake8-use-pathlib
+    "PTH",
+    # Refurb
+    "FURB",
+    # Ruff specific rules
+    "RUF",
+]
 ignore = [
     "E701",  # multiple statements on one line (colon) -- allow one-line class/def stubs
 ]
