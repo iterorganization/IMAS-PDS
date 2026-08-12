@@ -1,0 +1,98 @@
+ymmsl_version: v0.2
+
+# Core model: METIS from DINA, with an optional NICE inverse branch.
+#
+# Consolidates the four metis_*_from_dina workflows. Their graphs are identical apart from
+# the NICE branch, so this is one model with that branch optional:
+#
+#   metis_from_dina              NICE branch pruned  (was metis_{interpretative,predictive}_from_dina)
+#   metis_nice_inverse_from_dina NICE branch present (was metis_*_nice_inverse_from_dina)
+#
+# The interpretative/predictive distinction is NOT a separate workflow. It is five
+# settings -- metis.metis_external_data_{electron_temperature,electron_density,
+# ion_temperature,charge_effective,ECRH}, all 1 for interpretative and 0 for predictive --
+# and settings live in cases, because an imported file's settings are discarded by the
+# resolver. Four old workflows therefore become two workflows and four cases.
+#
+# NOT FOLDED INTO lib/design.ymmsl, deliberately: the coupling order is reversed. Here
+# METIS runs first and NICE fits coils to its equilibrium; in `design` NICE runs first and
+# transport consumes its equilibrium. They converge to the same fixed point but a single
+# pass differs, so merging would not be equivalence-preserving.
+#
+# `nice` is a bare nice_inv, NOT the lib/nice_inverse submodel: inserting a load balancer
+# would turn METIS's one whole-trace call into per-slice scatter/gather, which is likewise
+# not equivalence-preserving.
+#
+# `source_nice` stays a `sink_source`, as in the old templates. Goal F would make it a
+# waveform editor so machine description has one mechanism everywhere, but that is unproven
+# at runtime -- the editor would have to reproduce sink_source's time-aligned re-slicing --
+# and METIS is parked, so this model is left exactly equivalent to what it replaces.
+
+imports:
+- from lib.programs import implementation source
+- from lib.programs import implementation sink
+- from lib.programs import implementation sink_source
+- from lib.programs import implementation nice_inv
+- from lib.programs import implementation metis
+
+models:
+  metis_dina:
+    description: METIS transport from DINA input, optionally followed by a NICE inverse solve.
+    components:
+      source_metis:
+        description: source -- pulse schedule, profiles and sources for METIS
+        implementation: source
+        ports: {o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]}
+
+      metis:
+        description: METIS transport (coupling mode 2)
+        implementation: metis
+        ports:
+          f_init: [pulse_schedule_f_init, pulse_schedule_in_f, core_profiles_in_f, core_sources_in_f]
+          o_f: [equilibrium_out_f, pulse_schedule_out_f, plasma_profiles_out_f, plasma_sources_out_f, summary_out_f]
+
+      sink_metis:
+        description: sink -- METIS outputs
+        implementation: sink
+        ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
+
+      source_nice:
+        description: machine description for NICE, re-sliced at METIS's timestamp
+        implementation: sink_source
+        optional: true
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [wall_out, pf_active_out, pf_passive_out, iron_core_out]
+
+      nice:
+        description: NICE inverse solve on METIS's equilibrium (bare, no load balancer)
+        implementation: nice_inv
+        optional: true
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+
+      sink_nice:
+        description: sink -- NICE inverse outputs
+        implementation: sink
+        optional: true
+        ports: {f_init: [equilibrium_in, pf_active_in]}
+
+    conduits:
+      source_metis.pulse_schedule_out: [metis.pulse_schedule_f_init, metis.pulse_schedule_in_f]
+      source_metis.core_profiles_out: metis.core_profiles_in_f
+      source_metis.core_sources_out: metis.core_sources_in_f
+
+      metis.equilibrium_out_f: [sink_metis.equilibrium_in, nice.equilibrium_in, source_nice.equilibrium_in]
+      metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
+      metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
+      metis.plasma_sources_out_f: sink_metis.plasma_sources_in
+      metis.summary_out_f: sink_metis.summary_in
+
+      source_nice.wall_out: nice.wall_in
+      source_nice.pf_active_out: nice.pf_active_in
+      source_nice.pf_passive_out: nice.pf_passive_in
+      source_nice.iron_core_out: nice.iron_core_in
+
+      nice.equilibrium_out: sink_nice.equilibrium_in
+      nice.pf_active_out: sink_nice.pf_active_in

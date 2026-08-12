@@ -1,0 +1,252 @@
+ymmsl_version: v0.2
+
+# Program (implementation) definitions for the PDS workflows.
+#
+# Import into a workflow or lib model with e.g.:
+#   imports:
+#   - from lib.programs import implementation torax
+# and run the manager with YMMSL_PATH pointing at the workflows/ directory, so that
+# `lib.programs` resolves to <workflows>/lib/programs.ymmsl.
+#
+# HDF5_USE_FILE_LOCKING=FALSE is set on every program that opens an IDS entry. The entries
+# live on a network filesystem, and several actors read the same entry concurrently -- the
+# `source` and the waveform editor both read the scenario's data/in. `env:` is fine for it
+# because the value is a literal and needs no shell expansion.
+#
+# $PDS_REPO must be exported. Only `modules`, `virtual_env`, `executable`, `args` and
+# `script` are shell-expanded (run_script.py writes them into a bash script); `env:` values
+# go through Popen(env=...) and are NOT expanded, which is why every program whose
+# environment references an install path uses a `script:` block instead of `env:`.
+#
+# Replaces lib/local_programs.ymmsl and lib/programs.ymmsl.template. Dropped from those:
+# `convergence_driver` and `dispatcher`, both unreferenced.
+#
+# ----- On `ports:` declarations ------------------------------------------------------
+# Declaring ports here lets _check_consistent_ports turn a wrong hole fill into a static
+# error. It is only safe for programs with ONE fixed signature. Deliberately NOT declared:
+#
+#   * the generic IMAS-MUSCLE3 actors -- they declare a port per IDS name and filter to
+#     the connected ones via get_port_list().
+#   * waveform_editor -- its ports follow the scenario's waveforms.yaml, so they differ
+#     per case (compare inverse_convergence's and prescribed_transport's declarations).
+#   * torax -- it has TWO incompatible signatures in this repo and takes no mode argument,
+#     so like the generic actors it adapts to what is connected:
+#         design co-sim (inverse_convergence):
+#           f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+#           o_f:    [equilibrium_out_f, core_profiles_out_f]
+#         time-stepping co-sim (torax_nice_{,rd_}controller):
+#           f_init: [equilibrium_in_f, core_profiles_in_f]
+#           s:      [equilibrium_in_s]
+#           o_i:    [equilibrium_out_i, core_profiles_out_i]
+#     Declaring either set would make the other a hard error. Confirm against
+#     torax_muscle3.torax_actor before adding a declaration or splitting the program.
+#
+# `supported_settings:` is also absent, deliberately. It does NOT catch a misspelled or
+# mis-prefixed setting name -- _check_supported_setting iterates the settings you declare
+# and type-checks any that are set, so an unknown key simply matches nothing and is
+# ignored. Misspelling is caught by ci/check_ymmsl.py cross-checking case keys against
+# flattened instance names instead.
+
+programs:
+
+  # ----- IMAS-MUSCLE3 python actors (all present on the `develop` branch that
+  # setup_files/setup_imas_muscle3.sh installs by default) -----------------------------
+  source:
+    description: IMAS source actor -- reads an IDS entry onto O_I/O_F ports
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.source_component
+
+  sink:
+    description: IMAS sink actor -- writes received IDSs to an entry
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.sink_component
+
+  sink_source:
+    description: IMAS sink_source actor -- time-aligned re-emitter
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.sink_source_component
+
+  recorder:
+    description: IMAS recorder actor -- distill-format run recording
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.recorder_component
+
+  validator:
+    description: IMAS open-loop-check actor -- rule validation
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.olc_component
+
+  accumulator:
+    description: IMAS accumulator actor -- gathers timeslices into a full trace
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.accumulator_component
+
+  visualization:
+    description: IMAS visualization actor -- live plotting
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.visualization_component
+
+  # ----- Waveform-Editor ---------------------------------------------------------------
+  waveform_editor:
+    description: Waveform-Editor actor -- owns the scenario's waveforms and data pointers
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/Waveform-Editor/venv
+    executable: waveform-editor
+    args: actor
+
+  # ----- NICE free-boundary equilibrium binaries ---------------------------------------
+  nice_inv:
+    description: NICE inverse solve -- fits coil currents to a target boundary
+    ports:
+      f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+      o_f: [equilibrium_out, pf_active_out]
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+
+  nice_evo:
+    description: NICE evolutive solve -- S/O_I time-stepping free-boundary equilibrium
+    ports:
+      f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init]
+      s: [equilibrium_s, pf_active_s]
+      o_i: [equilibrium_o_i, pf_active_o_i]
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0
+      exec $PDS_REPO/run/nice/run/nice_imas_evo_muscle3 "$@"
+
+  nice_evo_rd:
+    description: NICE evolutive solve, resistive-diffusion variant -- adds core_profiles
+    ports:
+      f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init, core_profiles_f_init]
+      s: [equilibrium_s, pf_active_s, core_profiles_s]
+      o_i: [equilibrium_o_i, pf_active_o_i]
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0
+      exec $PDS_REPO/run/nice/run/nice_imas_evo_rd_muscle3 "$@"
+
+  # ----- TORAX transport ----------------------------------------------------------------
+  torax:
+    description: TORAX transport actor -- fills the `transport` hole (no ports, see header)
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load Python 2>/dev/null)"
+      source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
+      export HDF5_USE_FILE_LOCKING=FALSE
+      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+      exec python -u -m torax_muscle3.torax_actor "$@"
+
+  # ----- METIS transport (MATLAB) -------------------------------------------------------
+  # No `ports:`, and for a well-established reason. metis4muscle3_port_list.m declares ONE
+  # fixed superset of ports -- clock/pulse_schedule/equilibrium/plasma_profiles/
+  # plasma_sources/core_profiles/core_sources on F_INIT, S, O_I and O_F -- with the comment
+  # "ports is only used if they are connected !". METIS adapts to what the workflow wires,
+  # exactly like the generic IMAS actors. There is no per-mode port set.
+  #
+  # metis4muscle3's first argument is `debug_level`, NOT a coupling mode:
+  #   0 = none, 1 = Matlab logfile, 2 = +debugger stop on error, 3 = +keyboard stop.
+  # The old templates pass 2, which is kept here for equivalence, but 0 is what the
+  # docstring says production should use ("later it will be set to 0 in production").
+  #
+  # Because the superset contains equilibrium_in_f, core_profiles_in_f, core_sources_in_f,
+  # equilibrium_out_f and core_profiles_out_f simultaneously, METIS satisfies the
+  # lib/design `transport` contract directly -- Goal E is
+  #     custom_implementations: {<workflow>.run.transport: metis}
+  # with no adapter, no rename and no union mode.
+  #
+  # The old templates set DIR_METIS4MUSCLE3 via `env:`, which MUSCLE3 passes through
+  # Popen(env=...) WITHOUT shell expansion -- so `$PDS_REPO` in it would arrive literally.
+  # Exported inside the script instead.
+  metis:
+    description: METIS transport actor, coupling mode 2 (from-DINA co-simulation)
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load IMAS-AL-Matlab 2>/dev/null)"
+      export DIR_METIS4MUSCLE3=$PDS_REPO/run/metis/workflow/muscle3/mfile
+      exec matlab -batch "[s,t] = unix('which python'); \
+                          pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
+                          addpath(getenv('DIR_METIS4MUSCLE3')); \
+                          metis4muscle3(2);"
+
+  # ----- PDS-owned actors (run in the IMAS-MUSCLE3 venv -- all import imas) -------------
+  loop:
+    description: outer convergence loop (SEL submodel)
+    ports:
+      f_init: [equilibrium_in_f, core_profiles_in_f]
+      o_i: [equilibrium_out_i, core_profiles_out_i]
+      s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s]
+      o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
+
+  load_balancer:
+    description: IMAS-aware NICE load balancer -- scatters slices over N workers
+    ports:
+      f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+      o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter]
+      s: [equilibrium_gather, pf_active_gather]
+      o_f: [equilibrium_out_f, pf_active_out_f]
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
+
+  temporal_coupler:
+    description: two-peer zero-order-hold coupler between transport and NICE
+    ports:
+      s: [a_in, b_in]
+      o_i: [a_out, b_out]
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/temporal_coupler.py
+
+  # ----- PCS magnetic controller (SCDDS / MATLAB) ---------------------------------------
+  # env: is not expanded, so the paths are exported inside the script instead.
+  magnetic_controller:
+    description: PCS magnetic controller -- closes the coil-current loop
+    ports:
+      f_init: [equilibrium_in_f, pf_active_in_f]
+      s: [equilibrium_in_s, pf_active_in_s]
+      o_i: [pf_active_out_i]
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0 2>/dev/null)"
+      export PCS_PATH=$PDS_REPO/run/pcs
+      export CONTROLLER_PATH=$PDS_REPO/controllers
+      export SCDDS_COREPATH=$PDS_REPO/run/pcs/pcssp/scdds
+      exec matlab -batch "[s,t] = unix('which python'); \
+                          pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
+                          addpath(getenv('PCS_PATH')); \
+                          run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m'); \
+                          pcssp_pcs_add_paths; \
+                          comparisons.ExternalSCMLink.setupGitConfig(); \
+                          addpath(getenv('CONTROLLER_PATH')); \
+                          muscle_controller_NICE_IMAS_iter_init;"

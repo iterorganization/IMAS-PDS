@@ -1,0 +1,146 @@
+ymmsl_version: v0.2
+
+# Core model: inverse pulse design with an optional transport co-simulation.
+#
+# The graph is the consolidated inverse_convergence coupling, with the hand-copied
+# load_balancer/nice_inv pairs replaced by the lib/nice_inverse submodel and the
+# sink_source machine-description injector replaced by a second waveform editor:
+#
+#   load_balancer + nice_inv              -> solve        (nice_inverse)
+#   load_balancer_final + nice_final      -> final_solve  (nice_inverse)
+#   md_final (sink_source)                -> we_final     (waveform_editor)
+#   torax                                 -> transport    (a hole)
+#
+# Variants are made by pruning, in the workflow that wraps this model:
+#
+#   inverse_convergence  everything present, transport: torax
+#   prescribed_transport transport / final_solve / we_final / validator / sink_torax /
+#                        rec_torax all null -- a single inverse pass. The loop actor
+#                        detects that its transport S ports are unconnected and stops
+#                        after one iteration (see lib/actors/outer_convergence_loop.py).
+#
+# Pruning is total: flatten() drops both the component and every conduit touching it.
+
+imports:
+- from lib.programs import implementation source
+- from lib.programs import implementation sink
+- from lib.programs import implementation recorder
+- from lib.programs import implementation validator
+- from lib.programs import implementation loop
+- from lib.programs import implementation waveform_editor
+- from lib.programs import implementation torax
+- from lib.nice_inverse import implementation nice_inverse
+
+models:
+  design:
+    description: Inverse pulse design, optionally converged against a transport model.
+    components:
+      source:
+        description: source -- seeds the equilibrium and core_profiles traces
+        implementation: source
+        ports: {o_i: [equilibrium_out, core_profiles_out]}
+
+      loop:
+        description: outer convergence loop (SEL submodel)
+        implementation: loop
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f]
+          o_i: [equilibrium_out_i, core_profiles_out_i]
+          s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s]
+          o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]
+
+      waveform_editor:
+        description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed)
+        implementation: waveform_editor
+        ports:
+          f_init: [equilibrium_in, core_profiles_in]
+          o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]
+
+      solve:
+        description: NICE inverse solve (lib/nice_inverse submodel)
+        implementation: nice_inverse
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+
+      transport:
+        description: transport model -- the Goal E hole; torax, or null for a single pass
+        implementation: torax
+        optional: true
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+          o_f: [equilibrium_out_f, core_profiles_out_f]
+
+      sink_nice:
+        description: sink -- NICE inverse outputs
+        implementation: sink
+        ports: {f_init: [equilibrium_in, pf_active_in]}
+
+      rec_nice:
+        description: distill recorder (NICE inverse outputs)
+        implementation: recorder
+        ports: {s: [equilibrium_in, pf_active_in]}
+
+      sink_torax:
+        description: sink -- converged pulse
+        implementation: sink
+        optional: true
+        ports: {f_init: [equilibrium_in, pf_active_in, core_profiles_in]}
+
+      rec_torax:
+        description: distill recorder (TORAX per-step outputs)
+        implementation: recorder
+        optional: true
+        ports: {s: [equilibrium_in, core_profiles_in]}
+
+      validator:
+        description: imas-validator on the converged coil currents
+        implementation: validator
+        optional: true
+        ports: {f_init: [pf_active_in]}
+
+      we_final:
+        description: waveform editor -- machine description for the final pass (replaces md_final)
+        implementation: waveform_editor
+        optional: true
+        ports:
+          f_init: [pf_active_in]
+          o_f: [wall_out, pf_passive_out, iron_core_out]
+
+      final_solve:
+        description: NICE inverse solve, linear-model output (lib/nice_inverse submodel)
+        implementation: nice_inverse
+        optional: true
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+
+    conduits:
+      source.equilibrium_out: loop.equilibrium_in_f
+      source.core_profiles_out: loop.core_profiles_in_f
+
+      loop.equilibrium_out_i: waveform_editor.equilibrium_in
+      loop.core_profiles_out_i: waveform_editor.core_profiles_in
+
+      waveform_editor.equilibrium_out: solve.equilibrium_in
+      waveform_editor.wall_out: solve.wall_in
+      waveform_editor.pf_passive_out: solve.pf_passive_in
+      waveform_editor.iron_core_out: solve.iron_core_in
+      waveform_editor.pf_active_out: solve.pf_active_in
+      waveform_editor.core_sources_out: transport.core_sources_in_f
+      waveform_editor.core_profiles_out: transport.core_profiles_in_f
+
+      solve.equilibrium_out: [transport.equilibrium_in_f, rec_nice.equilibrium_in, sink_nice.equilibrium_in]
+      solve.pf_active_out: [loop.pf_active_in_s, rec_nice.pf_active_in, sink_nice.pf_active_in]
+
+      transport.equilibrium_out_f: [loop.equilibrium_in_s, rec_torax.equilibrium_in]
+      transport.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
+
+      loop.equilibrium_out_f: sink_torax.equilibrium_in
+      loop.core_profiles_out_f: sink_torax.core_profiles_in
+      loop.pf_active_out_f: [sink_torax.pf_active_in, final_solve.pf_active_in, we_final.pf_active_in, validator.pf_active_in]
+      loop.equilibrium_target_out_f: final_solve.equilibrium_in
+
+      we_final.wall_out: final_solve.wall_in
+      we_final.pf_passive_out: final_solve.pf_passive_in
+      we_final.iron_core_out: final_solve.iron_core_in
