@@ -32,6 +32,12 @@ PATCHES="$PDS_REPO/ci/patches"
 M3_VENV="${M3_VENV:-${EBROOTIMASMUSCLE3:+$EBROOTIMASMUSCLE3/venv}}"
 M3_VENV="${M3_VENV:-$PWD/IMAS-MUSCLE3/venv}"
 WE_DIR="${WE_DIR:-${EBROOTWAVEFORMEDITOR:-$PWD/Waveform-Editor}}"
+# Two layouts in use. setup_files/setup_waveform_editor.sh clones the repo directly into
+# run/Waveform-Editor, so the prefix IS the checkout. custom_modules/build_*.sh instead
+# creates <prefix>/{src,venv} and does `pip install -e <prefix>/src`, so the checkout is
+# one level down -- and because that install is editable, patching src/ is what takes
+# effect.
+[[ -d "$WE_DIR/.git" ]] || [[ ! -d "$WE_DIR/src/.git" ]] || WE_DIR="$WE_DIR/src"
 
 # A shared module install belongs to whoever built it, so patching it in place is not
 # possible -- and silently skipping would leave a run that fails much later, for reasons
@@ -154,6 +160,22 @@ import muscle3.muscle_manager as m; raise SystemExit(0 if hasattr(m, 'save_input
     echo "  muscle3 copies input yMMSL into <run_dir>/input/: yes"
   else
     echo "  muscle3 does NOT copy input yMMSL into the run dir" >&2
+    exit 1
+  fi
+fi
+
+# Verify the Waveform-Editor patch in the interpreter that will actually import it, not
+# just in the checkout -- an editable install can point somewhere other than $WE_DIR.
+WE_PY="${WE_PY:-${EBROOTWAVEFORMEDITOR:+$EBROOTWAVEFORMEDITOR/venv/bin/python}}"
+if [[ -x "${WE_PY:-}" ]]; then
+  if "$WE_PY" -c "
+import inspect
+from waveform_editor.import_resolver import ImportResolver
+raise SystemExit(0 if 'base_dir' in inspect.signature(ImportResolver.__init__).parameters else 1)"; then
+    echo "  Waveform-Editor resolves relative import URIs: yes"
+  else
+    echo "  Waveform-Editor does NOT resolve relative import URIs" >&2
+    echo "    The venv is importing a different copy than $WE_DIR." >&2
     exit 1
   fi
 fi
