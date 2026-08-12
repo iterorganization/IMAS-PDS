@@ -28,8 +28,10 @@ settings:
   run.source.iterative: False
 
   # Convergence. t_min/t_max trim the pulse to the interval this shot is designed over.
+  # 5 iterations: this shot does not converge within the old default of 2 (it stops at
+  # max|dI| ~ 15 kA against a 1 kA tolerance).
   run.loop.cold_start: False
-  run.loop.max_iterations: 2
+  run.loop.max_iterations: 5
   run.loop.max_slices: 0
   run.loop.t_min: 10
   run.loop.t_max: 205
