@@ -38,14 +38,18 @@ STATIC = {"wall", "pf_passive", "iron_core"}  # forwarded whole to each call, no
 
 def _split(trace, name, times):
     with DBEntry("imas:memory?path=/", "w") as db:
-        ids = IDSFactory().new(name); ids.deserialize(trace); db.put(ids)
+        ids = IDSFactory().new(name)
+        ids.deserialize(trace)
+        db.put(ids)
         return [db.get_slice(name, t, CLOSEST_INTERP).serialize() for t in times]
 
 
 def _assemble(slices, name):
     with DBEntry("imas:memory?path=/", "w") as db:
         for s in slices:
-            ids = IDSFactory().new(name); ids.deserialize(s); db.put_slice(ids)
+            ids = IDSFactory().new(name)
+            ids.deserialize(s)
+            db.put_slice(ids)
         return db.get(name).serialize()
 
 
@@ -53,7 +57,8 @@ def _anchor_psi(ser):
     """Shift one equilibrium slice's profiles_1d.psi so psi[-1] == the designed
     psi_boundary (see module docstring). Returns (slice, shift) -- shift is None
     when the slice carries no anchor or no psi profile."""
-    eq = IDSFactory().new("equilibrium"); eq.deserialize(ser)
+    eq = IDSFactory().new("equilibrium")
+    eq.deserialize(ser)
     ts = eq.time_slice[0]
     if not ts.global_quantities.psi_boundary.has_value or not len(ts.profiles_1d.psi):
         return ser, None
@@ -65,45 +70,63 @@ def _anchor_psi(ser):
 
 
 def main() -> None:
-    inst = Instance({
-        Operator.F_INIT: [f"{l}_in" for l in FWD_LANES],
-        Operator.O_I: [f"{l}_scatter[]" for l in FWD_LANES],
-        Operator.S: [f"{l}_gather[]" for l in RES_LANES],
-        Operator.O_F: [f"{l}_out_f" for l in RES_LANES],
-    })
+    inst = Instance(
+        {
+            Operator.F_INIT: [f"{lane}_in" for lane in FWD_LANES],
+            Operator.O_I: [f"{lane}_scatter[]" for lane in FWD_LANES],
+            Operator.S: [f"{lane}_gather[]" for lane in RES_LANES],
+            Operator.O_F: [f"{lane}_out_f" for lane in RES_LANES],
+        }
+    )
     while inst.reuse_instance():
-        traces = {l: inst.receive(f"{l}_in").data for l in FWD_LANES}
+        traces = {lane: inst.receive(f"{lane}_in").data for lane in FWD_LANES}
         with DBEntry("imas:memory?path=/", "w") as db:
-            eq = IDSFactory().new("equilibrium"); eq.deserialize(traces["equilibrium"])
+            eq = IDSFactory().new("equilibrium")
+            eq.deserialize(traces["equilibrium"])
             db.put(eq)
             times = [float(t) for t in db.get("equilibrium").time]
         n = len(times)
-        per = {l: _split(traces[l], l, times) for l in FWD_LANES if l not in STATIC}
+        per = {
+            lane: _split(traces[lane], lane, times)
+            for lane in FWD_LANES
+            if lane not in STATIC
+        }
         anchored = [_anchor_psi(s) for s in per["equilibrium"]]
         per["equilibrium"] = [s for s, _ in anchored]
         shifts = [sh for _, sh in anchored if sh is not None]
         w = inst.get_port_length(f"{FWD_LANES[0]}_scatter")
-        logger.info("nice_load_balancer: %d slices over %d workers; psi re-gauged on %d/%d slices"
-                    " (max |shift| %.3g Wb)", n, w, len(shifts), n,
-                    max((abs(s) for s in shifts), default=0.0))
+        logger.info(
+            "nice_load_balancer: %d slices over %d workers; psi re-gauged on %d/%d slices"
+            " (max |shift| %.3g Wb)",
+            n,
+            w,
+            len(shifts),
+            n,
+            max((abs(s) for s in shifts), default=0.0),
+        )
 
-        res = {l: [None] * n for l in RES_LANES}
+        res = {lane: [None] * n for lane in RES_LANES}
         started = done = 0
         while done < n:
             while started - done < w and started < n:
                 slot, t = started % w, times[started]
-                for l in FWD_LANES:
-                    data = traces[l] if l in STATIC else per[l][started]
-                    inst.send(f"{l}_scatter", Message(t, data=data), slot)
+                for lane in FWD_LANES:
+                    data = traces[lane] if lane in STATIC else per[lane][started]
+                    inst.send(f"{lane}_scatter", Message(t, data=data), slot)
                 started += 1
-            for l in RES_LANES:
-                res[l][done] = inst.receive(f"{l}_gather", done % w).data
+            for lane in RES_LANES:
+                res[lane][done] = inst.receive(f"{lane}_gather", done % w).data
             done += 1
 
-        for l in RES_LANES:
-            inst.send(f"{l}_out_f", Message(times[0], data=_assemble(res[l], l)))
+        for lane in RES_LANES:
+            inst.send(
+                f"{lane}_out_f", Message(times[0], data=_assemble(res[lane], lane))
+            )
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
     main()

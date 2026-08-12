@@ -20,17 +20,19 @@ no `pf_active` in the F_INIT/O_I lanes below), so it is also produced by `wavefo
 load_balancer -- only the *result* NICE returns for pf_active still
 flows through the loop (S, then O_F), since that is what the convergence check watches.
 """
+
 import logging
+
 import numpy as np
 from imas import DBEntry, IDSFactory
 from imas.ids_defs import CLOSEST_INTERP
+from imas_muscle3.utils import get_setting_optional
 from libmuscle import Instance, Message
 from ymmsl import Operator
-from imas_muscle3.utils import get_setting_optional
 
 logger = logging.getLogger()
-IDS_LIST = ['equilibrium', 'core_profiles']
-S_LIST = ['equilibrium', 'core_profiles', 'pf_active']
+IDS_LIST = ["equilibrium", "core_profiles"]
+S_LIST = ["equilibrium", "core_profiles", "pf_active"]
 
 
 def _split(trace, name, times):
@@ -38,7 +40,9 @@ def _split(trace, name, times):
     # duplicate timestamps when a downstream solver (e.g. TORAX) produces fewer output
     # slices than the input and the last slice is reused for many requested times.
     with DBEntry("imas:memory?path=/", "w") as db:
-        ids = IDSFactory().new(name); ids.deserialize(trace); db.put(ids)
+        ids = IDSFactory().new(name)
+        ids.deserialize(trace)
+        db.put(ids)
         slices, seen = [], set()
         for t in times:
             s = db.get_slice(name, t, CLOSEST_INTERP)
@@ -53,7 +57,9 @@ def _split(trace, name, times):
 def _assemble(slices, name):
     with DBEntry("imas:memory?path=/", "w") as db:
         for s in slices:
-            ids = IDSFactory().new(name); ids.deserialize(s); db.put_slice(ids)
+            ids = IDSFactory().new(name)
+            ids.deserialize(s)
+            db.put_slice(ids)
         return db.get(name).serialize()
 
 
@@ -62,8 +68,10 @@ def _hold_boundary(evolved_ser, ref_ser):
 
     Ip is no longer held here -- the waveform editor overlays it on the forward pass.
     """
-    ev = IDSFactory().new("equilibrium"); ev.deserialize(evolved_ser)
-    rf = IDSFactory().new("equilibrium"); rf.deserialize(ref_ser)
+    ev = IDSFactory().new("equilibrium")
+    ev.deserialize(evolved_ser)
+    rf = IDSFactory().new("equilibrium")
+    rf.deserialize(ref_ser)
     es, rs = ev.time_slice[0], rf.time_slice[0]
     es.boundary.outline.r = rs.boundary.outline.r
     es.boundary.outline.z = rs.boundary.outline.z
@@ -88,14 +96,18 @@ def _cold_equilibrium(ser):
     amplitude pair to match Ip (algoWithIp), so only the shapes and the p'/ff'
     ratio (~beta_p 0.05 here) matter.
     """
-    eq = IDSFactory().new("equilibrium"); eq.deserialize(ser)
+    eq = IDSFactory().new("equilibrium")
+    eq.deserialize(ser)
     ts = eq.time_slice[0]
     p1 = ts.profiles_1d
     ip = abs(float(ts.global_quantities.ip))
     s_psi = 1.0 if p1.psi[-1] >= p1.psi[0] else -1.0
     s_ffp = -1.0 if np.mean(p1.f_df_dpsi) < 0 else 1.0
-    psib = float(ts.global_quantities.psi_boundary) \
-        if ts.global_quantities.psi_boundary.has_value else float(p1.psi[-1])
+    psib = (
+        float(ts.global_quantities.psi_boundary)
+        if ts.global_quantities.psi_boundary.has_value
+        else float(p1.psi[-1])
+    )
     dpsi = 0.5 * MU0 * R0 * ip
     # Keep the original grid size: the slice's other profiles_1d arrays (psi_norm,
     # pressure, q, ...) are coordinated on psi, so resizing psi would invalidate them.
@@ -119,7 +131,8 @@ def _cold_core_profiles(ser):
     (like Ip or the heating), not an evolved initial state, so removing it would
     change the physics target rather than the start.
     """
-    cp = IDSFactory().new("core_profiles"); cp.deserialize(ser)
+    cp = IDSFactory().new("core_profiles")
+    cp.deserialize(ser)
     p1 = cp.profiles_1d[0]
     ip = abs(float(cp.global_quantities.ip[0]))
     rho = np.asarray(p1.grid.rho_tor_norm)
@@ -135,18 +148,25 @@ def _cold_core_profiles(ser):
 
 
 def _coils(pf_trace):
-    pf = IDSFactory().new("pf_active"); pf.deserialize(pf_trace)
+    pf = IDSFactory().new("pf_active")
+    pf.deserialize(pf_trace)
     return np.array([[c.current.data[i] for c in pf.coil] for i in range(len(pf.time))])
 
 
 def main() -> None:
-    inst = Instance({
-        Operator.F_INIT: [f"{l}_in_f" for l in IDS_LIST],
-        Operator.O_I: [f"{l}_out_i" for l in IDS_LIST],
-        Operator.S: [f"{l}_in_s" for l in S_LIST],
-        Operator.O_F: ["equilibrium_out_f", "pf_active_out_f", "core_profiles_out_f",
-                       "equilibrium_target_out_f"],
-    })
+    inst = Instance(
+        {
+            Operator.F_INIT: [f"{lane}_in_f" for lane in IDS_LIST],
+            Operator.O_I: [f"{lane}_out_i" for lane in IDS_LIST],
+            Operator.S: [f"{lane}_in_s" for lane in S_LIST],
+            Operator.O_F: [
+                "equilibrium_out_f",
+                "pf_active_out_f",
+                "core_profiles_out_f",
+                "equilibrium_target_out_f",
+            ],
+        }
+    )
     while inst.reuse_instance():
         max_iter = int(get_setting_optional(inst, "max_iterations", 4))
         tol = float(get_setting_optional(inst, "tolerance", 1e3))
@@ -156,8 +176,9 @@ def main() -> None:
         t_min = get_setting_optional(inst, "t_min")
         t_max = get_setting_optional(inst, "t_max")
 
-        init = {l: inst.receive(f"{l}_in_f").data for l in IDS_LIST}
-        eq_ids = IDSFactory().new("equilibrium"); eq_ids.deserialize(init["equilibrium"])
+        init = {lane: inst.receive(f"{lane}_in_f").data for lane in IDS_LIST}
+        eq_ids = IDSFactory().new("equilibrium")
+        eq_ids.deserialize(init["equilibrium"])
         times = [float(t) for t in eq_ids.time]
         if t_min is not None:
             times = [t for t in times if t >= float(t_min)]
@@ -172,18 +193,26 @@ def main() -> None:
             # instead of the DINA profiles (see _cold_equilibrium/_cold_core_profiles).
             # `boundary` itself is replaced so the padding path can't reintroduce
             # DINA profiles either; _hold_boundary only ever reads its outline.
-            logger.info("cold_start: replacing the DINA initial state with generic profiles")
+            logger.info(
+                "cold_start: replacing the DINA initial state with generic profiles"
+            )
             boundary = [_cold_equilibrium(s) for s in boundary]
             cp_slices = [_cold_core_profiles(s) for s in cp_slices]
         cp = _assemble(cp_slices, "core_profiles")
         t0 = times[0]
         target = _assemble(boundary, "equilibrium")
-        prev = None; prev_dI = None; torax_eq = coilr = None
+        prev = None
+        prev_dI = None
+        torax_eq = coilr = None
 
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
-            inst.send("equilibrium_out_i", Message(t0, data=target))          # -> waveform_editor (+Ip) -> nice
-            inst.send("core_profiles_out_i", Message(t0, data=cp))       # -> waveform_editor -> torax
+            inst.send(
+                "equilibrium_out_i", Message(t0, data=target)
+            )  # -> waveform_editor (+Ip) -> nice
+            inst.send(
+                "core_profiles_out_i", Message(t0, data=cp)
+            )  # -> waveform_editor -> torax
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
             coilr = inst.receive("pf_active_in_s").data
@@ -192,14 +221,24 @@ def main() -> None:
 
             cur = _coils(coilr)
             dI = None if prev is None else float(np.max(np.abs(cur - prev)))
-            logger.info("iter %d: NICE+TORAX done (%d slices), max|dI|=%s", it, len(times), dI)
+            logger.info(
+                "iter %d: NICE+TORAX done (%d slices), max|dI|=%s", it, len(times), dI
+            )
             prev = cur
 
             ev = _split(torax_eq, "equilibrium", times)
             if len(ev) < len(boundary):
-                logger.info("iter %d: TORAX covered %d/%d slices; padding remaining from boundary", it, len(ev), len(boundary))
-                ev = ev + boundary[len(ev):]
-            target = _assemble([_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))], "equilibrium")
+                logger.info(
+                    "iter %d: TORAX covered %d/%d slices; padding remaining from boundary",
+                    it,
+                    len(ev),
+                    len(boundary),
+                )
+                ev = ev + boundary[len(ev) :]
+            target = _assemble(
+                [_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))],
+                "equilibrium",
+            )
             cp = _assemble(_split(torax_cp, "core_profiles", times), "core_profiles")
 
             stalled = False
@@ -207,15 +246,23 @@ def main() -> None:
                 rel_change = abs(dI - prev_dI) / prev_dI
                 stalled = rel_change < rel_tol
                 if stalled:
-                    logger.info("iter %d: relative change in max|dI| = %.4f < %.4f, stalled", it, rel_change, rel_tol)
+                    logger.info(
+                        "iter %d: relative change in max|dI| = %.4f < %.4f, stalled",
+                        it,
+                        rel_change,
+                        rel_tol,
+                    )
             prev_dI = dI
 
             if dI is not None and dI < tol:
-                logger.info("converged at iteration %d", it); break
+                logger.info("converged at iteration %d", it)
+                break
             if stalled:
-                logger.info("converged (stalled) at iteration %d", it); break
+                logger.info("converged (stalled) at iteration %d", it)
+                break
             if it == max_iter - 1:
-                logger.info("reached max_iterations=%d", max_iter); break
+                logger.info("reached max_iterations=%d", max_iter)
+                break
 
         inst.send("equilibrium_out_f", Message(t0, data=torax_eq))
         inst.send("pf_active_out_f", Message(t0, data=coilr))
@@ -225,5 +272,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
     main()

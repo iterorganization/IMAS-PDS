@@ -17,33 +17,22 @@ last, possibly leading to deadlocks. It is advised to use predictable or
 constant timestepping.
 """
 
-import logging
-from typing import Dict, List
+from __future__ import annotations
 
-from imas import DBEntry, IDSFactory
-from imas.ids_defs import IDS_TIME_MODE_INDEPENDENT
+import logging
+from typing import Any
+
 from libmuscle import Instance, InstanceFlags, Message
 from ymmsl import Operator
 
 logger = logging.getLogger()
 
 
-import logging
-from typing import Any, Optional, Tuple, Dict
-
-from libmuscle import Instance, InstanceFlags, Message
-from libmuscle.runner import run_simulation
-from ymmsl import (
-        Component, Conduit, Configuration, Model, Operator, Ports, Settings)
-
-
-def get_port_list(instance: Instance, operator: Operator) -> List[str]:
+def get_port_list(instance: Instance, operator: Operator) -> list[str]:
     """Filter list of ids_names by which ones are actually connected for
     given instance"""
     total_port_list = instance.list_ports().get(operator, [])
-    port_list = [
-        port for port in total_port_list if instance.is_connected(port)
-    ]
+    port_list = [port for port in total_port_list if instance.is_connected(port)]
     return port_list
 
 
@@ -54,15 +43,16 @@ class DataCache:
     received from a peer, and interpolates between them to produce data
     for intermediate time points.
     """
+
     def __init__(self) -> None:
         """Create a DataCache.
 
         The cache starts out empty.
         """
-        self.t_cur: Optional[float] = None
-        self.data_cur: Optional[Any] = None
-        self.t_next: Optional[float] = None
-        self.data_next: Optional[Any] = None
+        self.t_cur: float | None = None
+        self.data_cur: Any | None = None
+        self.t_next: float | None = None
+        self.data_next: Any | None = None
 
     def add_data(self, t: float, data: Any) -> None:
         """Add new data to the cache.
@@ -86,7 +76,7 @@ class DataCache:
             self.t_next = t
             self.data_next = data
 
-    def get_data(self, t: float) -> Tuple[float, Any]:
+    def get_data(self, t: float) -> tuple[float, Any]:
         """Return a data value for a given time point.
 
         This function interpolates the stored data to produce an
@@ -132,9 +122,14 @@ class Peer:
     Finally, this class does the actual communication with the peer,
     via the instance object.
     """
+
     def __init__(
-            self, instance: Instance, in_port: str, out_port: str,
-            resume_from_state: Any = None) -> None:
+        self,
+        instance: Instance,
+        in_port: str,
+        out_port: str,
+        resume_from_state: Any = None,
+    ) -> None:
         """Create a Peer object.
 
         This also receives an initial message from the peer model, and
@@ -151,13 +146,13 @@ class Peer:
         self.cache = DataCache()
 
         if resume_from_state:
-            self.cache.t_cur = resume_from_state['cache.t_cur']
-            self.cache.data_cur = resume_from_state['cache.data_cur']
-            self.cache.t_next = resume_from_state['cache.t_next']
-            self.cache.data_next = resume_from_state['cache.data_next']
-            self.rcvd = resume_from_state['rcvd']
-            self.to_send = resume_from_state['to_send']
-            self.next = resume_from_state['next']
+            self.cache.t_cur = resume_from_state["cache.t_cur"]
+            self.cache.data_cur = resume_from_state["cache.data_cur"]
+            self.cache.t_next = resume_from_state["cache.t_next"]
+            self.cache.data_next = resume_from_state["cache.data_next"]
+            self.rcvd = resume_from_state["rcvd"]
+            self.to_send = resume_from_state["to_send"]
+            self.next = resume_from_state["next"]
         else:
             msg = self.instance.receive(self.in_port)
             self.cache.add_data(msg.timestamp, msg.data)
@@ -180,7 +175,7 @@ class Peer:
         self.rcvd = msg.timestamp
         self.next = msg.next_timestamp
 
-    def can_send(self, peer_rcvd: float, peer_next: Optional[float]) -> bool:
+    def can_send(self, peer_rcvd: float, peer_next: float | None) -> bool:
         """Return whether we can send to this peer.
 
         This determines whether our next interaction with the peer
@@ -214,16 +209,17 @@ class Peer:
         self.instance.send(self.out_port, Message(t, self.next, data))
         self.to_send = self.next
 
-    def get_state(self) -> Dict[str, Any]:
-        """Return the current state of this object as a MUSCLE-serializable dict
-        """
-        return {'cache.t_cur': self.cache.t_cur,
-                'cache.data_cur': self.cache.data_cur,
-                'cache.t_next': self.cache.t_next,
-                'cache.data_next': self.cache.data_next,
-                'rcvd': self.rcvd,
-                'to_send': self.to_send,
-                'next': self.next}
+    def get_state(self) -> dict[str, Any]:
+        """Return the current state of this object as a MUSCLE-serializable dict"""
+        return {
+            "cache.t_cur": self.cache.t_cur,
+            "cache.data_cur": self.cache.data_cur,
+            "cache.t_next": self.cache.t_next,
+            "cache.data_next": self.cache.data_next,
+            "rcvd": self.rcvd,
+            "to_send": self.to_send,
+            "next": self.next,
+        }
 
 
 def main() -> None:
@@ -237,10 +233,10 @@ def main() -> None:
     This function extends :func:`temporal_coupler` with checkpointing
     capabilities.
     """
-    instance = Instance({
-        Operator.O_I: ['a_out', 'b_out'],
-        Operator.S: ['a_in', 'b_in']},
-        InstanceFlags.USES_CHECKPOINT_API | InstanceFlags.SKIP_MMSF_SEQUENCE_CHECKS)
+    instance = Instance(
+        {Operator.O_I: ["a_out", "b_out"], Operator.S: ["a_in", "b_in"]},
+        InstanceFlags.USES_CHECKPOINT_API | InstanceFlags.SKIP_MMSF_SEQUENCE_CHECKS,
+    )
 
     while instance.reuse_instance():
         # if instance.resuming():
@@ -252,23 +248,23 @@ def main() -> None:
         #     # Receive initial messages and initialise state
         #     a = Peer(instance, 'a_in', 'a_out')
         #     b = Peer(instance, 'b_in', 'b_out')
-        a = Peer(instance, 'a_in', 'a_out')
-        b = Peer(instance, 'b_in', 'b_out')
+        a = Peer(instance, "a_in", "a_out")
+        b = Peer(instance, "b_in", "b_out")
 
         # Send and receive as needed
         while not a.done() or not b.done():
             if a.can_receive():
-                print('receive a', a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                print("receive a", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
                 a.receive()
             elif b.can_receive():
-                print('receive b', a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                print("receive b", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
                 b.receive()
             elif a.can_send(b.rcvd, b.next):
-                print('send a', a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                print("send a", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
                 t, data = b.cache.get_data(a.to_send)
                 a.send(t, data)
             elif b.can_send(a.rcvd, a.next):
-                print('send b', a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
+                print("send b", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
                 t, data = a.cache.get_data(b.to_send)
                 b.send(t, data)
 
@@ -280,6 +276,7 @@ def main() -> None:
         # t_cur = min(a.rcvd, b.rcvd)
         # if instance.should_save_final_snapshot():
         #     instance.save_final_snapshot(Message(t_cur))
+
 
 if __name__ == "__main__":
     logging.basicConfig(

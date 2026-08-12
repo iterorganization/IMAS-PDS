@@ -17,7 +17,6 @@ import numpy as np
 import panel as pn
 import param
 import xarray as xr
-
 from imas_muscle3.visualization.base_plotter import BasePlotter
 from imas_muscle3.visualization.base_state import BaseState
 
@@ -176,9 +175,7 @@ class State(BaseState):
         if current_data is None:
             self.data["equilibrium"] = new_data
         else:
-            self.data["equilibrium"] = self._concat_time(
-                current_data, new_data
-            )
+            self.data["equilibrium"] = self._concat_time(current_data, new_data)
 
 
 class Plotter(BasePlotter):
@@ -198,9 +195,7 @@ class Plotter(BasePlotter):
     )
     DESIRED_SHAPE_OPTS = hv.opts.Curve(color="blue")
 
-    levels = param.Integer(
-        default=20, bounds=(1, 100), doc="Number of contour levels"
-    )
+    levels = param.Integer(default=20, bounds=(1, 100), doc="Number of contour levels")
 
     def get_dashboard(self):
         # Create poloidal flux plot
@@ -247,7 +242,7 @@ class Plotter(BasePlotter):
         rectangles = []
         paths = []
         if pf_active is not None:
-            for idx, coil in enumerate(pf_active.coil):
+            for coil in pf_active.coil:
                 name = str(coil.name)
                 for element in coil.element:
                     rect = element.geometry.rectangle
@@ -265,21 +260,16 @@ class Plotter(BasePlotter):
                         phi = np.linspace(0, 2 * np.pi, 17)
                         paths.append(
                             (
-                                (
-                                    annulus.r
-                                    + annulus.radius_outer * np.cos(phi)
-                                ),
-                                (
-                                    annulus.z
-                                    + annulus.radius_outer * np.sin(phi)
-                                ),
+                                (annulus.r + annulus.radius_outer * np.cos(phi)),
+                                (annulus.z + annulus.radius_outer * np.sin(phi)),
                                 name,
                             )
                         )
                     else:
                         logger.warning(
-                            f"Coil {name} was skipped, as it does not have a "
-                            "filled 'rect' or 'outline' node"
+                            "Coil %s was skipped, as it does not have a "
+                            "filled 'rect' or 'outline' node",
+                            name,
                         )
                         continue
         rects = hv.Rectangles(rectangles, vdims=["name"]).opts(
@@ -345,9 +335,7 @@ class Plotter(BasePlotter):
         for i, level in enumerate(tricontour.levels):
             for seg in tricontour.allsegs[i]:
                 if len(seg) > 1:
-                    segments.append(
-                        {"x": seg[:, 0], "y": seg[:, 1], "psi": level}
-                    )
+                    segments.append({"x": seg[:, 0], "y": seg[:, 1], "psi": level})
         return segments
 
     @pn.depends("time")

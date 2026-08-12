@@ -3,11 +3,10 @@ Validate output of simulations in FBE + Transport coupling
 """
 
 import argparse
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from imas import DBEntry, IDSFactory
+from imas import DBEntry
 from imas.ids_defs import CLOSEST_INTERP
 
 PLOT_KWARGS = {"marker": "."}
@@ -89,16 +88,16 @@ def pf_active_plots_dina_nice(args, dbs):
                 axes[coil_dict[coil_name]].set_title(coil_name)
                 axes[coil_dict[coil_name]].set_ylabel("current")
                 axes[coil_dict[coil_name]].set_xlabel("time")
-            nbel = min(len(pfa.time),len(coil.current.data))
+            nbel = min(len(pfa.time), len(coil.current.data))
             axes[coil_dict[coil_name]].plot(
-                    pfa.time[:nbel], coil.current.data[:nbel], label=key, **PLOT_KWARGS
-                )
+                pfa.time[:nbel], coil.current.data[:nbel], label=key, **PLOT_KWARGS
+            )
             axes[coil_dict[coil_name]].legend()
-    for ax in axes[len(pfa.coil):]:
+    for ax in axes[len(pfa.coil) :]:
         fig.delaxes(ax)
 
     # save figure
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(coil_figure_path)
 
 
@@ -161,7 +160,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
     """Plot equilibrium IDS output"""
     # init data
     eq_dict = {}
-    equilibrium = list(dbs.values())[0].get("equilibrium", lazy=True)
+    equilibrium = next(iter(dbs.values())).get("equilibrium", lazy=True)
 
     # init figure
     nrows, ncols = (5, 2)
@@ -177,13 +176,12 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
         }
         for field in fields_0d:
             if field[-1] not in eq_dict:
-                eq_dict[field[-1]] = {key: [] for key in dbs.keys()}
+                eq_dict[field[-1]] = {key: [] for key in dbs}
             vals = {
-                key: nested_getattr(eqs[key].time_slice[0], field).value
-                for key in dbs.keys()
+                key: nested_getattr(eqs[key].time_slice[0], field).value for key in dbs
             }
 
-            for key in dbs.keys():
+            for key in dbs:
                 if key == "dina":
                     continue
                 if "boundary" in field and hasattr(
@@ -200,17 +198,17 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                     )
                     vals[key] = np.interp(0.99, nice_psi_norm, nice_arr)
 
-            for key in dbs.keys():
+            for key in dbs:
                 if abs(vals[key]) > 1e30:
                     vals[key] = None
                 eq_dict[field[-1]][key].append(vals[key])
 
     # plot 0d profiles over time
-    for i, (field_key, val) in enumerate(eq_dict.items()):
+    for i, field_key in enumerate(eq_dict):
         axes[i].set_title(field_key)
         axes[i].set_ylabel(field_key)
         axes[i].set_xlabel("time")
-        for key in dbs.keys():
+        for key in dbs:
             axes[i].plot(
                 equilibrium.time, eq_dict[field_key][key], label=key, **PLOT_KWARGS
             )
@@ -245,7 +243,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
     #   axes[idx + 1].plot(equilibrium.time, np.array(eq_dict['beta_tor']['nice']) / np.array(eq_dict['beta_tor']['dina']), color=colors[1])
 
     # save fig
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(output_path)
 
 

@@ -2,11 +2,11 @@
 Script to build valid inputs for the PDS couplings from DINA output data.
 """
 
-import logging
 import argparse
-from imas import DBEntry
+import logging
 from contextlib import ExitStack
 
+from imas import DBEntry
 from preprocess_dina import write_dina_data
 from preprocess_machine_description import write_machine_description_data
 

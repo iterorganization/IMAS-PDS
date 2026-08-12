@@ -12,6 +12,7 @@ from imas import IDSFactory, convert_ids
 
 DD_VERSION = "4.0.0"
 
+
 @contextmanager
 def quiet_expected_conversion_drops():
     """convert_ids() warns on every call about source fields that have no home in the
@@ -158,7 +159,9 @@ def preprocess_wall(db_out, db_md_wall):
     wallIn = db_md_wall.get("wall", autoconvert=False)
     wall = IDSFactory(version=DD_VERSION).wall()
     wall.ids_properties.homogeneous_time = 2  # static
-    wall.ids_properties.creation_date = datetime.datetime.now().strftime("%y-%m-%d")
+    wall.ids_properties.creation_date = datetime.datetime.now(
+        tz=datetime.timezone.utc
+    ).strftime("%y-%m-%d")
     wall.description_2d.resize(1)
     wall.description_2d[0].type.index = 2
 

@@ -6,18 +6,19 @@ and the pf_active coil-current trace) into valid PDS coupling input.
 import logging
 
 import numpy as np
-from scipy.integrate import cumulative_trapezoid as cumtrapz
-from scipy.interpolate import interp1d as interp1
 from imas import convert_ids
 from imas.ids_defs import CLOSEST_INTERP
 from packaging.version import Version
-
 from preprocess_machine_description import (
     _fix_pf_active_md_geometry,
     quiet_expected_conversion_drops,
 )
+from scipy.integrate import cumulative_trapezoid as cumtrapz
+from scipy.interpolate import interp1d as interp1
 
 DD_VERSION = "4.0.0"
+logger = logging.getLogger(__name__)
+
 
 def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
     """Write the data derived from the DINA source run: equilibrium, core_profiles and
@@ -29,9 +30,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
     """
     summary = db_sum.get("summary", autoconvert=False)
     time_array = summary.time
-    interesting_time_slices = find_interesting_time_slices(
-        summary, n_timeslices
-    )
+    interesting_time_slices = find_interesting_time_slices(summary, n_timeslices)
     skipped = []
     t_list = []
 
@@ -71,9 +70,7 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
         psi = eq.time_slice[0].profiles_1d.psi
         psi_a = psi[0]
         psi_b = eq.time_slice[0].boundary.psi
-        eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(
-            psi_b - psi_a
-        )
+        eq.time_slice[0].profiles_1d.psi_norm = abs(psi - psi_a) / abs(psi_b - psi_a)
         db_out.put_slice(eq)
 
         # time dependent standard
@@ -94,7 +91,9 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
 
     preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list)
 
-    logging.info(f"Following timeslices during preprocessing were not viable: {skipped}")
+    logger.info(
+        "Following timeslices during preprocessing were not viable: %s", skipped
+    )
     return t_list
 
 
@@ -144,7 +143,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
                         )
                     else:
                         slice.coil[i].resistance *= len(coil.element)
-                for j, element in enumerate(coil.element):
+                for j in range(len(coil.element)):
                     slice.coil[i].element[j].geometry.geometry_type = 2
 
         db_out.put_slice(slice)
@@ -191,6 +190,6 @@ def find_interesting_time_slices(sm, n_timeslices):
         kind="linear",
     )
     indice_selected = sorted(
-        list(set([int(idx) for idx in f_nearest(np.linspace(0, 1, n_timeslices))]))
+        {int(idx) for idx in f_nearest(np.linspace(0, 1, n_timeslices))}
     )
     return indice_selected

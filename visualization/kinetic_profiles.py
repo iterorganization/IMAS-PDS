@@ -13,7 +13,6 @@ import numpy as np
 import panel as pn
 import param
 import xarray as xr
-
 from imas_muscle3.visualization.base_plotter import BasePlotter
 from imas_muscle3.visualization.base_state import BaseState
 
@@ -49,8 +48,7 @@ class State(BaseState):
         parts = [
             ds
             for itime, p1d in enumerate(ids.profiles_1d)
-            if (ds := self._extract_core_profiles_slice(ids, itime, p1d))
-            is not None
+            if (ds := self._extract_core_profiles_slice(ids, itime, p1d)) is not None
         ]
         if not parts:
             return
@@ -58,9 +56,7 @@ class State(BaseState):
         if existing is not None:
             parts.insert(0, existing)
         self.data["core_profiles"] = (
-            parts[0]
-            if len(parts) == 1
-            else xr.concat(parts, dim="time", join="outer")
+            parts[0] if len(parts) == 1 else xr.concat(parts, dim="time", join="outer")
         )
 
     def _extract_core_profiles_slice(self, ids, itime, p1d):
@@ -73,11 +69,10 @@ class State(BaseState):
         n_rho = rho.size
 
         # --- 1D profiles ---
-        t_e = np.asarray(p1d.electrons.temperature / 1e3)   # [keV]
-        n_e = np.asarray(p1d.electrons.density)        # [m^-3]
+        t_e = np.asarray(p1d.electrons.temperature / 1e3)  # [keV]
+        n_e = np.asarray(p1d.electrons.density)  # [m^-3]
         t_e0 = t_e[0]
         n_e0 = n_e[0]
-
 
         # Ion profiles: average over ion species present (usually D, T, He...)
         t_i = np.asarray(p1d.t_i_average / 1e3)  # [keV]
@@ -88,10 +83,10 @@ class State(BaseState):
             if np.asarray(ion.density).size == n_rho
         ]
         # Mean ion temperature / density across species (simple average)
-        n_i = np.sum(n_i_list, axis=0) # [m^-3]
+        n_i = np.sum(n_i_list, axis=0)  # [m^-3]
         n_i0 = n_i[0]
 
-        ip = -1 * ids.global_quantities.ip[itime] / 1e6 # [MA]
+        ip = -1 * ids.global_quantities.ip[itime] / 1e6  # [MA]
 
         profiles = xr.Dataset(
             {
@@ -126,9 +121,7 @@ class State(BaseState):
         if existing is not None:
             parts.insert(0, existing)
         self.data["equilibrium"] = (
-            parts[0]
-            if len(parts) == 1
-            else xr.concat(parts, dim="time", join="outer")
+            parts[0] if len(parts) == 1 else xr.concat(parts, dim="time", join="outer")
         )
 
     def _extract_equilibrium_slice(self, ids, itime, ts):
@@ -144,9 +137,10 @@ class State(BaseState):
             coords={"time": [t]},
         )
 
+
 class Plotter(BasePlotter):
     """Dashboard with time-evolving 1D profile plots and source waveforms."""
- 
+
     def get_dashboard(self):
         # Overlay DynamicMaps directly (same pattern as nice_inv.py flux_map_elements).
         # Returning an Overlay from inside a DynamicMap callback breaks rendering.
@@ -154,111 +148,164 @@ class Plotter(BasePlotter):
             hv.DynamicMap(self.plot_T_e) * hv.DynamicMap(self.plot_T_i)
         ).opts(
             hv.opts.Overlay(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
-                title="Temperature profiles", show_legend=True, legend_position="top_right",
-                xlabel="rho_tor_norm", ylabel="Temperature [keV]", show_grid=True,
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
+                title="Temperature profiles",
+                show_legend=True,
+                legend_position="top_right",
+                xlabel="rho_tor_norm",
+                ylabel="Temperature [keV]",
+                show_grid=True,
             )
         )
-        density = (
-            hv.DynamicMap(self.plot_n_e) * hv.DynamicMap(self.plot_n_i)
-        ).opts(
+        density = (hv.DynamicMap(self.plot_n_e) * hv.DynamicMap(self.plot_n_i)).opts(
             hv.opts.Overlay(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
-                title="Density profiles", show_legend=True, legend_position="top_right",
-                xlabel="rho_tor_norm", ylabel="Density [m⁻³]", show_grid=True,
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
+                title="Density profiles",
+                show_legend=True,
+                legend_position="top_right",
+                xlabel="rho_tor_norm",
+                ylabel="Density [m⁻³]",
+                show_grid=True,
             )
         )
-        ip      = hv.DynamicMap(self.plot_ip_vs_time)
-        Te_0      = hv.DynamicMap(self.plot_Te0_vs_time)
-        Ti_0      = hv.DynamicMap(self.plot_Ti0_vs_time)
-        temperature_waveforms = ( Te_0 * Ti_0 ).opts(
+        ip = hv.DynamicMap(self.plot_ip_vs_time)
+        Te_0 = hv.DynamicMap(self.plot_Te0_vs_time)
+        Ti_0 = hv.DynamicMap(self.plot_Ti0_vs_time)
+        temperature_waveforms = (Te_0 * Ti_0).opts(
             hv.opts.Overlay(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
-                title="Temperature waveforms", show_legend=True, legend_position="top_right",
-                xlabel="Time [s]", ylabel="Temperature [keV]", show_grid=True,
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
+                title="Temperature waveforms",
+                show_legend=True,
+                legend_position="top_right",
+                xlabel="Time [s]",
+                ylabel="Temperature [keV]",
+                show_grid=True,
             )
         )
-        ne_0      = hv.DynamicMap(self.plot_ne0_vs_time)
-        ni_0      = hv.DynamicMap(self.plot_ni0_vs_time)
-        density_waveforms = ( ne_0 * ni_0 ).opts(
+        ne_0 = hv.DynamicMap(self.plot_ne0_vs_time)
+        ni_0 = hv.DynamicMap(self.plot_ni0_vs_time)
+        density_waveforms = (ne_0 * ni_0).opts(
             hv.opts.Overlay(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
-                title="Density waveforms", show_legend=True, legend_position="top_right",
-                xlabel="Time [s]", ylabel="Density [m⁻³]", show_grid=True,
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
+                title="Density waveforms",
+                show_legend=True,
+                legend_position="top_right",
+                xlabel="Time [s]",
+                ylabel="Density [m⁻³]",
+                show_grid=True,
             )
         )
         f_df_dpsi = hv.DynamicMap(self.plot_f_df_dpsi_profile)
         dpressure_dpsi = hv.DynamicMap(self.plot_dpressure_dpsi)
 
- 
         return pn.Row(
             pn.Column(temperature, density),
             pn.Column(ip, temperature_waveforms, density_waveforms),
-            pn.Column(
-                f_df_dpsi, dpressure_dpsi, ip),
+            pn.Column(f_df_dpsi, dpressure_dpsi, ip),
         )
- 
+
     # ------------------------------------------------------------------
     # 1D profile plots — one method per curve
     # ------------------------------------------------------------------
- 
+
     def _get_profile_snap(self):
         """Return (rho, selected_data) or (None, None) if no data yet."""
         state = self.active_state.data.get("core_profiles")
         if state is None:
             return None, None
         return state.sel(time=self.time, method="nearest"), state
- 
+
     @param.depends("time")
     def plot_T_e(self):
         """Plot T_e vs rho_tor_norm at the selected time."""
         snap, _ = self._get_profile_snap()
         if snap is None:
-            return hv.Curve([], kdims=["rho_tor_norm"], vdims=["T_e [keV]"], label = "T_e",).opts(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
+            return hv.Curve(
+                [],
+                kdims=["rho_tor_norm"],
+                vdims=["T_e [keV]"],
+                label="T_e",
+            ).opts(
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
                 title="Waiting for core_profiles data...",
             )
         return hv.Curve(
-            (snap.rho.values, snap.T_e.values), kdims=["rho_tor_norm"], vdims=["T_e [keV]"], label = "T_e",
+            (snap.rho.values, snap.T_e.values),
+            kdims=["rho_tor_norm"],
+            vdims=["T_e [keV]"],
+            label="T_e",
         ).opts(color="red", framewise=True)
- 
+
     @param.depends("time")
     def plot_T_i(self):
         """Plot T_i vs rho_tor_norm at the selected time."""
         snap, _ = self._get_profile_snap()
         if snap is None:
-            return hv.Curve([], kdims=["rho_tor_norm"], vdims=["T_i [keV]"], label = "T_i",).opts(framewise=True)
+            return hv.Curve(
+                [],
+                kdims=["rho_tor_norm"],
+                vdims=["T_i [keV]"],
+                label="T_i",
+            ).opts(framewise=True)
         return hv.Curve(
-            (snap.rho.values, snap.T_i.values), kdims=["rho_tor_norm"], vdims=["T_i [keV]"], label = "T_i",
+            (snap.rho.values, snap.T_i.values),
+            kdims=["rho_tor_norm"],
+            vdims=["T_i [keV]"],
+            label="T_i",
         ).opts(color="blue", framewise=True)
- 
+
     @param.depends("time")
     def plot_n_e(self):
         """Plot n_e vs rho_tor_norm at the selected time."""
         snap, _ = self._get_profile_snap()
         if snap is None:
-            return hv.Curve([], kdims=["rho_tor_norm"], vdims=["n_e [m⁻³]"], label = "n_e",).opts(
-                framewise=True, height=_PROFILE_HEIGHT, width=_PROFILE_WIDTH,
+            return hv.Curve(
+                [],
+                kdims=["rho_tor_norm"],
+                vdims=["n_e [m⁻³]"],
+                label="n_e",
+            ).opts(
+                framewise=True,
+                height=_PROFILE_HEIGHT,
+                width=_PROFILE_WIDTH,
                 title="Waiting for core_profiles data...",
             )
         return hv.Curve(
-            (snap.rho.values, snap.n_e.values), kdims=["rho_tor_norm"], vdims=["n_e [m⁻³]"], label = "n_e",
+            (snap.rho.values, snap.n_e.values),
+            kdims=["rho_tor_norm"],
+            vdims=["n_e [m⁻³]"],
+            label="n_e",
         ).opts(color="red", framewise=True)
- 
+
     @param.depends("time")
     def plot_n_i(self):
         """Plot n_i (sum over ions) vs rho_tor_norm at the selected time."""
         snap, _ = self._get_profile_snap()
         if snap is None:
-            return hv.Curve([], kdims=["rho_tor_norm"], vdims=["n_i [m⁻³]"]).opts(framewise=True)
+            return hv.Curve([], kdims=["rho_tor_norm"], vdims=["n_i [m⁻³]"]).opts(
+                framewise=True
+            )
         return hv.Curve(
-            (snap.rho.values, snap.n_i.values), kdims=["rho_tor_norm"], vdims=["n_i [m⁻³]"], label = "n_i",
+            (snap.rho.values, snap.n_i.values),
+            kdims=["rho_tor_norm"],
+            vdims=["n_i [m⁻³]"],
+            label="n_i",
         ).opts(color="blue", framewise=True)
- 
+
     # ------------------------------------------------------------------
     # Scalar / waveform plots (history up to slider time)
     # ------------------------------------------------------------------
- 
+
     @param.depends("time")
     def plot_ip_vs_time(self):
         """Plot plasma current Ip vs time."""
@@ -267,17 +314,21 @@ class Plotter(BasePlotter):
         if state is None:
             time, ip, title = [], [], "Waiting for data..."
         else:
-            mask  = state.time <= self.time
-            time  = state.time[mask]
-            ip    = state[var][mask]
+            mask = state.time <= self.time
+            time = state.time[mask]
+            ip = state[var][mask]
             title = "Plasma current over time"
- 
-        return hv.Curve((time, ip), "Time [s]", ylabel, label = "Ip").opts(
-            framewise=True, height=_SCALAR_HEIGHT, width=_SCALAR_WIDTH,
-            title=title, show_legend= True,
-            color="green", show_grid=True,
+
+        return hv.Curve((time, ip), "Time [s]", ylabel, label="Ip").opts(
+            framewise=True,
+            height=_SCALAR_HEIGHT,
+            width=_SCALAR_WIDTH,
+            title=title,
+            show_legend=True,
+            color="green",
+            show_grid=True,
         )
-    
+
     @param.depends("time")
     def plot_Te0_vs_time(self):
         """Plot Te(0) vs time."""
@@ -286,14 +337,20 @@ class Plotter(BasePlotter):
         if state is None:
             time, Te0 = [], []
         else:
-            mask  = state.time <= self.time
-            time  = state.time[mask]
-            Te0    = state[var][mask]
- 
-        return hv.Curve((time, Te0), kdims=["time"], vdims=["T_e0 [keV]"], label = "T_e(0)",).opts(
-            framewise=True, color="red",
+            mask = state.time <= self.time
+            time = state.time[mask]
+            Te0 = state[var][mask]
+
+        return hv.Curve(
+            (time, Te0),
+            kdims=["time"],
+            vdims=["T_e0 [keV]"],
+            label="T_e(0)",
+        ).opts(
+            framewise=True,
+            color="red",
         )
-    
+
     @param.depends("time")
     def plot_Ti0_vs_time(self):
         """Plot Ti(0) vs time."""
@@ -302,14 +359,20 @@ class Plotter(BasePlotter):
         if state is None:
             time, Ti0 = [], []
         else:
-            mask  = state.time <= self.time
-            time  = state.time[mask]
-            Ti0    = state[var][mask]
- 
-        return hv.Curve((time, Ti0), kdims=["time"], vdims=["T_i0 [keV]"], label = "T_i(0)",).opts(
-            framewise=True, color="blue",
+            mask = state.time <= self.time
+            time = state.time[mask]
+            Ti0 = state[var][mask]
+
+        return hv.Curve(
+            (time, Ti0),
+            kdims=["time"],
+            vdims=["T_i0 [keV]"],
+            label="T_i(0)",
+        ).opts(
+            framewise=True,
+            color="blue",
         )
-    
+
     @param.depends("time")
     def plot_ne0_vs_time(self):
         """Plot ne(0) vs time."""
@@ -318,14 +381,20 @@ class Plotter(BasePlotter):
         if state is None:
             time, ne0 = [], []
         else:
-            mask  = state.time <= self.time
-            time  = state.time[mask]
-            ne0    = state[var][mask]
- 
-        return hv.Curve((time, ne0), kdims=["time"], vdims=["n_e0 [keV]"], label = "n_e(0)",).opts(
-            framewise=True, color="red",
+            mask = state.time <= self.time
+            time = state.time[mask]
+            ne0 = state[var][mask]
+
+        return hv.Curve(
+            (time, ne0),
+            kdims=["time"],
+            vdims=["n_e0 [keV]"],
+            label="n_e(0)",
+        ).opts(
+            framewise=True,
+            color="red",
         )
-    
+
     @param.depends("time")
     def plot_ni0_vs_time(self):
         """Plot ni(0) vs time."""
@@ -334,14 +403,20 @@ class Plotter(BasePlotter):
         if state is None:
             time, ni0 = [], []
         else:
-            mask  = state.time <= self.time
-            time  = state.time[mask]
-            ni0    = state[var][mask]
- 
-        return hv.Curve((time, ni0), kdims=["time"], vdims=["n_i0 [keV]"], label = "n_i(0)",).opts(
-            framewise=True, color="blue",
+            mask = state.time <= self.time
+            time = state.time[mask]
+            ni0 = state[var][mask]
+
+        return hv.Curve(
+            (time, ni0),
+            kdims=["time"],
+            vdims=["n_i0 [keV]"],
+            label="n_i(0)",
+        ).opts(
+            framewise=True,
+            color="blue",
         )
-    
+
     @param.depends("time")
     def plot_f_df_dpsi_profile(self):
         xlabel = "Psi"
@@ -377,5 +452,3 @@ class Plotter(BasePlotter):
         return hv.Curve((psi, dpressure_dpsi), xlabel, ylabel).opts(
             framewise=True, height=200, width=600, title=title
         )
-
-    

@@ -17,18 +17,19 @@ from packaging.version import Version
 
 import pds
 
-
 print("python exec:", sys.executable)
 print("sys.path:", sys.path)
 
 # -- Project information -----------------------------------------------------
-# The documented project’s name
+# The documented project's name
 project = src_project = PROJECT = "pds"
 PACKAGE = "pds"
 src_group = GROUP = "IMEX"
 
 # A copyright statement in the style '2008, Author Name'.
-copyright = f"2020-{datetime.datetime.now().year}, ITER Organization"
+copyright = (
+    f"2020-{datetime.datetime.now(tz=datetime.timezone.utc).year}, ITER Organization"
+)
 # The author name(s) of the document
 author = "ITER Organization"
 src_host = "github.com"
@@ -175,8 +176,8 @@ html_theme_options = {
 
 # Shorten Table Of Contents in API documentation
 object_description_options = [
-    (".*", dict(include_fields_in_toc=False)),
-    (".*parameter", dict(include_in_toc=False)),
+    (".*", {"include_fields_in_toc": False}),
+    (".*parameter", {"include_in_toc": False}),
 ]
 
 # Add any paths that contain custom themes here, relative to this directory.

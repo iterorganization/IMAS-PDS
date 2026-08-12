@@ -25,8 +25,9 @@ rm -rf venv
 . venv/bin/activate
 
 # Install and run linters
-"$UV" pip install --upgrade .[linting]
+# docs/visualization needed too so ty can resolve every import across the repo
+"$UV" pip install --upgrade .[docs,linting,visualization]
 
-ruff format --check pds
-ruff check pds
-ty check pds
+ruff format --check .
+ruff check .
+ty check .

@@ -41,10 +41,10 @@ You can also install Ruff and run it manually before committing:
 
 .. code-block:: console
 
-    $ ruff format pds       # Format code
-    $ ruff check pds        # Lint code
+    $ ruff format .       # Format code
+    $ ruff check .        # Lint code
 
-``ruff check --fix pds`` will also sort imports and fix other auto-fixable violations.
+``ruff check --fix .`` will also sort imports and fix other auto-fixable violations.
 
 Type checking
 -------------
@@ -59,7 +59,7 @@ Using ty
 
 .. code-block:: console
 
-    $ ty check pds
+    $ ty check .
     All checks passed!
 
 Docstring style

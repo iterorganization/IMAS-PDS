@@ -14,6 +14,7 @@ Extra suffixes plot additional TORAX variants, e.g.:
 Writes <scenarios>/<shot>/tmp/pds_rlte_<shot>.png with two panels:
 left R/LTe(rho) at a few times, right R/LTe at rho=0.6 vs time.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -69,17 +70,29 @@ def main():
     for label, (t, rhos, rltes) in data.items():
         for k, tt in enumerate(plot_times):
             i = np.argmin(abs(t - tt))
-            ax1.plot(rhos[i], rltes[i], alpha=0.4 + 0.3 * k,
-                     color=f"C{list(data).index(label)}",
-                     label=f"{label} t={t[i]:.0f}s" if k == 2 else None)
-        ax2.plot(t, [np.interp(0.6, rhos[i], rltes[i]) for i in range(len(t))],
-                 label=label)
+            ax1.plot(
+                rhos[i],
+                rltes[i],
+                alpha=0.4 + 0.3 * k,
+                color=f"C{list(data).index(label)}",
+                label=f"{label} t={t[i]:.0f}s" if k == 2 else None,
+            )
+        ax2.plot(
+            t, [np.interp(0.6, rhos[i], rltes[i]) for i in range(len(t))], label=label
+        )
     ax1.axhline(16, color="k", ls=":", lw=1, label="QLKNN training max")
-    ax1.set(xlabel=r"$\rho_{tor,norm}$", ylabel=r"$R/L_{Te}$", ylim=(0, 40),
-            title=f"{shot}: profiles")
+    ax1.set(
+        xlabel=r"$\rho_{tor,norm}$",
+        ylabel=r"$R/L_{Te}$",
+        ylim=(0, 40),
+        title=f"{shot}: profiles",
+    )
     ax2.axhline(16, color="k", ls=":", lw=1)
-    ax2.set(xlabel="time [s]", ylabel=r"$R/L_{Te}$ at $\rho=0.6$",
-            title=f"{shot}: mid-radius evolution")
+    ax2.set(
+        xlabel="time [s]",
+        ylabel=r"$R/L_{Te}$ at $\rho=0.6$",
+        title=f"{shot}: mid-radius evolution",
+    )
     ax1.legend(fontsize=8)
     ax2.legend(fontsize=8)
     fig.tight_layout()

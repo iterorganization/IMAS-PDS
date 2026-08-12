@@ -44,17 +44,11 @@ def interpolate_current(B_value, setpoints):
 @validator("pf_active")
 def validate_force_limits_cs(ids):
     """Validate forces on central solenoid coils are within operational limits"""
-    alpha = -0.0019
-    beta = [0.0389, 0, 1161, 0, 1933, 0.2696, 0.3468, 0.4239]
-    gamma = 0.0739
     F0 = 16.82
     dF = -0.53
     mg = 1.18e6
     F_tp4K = 190e6
-    sum_radial = 0
     sum_vertical = 0
-    sum_vertical_beta = 0
-    sum_c = 0
     cs_force_dict = {
         "CS3U": None,
         "CS2U": None,
@@ -64,10 +58,10 @@ def validate_force_limits_cs(ids):
         "CS3L": None,
     }
     for coil in ids.coil:
-        for key in cs_force_dict.keys():
+        for key in cs_force_dict:
             if key in coil.name:
                 cs_force_dict[key] = coil.force_vertical.data.value
-    if all([val is not None for val in cs_force_dict.values()]):
+    if all(val is not None for val in cs_force_dict.values()):
         return
 
     F_z = [
@@ -81,7 +75,9 @@ def validate_force_limits_cs(ids):
     Ftp = F_tp4K
     F_gap = [-Ftp]
     for i in reversed(range(6)):
-        F_gap = [F_gap[0] + F_z[i] - mg] + F_gap
+        # ty can't see that the `not all(...)` guard above already ensures every
+        # cs_force_dict value -- and hence every F_z entry -- is not None.
+        F_gap = [F_gap[0] + F_z[i] - mg, *F_gap]  # ty: ignore[unsupported-operator]
 
     for F_gap_j in F_gap:
         assert F_gap_j < -26e6
@@ -93,39 +89,46 @@ def validate_force_limits_cs(ids):
 def validate_force_limits_pf(ids):
     """Validate forces in poloidal field coils are within operational limits"""
     for coil in ids.coil:
-        for key in pf_force_limits.keys():
-            if key in coil.name:
-                if coil.force_vertical.data.value:
-                    assert coil.force_vertical.data.value < pf_force_limits[key][0]
-                    assert coil.force_vertical.data.value > pf_force_limits[key][1]
+        for key in pf_force_limits:
+            if key in coil.name and coil.force_vertical.data.value:
+                assert coil.force_vertical.data.value < pf_force_limits[key][0]
+                assert coil.force_vertical.data.value > pf_force_limits[key][1]
 
 
 @validator("pf_active")
 def validate_current_limits_pf(pf_active):
     """Validate currents in poloidal field coils are within operational limits"""
     for coil in pf_active.coil:
-        for key in pf_current_limits.keys():
-            if key in coil.name:
-                if coil.current.data.value:
-                    assert len(coil.current.data.value) == len(coil.b_field_max_timed.data.value)
-                    I_limit = [interpolate_current(
-                        b_field, pf_current_limits[key]
-                    ) for b_field in coil.b_field_max_timed.data.value]
-                    assert all(coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit)))
+        for key, limits in pf_current_limits.items():
+            if key in coil.name and coil.current.data.value:
+                assert len(coil.current.data.value) == len(
+                    coil.b_field_max_timed.data.value
+                )
+                I_limit = [
+                    interpolate_current(b_field, limits)
+                    for b_field in coil.b_field_max_timed.data.value
+                ]
+                assert all(
+                    coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit))
+                )
 
 
 @validator("pf_active")
 def validate_current_limits_cs(pf_active):
     """Validate currents in central solenoid coils are within operational limits"""
     for coil in pf_active.coil:
-        for key in cs_current_limits.keys():
-            if key in coil.name:
-                if coil.current.data.value:
-                    assert len(coil.current.data.value) == len(coil.b_field_max_timed.data.value)
-                    I_limit = [interpolate_current(
-                        b_field, cs_current_limits[key]
-                    ) for b_field in coil.b_field_max_timed.data.value]
-                    assert all(coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit)))
+        for key, limits in cs_current_limits.items():
+            if key in coil.name and coil.current.data.value:
+                assert len(coil.current.data.value) == len(
+                    coil.b_field_max_timed.data.value
+                )
+                I_limit = [
+                    interpolate_current(b_field, limits)
+                    for b_field in coil.b_field_max_timed.data.value
+                ]
+                assert all(
+                    coil.current.data.value[i] < I_limit[i] for i in range(len(I_limit))
+                )
 
 
 @validator("pf_active")
@@ -139,13 +142,14 @@ def validate_imbalance_current_limits(ids):
         "PF5": None,
     }
     for coil in ids.coil:
-        for key in I_pf_dict.keys():
+        for key in I_pf_dict:
             if key in coil.name:
                 I_pf_dict[key] = coil.current.data.value
     for key, val in I_pf_dict.items():
         assert val is not None, f"{key} coil not found"
     assert (
-        abs(I_pf_dict["PF2"] + I_pf_dict["PF3"] - I_pf_dict["PF4"] - I_pf_dict["PF5"])
+        # ty can't see that the loop above already asserted every value is not None.
+        abs(I_pf_dict["PF2"] + I_pf_dict["PF3"] - I_pf_dict["PF4"] - I_pf_dict["PF5"])  # ty: ignore[unsupported-operator]
         <= 22500
     )
 

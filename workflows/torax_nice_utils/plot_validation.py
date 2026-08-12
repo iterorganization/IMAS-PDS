@@ -3,13 +3,12 @@ Validate output of simulations in FBE + Transport coupling
 """
 
 import argparse
-import os
 
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import numpy as np
-from imas import DBEntry, IDSFactory
+from imas import DBEntry
 from imas.ids_defs import CLOSEST_INTERP
+from matplotlib.lines import Line2D
 
 PLOT_KWARGS = {"marker": "."}
 GET_KWARGS = {"interpolation_method": CLOSEST_INTERP, "lazy": True}
@@ -49,7 +48,10 @@ def nested_getattr(obj, name_list):
 # Fields recomputed from each code's own profiles according to DD definition instead of
 # read from global_quantities since definitions differ per code
 RECOMPUTED_0D = {"beta_pol", "beta_tor"}
-_trapz = getattr(np, "trapezoid", None) or np.trapz
+# numpy>=2.0 renamed trapz to trapezoid; the getattr short-circuits before ever
+# touching np.trapz on those versions, so this is safe despite the stub not
+# declaring `trapz` for the numpy version actually installed here.
+_trapz = getattr(np, "trapezoid", None) or np.trapz  # ty: ignore[unresolved-attribute]
 
 
 def recomputed_beta(eq, which):
@@ -113,9 +115,7 @@ def pf_active_plots_dina_nice(args, dbs):
     # init data
     coil_figure_path = f"{args.output_dir}/pds_coils_{args.shot_nr}.png"
     coil_dict = {}
-    pfas = {
-        key: db.get("pf_active") for key, db in dbs.items() if key in active_keys
-    }
+    pfas = {key: db.get("pf_active") for key, db in dbs.items() if key in active_keys}
 
     # init figure
     nrows, ncols = (7, 2)
@@ -144,15 +144,13 @@ def pf_active_plots_dina_nice(args, dbs):
             time, current = full_time, np.asarray(coil.current.data)
             if mask is not None and len(mask) == len(time):
                 time, current = time[mask], current[mask]
-            axes[coil_dict[coil_name]].plot(
-                time, current, label=key, **PLOT_KWARGS
-            )
+            axes[coil_dict[coil_name]].plot(time, current, label=key, **PLOT_KWARGS)
             axes[coil_dict[coil_name]].legend()
     for ax in axes[len(pfa.coil) :]:
         fig.delaxes(ax)
 
     # save figure
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(coil_figure_path)
 
 
@@ -231,9 +229,7 @@ def core_profiles_plots_dina_torax(args, dbs):
     fields = [("electrons", "temperature"), ("t_i_average",)]
     labels = ["t_e", "t_i"]
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15, 10))
-    fig.suptitle(
-        f"{args.shot_nr}: {'-'.join(cps).upper()} core_profiles", fontsize=16
-    )
+    fig.suptitle(f"{args.shot_nr}: {'-'.join(cps).upper()} core_profiles", fontsize=16)
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     # profiles at t_list: first db as line, second as scatter (same convention
@@ -245,9 +241,7 @@ def core_profiles_plots_dina_torax(args, dbs):
         ax.set_xlabel("rho_tor_norm")
         for i_t, t in enumerate(args.t_list):
             for num, key in enumerate(cps):
-                cp = dbs[key].get_slice(
-                    "core_profiles", time_requested=t, **GET_KWARGS
-                )
+                cp = dbs[key].get_slice("core_profiles", time_requested=t, **GET_KWARGS)
                 p1 = cp.profiles_1d[0]
                 rho = np.asarray(p1.grid.rho_tor_norm)
                 val = np.asarray(nested_getattr(p1, field).value)
@@ -262,7 +256,14 @@ def core_profiles_plots_dina_torax(args, dbs):
         if len(keys) > 1:
             handles += [
                 Line2D([0], [0], color="k", label=f"{keys[0]} (line)"),
-                Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{keys[1]} (scatter)"),
+                Line2D(
+                    [0],
+                    [0],
+                    color="k",
+                    marker=".",
+                    linestyle="None",
+                    label=f"{keys[1]} (scatter)",
+                ),
             ]
         ax.legend(handles=handles)
 
@@ -275,9 +276,11 @@ def core_profiles_plots_dina_torax(args, dbs):
         for key, cp_full in cps.items():
             times, vals = [], []
             for t in np.asarray(cp_full.time):
-                p1 = dbs[key].get_slice(
-                    "core_profiles", time_requested=t, **GET_KWARGS
-                ).profiles_1d[0]
+                p1 = (
+                    dbs[key]
+                    .get_slice("core_profiles", time_requested=t, **GET_KWARGS)
+                    .profiles_1d[0]
+                )
                 val = np.asarray(nested_getattr(p1, field).value)
                 if len(val) == 0:
                     continue
@@ -286,7 +289,7 @@ def core_profiles_plots_dina_torax(args, dbs):
             ax.plot(times, vals, label=key, **PLOT_KWARGS)
         ax.legend()
 
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(figure_path)
 
 
@@ -322,9 +325,11 @@ def rlte_plots_dina_torax(args, dbs):
     eq_of = {"dina": "dina", "torax": "nice"}
 
     def geo_at(key, t):
-        ts = dbs[eq_of[key]].get_slice(
-            "equilibrium", time_requested=t, **GET_KWARGS
-        ).time_slice[0]
+        ts = (
+            dbs[eq_of[key]]
+            .get_slice("equilibrium", time_requested=t, **GET_KWARGS)
+            .time_slice[0]
+        )
         return ts.boundary.geometric_axis.r, ts.boundary.minor_radius
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 5))
@@ -340,9 +345,11 @@ def rlte_plots_dina_torax(args, dbs):
     ax.set_ylim(0, 40)
     for i_t, t in enumerate(args.t_list):
         for num, key in enumerate(cps):
-            p1 = dbs[key].get_slice(
-                "core_profiles", time_requested=t, **GET_KWARGS
-            ).profiles_1d[0]
+            p1 = (
+                dbs[key]
+                .get_slice("core_profiles", time_requested=t, **GET_KWARGS)
+                .profiles_1d[0]
+            )
             rho, rlte = _rlte_profile(p1, *geo_at(key, t))
             if rho is None:
                 continue
@@ -356,7 +363,14 @@ def rlte_plots_dina_torax(args, dbs):
     if len(keys) > 1:
         handles += [
             Line2D([0], [0], color="k", label=f"{keys[0]} (line)"),
-            Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{keys[1]} (scatter)"),
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                marker=".",
+                linestyle="None",
+                label=f"{keys[1]} (scatter)",
+            ),
         ]
     ax.legend(handles=handles)
 
@@ -368,9 +382,11 @@ def rlte_plots_dina_torax(args, dbs):
     for key, cp_full in cps.items():
         times, vals = [], []
         for t in np.asarray(cp_full.time):
-            p1 = dbs[key].get_slice(
-                "core_profiles", time_requested=t, **GET_KWARGS
-            ).profiles_1d[0]
+            p1 = (
+                dbs[key]
+                .get_slice("core_profiles", time_requested=t, **GET_KWARGS)
+                .profiles_1d[0]
+            )
             rho, rlte = _rlte_profile(p1, *geo_at(key, t))
             if rho is None:
                 continue
@@ -380,7 +396,7 @@ def rlte_plots_dina_torax(args, dbs):
     ax.axhline(16, color="k", ls=":", lw=1)
     ax.legend()
 
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(figure_path)
 
 
@@ -388,7 +404,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
     """Plot equilibrium IDS output"""
     # init data
     eq_dict = {}
-    equilibrium = list(dbs.values())[0].get("equilibrium", lazy=True)
+    equilibrium = next(iter(dbs.values())).get("equilibrium", lazy=True)
 
     # init figure
     nrows, ncols = (5, 2)
@@ -411,15 +427,15 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
         kept_times.append(t)
         for field in fields_0d:
             if field[-1] not in eq_dict:
-                eq_dict[field[-1]] = {key: [] for key in dbs.keys()}
+                eq_dict[field[-1]] = {key: [] for key in dbs}
             vals = {
                 key: recomputed_beta(eqs[key], field[-1])
                 if field[-1] in RECOMPUTED_0D
                 else nested_getattr(eqs[key].time_slice[0], field).value
-                for key in dbs.keys()
+                for key in dbs
             }
 
-            for key in dbs.keys():
+            for key in dbs:
                 if key == "dina":
                     continue
                 if "boundary" in field and hasattr(
@@ -436,21 +452,19 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                     )
                     vals[key] = np.interp(0.99, nice_psi_norm, nice_arr)
 
-            for key in dbs.keys():
+            for key in dbs:
                 eq_dict[field[-1]][key].append(vals[key])
 
     # plot 0d profiles over time
-    for i, (field_key, val) in enumerate(eq_dict.items()):
+    for i, field_key in enumerate(eq_dict):
         title = field_key
         if field_key in RECOMPUTED_0D:
             title += " (recomputed, DD def.)"
         axes[i].set_title(title)
         axes[i].set_ylabel(field_key)
         axes[i].set_xlabel("time")
-        for key in dbs.keys():
-            axes[i].plot(
-                kept_times, eq_dict[field_key][key], label=key, **PLOT_KWARGS
-            )
+        for key in dbs:
+            axes[i].plot(kept_times, eq_dict[field_key][key], label=key, **PLOT_KWARGS)
         axes[i].legend()
 
     # plot 1d profiles for given time values
@@ -471,17 +485,24 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                     axes[idx].plot(psi_norm, val, label=f"t={t}", color=colors[i_t])
                 else:
                     axes[idx].scatter(psi_norm, val, color=colors[i_t], marker=".")
-        handles, labels = axes[idx].get_legend_handles_labels()
+        handles, _labels = axes[idx].get_legend_handles_labels()
         db_keys = list(dbs.keys())
         if len(db_keys) > 1:
             handles += [
                 Line2D([0], [0], color="k", label=f"{db_keys[0]} (line)"),
-                Line2D([0], [0], color="k", marker=".", linestyle="None", label=f"{db_keys[1]} (scatter)"),
+                Line2D(
+                    [0],
+                    [0],
+                    color="k",
+                    marker=".",
+                    linestyle="None",
+                    label=f"{db_keys[1]} (scatter)",
+                ),
             ]
         axes[idx].legend(handles=handles)
 
     # save fig
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(output_path)
 
 
@@ -501,8 +522,12 @@ def shape_comparison_plot(args, dbs):
     axes = axes.flatten()
 
     for ax, t in zip(axes, args.t_list):
-        dina_ts = dina.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
-        torax_ts = torax.get_slice("equilibrium", time_requested=t, **GET_KWARGS).time_slice[0]
+        dina_ts = dina.get_slice(
+            "equilibrium", time_requested=t, **GET_KWARGS
+        ).time_slice[0]
+        torax_ts = torax.get_slice(
+            "equilibrium", time_requested=t, **GET_KWARGS
+        ).time_slice[0]
 
         ax.plot(
             dina_ts.boundary.outline.r,
@@ -525,10 +550,10 @@ def shape_comparison_plot(args, dbs):
         ax.set_aspect("equal")
         ax.legend()
 
-    for ax in axes[len(args.t_list):]:
+    for ax in axes[len(args.t_list) :]:
         fig.delaxes(ax)
 
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(shape_figure_path)
 
 
