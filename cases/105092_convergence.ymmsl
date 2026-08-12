@@ -1,0 +1,67 @@
+ymmsl_version: v0.2
+
+# DINA shot 105092, inverse pulse design converged against TORAX transport.
+#
+#   export PDS_REPO=/path/to/pds
+#   export SCENARIOS_REPO=/path/to/pds-scenarios
+#   export YMMSL_PATH=$PDS_REPO/workflows
+#   muscle_manager --start-all $PDS_REPO/cases/105092_convergence.ymmsl
+#
+# To change something for a single run, put it in a second file and stack it after this
+# one -- the last value for a key wins.
+
+imports:
+- from inverse_convergence.workflow import implementation inverse_convergence
+
+resources:
+  run.solve.nice: {threads: 2}
+  run.final_solve.nice: {threads: 2}
+  run.transport: {threads: 8}
+  run.rec_nice: {threads: 1}
+  run.rec_torax: {threads: 1}
+
+settings:
+  # Scenario: the pulse design and its input data.
+  run.waveform_editor.waveforms: ${SCENARIOS_REPO}/105092/waveforms.yaml
+  run.we_final.waveforms: ${SCENARIOS_REPO}/105092/waveforms_md_only.yaml
+  run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in"
+  run.source.iterative: False
+
+  # Convergence.
+  run.loop.cold_start: False
+  run.loop.max_iterations: 2
+  run.loop.max_slices: 0
+  run.loop.tolerance: 1000.0
+  run.loop.rel_tolerance: 0.03
+
+  # Solvers.
+  run.solve.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
+  run.final_solve.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
+  run.final_solve.nice.output_for_control: 1
+  run.transport.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
+  run.transport.output_all_timeslices: True
+
+  # Output. Relative URIs resolve against each instance's own work directory, so results
+  # land in <run_dir>/instances/<sink>/workdir/<name> -- contained per run, no absolute
+  # paths, but one level deeper than the run dir itself.
+  run.sink_nice.sink_uri: "imas:hdf5?path=out_nice"
+  run.sink_nice.sink_mode: "w"
+  run.sink_torax.sink_uri: "imas:hdf5?path=out_torax"
+  run.sink_torax.sink_mode: "w"
+
+  # Recording.
+  run.rec_nice.format: distill
+  run.rec_nice.auto: False
+  run.rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  run.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in_md"
+  run.rec_torax.format: distill
+  run.rec_torax.auto: False
+  run.rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+
+  # Validation.
+  run.validator.halt_on_error: False
+  run.validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
+  run.validator.rulesets: iter-olc
+  run.validator.apply_generic: False
+
+  muscle_remote_log_level: 'INFO'

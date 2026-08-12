@@ -1,0 +1,44 @@
+ymmsl_version: v0.2
+
+# DINA shot 105092, boundary-prescribed pulse design, solved once with NICE inverse.
+#
+#   export PDS_REPO=/path/to/pds
+#   export SCENARIOS_REPO=/path/to/pds-scenarios
+#   export YMMSL_PATH=$PDS_REPO/workflows
+#   muscle_manager --start-all $PDS_REPO/cases/105092_prescribed.ymmsl
+#
+# To change something for a single run, put it in a second file and stack it after this
+# one -- the last value for a key wins:
+#
+#   muscle_manager --start-all $PDS_REPO/cases/105092_prescribed.ymmsl ./my-override.ymmsl
+
+imports:
+- from prescribed_transport.workflow import implementation prescribed_transport
+
+resources:
+  solve.nice: {threads: 2}
+  rec_nice: {threads: 1}
+
+settings:
+  # Scenario: the pulse design and its input data.
+  waveform_editor.waveforms: ${SCENARIOS_REPO}/105092/waveforms_no_transport.yaml
+  source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in"
+  source.iterative: true
+
+  # Solver. Point xml_path at ${SCENARIOS_REPO}/105092/config_nice.xml if this scenario
+  # ever needs its own NICE settings.
+  solve.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice.xml
+
+  # Output. Relative URIs resolve against each instance's own work directory, so results
+  # land in <run_dir>/instances/<sink>/workdir/<name> -- contained per run, no absolute
+  # paths, but one level deeper than the run dir itself.
+  sink.sink_uri: "imas:hdf5?path=out_nice"
+  sink.sink_mode: "w"
+
+  # Recording.
+  rec_nice.format: distill
+  rec_nice.auto: False
+  rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/105092/data/in_md"
+
+  muscle_remote_log_level: 'INFO'
