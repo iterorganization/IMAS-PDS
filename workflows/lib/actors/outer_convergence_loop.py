@@ -205,6 +205,12 @@ def main() -> None:
         prev_dI = None
         torax_eq = coilr = None
 
+        # The `transport` hole may be pruned (prescribed_transport). flatten() then drops
+        # the conduits into these S ports, so they are simply unconnected -- receiving on
+        # them would block forever.
+        transport_connected = (
+            inst.is_connected("equilibrium_in_s") and inst.is_connected("core_profiles_in_s"))
+
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
             inst.send(
@@ -216,6 +222,15 @@ def main() -> None:
 
             # --- S: receive the full pulse (coils from nice, evolved state from torax) ---
             coilr = inst.receive("pf_active_in_s").data
+
+            if not transport_connected:
+                # No transport in this workflow (the `transport` hole is pruned): NICE has
+                # solved the prescribed boundary once and there is nothing to iterate
+                # against, so `target` and `cp` stay as they are and we stop after one
+                # pass. torax_eq is left None; the design target is emitted below.
+                logger.info("no transport connected: single pass, emitting the design target")
+                break
+
             torax_eq = inst.receive("equilibrium_in_s").data
             torax_cp = inst.receive("core_profiles_in_s").data
 
@@ -264,7 +279,10 @@ def main() -> None:
                 logger.info("reached max_iterations=%d", max_iter)
                 break
 
-        inst.send("equilibrium_out_f", Message(t0, data=torax_eq))
+        # With no transport there is no evolved equilibrium; the design target is the
+        # only meaningful result, so send that on both lanes.
+        final_eq = torax_eq if torax_eq is not None else target
+        inst.send("equilibrium_out_f", Message(t0, data=final_eq))
         inst.send("pf_active_out_f", Message(t0, data=coilr))
         inst.send("core_profiles_out_f", Message(t0, data=cp))
         inst.send("equilibrium_target_out_f", Message(t0, data=target))
