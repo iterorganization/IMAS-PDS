@@ -1,0 +1,19 @@
+ymmsl_version: v0.2
+
+# metis_nice_inverse_from_dina -- METIS transport from DINA input, then a NICE inverse
+# solve that fits coil currents to METIS's equilibrium.
+#
+# Replaces metis_{interpretative,predictive}_nice_inverse_from_dina. Which of those you get
+# is decided by the five metis_external_data_* settings in the case, not by this file.
+
+imports:
+- from lib.metis_dina import implementation metis_dina
+
+models:
+  metis_nice_inverse_from_dina:
+    description: METIS transport from DINA input, followed by a NICE inverse solve.
+    components:
+      run:
+        description: the METIS coupling, NICE branch present
+        implementation: metis_dina
+        ports: {}

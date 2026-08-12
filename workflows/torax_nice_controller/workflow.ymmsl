@@ -1,0 +1,15 @@
+ymmsl_version: v0.2
+
+# torax_nice_controller -- Forward co-simulation via a temporal coupler, with the PCS controller.
+
+imports:
+- from lib.evolutive_coupled import implementation evolutive_coupled
+
+models:
+  torax_nice_controller:
+    description: Forward co-simulation via a temporal coupler, with the PCS controller.
+    components:
+      run:
+        description: the co-simulation
+        implementation: evolutive_coupled
+        ports: {}

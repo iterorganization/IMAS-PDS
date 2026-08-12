@@ -1,0 +1,23 @@
+ymmsl_version: v0.2
+
+# metis_from_dina -- METIS transport from DINA input, no NICE inverse.
+#
+# Replaces metis_{interpretative,predictive}_from_dina. Which of those you get is decided
+# by the five metis_external_data_* settings in the case, not by this file.
+
+imports:
+- from lib.metis_dina import implementation metis_dina
+
+models:
+  metis_from_dina:
+    description: METIS transport from DINA input.
+    components:
+      run:
+        description: the METIS coupling, NICE branch pruned
+        implementation: metis_dina
+        ports: {}
+
+custom_implementations:
+  metis_from_dina.run.source_nice:      null
+  metis_from_dina.run.nice:            null
+  metis_from_dina.run.sink_nice:       null

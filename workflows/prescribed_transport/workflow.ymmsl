@@ -1,35 +1,76 @@
 ymmsl_version: v0.2
-# Consolidated prescribed_transport workflow structure; no scenario data.
-# Also needs programs and settings from somewhere else.
+
+# prescribed_transport -- a single inverse solve against a prescribed boundary.
 #
-# Programs come from lib.easybuild_programs (see workflows/lib/easybuild_programs.ymmsl);
-# resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# To override one actor (e.g. your own build), copy easybuild_programs.ymmsl to
-# lib/easybuild_programs_<yourname>.ymmsl and repoint just that actor's import here.
+# Structure only: no scenario data, no paths, no variables. Run it by stacking a case:
 #
-# Settings come from workflows/prescribed_transport/settings.ymmsl
+#   export PDS_REPO=/path/to/pds YMMSL_PATH=$PDS_REPO/workflows
+#   muscle_manager --start-all $PDS_REPO/workflows/prescribed_transport/workflow.ymmsl \
+#                              $PDS_REPO/cases/105084_prescribed.ymmsl
+#
+# Setting keys in the case are prefixed with the flattened instance name -- `solve.nice`
+# for the NICE workers, bare `source` / `waveform_editor` / `sink` / `rec_nice` for the
+# components at root depth. See ci/gate_probe.py.
+#
+# CHANGE FROM THE PREVIOUS DEFINITION: `nice_inv` (a bare NICE process) is replaced by
+# `solve`, the lib/nice_inverse submodel, which puts a load_balancer in front of the same
+# NICE worker. This adds one process and turns one whole-trace call into slice
+# scatter/gather -- the same shape inverse_convergence already uses. The Verification 2
+# flatten-diff for this workflow is therefore expected to be non-empty; review it rather
+# than requiring it to be identical.
 
 imports:
-- from imas_muscle3 import implementation source_component
-- from imas_muscle3 import implementation sink_component
-- from imas_muscle3 import implementation recorder_component
-- from lib.easybuild_programs import implementation waveform_editor
-- from lib.easybuild_programs import implementation nice_inv
+- from lib.programs import implementation source
+- from lib.programs import implementation sink
+- from lib.programs import implementation recorder
+- from lib.programs import implementation waveform_editor
+- from lib.nice_inverse import implementation nice_inverse
+
 models:
   prescribed_transport:
+    description: Single-pass inverse solve against a prescribed boundary.
     components:
-      source:   {description: source, implementation: source_component, ports: {o_i: [equilibrium_out]}}
-      waveform_editor: {description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed), implementation: waveform_editor, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]}}
-      nice_inv: {description: nice, implementation: nice_inv, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
-      sink:     {description: sink, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
-      rec_nice: {description: distill recorder (NICE inverse outputs), implementation: recorder_component, ports: {s: [equilibrium_in, pf_active_in]}}
+      source:
+        description: source -- seeds the equilibrium trace
+        implementation: source
+        ports: {o_i: [equilibrium_out]}
+      waveform_editor:
+        description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed)
+        implementation: waveform_editor
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+      solve:
+        description: NICE inverse solve (lib/nice_inverse submodel)
+        implementation: nice_inverse
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      sink:
+        description: sink -- writes the solved equilibrium and coil currents
+        implementation: sink
+        ports: {f_init: [equilibrium_in, pf_active_in]}
+      rec_nice:
+        description: distill recorder (NICE inverse outputs)
+        implementation: recorder
+        ports: {s: [equilibrium_in, pf_active_in]}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
-      waveform_editor.equilibrium_out: nice_inv.equilibrium_in
-      waveform_editor.wall_out: nice_inv.wall_in
-      waveform_editor.pf_active_out: nice_inv.pf_active_in
-      waveform_editor.pf_passive_out: nice_inv.pf_passive_in
-      waveform_editor.iron_core_out: nice_inv.iron_core_in
-      nice_inv.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
-      nice_inv.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
-resources: {nice_inv: {threads: 2}, rec_nice: {threads: 1}}
+      waveform_editor.equilibrium_out: solve.equilibrium_in
+      waveform_editor.wall_out: solve.wall_in
+      waveform_editor.pf_active_out: solve.pf_active_in
+      waveform_editor.pf_passive_out: solve.pf_passive_in
+      waveform_editor.iron_core_out: solve.iron_core_in
+      solve.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
+      solve.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
+
+# NO `resources:` OR `settings:` BLOCK HERE, DELIBERATELY.
+#
+# Cases import this model rather than being stacked alongside it, and ymmsl's
+# resolve_impl_imports() copies only `models` and `programs` -- `settings` and `resources`
+# in an imported file are silently discarded (Implementation has no field for either).
+# Anything declared here would vanish with no diagnostic.
+#
+# So resources live in the case, keyed on flattened instance names:
+#   resources: {solve.nice: {threads: 2}, rec_nice: {threads: 1}}
+# ci/check_ymmsl.py fails the build if a case importing this model omits them.
