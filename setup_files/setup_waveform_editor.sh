@@ -7,6 +7,8 @@ BRANCH_WAVEFORM_EDITOR=${2:-"develop"}
 source imas_base_env
 module load Python
 
+source "$(dirname "${BASH_SOURCE[0]}")/ensure_uv.sh"
+
 if [[ ! -d "Waveform-Editor/.git" ]]; then
   git clone $WAVEFORM_EDITOR_URL Waveform-Editor
 fi
@@ -14,11 +16,11 @@ cd Waveform-Editor
 git fetch --quiet origin
 git checkout $BRANCH_WAVEFORM_EDITOR
 if [[ ! -d venv ]]; then
-  python3 -m venv ./venv
+  "$UV" venv ./venv
 fi
 . venv/bin/activate
-pip install -e .[muscle3]
-echo "  muscle3 version: $(pip show muscle3 | grep '^Version')"
+"$UV" pip install -e .[muscle3]
+echo "  muscle3 version: $("$UV" pip show muscle3 | grep '^Version')"
 deactivate
 module purge
 cd ..

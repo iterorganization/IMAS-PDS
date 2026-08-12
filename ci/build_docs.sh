@@ -16,17 +16,18 @@ module load $@
 echo "Done loading modules"
 set -x
 
+source "$(dirname "${BASH_SOURCE[0]}")/../setup_files/ensure_uv.sh"
+
 # Set up the testing venv
 rm -rf venv  # Environment should be clean, but remove directory to be sure
-python -m venv venv
+"$UV" venv venv
 source venv/bin/activate
 
 # Create sdist and wheel
-pip install --upgrade pip setuptools wheel
-pip install --upgrade .[docs]
+"$UV" pip install --upgrade .[docs]
 
 # Debugging:
-pip freeze
+"$UV" pip freeze
 
 # Enable sphinx options:
 # - `-W`: turn warnings into errors

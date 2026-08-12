@@ -49,10 +49,6 @@ CURR_INSTALL='START'
 
   # TODO: turn off install arg when easybuild module available
 
-  # MODULE LOAD
-  pip install --upgrade pip
-  pip install --upgrade setuptools wheel
-
   # SET UP PDS
   CURR_INSTALL='PDS FILES'
   if [ "$INSTALL_PDS" = "true" ]; then

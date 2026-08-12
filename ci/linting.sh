@@ -17,15 +17,16 @@ module load $@
 echo "Done loading modules"
 set -x
 
+source "$(dirname "${BASH_SOURCE[0]}")/../setup_files/ensure_uv.sh"
+
 # Create a venv
 rm -rf venv
-python -m venv venv
+"$UV" venv venv
 . venv/bin/activate
 
 # Install and run linters
-pip install --upgrade .[linting]
+"$UV" pip install --upgrade .[linting]
 
-black --check pds
-flake8 pds
-mypy pds
-isort --check-only pds
+ruff format --check pds
+ruff check pds
+ty check pds
