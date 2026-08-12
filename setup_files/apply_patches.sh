@@ -26,8 +26,44 @@ set -euo pipefail
 
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PATCHES="$PDS_REPO/ci/patches"
+# Prefer the module-provided installs ($EBROOT* from `module load PDS`, or the same names
+# exported by ci/run_test_workflows.sh for its local builds); fall back to the old
+# per-user run/ layout when neither is set.
+M3_VENV="${M3_VENV:-${EBROOTIMASMUSCLE3:+$EBROOTIMASMUSCLE3/venv}}"
 M3_VENV="${M3_VENV:-$PWD/IMAS-MUSCLE3/venv}"
-WE_DIR="${WE_DIR:-$PWD/Waveform-Editor}"
+WE_DIR="${WE_DIR:-${EBROOTWAVEFORMEDITOR:-$PWD/Waveform-Editor}}"
+
+# A shared module install belongs to whoever built it, so patching it in place is not
+# possible -- and silently skipping would leave a run that fails much later, for reasons
+# that look nothing like a missing patch.
+for target in "$M3_VENV" "$WE_DIR"; do
+  if [[ -e "$target" && ! -w "$target" ]]; then
+    cat >&2 <<MSG
+apply_patches: $target is not writable.
+
+It is a shared install owned by someone else -- most likely one of the PDS-* modules. The
+two patches in ci/patches/ cannot be applied to it, and without them:
+
+  * \${PDS_REPO} / \${SCENARIOS_REPO} in cases/ reach the actors as literal text;
+  * relative data URIs in a scenario's waveforms.yaml resolve against each MUSCLE3
+    instance's own work directory instead of the scenario, and the reads fail.
+
+Two ways forward:
+
+  1. Ask whoever owns the module to fold ci/patches/ into their
+     setup_files/custom_modules/build_*.sh, and rebuild. This is the right fix.
+  2. Build your own copies and point the module variables at them for your session:
+       cd \$PDS_REPO/run
+       bash ../setup_files/setup_imas_muscle3.sh
+       bash ../setup_files/setup_waveform_editor.sh
+       export EBROOTIMASMUSCLE3=\$PDS_REPO/run/IMAS-MUSCLE3
+       export EBROOTWAVEFORMEDITOR=\$PDS_REPO/run/Waveform-Editor
+       bash ../setup_files/apply_patches.sh
+     The rest of the stack (NICE, TORAX, the IMAS modules) still comes from the module.
+MSG
+    exit 1
+  fi
+done
 
 fail=0
 
