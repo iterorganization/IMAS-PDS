@@ -75,7 +75,7 @@ This workflow is meant to be rerun multiple times until the results are converge
 
 .. code-block:: bash
 
-  bash run_workflow.sh inverse_convergence 105084
+  muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
 
 Requirements:
 

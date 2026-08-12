@@ -20,7 +20,7 @@ and the scenario as second argument like:
   # run test workflow of choice, in this case:
   # workflow: inverse_convergence
   # scenario: 105084
-  bash run_workflow.sh inverse_convergence 105084
+  muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
 
 In the workflow directories are the default configuration and workflow files that are reused between scenarios.
 If a scenario needs its own config or workflow files, they should be added to the scenario subdirectory.

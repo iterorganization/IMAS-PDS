@@ -37,21 +37,42 @@ These workflows can be used as a template for your own workflows.
 
 Example cases
 -------------
-Example cases for actual ITER scenarios can be run for validation of the PDS workflows.
-The shell script currently assumes it is being run from the base directory of the PDS repository.
-The different workflows are contained in the ``workflows`` directory.
-The different scenarios for these workflows are contained in the ``workflows/<my_workflow>/scenarios`` directory.
-To run a preconfigured workflow, run the ``run_workflow.sh`` file with the desired workflow and scenario as arguments.
-Note that this way of running the PDS workflows will change in the future as more developments are being made.
+
+A run pairs a **workflow** -- how something is simulated, in ``workflows/`` -- with a
+**scenario** -- what is simulated, in the separate ``pds-scenarios`` repository. That
+pairing is a **case**, in ``cases/``, and the case is the only file you pass to the manager.
 
 .. code-block:: bash
 
-  # run_workflow.sh requires the PDS module stack to already be loaded
   module use /home/ITER/blokhus/public/modules/all
   module load PDS
-  # to enable tab completion of the workflows and scenarios
-  source completion.sh
-  # run test workflow of choice, in this case:
-  # workflow: inverse_convergence
-  # scenario: 105084
-  bash run_workflow.sh inverse_convergence 105084
+
+  export PDS_REPO=/path/to/pds
+  export SCENARIOS_REPO=/path/to/pds-scenarios
+  export YMMSL_PATH=$PDS_REPO/workflows
+
+  muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
+
+To change something for a single run, put it in a second file and stack it after the case.
+The last value given for a key wins:
+
+.. code-block:: bash
+
+  muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl ./cold-start.ymmsl
+
+The run directory receives ``input/``, holding the yMMSL files exactly as passed, and
+``configuration.ymmsl``, the fully resolved configuration that was executed.
+
+Two unmerged upstream patches are required; ``setup_files/apply_patches.sh`` applies and
+verifies them.
+
+Legacy path
+~~~~~~~~~~~
+
+The four ``metis_*_from_dina`` workflows have not been migrated and still use
+``run_workflow.sh`` with a scenario from ``workflows/<workflow>/scenarios/``:
+
+.. code-block:: bash
+
+  source completion.sh    # tab completion for workflows and scenarios
+  bash run_workflow.sh metis_interpretative_from_dina 105084

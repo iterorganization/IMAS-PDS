@@ -39,6 +39,10 @@ First we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
 The different scenarios can be found in the ``workflows`` directory.
 The workflow can be run by running the ``run_workflow.sh`` shell script.
+.. warning::
+   This course uses the legacy ``run_workflow.sh`` invocation and the per-scenario
+   ``scenarios/<shot>/tmp/`` output layout. Migrated workflows are also runnable from a
+   case file (see :doc:`../../usage`); scenario 105092 has no case yet.
 The shell script:
 
 - preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.

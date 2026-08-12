@@ -65,21 +65,52 @@ muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 ```
 
 # Example cases
-Example cases for actual ITER scenarios can be run for validation of the PDS workflows.
-The shell script currently assumes it is being run from the base directory of the PDS repository.
-The different workflows are contained in the ``workflows`` directory.
-The different scenarios for these workflows are contained in the ``workflows/<my_workflow>/scenarios`` directory.
-To run a preconfigured workflow, run the ``run_workflow.sh`` file with the desired workflow and scenario as arguments.
-Note that this way of running the PDS workflows will change in the future as more developments are being made.
+
+A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
+is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). That pairing is
+a **case**, in `cases/`, and a case is the single file you hand to the manager:
 
 ```bash
-# load the PDS module
+# PDS_REPO before the module load: without it the PDS module only finds the
+# checkout when it happens to be your current directory.
+export PDS_REPO=/path/to/pds
+export SCENARIOS_REPO=/path/to/pds-scenarios
+
 module use /home/ITER/blokhus/public/modules/all
 module load PDS
-# to enable tab completion of the workflows and scenarios
-source completion.sh
-# run test workflow of choice, in this case:
-# workflow: inverse_convergence
-# scenario: 105084
-bash run_workflow.sh inverse_convergence 105084
+
+muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
 ```
+
+To change something for one run, put it in a second file and stack it after the case; the
+last value for a key wins:
+
+```bash
+muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl ./cold-start.ymmsl
+```
+
+Each run directory gets `input/`, holding the yMMSL files exactly as you passed them, and
+`configuration.ymmsl`, the fully resolved configuration actually executed.
+
+| Case | Workflow | Scenario |
+|---|---|---|
+| `105084_prescribed` | `prescribed_transport` | `105084` |
+| `105084_convergence` | `inverse_convergence` | `105084` |
+| `105073_evolutive` | `evolutive` | `105073` |
+| `105073_controller` | `torax_nice_controller` | `105073` |
+| `105073_rd` | `torax_nice_rd_controller` | `105073` |
+
+Two unmerged upstream patches are required; `setup_files/apply_patches.sh` applies and
+verifies them. See `ci/patches/`.
+
+## Legacy path
+
+The four `metis_*_from_dina` workflows have not been migrated and still run the old way:
+
+```bash
+source completion.sh          # tab completion for workflows and scenarios
+bash run_workflow.sh metis_interpretative_from_dina 105084
+```
+
+`run_workflow.sh` and the per-workflow `scenarios/` directories exist only for those four.
+They will go once METIS is migrated.
