@@ -38,7 +38,12 @@ source "$MUSCLE3_ENV_FILE"
 cd src
 cp -f Makefile.TEMPLATE Makefile
 NICE_MUSCLE3_TARGETS="nice_imas_inv_muscle3 nice_imas_dir_muscle3 nice_imas_evo_muscle3 nice_imas_evo_rd_muscle3"
-module load patchelf
+# Pinned for the same reason as $NICE_MODULE above: an unversioned `module load patchelf`
+# floats to its default build (patchelf/0.18.0-GCCcore-14.3.0), whose dependency resolution
+# swaps the already-loaded GCCcore/13.2.0 out for GCCcore/14.3.0 -- putting a GCC 14 g++ ahead
+# of the intel-2023b toolchain's in PATH for the `make` calls below, and producing a binary
+# that needs libstdc++ symbols (e.g. CXXABI_1.3.15) newer than the run-time module provides.
+module load patchelf/0.18.0-GCCcore-13.2.0
 
 # Binaries are skipped if already built (below), to avoid recompiling the whole tree on every
 # CI/dev run -- but that cache is only valid if it was built against $NICE_MODULE. Record the
