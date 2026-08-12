@@ -17,13 +17,25 @@ module load $@
 echo "Done loading modules"
 set -x
 
+# uv isn't guaranteed to be present on the CI agent; bootstrap it via a disposable
+# venv if missing (not `pip install --user`: the agent's home directory may not be
+# writable, and the shared module Python's site-packages usually isn't either).
+if command -v uv >/dev/null 2>&1; then
+  UV="$(command -v uv)"
+else
+  rm -rf .uv-bootstrap
+  python3 -m venv .uv-bootstrap
+  .uv-bootstrap/bin/pip install --quiet uv
+  UV="$(.uv-bootstrap/bin/python -c 'import uv; print(uv.find_uv_bin())')"
+fi
+
 # Create a venv
 rm -rf venv
-uv venv venv
+"$UV" venv venv
 . venv/bin/activate
 
 # Install and run linters
-uv pip install --upgrade .[linting]
+"$UV" pip install --upgrade .[linting]
 
 ruff format --check pds
 ruff check pds

@@ -13,6 +13,7 @@ tmp
 .coverage
 .venv
 venv
+.uv-bootstrap
 build
 junit.xml
 .idea/
