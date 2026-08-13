@@ -3,6 +3,7 @@ Preprocessing of the machine-description reference data (wall, iron_core,
 pf_passive and the pf_active coil-current seed) into valid PDS coupling input.
 """
 
+import copy
 import datetime
 import logging
 from contextlib import contextmanager
@@ -177,9 +178,16 @@ def preprocess_wall(db_out, db_md_wall):
 
     # copy 2 first unit from vessel
     wall.description_2d[0].vessel = wallIn.description_2d[0].vessel
-    tmp = wall.description_2d[0].vessel.unit
+    # `tmp` aliases the same array-of-structures being resized below (IMAS-python
+    # struct-array assignment doesn't copy), so the units must be deep-copied out
+    # before resize() truncates/reinitializes it in place -- otherwise unit[0]/[1]
+    # get reassigned from themselves, already wiped to empty by the resize.
+    first_two = [
+        copy.deepcopy(wall.description_2d[0].vessel.unit[0]),
+        copy.deepcopy(wall.description_2d[0].vessel.unit[1]),
+    ]
     wall.description_2d[0].vessel.unit.resize(2)
-    wall.description_2d[0].vessel.unit[0] = tmp[0]
-    wall.description_2d[0].vessel.unit[1] = tmp[1]
+    wall.description_2d[0].vessel.unit[0] = first_two[0]
+    wall.description_2d[0].vessel.unit[1] = first_two[1]
 
     db_out.put(wall)

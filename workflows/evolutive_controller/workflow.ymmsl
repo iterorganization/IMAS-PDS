@@ -9,7 +9,7 @@ ymmsl_version: v0.2
 # Settings come from workflows/magnetic_control/settings.ymmsl
 
 models:
-  torax_nice_self_rd_controller:
+  evolutive_controller:
     components:
       source:  {description: NICE-reconstructed equilibrium from a completed inverse_convergence run, implementation: source, ports: {o_i: [equilibrium_out]}}
       waveform_editor: {description: waveform editor (passes through received equilibrium + assembles core_sources/core_profiles + static MD + coil-current seed from DINA), implementation: waveform_editor, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
@@ -21,6 +21,7 @@ models:
       sink_controller: {description: sink controller, implementation: sink, ports: {f_init: [pf_active_in]}}
       rec_nice:  {description: distill recorder (NICE evo_rd outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
       rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
+      temporal_coupler: {description: temporal coupler between torax and nice_evo_rd equilibrium feedback loop (also carries torax's core_profiles onward to nice_evo_rd), implementation: temporal_coupler, ports: {s: [a_in_equilibrium, a_in_core_profiles, b_in_equilibrium], o_i: [a_out_equilibrium, b_out_equilibrium, b_out_core_profiles]}}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
 
@@ -32,10 +33,14 @@ models:
       waveform_editor.core_profiles_out: [torax.core_profiles_in_f, nice_evo_rd.core_profiles_f_init]
       waveform_editor.core_sources_out: torax.core_sources_in_f
 
-      torax.equilibrium_out_i: [nice_evo_rd.equilibrium_s, sink_torax.equilibrium_in, rec_torax.equilibrium_in]
-      torax.core_profiles_out_i: [nice_evo_rd.core_profiles_s, sink_torax.core_profiles_in, rec_torax.core_profiles_in]
+      torax.equilibrium_out_i: [temporal_coupler.a_in_equilibrium, sink_torax.equilibrium_in, rec_torax.equilibrium_in]
+      torax.core_profiles_out_i: [temporal_coupler.a_in_core_profiles, sink_torax.core_profiles_in, rec_torax.core_profiles_in]
 
-      nice_evo_rd.equilibrium_o_i: [torax.equilibrium_in_s, magnetic_controller.equilibrium_in_s, sink_nice.equilibrium_in, rec_nice.equilibrium_in]
+      temporal_coupler.a_out_equilibrium: torax.equilibrium_in_s
+      temporal_coupler.b_out_equilibrium: nice_evo_rd.equilibrium_s
+      temporal_coupler.b_out_core_profiles: nice_evo_rd.core_profiles_s
+
+      nice_evo_rd.equilibrium_o_i: [temporal_coupler.b_in_equilibrium, magnetic_controller.equilibrium_in_s, sink_nice.equilibrium_in, rec_nice.equilibrium_in]
       nice_evo_rd.pf_active_o_i: [magnetic_controller.pf_active_in_s, sink_nice.pf_active_in, rec_nice.pf_active_in]
 
       magnetic_controller.pf_active_out_i: [nice_evo_rd.pf_active_s, sink_controller.pf_active_in]
@@ -44,6 +49,7 @@ programs:
   waveform_editor: {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
   sink:        {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
   recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
+  temporal_coupler: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/torax_nice_utils/temporal_coupler.py}
   torax:
     script: |
       #!/bin/bash
@@ -79,4 +85,4 @@ programs:
                   comparisons.ExternalSCMLink.setupGitConfig();
                   addpath(getenv('CONTROLLER_PATH'));
                   muscle_controller_NICE_IMAS_iter_init;"
-resources: {torax: {threads: 8}, nice_evo_rd: {threads: 2}, magnetic_controller: {threads: 1}, rec_nice: {threads: 1}, rec_torax: {threads: 1}}
+resources: {torax: {threads: 8}, nice_evo_rd: {threads: 2}, magnetic_controller: {threads: 1}, rec_nice: {threads: 1}, rec_torax: {threads: 1}, temporal_coupler: {threads: 1}}

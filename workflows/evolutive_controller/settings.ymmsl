@@ -1,5 +1,5 @@
 ymmsl_version: v0.2
-# Shared knobs for torax_nice_self_rd_controller, stacked onto the static workflow.ymmsl. The
+# Shared knobs for evolutive_controller, stacked onto the static workflow.ymmsl. The
 # scenario-local scenarios/<shot>/settings.ymmsl (data URIs/paths) is stacked after this.
 #
 # nice_evo_rd.t_interval/dt MUST match torax's fixed_dt (both step the coupled system forward
@@ -20,8 +20,8 @@ settings:
   torax.max_consecutive_invalid_input: 20
   nice_evo_rd.t_interval: 0.01
   nice_evo_rd.dt: 0.01
-  nice_evo_rd.xml_path: ${PDS_REPO}/workflows/torax_nice_self_rd_controller/config_nice.xml
-  torax.python_config_module: ${PDS_REPO}/workflows/torax_nice_self_rd_controller/config_torax.py
+  nice_evo_rd.xml_path: ${PDS_REPO}/workflows/evolutive_controller/config_nice.xml
+  torax.python_config_module: ${PDS_REPO}/workflows/evolutive_controller/config_torax.py
   # NICE-reconstructed equilibrium (has the full flux-surface geometry TORAX needs), not raw
   # DINA -- copied from a completed inverse_convergence run by preprocess_data.sh.
   source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"

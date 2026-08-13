@@ -1,7 +1,0 @@
-ymmsl_version: v0.2
-# First-pass validation run: restrict to flattop only (Ip is flat ~-3.5MA from t~20s to
-# t~256s in the 105084_out_nice seed trace; ramp-up is 2.4-20s, ramp-down starts ~256s).
-# Picked a conservative window inside that, away from the ramp transitions.
-settings:
-  source.t_min: 135.0
-  source.t_max: 250.0

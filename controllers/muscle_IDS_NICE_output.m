@@ -8,6 +8,10 @@ function [coils_current,rgeo,zgeo,ip,t_out,stop_signal] = muscle_IDS_NICE_output
 instance = evalin('base','instance');
 logger = evalin('base','logger');
 
+% Holds the last accepted measurement across calls, for the output_flag=-1
+% case below (persists for the lifetime of the MATLAB session/model).
+persistent last_coils_current last_rgeo last_zgeo last_ip
+
 t_out=0;
 stop_signal=0;
 rgeo=0;
@@ -27,13 +31,40 @@ end
 
 equilibrium_serial=uint8(msg_eq.data);
 equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
-ip=abs(equilibrium.time_slice{1}.global_quantities.ip);
-rgeo=equilibrium.time_slice{1}.boundary.geometric_axis.r;
-zgeo=equilibrium.time_slice{1}.boundary.geometric_axis.z;
 
 pf_active_serial=uint8(msg_pfa.data);
 pf_active=imas_deserialize(pf_active_serial,'pf_active');
-for ii=1:length(pf_active.coil)
-   coil=struct(pf_active.coil{ii});
-   coils_current(ii)=coil.current.data;
+
+% nice_imas_evo_rd_muscle3 flags a rejected/rolled-back evolutive step with
+% code.output_flag=-1 (see Solver::_OutputDataFullEqui in run/nice): the
+% equilibrium is still the last valid state, but the derived coil currents
+% have been observed to come out unphysically large on exactly these steps
+% (a leftover-from-a-divergent-Newton-iterate bug in _ComputeCurrents()).
+% TORAX's actor (torax_actor.py) already skips output_flag=-1 messages
+% instead of feeding them into its state; do the same here rather than
+% feeding a spurious measurement into the closed loop.
+eq_flag = double(equilibrium.code.output_flag);
+pfa_flag = double(pf_active.code.output_flag);
+is_stale = (~isempty(eq_flag) && eq_flag(1) == -1) || (~isempty(pfa_flag) && pfa_flag(1) == -1);
+
+if is_stale && ~isempty(last_ip)
+    logger.warning(sprintf('muscle_IDS_NICE_output: received output_flag=-1 at t=%g, holding last valid measurement', t_out));
+    coils_current = last_coils_current;
+    rgeo = last_rgeo;
+    zgeo = last_zgeo;
+    ip = last_ip;
+else
+    ip=abs(equilibrium.time_slice{1}.global_quantities.ip);
+    rgeo=equilibrium.time_slice{1}.boundary.geometric_axis.r;
+    zgeo=equilibrium.time_slice{1}.boundary.geometric_axis.z;
+
+    for ii=1:length(pf_active.coil)
+       coil=struct(pf_active.coil{ii});
+       coils_current(ii)=coil.current.data;
+    end
+
+    last_coils_current = coils_current;
+    last_rgeo = rgeo;
+    last_zgeo = zgeo;
+    last_ip = ip;
 end

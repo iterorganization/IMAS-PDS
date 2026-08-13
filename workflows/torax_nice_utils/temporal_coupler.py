@@ -17,8 +17,6 @@ last, possibly leading to deadlocks. It is advised to use predictable or
 constant timestepping.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -32,8 +30,47 @@ def get_port_list(instance: Instance, operator: Operator) -> list[str]:
     """Filter list of ids_names by which ones are actually connected for
     given instance"""
     total_port_list = instance.list_ports().get(operator, [])
-    port_list = [port for port in total_port_list if instance.is_connected(port)]
-    return port_list
+    return [port for port in total_port_list if instance.is_connected(port)]
+
+
+# IDS types the coupler can carry on a role (`a_in`/`a_out`/`b_in`/`b_out`),
+# each as a `<role>_<channel>` port (e.g. `a_in_equilibrium`,
+# `a_in_core_profiles`) -- every port follows this scheme, there is no
+# unsuffixed/bare port. MUSCLE3 requires all ports to be declared upfront,
+# so this is the finite universe a given workflow can pick any subset of
+# via its conduits -- wiring a channel that isn't in this list still needs
+# a one-line addition here, but everything else (labels, matching between
+# peers, timing) is fully generic to whatever combination is connected.
+CHANNELS = [
+    "equilibrium",
+    "core_profiles",
+    "pf_active",
+    "core_sources",
+    "wall",
+    "pf_passive",
+    "iron_core",
+    "plasma_profiles",
+    "plasma_sources",
+    "pulse_schedule",
+    "summary",
+]
+
+
+def role_ports(role: str) -> list[str]:
+    """All statically declared port names for one peer role, e.g. 'a_in'."""
+    return [f"{role}_{channel}" for channel in CHANNELS]
+
+
+def channel_ports(instance: Instance, operator: Operator, role: str) -> dict[str, str]:
+    """Channel label -> port name, for whichever `<role>_<channel>` ports
+    of this role are actually connected in the workflow. The first one
+    encountered (in `CHANNELS` order) drives the peer's timing.
+    """
+    channels: dict[str, str] = {}
+    for port in get_port_list(instance, operator):
+        if port.startswith(role + "_"):
+            channels[port[len(role) + 1 :]] = port
+    return channels
 
 
 class DataCache:
@@ -124,13 +161,22 @@ class Peer:
 
     Finally, this class does the actual communication with the peer,
     via the instance object.
+
+    A peer can carry more than one data channel (e.g. an equilibrium
+    plus a core_profiles IDS from the same submodel, sent together each
+    timestep). `in_ports`/`out_ports` map a channel label (e.g.
+    'equilibrium', 'core_profiles') to the MUSCLE3 port name for that
+    channel. All channels on a peer are assumed to be sent/received
+    together by the submodel; the first channel in `in_ports` drives
+    the timing (rcvd/to_send/next), the rest are just cached and
+    forwarded on the same cadence.
     """
 
     def __init__(
         self,
         instance: Instance,
-        in_port: str,
-        out_port: str,
+        in_ports: dict[str, str],
+        out_ports: dict[str, str],
         resume_from_state: Any = None,
     ) -> None:
         """Create a Peer object.
@@ -140,28 +186,33 @@ class Peer:
 
         Args:
             instance: The instance to use for communication
-            in_port: The port to receive on for this peer
-            out_port: The port to send on for this peer
+            in_ports: Channel label -> port to receive on for this peer.
+                The first entry drives this peer's timing.
+            out_ports: Channel label -> port to send on for this peer
         """
         self.instance = instance
-        self.in_port = in_port
-        self.out_port = out_port
-        self.cache = DataCache()
+        self.in_ports = in_ports
+        self.out_ports = out_ports
+        self.caches: dict[str, DataCache] = {label: DataCache() for label in in_ports}
+        self.primary_label = next(iter(in_ports))
 
         if resume_from_state:
-            self.cache.t_cur = resume_from_state["cache.t_cur"]
-            self.cache.data_cur = resume_from_state["cache.data_cur"]
-            self.cache.t_next = resume_from_state["cache.t_next"]
-            self.cache.data_next = resume_from_state["cache.data_next"]
+            for label, cache_state in resume_from_state["caches"].items():
+                self.caches[label].t_cur = cache_state["t_cur"]
+                self.caches[label].data_cur = cache_state["data_cur"]
+                self.caches[label].t_next = cache_state["t_next"]
+                self.caches[label].data_next = cache_state["data_next"]
             self.rcvd = resume_from_state["rcvd"]
             self.to_send = resume_from_state["to_send"]
             self.next = resume_from_state["next"]
         else:
-            msg = self.instance.receive(self.in_port)
-            self.cache.add_data(msg.timestamp, msg.data)
-            self.rcvd = msg.timestamp
-            self.to_send = msg.timestamp
-            self.next = msg.next_timestamp
+            for label, port in self.in_ports.items():
+                msg = self.instance.receive(port)
+                self.caches[label].add_data(msg.timestamp, msg.data)
+                if label == self.primary_label:
+                    self.rcvd = msg.timestamp
+                    self.to_send = msg.timestamp
+                    self.next = msg.next_timestamp
 
     def done(self) -> bool:
         """Return whether we are done commmunicating with this peer."""
@@ -176,11 +227,14 @@ class Peer:
         )
 
     def receive(self) -> None:
-        """Receive a message from this peer and update the cache."""
-        msg = self.instance.receive(self.in_port)
-        self.cache.add_data(msg.timestamp, msg.data)
-        self.rcvd = msg.timestamp
-        self.next = msg.next_timestamp
+        """Receive a message from this peer on all its channels, and
+        update the caches."""
+        for label, port in self.in_ports.items():
+            msg = self.instance.receive(port)
+            self.caches[label].add_data(msg.timestamp, msg.data)
+            if label == self.primary_label:
+                self.rcvd = msg.timestamp
+                self.next = msg.next_timestamp
 
     def can_send(self, peer_rcvd: float, peer_next: float | None) -> bool:
         """Return whether we can send to this peer.
@@ -203,26 +257,34 @@ class Peer:
             return False
         return self.to_send <= peer_rcvd or peer_next is None
 
-    def send(self, t: float, data: Any) -> None:
-        """Send the next message to this peer.
+    def send(self, peer: "Peer") -> None:
+        """Send the next message(s) to this peer.
 
-        This sends a message to the peer containing the given data
-        and timestamp, and marks this send as done.
+        For every channel this peer sends out, the corresponding
+        channel is drained from `peer`'s cache (interpolated to this
+        peer's next send point) and sent out. Marks this send as done.
 
         Args:
-            t: Timestamp corresponding to the data
-            data: Data to send
+            peer: The other peer, whose caches hold the data to send.
         """
-        self.instance.send(self.out_port, Message(t, self.next, data))
+        assert self.to_send is not None
+        for label, port in self.out_ports.items():
+            t, data = peer.caches[label].get_data(self.to_send)
+            self.instance.send(port, Message(t, self.next, data))
         self.to_send = self.next
 
     def get_state(self) -> dict[str, Any]:
         """Return the current state of this object as a MUSCLE-serializable dict"""
         return {
-            "cache.t_cur": self.cache.t_cur,
-            "cache.data_cur": self.cache.data_cur,
-            "cache.t_next": self.cache.t_next,
-            "cache.data_next": self.cache.data_next,
+            "caches": {
+                label: {
+                    "t_cur": cache.t_cur,
+                    "data_cur": cache.data_cur,
+                    "t_next": cache.t_next,
+                    "data_next": cache.data_next,
+                }
+                for label, cache in self.caches.items()
+            },
             "rcvd": self.rcvd,
             "to_send": self.to_send,
             "next": self.next,
@@ -241,22 +303,30 @@ def main() -> None:
     capabilities.
     """
     instance = Instance(
-        {Operator.O_I: ["a_out", "b_out"], Operator.S: ["a_in", "b_in"]},
+        {
+            Operator.O_I: role_ports("a_out") + role_ports("b_out"),
+            Operator.S: role_ports("a_in") + role_ports("b_in"),
+        },
         InstanceFlags.USES_CHECKPOINT_API | InstanceFlags.SKIP_MMSF_SEQUENCE_CHECKS,
     )
 
     while instance.reuse_instance():
+        a_in_ports = channel_ports(instance, Operator.S, "a_in")
+        a_out_ports = channel_ports(instance, Operator.O_I, "a_out")
+        b_in_ports = channel_ports(instance, Operator.S, "b_in")
+        b_out_ports = channel_ports(instance, Operator.O_I, "b_out")
+
         # if instance.resuming():
         #     state = instance.load_snapshot().data
         #     if state is not None:
-        #         a = Peer(instance, 'a_in', 'a_out', state['a'])
-        #         b = Peer(instance, 'b_in', 'b_out', state['b'])
+        #         a = Peer(instance, a_in_ports, a_out_ports, state['a'])
+        #         b = Peer(instance, b_in_ports, b_out_ports, state['b'])
         # if instance.should_init():
         #     # Receive initial messages and initialise state
-        #     a = Peer(instance, 'a_in', 'a_out')
-        #     b = Peer(instance, 'b_in', 'b_out')
-        a = Peer(instance, "a_in", "a_out")
-        b = Peer(instance, "b_in", "b_out")
+        #     a = Peer(instance, a_in_ports, a_out_ports)
+        #     b = Peer(instance, b_in_ports, b_out_ports)
+        a = Peer(instance, a_in_ports, a_out_ports)
+        b = Peer(instance, b_in_ports, b_out_ports)
 
         # Send and receive as needed
         while not a.done() or not b.done():
@@ -268,15 +338,10 @@ def main() -> None:
                 b.receive()
             elif a.can_send(b.rcvd, b.next):
                 print("send a", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
-                # can_send() returning True guarantees to_send is not None.
-                assert a.to_send is not None
-                t, data = b.cache.get_data(a.to_send)
-                a.send(t, data)
+                a.send(b)
             elif b.can_send(a.rcvd, a.next):
                 print("send b", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
-                assert b.to_send is not None
-                t, data = a.cache.get_data(b.to_send)
-                b.send(t, data)
+                b.send(a)
 
             # t_cur = min(a.rcvd, b.rcvd)
             # if instance.should_save_snapshot(t_cur):

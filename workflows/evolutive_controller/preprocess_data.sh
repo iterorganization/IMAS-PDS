@@ -31,7 +31,7 @@ if [[ ! -e "$DEST_OUT_NICE" ]]; then
   if [[ -e "$SEED_OUT_NICE" ]]; then
     cp -r "$SEED_OUT_NICE" "$DEST_OUT_NICE"
   else
-    echo "torax_nice_self_rd_controller: no seed equilibrium at $DEST_OUT_NICE and no" >&2
+    echo "evolutive_controller: no seed equilibrium at $DEST_OUT_NICE and no" >&2
     echo "companion inverse_convergence output at $SEED_OUT_NICE to copy it from. Run" >&2
     echo "'bash run_workflow.sh inverse_convergence ${SHOT_NR}' first, or place a converged" >&2
     echo "NICE-inverse equilibrium+pf_active snapshot at $DEST_OUT_NICE yourself." >&2

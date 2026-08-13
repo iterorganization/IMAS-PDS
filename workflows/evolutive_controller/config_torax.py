@@ -1,4 +1,4 @@
-"""Scenario-generic TORAX config for the torax_nice_self_rd_controller evolutive coupling.
+"""Scenario-generic TORAX config for the evolutive_controller evolutive coupling.
 
 core_sources (the DINA-derived ECRH actuator trace) is imported the same way
 inverse_convergence imports its core_sources: over a MUSCLE3 port (waveform_editor.core_sources_out ->

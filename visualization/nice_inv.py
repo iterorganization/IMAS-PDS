@@ -48,8 +48,11 @@ class State(BaseState):
         if current_data is None:
             self.data["pf_active"] = new_point
         else:
-            self.data["pf_active"] = xr.concat(
+            combined = xr.concat(
                 [current_data, new_point], dim="time", join="outer"
+            )
+            self.data["pf_active"] = combined.drop_duplicates(
+                "time", keep="last"
             )
 
     def _extract_equilibrium(self, ids):
@@ -62,6 +65,14 @@ class State(BaseState):
     def _concat_time(current, new):
         """Concat along "time", NaN-padding ragged non-time dims to a
         common width first instead of relying on an index-based outer join.
+
+        Consecutive recorder messages can re-report the same physical time
+        (e.g. a controller iteration re-solving a boundary slice), so the
+        concatenated result is deduplicated on "time", keeping the most
+        recently written (i.e. most converged) slice. Without this, a
+        repeated time value makes `.sel(time=...)` return multiple slices
+        instead of one, breaking any consumer that expects a single slice
+        (e.g. the contour plot's `plt.tricontour` call).
         """
         widths = {}
         for ds in (current, new):
@@ -77,7 +88,8 @@ class State(BaseState):
             }
             return ds.pad(pad, constant_values=np.nan) if pad else ds
 
-        return xr.concat([_pad(current), _pad(new)], dim="time")
+        combined = xr.concat([_pad(current), _pad(new)], dim="time")
+        return combined.drop_duplicates("time", keep="last")
 
     def _extract_equilibrium_slice(self, ids, itime, ts):
         # Extract separatrix data

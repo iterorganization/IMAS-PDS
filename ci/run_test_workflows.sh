@@ -95,7 +95,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 bash run_workflow.sh prescribed_transport 105084
 bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
-# bash run_workflow.sh  torax_nice_self_rd_controller 105073
+# bash run_workflow.sh  evolutive_controller 105073
 
 # # WAIT FOR METIS EASYBUILD MODULE
 # bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10

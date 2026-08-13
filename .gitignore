@@ -38,4 +38,8 @@ workflows/*/scenarios/*/*
 # Per-scenario waveforms.yaml is a committed static file too.
 !workflows/*/scenarios/*/waveforms.yaml
 
+# Per-scenario config_torax.py overrides the workflow's shared config_torax.py (e.g.
+# scenario-specific transport calibration); also a committed static file.
+!workflows/*/scenarios/*/config_torax.py
+
 .claude
