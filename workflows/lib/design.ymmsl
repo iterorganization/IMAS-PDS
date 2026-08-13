@@ -9,15 +9,15 @@ ymmsl_version: v0.2
 #   we_final     waveform_editor   machine description for the final solve
 #   transport    (a hole)          filled with torax, or pruned to null
 #
-# Variants are made by pruning, in the workflow that wraps this model:
+# Variants are made by pruning, in the workflow that wraps this model. Pruning is total:
+# flatten() drops both the component and every conduit touching it.
 #
 #   inverse_convergence  everything present, transport: torax
-#   prescribed_transport transport / final_solve / we_final / validator / sink_torax /
-#                        rec_torax all null -- a single inverse pass. The loop actor
-#                        detects that its transport S ports are unconnected and stops
-#                        after one iteration (see lib/actors/outer_convergence_loop.py).
 #
-# Pruning is total: flatten() drops both the component and every conduit touching it.
+# Setting `transport` to null gives a single inverse pass: the loop actor detects that its
+# transport S ports are unconnected and stops after one iteration (see
+# lib/actors/outer_convergence_loop.py). No workflow does this today --
+# prescribed_transport predates this model and builds its own graph over lib/nice_inverse.
 
 imports:
 - from lib.programs import implementation source
