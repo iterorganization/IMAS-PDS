@@ -92,8 +92,8 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 ###### RUN WORKFLOWS ######
 export HDF5_USE_FILE_LOCKING=FALSE
 
-run_step prescribed_transport bash run_workflow.sh prescribed_transport 105099
-run_step inverse_convergence bash run_workflow.sh inverse_convergence 105084
+bash run_workflow.sh prescribed_transport 105099
+bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
 # bash run_workflow.sh  torax_nice_self_rd_controller 105073
 
@@ -102,13 +102,3 @@ run_step inverse_convergence bash run_workflow.sh inverse_convergence 105084
 # bash run_workflow.sh metis_predictive_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_interpretative_nicne_inverse_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
-
-###### CHECK RUNS ######
-wf_fail=0
-wait_step prescribed_transport "$pid_prescribed_transport" || wf_fail=1
-wait_step inverse_convergence "$pid_inverse_convergence" || wf_fail=1
-
-if [[ $wf_fail -ne 0 ]]; then
-  echo "One or more workflow runs failed" >&2
-  exit 1
-fi
