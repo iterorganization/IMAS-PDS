@@ -11,6 +11,8 @@ from imas import DBEntry
 from imas.ids_defs import CLOSEST_INTERP
 from matplotlib.lines import Line2D
 
+logger = logging.getLogger(__name__)
+
 PLOT_KWARGS = {"marker": "."}
 GET_KWARGS = {"interpolation_method": CLOSEST_INTERP, "lazy": True}
 
@@ -147,7 +149,7 @@ def pf_active_plots_dina_nice(args, dbs):
                     # crash the whole plot -- see also the analogous
                     # dina/machine-description coil-name mismatch handled in
                     # workflows/utils/preprocess_dina.py.
-                    logging.warning(
+                    logger.warning(
                         "pf_active coil name %r (%s) has no free plot slot "
                         "(dina/nice disagree on coil naming for this "
                         "scenario) -- skipping its plot.",
@@ -252,7 +254,7 @@ def core_profiles_plots_dina_torax(args, dbs):
 
     # profiles at t_list: first db as line, second as scatter (same convention
     # as the equilibrium 1D panels)
-    for col, (field, label) in enumerate(zip(fields, labels)):
+    for col, (field, label) in enumerate(zip(fields, labels, strict=True)):
         ax = axes[0][col]
         ax.set_title(label)
         ax.set_ylabel(label)
@@ -286,7 +288,7 @@ def core_profiles_plots_dina_torax(args, dbs):
         ax.legend(handles=handles)
 
     # central values over time
-    for col, (field, label) in enumerate(zip(fields, labels)):
+    for col, (field, label) in enumerate(zip(fields, labels, strict=True)):
         ax = axes[1][col]
         ax.set_title(f"central {label}")
         ax.set_ylabel(label)
@@ -539,7 +541,7 @@ def shape_comparison_plot(args, dbs):
     fig.suptitle(f"{args.shot_nr}: input vs final output plasma shape", fontsize=16)
     axes = axes.flatten()
 
-    for ax, t in zip(axes, args.t_list):
+    for ax, t in zip(axes, args.t_list, strict=False):
         dina_ts = dina.get_slice(
             "equilibrium", time_requested=t, **GET_KWARGS
         ).time_slice[0]

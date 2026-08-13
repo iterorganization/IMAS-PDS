@@ -133,7 +133,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
                     # match). Coil order is fixed ITER machine geometry and lines up
                     # correctly by index (verified), so this is not a misalignment --
                     # just log it in case a real mismatch ever does occur.
-                    logging.warning(
+                    logger.warning(
                         "pf_active coil name mismatch at index %d: "
                         "source=%r machine description=%r",
                         i,

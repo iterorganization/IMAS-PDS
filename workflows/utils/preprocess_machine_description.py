@@ -159,9 +159,9 @@ def preprocess_wall(db_out, db_md_wall):
     wallIn = db_md_wall.get("wall", autoconvert=False)
     wall = IDSFactory(version=DD_VERSION).wall()
     wall.ids_properties.homogeneous_time = 2  # static
-    wall.ids_properties.creation_date = datetime.datetime.now(
-        tz=datetime.timezone.utc
-    ).strftime("%y-%m-%d")
+    wall.ids_properties.creation_date = datetime.datetime.now(tz=datetime.UTC).strftime(
+        "%y-%m-%d"
+    )
     wall.description_2d.resize(1)
     wall.description_2d[0].type.index = 2
 

@@ -433,12 +433,12 @@ class Plotter(BasePlotter):
             # Extract X-points
             x_r = selected_data.x_points_r.values
             x_z = selected_data.x_points_z.values
-            x_points = list(zip(x_r, x_z))
+            x_points = list(zip(x_r, x_z, strict=True))
 
             # Extract O-points
             o_r = selected_data.o_points_r.values
             o_z = selected_data.o_points_z.values
-            o_points = list(zip(o_r, o_z))
+            o_points = list(zip(o_r, o_z, strict=True))
 
         o_scatter = hv.Scatter(o_points).opts(
             marker="o",
