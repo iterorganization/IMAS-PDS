@@ -5,53 +5,24 @@ ymmsl_version: v0.2
 # Import into a workflow or lib model with e.g.:
 #   imports:
 #   - from lib.programs import implementation torax
-# and run the manager with YMMSL_PATH pointing at the workflows/ directory, so that
-# `lib.programs` resolves to <workflows>/lib/programs.ymmsl.
+# and run the manager with YMMSL_PATH pointing at the workflows/ directory.
 #
-# HDF5_USE_FILE_LOCKING=FALSE is set on every program that opens an IDS entry. The entries
-# live on a network filesystem, and several actors read the same entry concurrently -- the
-# `source` and the waveform editor both read the scenario's data/in. `env:` is fine for it
-# because the value is a literal and needs no shell expansion.
+# `module load PDS` sets $EBROOTNICE, $EBROOTIMASMUSCLE3, $EBROOTWAVEFORMEDITOR and
+# $EBROOTTORAXMUSCLE3 to each actor's install prefix, and $PDS_REPO to the checkout. The
+# installs are built by setup_files/custom_modules/build_*.sh; setup_files/PDS.lua says why
+# the official SDCC modules cannot be used.
 #
-# Actor codes come from the custom modules built by setup_files/custom_modules/build_*.sh
-# -- see setup_files/PDS.lua for why the official SDCC modules cannot be used (RPATH and
-# PYTHONPATH conflicts). `module load PDS` sets $EBROOTNICE, $EBROOTIMASMUSCLE3,
-# $EBROOTWAVEFORMEDITOR and $EBROOTTORAXMUSCLE3 to each install prefix, and $PDS_REPO to
-# the checkout.
+# Only `modules`, `virtual_env`, `executable`, `args` and `script` are shell-expanded.
+# `env:` values are NOT, so anything referencing an install path belongs in a `script:`
+# block. HDF5_USE_FILE_LOCKING=FALSE is a literal, so `env:` is fine for it; it is set on
+# every program that opens an IDS entry, because several actors read the same entry
+# concurrently off a network filesystem.
 #
-# Only `modules`, `virtual_env`, `executable`, `args` and `script` are shell-expanded
-# (run_script.py writes them into a bash script); `env:` values go through Popen(env=...)
-# and are NOT expanded, so anything referencing an install path belongs in a `script:`
-# block, not in `env:`.
-#
-# Replaces lib/local_programs.ymmsl and lib/programs.ymmsl.template. Dropped from those:
-# `convergence_driver` and `dispatcher`, both unreferenced.
-#
-# ----- On `ports:` declarations ------------------------------------------------------
-# Declaring ports here lets _check_consistent_ports turn a wrong hole fill into a static
-# error. It is only safe for programs with ONE fixed signature. Deliberately NOT declared:
-#
-#   * the generic IMAS-MUSCLE3 actors -- they declare a port per IDS name and filter to
-#     the connected ones via get_port_list().
-#   * waveform_editor -- its ports follow the scenario's waveforms.yaml, so they differ
-#     per case (compare inverse_convergence's and prescribed_transport's declarations).
-#   * torax -- it has TWO incompatible signatures in this repo and takes no mode argument,
-#     so like the generic actors it adapts to what is connected:
-#         design co-sim (inverse_convergence):
-#           f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
-#           o_f:    [equilibrium_out_f, core_profiles_out_f]
-#         time-stepping co-sim (torax_nice_{,rd_}controller):
-#           f_init: [equilibrium_in_f, core_profiles_in_f]
-#           s:      [equilibrium_in_s]
-#           o_i:    [equilibrium_out_i, core_profiles_out_i]
-#     Declaring either set would make the other a hard error. Confirm against
-#     torax_muscle3.torax_actor before adding a declaration or splitting the program.
-#
-# `supported_settings:` is also absent, deliberately. It does NOT catch a misspelled or
-# mis-prefixed setting name -- _check_supported_setting iterates the settings you declare
-# and type-checks any that are set, so an unknown key simply matches nothing and is
-# ignored. Misspelling is caught by ci/check_ymmsl.py cross-checking case keys against
-# flattened instance names instead.
+# `ports:` are declared only on programs with ONE fixed signature, where they turn a wrong
+# hole fill into a static error. Not declared on: the generic IMAS-MUSCLE3 actors and
+# `waveform_editor`, which adapt to whatever is connected; and `torax`, which has two
+# incompatible signatures (design co-sim vs time-stepping co-sim) and takes no mode
+# argument, so declaring either would make the other a hard error.
 
 programs:
 
@@ -157,26 +128,15 @@ programs:
       exec $EBROOTTORAXMUSCLE3/venv/bin/python -u -m torax_muscle3.torax_actor "$@"
 
   # ----- METIS transport (MATLAB) -------------------------------------------------------
-  # No `ports:`, and for a well-established reason. metis4muscle3_port_list.m declares ONE
-  # fixed superset of ports -- clock/pulse_schedule/equilibrium/plasma_profiles/
-  # plasma_sources/core_profiles/core_sources on F_INIT, S, O_I and O_F -- with the comment
-  # "ports is only used if they are connected !". METIS adapts to what the workflow wires,
-  # exactly like the generic IMAS actors. There is no per-mode port set.
+  # No `ports:`: metis4muscle3_port_list.m declares one fixed superset and notes "ports is
+  # only used if they are connected !", so METIS adapts to what the workflow wires.
   #
-  # metis4muscle3's first argument is `debug_level`, NOT a coupling mode:
+  # metis4muscle3's first argument is `debug_level`, not a coupling mode:
   #   0 = none, 1 = Matlab logfile, 2 = +debugger stop on error, 3 = +keyboard stop.
-  # The old templates pass 2, which is kept here for equivalence, but 0 is what the
-  # docstring says production should use ("later it will be set to 0 in production").
+  # 2 is kept for equivalence with the previous definition; production should use 0.
   #
-  # Because the superset contains equilibrium_in_f, core_profiles_in_f, core_sources_in_f,
-  # equilibrium_out_f and core_profiles_out_f simultaneously, METIS satisfies the
-  # lib/design `transport` contract directly -- Goal E is
-  #     custom_implementations: {<workflow>.run.transport: metis}
-  # with no adapter, no rename and no union mode.
-  #
-  # The old templates set DIR_METIS4MUSCLE3 via `env:`, which MUSCLE3 passes through
-  # Popen(env=...) WITHOUT shell expansion -- so `$PDS_REPO` in it would arrive literally.
-  # Exported inside the script instead.
+  # DIR_METIS4MUSCLE3 is exported in the script rather than set via `env:`, which is not
+  # expanded.
   metis:
     description: METIS transport actor, coupling mode 2 (from-DINA co-simulation)
     script: |

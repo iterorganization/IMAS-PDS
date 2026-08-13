@@ -5,23 +5,15 @@
 # Both patches are unmerged upstream and both are load-bearing:
 #
 #   muscle3-manager-env-vars-and-input-copies   two changes to muscle_manager.py:
-#     (a) ${PDS_REPO} / ${SCENARIOS_REPO} in case files. Stock muscle3 uses setting values
-#         verbatim, so without this the actors receive a literal "${PDS_REPO}/...". Until
-#         bin/pds-run was deleted this job was done by its envsubst.
+#     (a) expands ${PDS_REPO} / ${SCENARIOS_REPO} in setting values. Stock muscle3 uses
+#         them verbatim, so without this the actors receive a literal "${PDS_REPO}/...".
 #     (b) copies the yMMSL files given on the command line into <run_dir>/input/, numbered
-#         in merge order. The run dir already gets configuration.ymmsl, but that is the
-#         resolved and flattened form -- four times the size and not what anyone wrote.
-#         run_dir.py's own layout docstring documents these copies; nothing implemented
-#         them. They are one patch because both touch the same regions of one file.
+#         in merge order. The run dir otherwise keeps only configuration.ymmsl, the
+#         resolved and flattened form.
 #
 #   waveform-editor-relative-imports      relative data URIs in a scenario's waveforms.yaml.
 #     Without it a scenario has to name its data by absolute path, which is only correct
 #     on the machine it was written on.
-#
-# FALLBACK: if the muscle3 patch is not merged in reasonable time, the alternative is a
-# thin wrapper that runs `envsubst` over the ymmsl files before calling muscle_manager --
-# what bin/pds-run did. That reintroduces a wrapper (against Goal C) but needs no patched
-# muscle3. The Waveform-Editor patch has no such fallback short of absolute paths.
 set -euo pipefail
 
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"

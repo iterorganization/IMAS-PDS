@@ -2,14 +2,12 @@ ymmsl_version: v0.2
 
 # Core model: inverse pulse design with an optional transport co-simulation.
 #
-# The graph is the consolidated inverse_convergence coupling, with the hand-copied
-# load_balancer/nice_inv pairs replaced by the lib/nice_inverse submodel and the
-# sink_source machine-description injector replaced by a second waveform editor:
+# Components:
 #
-#   load_balancer + nice_inv              -> solve        (nice_inverse)
-#   load_balancer_final + nice_final      -> final_solve  (nice_inverse)
-#   md_final (sink_source)                -> we_final     (waveform_editor)
-#   torax                                 -> transport    (a hole)
+#   solve        nice_inverse      load-balanced NICE inverse solve
+#   final_solve  nice_inverse      second solve, for control output
+#   we_final     waveform_editor   machine description for the final solve
+#   transport    (a hole)          filled with torax, or pruned to null
 #
 # Variants are made by pruning, in the workflow that wraps this model:
 #
@@ -64,7 +62,7 @@ models:
           o_f: [equilibrium_out, pf_active_out]
 
       transport:
-        description: transport model -- the Goal E hole; torax, or null for a single pass
+        description: transport model -- torax, or null for a single pass
         implementation: torax
         optional: true
         ports:

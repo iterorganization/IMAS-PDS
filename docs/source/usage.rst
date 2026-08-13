@@ -67,6 +67,15 @@ Sink outputs land in each sink's own work directory,
 ``<run_dir>/instances/<sink>/workdir/<name>``: relative IMAS URIs resolve against the
 instance's working directory, not the run directory.
 
+Setting keys and resources keys are written differently, which is worth knowing before you
+edit a case. Settings are matched by walking instance prefixes, so the short instance name
+is enough (``solve.nice.xml_path``). Resources are looked up by exact match, and the key
+must start with the root model name -- which for a case that imports its workflow is the
+full dotted import path
+(``prescribed_transport.workflow.prescribed_transport.solve.nice``). A resources key that
+matches nothing is not an error: that component silently gets one thread.
+``ci/check_ymmsl.py`` rejects both mistakes.
+
 Two unmerged upstream patches are required; ``setup_files/apply_patches.sh`` applies and
 verifies them.
 

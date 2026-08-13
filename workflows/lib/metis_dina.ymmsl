@@ -8,25 +8,16 @@ ymmsl_version: v0.2
 #   metis_from_dina              NICE branch pruned  (was metis_{interpretative,predictive}_from_dina)
 #   metis_nice_inverse_from_dina NICE branch present (was metis_*_nice_inverse_from_dina)
 #
-# The interpretative/predictive distinction is NOT a separate workflow. It is five
+# The interpretative/predictive distinction is not a separate workflow: it is five
 # settings -- metis.metis_external_data_{electron_temperature,electron_density,
-# ion_temperature,charge_effective,ECRH}, all 1 for interpretative and 0 for predictive --
-# and settings live in cases, because an imported file's settings are discarded by the
-# resolver. Four old workflows therefore become two workflows and four cases.
+# ion_temperature,charge_effective,ECRH}, all 1 for interpretative and 0 for predictive.
+# Four old workflows therefore become two workflows and four cases.
 #
-# NOT FOLDED INTO lib/design.ymmsl, deliberately: the coupling order is reversed. Here
-# METIS runs first and NICE fits coils to its equilibrium; in `design` NICE runs first and
-# transport consumes its equilibrium. They converge to the same fixed point but a single
-# pass differs, so merging would not be equivalence-preserving.
-#
-# `nice` is a bare nice_inv, NOT the lib/nice_inverse submodel: inserting a load balancer
-# would turn METIS's one whole-trace call into per-slice scatter/gather, which is likewise
-# not equivalence-preserving.
-#
-# `source_nice` stays a `sink_source`, as in the old templates. Goal F would make it a
-# waveform editor so machine description has one mechanism everywhere, but that is unproven
-# at runtime -- the editor would have to reproduce sink_source's time-aligned re-slicing --
-# and METIS is parked, so this model is left exactly equivalent to what it replaces.
+# Kept separate from lib/design.ymmsl because the coupling order is reversed: here METIS
+# runs first and NICE fits coils to its equilibrium, whereas in `design` NICE runs first
+# and transport consumes its equilibrium. Likewise `nice` is a bare nice_inv rather than
+# the lib/nice_inverse submodel, since a load balancer would turn METIS's one whole-trace
+# call into per-slice scatter/gather. Neither change would be equivalence-preserving.
 
 imports:
 - from lib.programs import implementation source

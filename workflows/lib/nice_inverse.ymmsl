@@ -1,27 +1,20 @@
 ymmsl_version: v0.2
 
-# Submodel: a NICE inverse solve, load-balanced over N workers.
-#
-# Wraps the load_balancer + nice_inv pair that inverse_convergence writes out twice by
-# hand (load_balancer/nice_inv and load_balancer_final/nice_final). Used as a component
+# Submodel: a NICE inverse solve, load-balanced over N workers. Use it as a component
 # implementation:
 #
 #   imports:
 #   - from lib.nice_inverse import implementation nice_inverse
-#   ...
 #     components:
 #       solve: {description: ..., implementation: nice_inverse, ports: {...}}
 #
-# Each use is independently customisable -- resolve() copy-on-writes the model along the
-# path -- so `solve.nice.xml_path` and `final_solve.nice.xml_path` are separate settings.
+# Each use is independently customisable, so `solve.nice.xml_path` and
+# `final_solve.nice.xml_path` are separate settings.
 #
-# LIMITATION: `multiplicity` is a model property and cannot be overridden from an overlay,
-# so every use of this submodel shares one worker count. Both uses are [1] today.
+# LIMITATION: `multiplicity` cannot be overridden from a case, so every use of this
+# submodel shares one worker count. Both uses are [1] today.
 #
-# Port names come from workflows/lib/actors/nice_load_balancer.py:68-73 --
-#   F_INIT {lane}_in, O_I {lane}_scatter[], S {lane}_gather[], O_F {lane}_out_f
-#   FWD_LANES = equilibrium, wall, pf_active, pf_passive, iron_core
-#   RES_LANES = equilibrium, pf_active
+# Port names come from workflows/lib/actors/nice_load_balancer.py:68-73.
 
 imports:
 - from lib.programs import implementation load_balancer

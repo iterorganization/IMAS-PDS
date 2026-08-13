@@ -1,23 +1,15 @@
 ymmsl_version: v0.2
 
 # Core model: forward co-simulation, equilibrium exchanged VIA the temporal coupler.
-# Replaces torax_nice_controller.
+# Backs torax_nice_controller.
 #
-# Three separate evolutive models exist rather than one with a swappable link, because a
-# single model carrying both the direct conduits and the coupler conduits would leave two
-# senders on `transport.equilibrium_in_s` and `nice_evo.equilibrium_s`. check_consistent()
-# does not flag that, but it is a double-wire at runtime. lib/direct_cosim.ymmsl.template's
-# own header reached the same conclusion.
-#
-#   evolutive_direct   direct both ways, nice_evo          (replaces evolutive)
-#   evolutive_coupled  via temporal_coupler, nice_evo      (this file; torax_nice_controller)
+#   evolutive_coupled  via temporal_coupler, nice_evo      (this file)
 #   evolutive_rd       direct + core_profiles, nice_evo_rd (torax_nice_rd_controller)
 #
-# Port names are taken from the two WORKING controller templates, not from
-# lib/direct_cosim.ymmsl.template: that file declares the transport hole with
-# equilibrium_f_init / equilibrium_s / equilibrium_o_i, but TORAX's actual ports are
-# equilibrium_in_f / equilibrium_in_s / equilibrium_out_i. It has never been runnable, so
-# the mismatch went unnoticed.
+# These are separate models rather than one with a swappable link: a single model carrying
+# both the direct and the coupler conduits would leave two senders on
+# `transport.equilibrium_in_s` and `nice_evo.equilibrium_s`, which check_consistent() does
+# not flag but which is a double-wire at runtime.
 
 imports:
 - from lib.programs import implementation source

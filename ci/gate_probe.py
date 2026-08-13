@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Verification 0 gate probe -- run this before writing any nested yMMSL.
+"""Measure how yMMSL prefixes keys, for the install you are actually running on.
 
-Everything in the modularisation plan that writes a prefixed key -- every case
-setting, every custom_implementations path, every resources entry -- depends on
-what this prints. Getting those prefixes wrong is silent: no error, no warning,
-just a default quietly used instead of your value.
+Every prefixed key -- case settings, custom_implementations paths, resources entries --
+depends on what this prints, and getting one wrong is silent: no error, no warning, just
+a default quietly used instead of your value.
 
 Usage:  python ci/gate_probe.py [ci/gate_probe.ymmsl]
 
@@ -13,28 +12,14 @@ Needs no scenario data, no actors and no IMAS -- only ymmsl and muscle3.
 Measured on muscle3 0.10.0 with ymmsl 0.17.0:
 
     instance names          run.inner              (nesting path only, no model name)
-    custom_implementations  probe.run.inner        (model name REQUIRED; bare form fails)
-    resources               probe.probe.run.inner  (ROOT MODEL NAME + instance, exact match)
+    custom_implementations  probe.run.inner        (model name required; bare form fails)
+    resources               probe.probe.run.inner  (root model name + instance, exact match)
 
-The three forms are all different -- do not generalise from one to another.
-
-The resources answer was previously recorded here as the bare instance name. That was
-wrong, and it silently cost a real run: `run.transport: {threads: 8}` in every case file
-got 1 thread instead of 8. Two reasons it was missed:
-
-  - the probe asked `get_resources(Reference("run.inner"))`, a lookup the manager never
-    performs. instance_manager.py:142 asks `get_resources(model.name + component.name)`,
-    and Configuration.get_resources is an exact dict `.get()` with no prefix walk -- so
-    the old probe reported "bare works" regardless of version. It now builds the key the
-    same way the manager does.
-  - `model.name` is module-qualified. Here that is `probe.probe`; for a case that imports
-    its workflow it is the full dotted import path, e.g.
-    `inverse_convergence.workflow.inverse_convergence`. resolver.py:177 sets
-    `impl.name = module + impl.name` and there is no way to alias it shorter.
-
-Settings are the exception that makes this easy to get wrong: get_setting DOES walk
-instance prefixes, so short `run.*` setting keys are correct while short resources keys
-are not. ci/check_ymmsl.py enforces each with its own rule.
+The three forms are all different -- do not generalise from one to another. In particular
+settings are matched by walking instance prefixes, so a short `run.*` key works, while
+resources are an exact dict lookup, so the same short key silently yields one thread. The
+root model name is module-qualified: `probe.probe` here, and for a case that imports its
+workflow the full dotted import path.
 
 Re-run on the target install to confirm before relying on it.
 """

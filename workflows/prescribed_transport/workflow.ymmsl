@@ -2,22 +2,10 @@ ymmsl_version: v0.2
 
 # prescribed_transport -- a single inverse solve against a prescribed boundary.
 #
-# Structure only: no scenario data, no paths, no variables. Run it by stacking a case:
+# Structure only: no scenario data, no paths, no variables. Run it through a case that
+# imports this model:
 #
-#   export PDS_REPO=/path/to/pds YMMSL_PATH=$PDS_REPO/workflows
-#   muscle_manager --start-all $PDS_REPO/workflows/prescribed_transport/workflow.ymmsl \
-#                              $PDS_REPO/cases/105084_prescribed.ymmsl
-#
-# Setting keys in the case are prefixed with the flattened instance name -- `solve.nice`
-# for the NICE workers, bare `source` / `waveform_editor` / `sink` / `rec_nice` for the
-# components at root depth. See ci/gate_probe.py.
-#
-# CHANGE FROM THE PREVIOUS DEFINITION: `nice_inv` (a bare NICE process) is replaced by
-# `solve`, the lib/nice_inverse submodel, which puts a load_balancer in front of the same
-# NICE worker. This adds one process and turns one whole-trace call into slice
-# scatter/gather -- the same shape inverse_convergence already uses. The Verification 2
-# flatten-diff for this workflow is therefore expected to be non-empty; review it rather
-# than requiring it to be identical.
+#   muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
 
 imports:
 - from lib.programs import implementation source
@@ -64,13 +52,7 @@ models:
       solve.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
       solve.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
 
-# NO `resources:` OR `settings:` BLOCK HERE, DELIBERATELY.
-#
-# Cases import this model rather than being stacked alongside it, and ymmsl's
-# resolve_impl_imports() copies only `models` and `programs` -- `settings` and `resources`
-# in an imported file are silently discarded (Implementation has no field for either).
-# Anything declared here would vanish with no diagnostic.
-#
-# So resources live in the case, keyed on flattened instance names:
-#   resources: {solve.nice: {threads: 2}, rec_nice: {threads: 1}}
-# ci/check_ymmsl.py fails the build if a case importing this model omits them.
+# No `resources:` or `settings:` here, deliberately: an imported file's settings and
+# resources are silently discarded, so anything declared here would vanish with no
+# diagnostic. Both live in the case instead, and ci/check_ymmsl.py fails a case that
+# omits them.

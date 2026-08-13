@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verification 1 -- static resolve + flatten of every case against its workflow.
+"""Static resolve + flatten of every case against its workflow.
 
 Catches, without needing scenario data or a running MUSCLE3:
 
