@@ -136,7 +136,7 @@ Exercise 5: increase the log level in the NICE config
 
         .. code-block:: console
 
-            cp workflows/prescribed_transport/config_nice.xml \
+            cp workflows/lib/config_nice_inverse.xml \
                my_config_nice.xml
             # in the copy: <verbose>1</verbose>
 

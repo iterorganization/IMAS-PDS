@@ -29,7 +29,7 @@ muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
 Or via SLURM, which sets all of the above for you:
 
 ```bash
-sbatch workflows/prescribed_transport/run_job.sbatch 105084
+sbatch --time=00:20:00 --cpus-per-task=8 workflows/run_case.sbatch 105084_prescribed
 ```
 
 Cases available: 105078, 105084, 105092, 105099 (`cases/<shot>_prescribed.ymmsl`).

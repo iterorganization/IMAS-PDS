@@ -59,8 +59,8 @@ settings:
   sink_inv.sink_mode: "w"
   sink_dir.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_dir"
   sink_dir.sink_mode: "w"
-  nice_inv.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
-  nice_dir.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
+  nice_inv.xml_path: [PWD_PLACEHOLDER]/workflows/lib/config_nice_inverse.xml
+  nice_dir.xml_path: [PWD_PLACEHOLDER]/workflows/lib/config_nice_inverse.xml
   muscle_remote_log_level: 'DEBUG'
 resources:
   source:

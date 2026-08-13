@@ -21,7 +21,7 @@ settings:
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105078/data/in"
   source.iterative: true
 
-  solve.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice.xml
+  solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
 
   # Relative URIs resolve against the instance's own work directory.
   sink.sink_uri: "imas:hdf5?path=out_nice"

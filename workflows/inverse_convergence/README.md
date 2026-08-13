@@ -36,7 +36,7 @@ muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
 Or via SLURM, which sets all of the above for you:
 
 ```bash
-sbatch workflows/inverse_convergence/run_job.sbatch 105084
+sbatch workflows/run_case.sbatch 105084_convergence
 ```
 
 Cases available: 105073, 105078, 105084, 105092, 105099 (`cases/<shot>_convergence.ymmsl`),

@@ -39,8 +39,8 @@ settings:
   run.loop.rel_tolerance: 0.03
 
   # Solvers.
-  run.solve.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
-  run.final_solve.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
+  run.solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
+  run.final_solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
   run.final_solve.nice.output_for_control: 1
   run.transport.python_config_module: ${SCENARIOS_REPO}/105073/config_torax.py
   run.transport.output_all_timeslices: True
