@@ -96,28 +96,6 @@ programs:
       export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $EBROOTNICE/run/nice_imas_inv_muscle3 "$@"
 
-  nice_evo:
-    description: NICE evolutive solve -- S/O_I time-stepping free-boundary equilibrium
-    ports:
-      f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init]
-      s: [equilibrium_s, pf_active_s]
-      o_i: [equilibrium_o_i, pf_active_o_i]
-    script: |
-      #!/bin/bash
-      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0
-      exec $EBROOTNICE/run/nice_imas_evo_muscle3 "$@"
-
-  nice_evo_rd:
-    description: NICE evolutive solve, resistive-diffusion variant -- adds core_profiles
-    ports:
-      f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init, core_profiles_f_init]
-      s: [equilibrium_s, pf_active_s, core_profiles_s]
-      o_i: [equilibrium_o_i, pf_active_o_i]
-    script: |
-      #!/bin/bash
-      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0
-      exec $EBROOTNICE/run/nice_imas_evo_rd_muscle3 "$@"
-
   # ----- TORAX transport ----------------------------------------------------------------
   torax:
     description: TORAX transport actor -- fills the `transport` hole (no ports, see header)
@@ -172,36 +150,3 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
 
-  temporal_coupler:
-    description: two-peer zero-order-hold coupler between transport and NICE
-    ports:
-      s: [a_in, b_in]
-      o_i: [a_out, b_out]
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u $PDS_REPO/workflows/lib/actors/temporal_coupler.py
-
-  # ----- PCS magnetic controller (SCDDS / MATLAB) ---------------------------------------
-  # env: is not expanded, so the paths are exported inside the script instead.
-  # PCS is NOT provided by `module load PDS`; it is still a per-user build under
-  # $PDS_REPO/run/pcs (setup_files/setup_pcs.sh). Only the controller workflows need it.
-  magnetic_controller:
-    description: PCS magnetic controller -- closes the coil-current loop
-    ports:
-      f_init: [equilibrium_in_f, pf_active_in_f]
-      s: [equilibrium_in_s, pf_active_in_s]
-      o_i: [pf_active_out_i]
-    script: |
-      #!/bin/bash
-      export PCS_PATH=$PDS_REPO/run/pcs
-      export CONTROLLER_PATH=$PDS_REPO/controllers
-      export SCDDS_COREPATH=$PDS_REPO/run/pcs/pcssp/scdds
-      exec matlab -batch "[s,t] = unix('which python'); \
-                          pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
-                          addpath(getenv('PCS_PATH')); \
-                          run('$EBROOTNICE/runmatlab/initNice4matlab.m'); \
-                          pcssp_pcs_add_paths; \
-                          comparisons.ExternalSCMLink.setupGitConfig(); \
-                          addpath(getenv('CONTROLLER_PATH')); \
-                          muscle_controller_NICE_IMAS_iter_init;"

@@ -1,9 +1,12 @@
 ymmsl_version: v0.2
 # Smoke test for the NICE actors (see setup_files/easyconfigs/n/NICE/).
 #
-# Only nice_inv and nice_dir are tested here: one-shot actors (F_INIT in,
-# O_F out) that fit this source -> actor -> sink topology. nice_evo is
-# iterative (O_I/S, needs a feedback loop) -- see workflows/torax_nice_controller.
+# Only nice_inv and nice_dir are tested here: they are one-shot actors
+# (F_INIT in, O_F out) that fit this source -> actor -> sink topology.
+# nice_evo is NOT tested: on the NICE master branch it became an iterative
+# actor (O_I/S ports exchanging equilibrium/pf_active with a peer every
+# t_interval), so it needs a feedback loop (temporal coupler + controller) to
+# run at all.
 imports:
 - from imas_muscle3 import implementation source_component
 - from imas_muscle3 import implementation sink_component
