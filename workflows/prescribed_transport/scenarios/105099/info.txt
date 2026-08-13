@@ -1,4 +1,0 @@
-Coupling DINA shot 105099.
-
-Last tested for versions:
-- Nice:     *git commit*

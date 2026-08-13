@@ -4,7 +4,7 @@ Running existing PDS simulations
 ================================
 
 In this section we show how to run pre existing workflows in this repo.
-You can use the actor specific test workflows or the iter scenario workflows.
+You can use the actor specific test workflows or the ITER scenario workflows.
 
 
 .. note::
@@ -26,14 +26,12 @@ You can use the actor specific test workflows or the iter scenario workflows.
     The easiest way to do this is to open a bash terminal on a compute node and work interactively from there.
     For more information on using compute nodes, see the `confluence page <https://confluence.iter.org/spaces/IMP/pages/316083236/How+to+work+interactively+on+a+batch+node+of+the+ITER+cluster>`_.
     Do keep in mind that certain graphical features like the IMAS-MUSCLE3 visualization actor are no longer immediately available from a compute node.
+    Some of the workflows are automatically run on the compute nodes.
 
     .. code-block:: console
 
         srun --pty bash
 
-
-Exercise 1
-----------
 
 First we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
@@ -62,6 +60,49 @@ The shell script currently expects to be run from the repository base directory.
     # to run the premade workflow
     bash run_workflow.sh <my_workflow> <my_scenario>
 
+
+Exercise 1
+----------
+
+Before running a full equilibrium+transport workflow, it is useful to first look at the
+``prescribed_transport`` workflow. This is the simplest workflow available: a
+minimal chain of ``source -> waveform_editor -> nice_inv -> sink``.
+Transport is **not** solved here: the plasma shape, Ip(t)/B0 and profile
+shape (``p'``, ``FF'``) are all fixed externally in ``waveforms.yaml``, and NICE-inverse solves
+the free-boundary equilibrium independently for each time slice, with no time coupling and no
+outer iteration. This makes it a quick way to check the equilibrium/coil side of the pipeline on
+its own, before adding the extra complexity of a self-consistently coupled transport solver.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Run the ``prescribed_transport`` workflow for scenario ``105092``.
+        This uses the same DINA-derived boundary/target trace as the
+        ``inverse_convergence`` workflow in the next exercise, but without a
+        TORAX transport solve, so NICE only needs to reproduce the prescribed equilibrium shape
+        and coil currents.
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: console
+
+            muscle_manager --start-all cases/105092_prescribed.ymmsl
+
+        Check if the results look as expected using the visualization tool. The solved
+        equilibrium and coil currents are written to
+        ``run/out/105092_prescribed/instances/sink/workdir/out_nice``.
+
+        Since transport is not solved, there are no profile comparison plots here, unlike
+        in the self-consistent transport workflow below.
+
+
+Exercise 2
+----------
+
+Next we look at the self-consistent transport workflow, which couples the equilibrium
+calculated by NICE to a transport solve using TORAX.
+
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
@@ -71,9 +112,9 @@ The shell script currently expects to be run from the repository base directory.
         a short ramp-up phase from t=0 to t=9,
         a flattop phase at ~ 3 MA from t=9 to t=147
         and ramp-down phase from t=147 to t=170.
-        The workflow uses DINA output for the 105092 scenario to give a desired plasma shape to NICE,
-        which calculates the coil currents needed to get the best approximation of this shape. This shape, 
-        together with the core_profiles and core_sources IDS is then used to calculate the current transport using TORAX.
+        The workflow uses DINA output for the 105092 scenario as a target to give a desired plasma shape to NICE,
+        which calculates the coil currents needed to get the best approximation of this shape. This shape,
+        together with the core_profiles and core_sources IDS is then used to calculate the current, ion and electron transport using TORAX.
 
         .. note::
             This run might take a while and will only show feedback through the visualization actor
@@ -89,8 +130,8 @@ The shell script currently expects to be run from the repository base directory.
             bash run_workflow.sh inverse_convergence 105092
 
         Check if results look as expected using the visualization tool.
-        You can also check the default plots: 
-        
+        You can also check the default plots:
+
         ``workflows/inverse_convergence/scenarios/105092/tmp/pds_coils_105092.png``
         ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
         ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
@@ -101,12 +142,12 @@ The shell script currently expects to be run from the repository base directory.
 
 You can also run some other workflows for different workflows and scenarios.
 
-Exercise 2
-----------
+Bonus Exercise
+--------------
 
 Next we look at actor specific test workflows.
 They are saved in the ``ymmsl_files`` directory.
-Test workflows can be run to check if everything is working as expected.
+Test workflows can be run to check if the individual actors are working as expected.
 These workflows can be used as a template for your own workflows.
 This exercise is mostly relevant for developers.
 
@@ -141,7 +182,7 @@ This exercise is mostly relevant for developers.
         ``test_sink_source_actor.ymmsl`` simply loads data from 1 Data Entry and saves it in a new one.
         The input and output are expected to be the same.
 
-        ``test_waveform_editor.ymmsl`` takes the timestamp of an incoming message and sets a waveform for 
+        ``test_waveform_editor.ymmsl`` takes the timestamp of an incoming message and sets a waveform for
         the ec_launchers/beam(1)/power_launched/data to ramp up to 50 kW over 10 seconds, remain constant for 30 seconds,
         and ramp down to 0 over 10 seconds again.
 
