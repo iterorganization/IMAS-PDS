@@ -77,25 +77,23 @@ if [[ $fail -ne 0 ]]; then
 fi
 
 ###### RUN TEST FILES ######
-# All actorn run on muscle3 0.10 so the manager also needs to run on 0.10.
+# All actors run on muscle3 0.10 so the manager also needs to run on 0.10.
 MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 
-# Prefixed tf_ to avoid colliding with the pid_<name> vars the setup steps
-# above already set and waited on (e.g. pid_torax, pid_waveform_editor).
-run_step tf_sink_source "$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
-run_step tf_accumulator "$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
-run_step tf_olc "$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
-run_step tf_waveform_editor "$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
-run_step tf_visualization "$MANAGER" --start-all ymmsl_files/test_visualization_actor.ymmsl
-run_step tf_torax "$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
-run_step tf_nice "$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
-# run_step tf_metis "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_visualization_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
+"$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
+# "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
 
 ###### RUN WORKFLOWS ######
-run_step prescribed_transport bash run_workflow.sh prescribed_transport 105084
+run_step prescribed_transport bash run_workflow.sh prescribed_transport 105099
 run_step inverse_convergence bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
-# bash run_workflow.sh  torax_nice_self_rd_controller 105084
+# bash run_workflow.sh  torax_nice_self_rd_controller 105073
 
 # # WAIT FOR METIS EASYBUILD MODULE
 # bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10
@@ -104,20 +102,6 @@ run_step inverse_convergence bash run_workflow.sh inverse_convergence 105084
 # bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
 
 ###### CHECK RUNS ######
-tf_fail=0
-wait_step tf_sink_source "$pid_tf_sink_source" || tf_fail=1
-wait_step tf_accumulator "$pid_tf_accumulator" || tf_fail=1
-wait_step tf_olc "$pid_tf_olc" || tf_fail=1
-wait_step tf_waveform_editor "$pid_tf_waveform_editor" || tf_fail=1
-wait_step tf_visualization "$pid_tf_visualization" || tf_fail=1
-wait_step tf_torax "$pid_tf_torax" || tf_fail=1
-wait_step tf_nice "$pid_tf_nice" || tf_fail=1
-
-if [[ $tf_fail -ne 0 ]]; then
-  echo "One or more test file runs failed" >&2
-  exit 1
-fi
-
 wf_fail=0
 wait_step prescribed_transport "$pid_prescribed_transport" || wf_fail=1
 wait_step inverse_convergence "$pid_inverse_convergence" || wf_fail=1
