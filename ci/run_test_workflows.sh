@@ -13,19 +13,77 @@ source "$(dirname "${BASH_SOURCE[0]}")/../setup_files/ensure_uv.sh"
 source /etc/profile.d/modules.sh
 module purge
 
-# bash pds_setup.sh
-bash setup_files/setup_test_files.sh
+# Bootstrap uv once here and put it on PATH so every setup_*.sh below finds
+# it via `command -v uv` and skips ensure_uv.sh's own bootstrap -- otherwise
+# running several of them in parallel would race on .uv-bootstrap.
+export PATH="$(dirname "$UV"):$PATH"
+
+# Run a setup step in the background, tagging its output with $name so
+# concurrent steps stay easy to tell apart in the CI log. Prints the
+# background PID, which the caller should save and hand to wait_step below.
+run_step() {
+  local name="$1"; shift
+  ( "$@" 2>&1 | sed -u "s/^/[$name] /" ) &
+  echo $!
+}
+
+# Wait for a step started with run_step and report failure under its name.
+wait_step() {
+  local name="$1" pid="$2"
+  wait "$pid" && return 0
+  echo "[$name] FAILED" >&2
+  return 1
+}
+
+# Dependency graph for the setup steps below ("->" = "must finish before"):
+#   muscle3 -> nice            (nice's build needs muscle3's muscle3.env)
+#   imas_muscle3 -> imas_validator   (installs into IMAS-MUSCLE3's venv)
+# test_files, waveform_editor, and torax have no dependencies and just run
+# alongside everything else.
+
+pid_test_files=$(run_step test_files bash setup_files/setup_test_files.sh)
 
 cd run/
-bash ../setup_files/setup_muscle3.sh
-bash ../setup_files/setup_imas_muscle3.sh
-bash ../setup_files/setup_waveform_editor.sh "https://github.com/iterorganization/Waveform-Editor.git" feature/reference-tendency-old
-bash ../setup_files/setup_nice.sh "https://gitlab.inria.fr/blfauger/nice.git" develop
-bash ../setup_files/setup_torax.sh
-# imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
-# (removed has_imas attribute); the olc actor needs the develop fix.
-"$UV" pip install --python ./IMAS-MUSCLE3/venv/bin/python "git+https://github.com/iterorganization/imas-validator.git@develop"
+
+pid_muscle3=$(run_step muscle3 bash ../setup_files/setup_muscle3.sh)
+pid_imas_muscle3=$(run_step imas_muscle3 bash ../setup_files/setup_imas_muscle3.sh)
+pid_waveform_editor=$(run_step waveform_editor bash ../setup_files/setup_waveform_editor.sh \
+  "https://github.com/iterorganization/Waveform-Editor.git" feature/reference-tendency-old)
+pid_torax=$(run_step torax bash ../setup_files/setup_torax.sh)
+
+fail=0
+
+if wait_step muscle3 "$pid_muscle3"; then
+  pid_nice=$(run_step nice bash ../setup_files/setup_nice.sh \
+    "https://gitlab.inria.fr/blfauger/nice.git" develop)
+else
+  echo "[nice] skipped -- muscle3 setup did not finish" >&2
+  fail=1
+fi
+
+if wait_step imas_muscle3 "$pid_imas_muscle3"; then
+  # imas-validator 1.0.0 (latest release) is incompatible with imas-python 2.3
+  # (removed has_imas attribute); the olc actor needs the develop fix.
+  pid_imas_validator=$(run_step imas_validator "$UV" pip install \
+    --python ./IMAS-MUSCLE3/venv/bin/python \
+    "git+https://github.com/iterorganization/imas-validator.git@develop")
+  wait_step imas_validator "$pid_imas_validator" || fail=1
+else
+  echo "[imas_validator] skipped -- imas_muscle3 setup did not finish" >&2
+  fail=1
+fi
+
+wait_step waveform_editor "$pid_waveform_editor" || fail=1
+wait_step torax "$pid_torax" || fail=1
+[[ -n "${pid_nice:-}" ]] && { wait_step nice "$pid_nice" || fail=1; }
+
 cd ..
+wait_step test_files "$pid_test_files" || fail=1
+
+if [[ $fail -ne 0 ]]; then
+  echo "One or more setup steps failed" >&2
+  exit 1
+fi
 
 
 # RUN TEST FILES
