@@ -90,6 +90,8 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 # "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
 
 ###### RUN WORKFLOWS ######
+export HDF5_USE_FILE_LOCKING=FALSE
+
 run_step prescribed_transport bash run_workflow.sh prescribed_transport 105099
 run_step inverse_convergence bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
