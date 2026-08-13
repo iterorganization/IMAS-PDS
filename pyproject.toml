@@ -78,7 +78,7 @@ visualization = [
     "holoviews",
     "panel",
     "param",
-    "imas_muscle3",
+    "imas_muscle3 @ git+https://github.com/iterorganization/IMAS-MUSCLE3.git@develop",
 ]
 
 [project.urls]

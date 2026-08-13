@@ -28,11 +28,11 @@ _SCALAR_WIDTH = 550
 class State(BaseState):
     """Extracts and stores time-evolving data from core_profiles and equilibrium IDS."""
 
-    def extract(self, ids):
-        if ids.metadata.name == "core_profiles":
-            self._extract_core_profiles(ids)
-        elif ids.metadata.name == "equilibrium":
-            self._extract_equilibrium(ids)
+    def extract(self, message):
+        if message.metadata.name == "core_profiles":
+            self._extract_core_profiles(message)
+        elif message.metadata.name == "equilibrium":
+            self._extract_equilibrium(message)
 
     def _extract_core_profiles(self, ids):
         """Extract 1D radial profiles and global scalars from a core_profiles IDS.

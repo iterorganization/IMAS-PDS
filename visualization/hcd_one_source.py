@@ -17,9 +17,9 @@ _PLOT_WIDTH = 550
 class State(BaseState):
     """Extracts scalar waveforms and 1D profiles for a SINGLE source."""
 
-    def extract(self, ids):
-        if ids.metadata.name == "core_sources":
-            self._extract_core_sources(ids)
+    def extract(self, message):
+        if message.metadata.name == "core_sources":
+            self._extract_core_sources(message)
 
     def _extract_core_sources(self, ids):
         if not ids.source or not ids.time:

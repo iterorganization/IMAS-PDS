@@ -27,11 +27,11 @@ logger = logging.getLogger()
 
 
 class State(BaseState):
-    def extract(self, ids):
-        if ids.metadata.name == "equilibrium":
-            self._extract_equilibrium(ids)
-        elif ids.metadata.name == "pf_active":
-            self._extract_pf_active(ids)
+    def extract(self, message):
+        if message.metadata.name == "equilibrium":
+            self._extract_equilibrium(message)
+        elif message.metadata.name == "pf_active":
+            self._extract_pf_active(message)
 
     def _extract_pf_active(self, ids):
         # (ncoil, ntime): a single slice and a whole trace both work.
