@@ -31,6 +31,35 @@ export PDS_REPO="$REPO"
 export SCENARIOS_REPO
 export YMMSL_PATH="$REPO/workflows"
 
+# Load the PDS module stack unless the caller already has one, so a submitted job does not
+# depend on the submitting shell. $PDS_MODULEPATH must hold YOUR module tree: the actors
+# resolve via the $EBROOT* it sets, and the manager must be a patched build (see below).
+if [[ -z "${MANAGER:-}" ]] && ! command -v muscle_manager >/dev/null 2>&1; then
+  if ! command -v module >/dev/null 2>&1; then
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    # shellcheck source=/usr/share/lmod/lmod/init/bash
+    [[ -f "$LMOD_INIT" ]] && source "$LMOD_INIT"
+  fi
+  [[ -n "${PDS_MODULEPATH:-}" ]] || { echo "set PDS_MODULEPATH to your module tree, or load PDS before submitting" >&2; exit 1; }
+  module use "$PDS_MODULEPATH"
+  module load PDS
+fi
+MANAGER="${MANAGER:-$(command -v muscle_manager)}"
+[[ -n "$MANAGER" ]] || { echo "no muscle_manager on PATH" >&2; exit 1; }
+
+# Cases name ${PDS_REPO} and ${SCENARIOS_REPO}; stock muscle3 passes setting values through
+# verbatim, so an unpatched manager hands the actors a literal "${SCENARIOS_REPO}/...".
+MANAGER_PY="$(dirname "$MANAGER")/python"
+[[ -x "$MANAGER_PY" ]] || MANAGER_PY="$(command -v python3 || true)"
+if [[ -x "$MANAGER_PY" ]]; then
+  MUSCLE3_MOD="$("$MANAGER_PY" -c 'import muscle3,os;print(os.path.join(os.path.dirname(muscle3.__file__),"muscle_manager.py"))' 2>/dev/null || true)"
+  if [[ -f "$MUSCLE3_MOD" ]] && ! grep -q expand_settings "$MUSCLE3_MOD"; then
+    echo "ERROR: $MANAGER is not patched -- \${SCENARIOS_REPO} will not expand." >&2
+    echo "       Run setup_files/apply_patches.sh against that install." >&2
+    exit 1
+  fi
+fi
+
 RUN_DIR="$REPO/run/out/${CASE_NAME%.ymmsl}"
 mkdir -p "$RUN_DIR"
-exec muscle_manager --start-all --run-dir "$RUN_DIR" "$CASE"
+exec "$MANAGER" --start-all --run-dir "$RUN_DIR" "$CASE"
