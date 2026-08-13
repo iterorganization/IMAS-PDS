@@ -1,5 +1,0 @@
-ymmsl_version: v0.2
-settings:
-  loop.t_min: 10
-  loop.t_max: 205
-  torax.python_config_module: ${SCEN}/config_torax.py

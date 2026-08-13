@@ -127,14 +127,12 @@ calculated by NICE to a transport solve using TORAX.
 
         .. code-block:: console
 
-            bash run_workflow.sh inverse_convergence 105092
+            muscle_manager --start-all cases/105092_convergence.ymmsl
 
-        Check if results look as expected using the visualization tool.
-        You can also check the default plots:
-
-        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_coils_105092.png``
-        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
-        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
+        Check if results look as expected using the visualization tool. The solved
+        equilibrium and coil currents are written to
+        ``run/out/105092_convergence/instances/run.sink_nice/workdir/out_nice``, and the
+        converged pulse to ``.../run.sink_torax/workdir/out_torax``.
 
         .. image:: pds_coils_105092.png
         .. image:: pds_equilibrium_0D_105092.png

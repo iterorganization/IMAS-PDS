@@ -11,10 +11,6 @@ set -euo pipefail
 # SLURM wrapper around a case file. Submit from the repo root, e.g.:
 #   sbatch workflows/prescribed_transport/run_job.sbatch 105084   (or run with bash)
 #
-# Takes a shot number and runs cases/<shot>_prescribed.ymmsl. The case is
-# self-contained -- it imports this workflow, so there is one file on the
-# command line and no generated scenario directory.
-#
 # Prefer $PDS_REPO (set by `module load PDS`) over $SLURM_SUBMIT_DIR/$PWD:
 REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
@@ -24,8 +20,6 @@ SHOT="${1:-${SHOT_NR:-}}"
 CASE="$REPO/cases/${SHOT}_prescribed.ymmsl"
 [[ -f "$CASE" ]] || { echo "no case file $CASE" >&2; exit 1; }
 
-# The case names ${SCENARIOS_REPO} and ${PDS_REPO}; muscle_manager expands both
-# (see ci/patches/muscle3-manager-env-vars-and-input-copies.patch).
 export PDS_REPO="$REPO"
 : "${SCENARIOS_REPO:=$(cd "$REPO/../pds-scenarios" && pwd)}"
 export SCENARIOS_REPO

@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 PDS_REPO = os.environ.get("PDS_REPO", str(Path(__file__).resolve().parents[2]))
-SCEN = f"{PDS_REPO}/workflows/inverse_convergence/scenarios"
+SCEN = os.environ.get("SCENARIOS_REPO", str(Path(PDS_REPO).parent / "pds-scenarios"))
 
 
 def load_rlte(path):
@@ -60,7 +60,7 @@ def main():
     data = {}
     for suffix, label in variants:
         try:
-            data[label] = load_rlte(f"{SCEN}/{shot}/tmp/data/{shot}_{suffix}")
+            data[label] = load_rlte(f"{SCEN}/{shot}/data/{suffix}")
         except Exception as exc:
             print(f"skipping {shot}_{suffix}: {exc}")
 
@@ -96,7 +96,7 @@ def main():
     ax1.legend(fontsize=8)
     ax2.legend(fontsize=8)
     fig.tight_layout()
-    out = f"{SCEN}/{shot}/tmp/pds_rlte_{shot}.png"
+    out = f"pds_rlte_{shot}.png"
     fig.savefig(out, dpi=140)
     print("wrote", out)
 

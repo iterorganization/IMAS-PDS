@@ -12,12 +12,9 @@ the free-boundary equilibrium per time slice; `sink` stores the resulting equili
 currents; `rec_nice` distills the same data (config: `visualization/nice_inv.py`) for the
 muscle3-dashboard.
 
-`solve` is the `lib/nice_inverse` submodel: a load balancer in front of N NICE workers, rather
-than the bare `nice_inv` process this workflow used previously. It slices the trace, scatters
-per-slice calls over the workers, re-gauges psi, and gathers results back in the original
-order. Verified bit-exact against the previous definition on 105084 -- 40 slices, 14 coils,
-zero difference on `ip`, `psi_boundary`, `psi_axis`, `magnetic_axis`, `beta_pol`, `li_3`,
-`profiles_1d.psi`/`q`, boundary outline and coil currents.
+`solve` is the `lib/nice_inverse` submodel: a load balancer in front of N NICE workers. It
+slices the trace, scatters per-slice calls over the workers, re-gauges psi, and gathers the
+results back in the original order.
 
 ## Running it
 
@@ -37,12 +34,8 @@ sbatch workflows/prescribed_transport/run_job.sbatch 105084
 
 Cases available: 105078, 105084, 105092, 105099 (`cases/<shot>_prescribed.ymmsl`).
 
-The case is self-contained -- it imports this workflow, so there is one file on the command
-line. Scenario data and waveform configs live in the separate `pds-scenarios` repository; see
-its `GENERATING.md` for how `data/` is produced from DINA and machine-description sources.
-
-To change one setting for a single run, put it in a second file and stack it after the case:
-`muscle_manager --start-all cases/105084_prescribed.ymmsl my_override.ymmsl`.
+Scenario data and waveform configs live in the separate `pds-scenarios` repository; see its
+`GENERATING.md` for how `data/` is produced from DINA and machine-description sources.
 
 ## Assumptions
 
@@ -61,8 +54,7 @@ To change one setting for a single run, put it in a second file and stack it aft
 
 ## Input requirements
 
-Everything below is produced by `tools/prepare <shot>` in the `pds-scenarios` repository,
-which reads the DINA and machine-description sources named in that scenario's `source.env`.
+Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
 
 - A DINA-derived source supplying the equilibrium boundary/target trace:
   `vacuum_toroidal_field/r0` and `/b0`, `global_quantities/ip` and `/psi_boundary`, and

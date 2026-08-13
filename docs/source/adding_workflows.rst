@@ -11,7 +11,7 @@ General
 
 Runnable scenarios are found in the ``workflows`` directory in the PDS repository.
 A runnable scenario for a given workflow is contained in a named directory like
-``workflows/inverse_convergence/scenarios/105092``.
+``workflows/metis_interpretative_from_dina/scenarios/105092``.
 It is executed by running the ``run_workflow.sh`` script with the workflow name as first argument
 and the scenario as second argument like:
 
@@ -77,13 +77,13 @@ where the placeholders are filled in. For example:
 
   # part of the .workflow.ymmsl template file in the workflow directory
   settings:
-    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/inverse_convergence/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/"
+    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/metis_interpretative_from_dina/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/"
 
 .. code-block:: bash
 
   # part of the resulting workflow.ymmsl runnable file in the scenario directory
   settings:
-    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/inverse_convergence/scenarios/105092/tmp/data/105092_out/"
+    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/metis_interpretative_from_dina/scenarios/105092/tmp/data/105092_out/"
 
 Running the Simulation
 ----------------------
