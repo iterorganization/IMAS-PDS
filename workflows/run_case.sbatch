@@ -14,14 +14,34 @@ set -euo pipefail
 # The defaults above suit a convergence run; override for anything smaller:
 #   sbatch --time=00:20:00 --cpus-per-task=8 workflows/run_case.sbatch 105084_prescribed
 #
-# Prefer $PDS_REPO (set by `module load PDS`) over $SLURM_SUBMIT_DIR/$PWD:
-# SLURM_SUBMIT_DIR is stuck at wherever an enclosing `srun --pty bash` was
-# first invoked from for the whole allocation, even after cd-ing elsewhere,
-# which silently pointed this at the wrong repo when run interactively.
-REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-
 CASE_NAME="${1:-}"
 [[ -n "$CASE_NAME" ]] || { echo "usage: $0 <case>   e.g. 105084_convergence" >&2; exit 1; }
+
+# Load the PDS module stack unless the caller already has one, so a submitted job does not
+# depend on the submitting shell. Prefer submitting with --export=NONE so it never does.
+if [[ -z "${MANAGER:-}" ]] && ! command -v muscle_manager >/dev/null 2>&1; then
+  if ! command -v module >/dev/null 2>&1; then
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    # shellcheck source=/usr/share/lmod/lmod/init/bash
+    [[ -f "$LMOD_INIT" ]] && source "$LMOD_INIT"
+  fi
+  command -v module >/dev/null 2>&1 || { echo "no Lmod available, and no muscle_manager on PATH" >&2; exit 1; }
+  loaded=0
+  for mp in "${PDS_MODULEPATH:-}" "$HOME/public/modules"; do
+    [[ -n "$mp" && -d "$mp/PDS" ]] || continue
+    module use "$mp"
+    if module load PDS 2>/dev/null; then loaded=1; break; fi
+  done
+  [[ $loaded -eq 1 ]] || { echo "could not load the PDS module; set PDS_MODULEPATH to your module tree" >&2; exit 1; }
+fi
+
+# Resolve the checkout only AFTER the module, which sets PDS_REPO. Deriving it from
+# ${BASH_SOURCE[0]} does not work here: SLURM copies the batch script into its spool
+# directory, so the script's own path is /var/spool/... and not the repo at all.
+REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
+[[ -f "$REPO/workflows/lib/programs.ymmsl" ]] || {
+  echo "PDS_REPO=$REPO is not a PDS checkout; export PDS_REPO or submit from the repo root" >&2
+  exit 1; }
 
 CASE="$REPO/cases/${CASE_NAME%.ymmsl}.ymmsl"
 [[ -f "$CASE" ]] || { echo "no case file $CASE" >&2; exit 1; }
@@ -30,20 +50,6 @@ export PDS_REPO="$REPO"
 : "${SCENARIOS_REPO:=$(cd "$REPO/../pds-scenarios" && pwd)}"
 export SCENARIOS_REPO
 export YMMSL_PATH="$REPO/workflows"
-
-# Load the PDS module stack unless the caller already has one, so a submitted job does not
-# depend on the submitting shell. $PDS_MODULEPATH must hold YOUR module tree: the actors
-# resolve via the $EBROOT* it sets, and the manager must be a patched build (see below).
-if [[ -z "${MANAGER:-}" ]] && ! command -v muscle_manager >/dev/null 2>&1; then
-  if ! command -v module >/dev/null 2>&1; then
-    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
-    # shellcheck source=/usr/share/lmod/lmod/init/bash
-    [[ -f "$LMOD_INIT" ]] && source "$LMOD_INIT"
-  fi
-  [[ -n "${PDS_MODULEPATH:-}" ]] || { echo "set PDS_MODULEPATH to your module tree, or load PDS before submitting" >&2; exit 1; }
-  module use "$PDS_MODULEPATH"
-  module load PDS
-fi
 MANAGER="${MANAGER:-$(command -v muscle_manager)}"
 [[ -n "$MANAGER" ]] || { echo "no muscle_manager on PATH" >&2; exit 1; }
 
