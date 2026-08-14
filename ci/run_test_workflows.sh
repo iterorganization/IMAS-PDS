@@ -84,21 +84,19 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 "$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_visualization_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
 # "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
 
 ###### RUN WORKFLOWS ######
 export HDF5_USE_FILE_LOCKING=FALSE
-
 bash run_workflow.sh prescribed_transport 105084
 bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
-# bash run_workflow.sh  torax_nice_self_rd_controller 105073
+# bash run_workflow.sh  evolutive_controller 105073
 
 # # WAIT FOR METIS EASYBUILD MODULE
 # bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_from_dina 105084 N_TIMESLICES=10
-# bash run_workflow.sh metis_interpretative_nicne_inverse_from_dina 105084 N_TIMESLICES=10
+# bash run_workflow.sh metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
