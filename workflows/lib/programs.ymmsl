@@ -124,9 +124,8 @@ programs:
       #!/bin/bash
       export DIR_METIS4MUSCLE3=${DIR_METIS4MUSCLE3:-$EBROOTMETISMINIRFM/workflow/muscle3/mfile}
       # Match the DD the IMAS-MATLAB module was built against: imas_serialize takes no
-      # version argument, so it emits whatever its MEX was compiled for. A literal, not
-      # ${VAR:-default} -- these scripts go through os.path.expandvars, which does not
-      # understand :- defaults and silently collapses them to an empty string.
+      # version argument, so it emits whatever its MEX was compiled for, and the rest of
+      # the stack pins 4.0.0.
       export IMAS_VERSION=4.1.1
       exec matlab -batch "[s,t] = unix('which python'); \
                           pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
