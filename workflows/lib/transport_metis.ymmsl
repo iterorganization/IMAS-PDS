@@ -23,7 +23,20 @@ ymmsl_version: v0.2
 # never learns METIS is different. METIS runs one reuse iteration per slice, in time order,
 # because it carries state between calls -- see the actor's docstring.
 #
-# NOT YET RUN. The structure is verified statically; the coupling is not.
+# BLOCKED ON THE ENVIRONMENT, not on anything in this repo.
+#
+# METIS starts, picks up the ports and enters its time loop, then dies in
+# metis4muscle3_read.m:71 on `Unrecognized function or variable 'imas_deserialize'`. That
+# function is the IMAS Access Layer MATLAB HLI (module IMAS-AL-Matlab), which METIS does
+# not ship and which has NO build for the intel-2025b toolchain this stack uses -- the
+# newest is intel-2023b. Its imas_deserialize.mexa64 loads under 2025b but then wants
+# libal-mex.so and libboost_filesystem 1.83, and `module load IMAS-AL-Matlab` will not
+# complete because it conflicts with Boost/1.88 + IMAS-Core/5.7.1 that NICE, TORAX,
+# IMAS-Python and METIS-IRFM all need.
+#
+# So this needs an IMAS-AL-Matlab built for intel-2025b (or a METIS wrapper that
+# deserializes through the Python bridge it already opens with pyenv). Everything on the
+# PDS side is in place and verified as far as it can be without that.
 
 imports:
 - from lib.programs import implementation metis
