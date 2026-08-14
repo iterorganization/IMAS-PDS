@@ -60,10 +60,14 @@ models:
         # name ends in `_f_init` carrying a timestamp (get_workflow_mode.m); with only the
         # _in_f set wired it finds none, concludes it is in replay mode, and exits looking
         # for a saved METIS data file. lib/metis_dina.ymmsl fans out the same way.
+        # o_i, NOT o_f. equilibrium_out_f is a FINALISATION port: METIS sends it once when
+        # its whole run ends, so the driver got one reply for two calls and then the socket
+        # closed. equilibrium_out_i is the O_I port it writes on every reuse iteration,
+        # which is what a per-slice conversation needs.
         ports:
           f_init: [pulse_schedule_f_init, pulse_schedule_in_f,
                    core_profiles_in_f, core_sources_in_f]
-          o_f: [equilibrium_out_f]
+          o_i: [equilibrium_out_i]
     conduits:
       # model input ports -> driver
       equilibrium_in_f: driver.equilibrium_in
@@ -82,7 +86,7 @@ models:
       driver.pulse_schedule_call: [metis.pulse_schedule_f_init, metis.pulse_schedule_in_f]
       # METIS -> driver, one slice per reply. core_profiles is not requested back, so the
       # driver echoes the trace it was given on that lane.
-      metis.equilibrium_out_f: driver.equilibrium_reply
+      metis.equilibrium_out_i: driver.equilibrium_reply
       # driver -> model output ports
       driver.equilibrium_out_f: equilibrium_out_f
       driver.core_profiles_out_f: core_profiles_out_f
