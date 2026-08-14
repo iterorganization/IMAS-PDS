@@ -182,6 +182,8 @@ programs:
     script: |
       #!/bin/bash
       source /etc/profile.d/lmod.sh 2>/dev/null
+      # Read PDS_REPO before the purge, which unsets what the PDS module exported.
+      PDS_PATCHES="${PDS_REPO:-}/workflows/lib/metis_patches"
       module purge
       module use ${PDS_MODULEPATH:-$HOME/public/modules}
       module load PDS-METIS IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
@@ -193,7 +195,7 @@ programs:
       # helper (make_metis4muscle3_external_equilibrium.m:4), so on a fresh session it gets
       # [] and dies with "SWITCH expression must be a scalar or a character vector". Only
       # reachable once an equilibrium is wired in, which no METIS workflow did before.
-      exec matlab -batch "setappdata(0,'IMAS_VERSION',4);pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+      exec matlab -batch "setappdata(0,'IMAS_VERSION',4);pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));addpath('$PDS_PATCHES');metis4muscle3(2);"
 
   # ----- PDS-owned actors (run in the IMAS-MUSCLE3 venv -- all import imas) -------------
   loop:
