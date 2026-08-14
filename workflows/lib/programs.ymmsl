@@ -68,7 +68,9 @@ programs:
     description: IMAS recorder actor -- distill-format run recording
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
     base_env: clean
-    modules: PDS-IMAS-MUSCLE3
+    # matplotlib too: this actor runs the plot config named by its `config` setting
+    # (visualization/*.py), and those import pyplot.
+    modules: [PDS-IMAS-MUSCLE3, matplotlib]
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.recorder_component
@@ -95,7 +97,9 @@ programs:
     description: IMAS visualization actor -- live plotting
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
     base_env: clean
-    modules: PDS-IMAS-MUSCLE3
+    # matplotlib too: this actor runs the plot config named by its `config` setting
+    # (visualization/*.py), and those import pyplot.
+    modules: [PDS-IMAS-MUSCLE3, matplotlib]
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
