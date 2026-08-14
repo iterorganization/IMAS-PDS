@@ -24,9 +24,6 @@ settings:
   rec_torax.auto: False
   rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
   nice_inv.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
-  md_final.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
-  nice_final.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice.xml
-  nice_final.output_for_control: 1
   torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
   validator.halt_on_error: False
   validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests

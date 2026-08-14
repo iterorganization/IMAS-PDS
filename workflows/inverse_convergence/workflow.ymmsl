@@ -40,9 +40,6 @@ models:
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
       rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
       rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
-      md_final:   {description: machine description for the final pass (coils-triggered), implementation: sink_source, ports: {f_init: [pf_active_in], o_f: [wall_out, pf_passive_out, iron_core_out]}}
-      load_balancer_final: {description: NICE load balancer (final linear-model pass), implementation: load_balancer, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
-      nice_final: {description: nice with linear-model output, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
     conduits:
       source.equilibrium_out: loop.equilibrium_in_f
       source.core_profiles_out: loop.core_profiles_in_f
@@ -67,17 +64,6 @@ models:
       torax.equilibrium_out_f: [loop.equilibrium_in_s, rec_torax.equilibrium_in]
       torax.core_profiles_out_f: [loop.core_profiles_in_s, rec_torax.core_profiles_in]
       loop.equilibrium_out_f: sink_torax.equilibrium_in
-      loop.pf_active_out_f: [sink_torax.pf_active_in, load_balancer_final.pf_active_in, md_final.pf_active_in, validator.pf_active_in]
+      loop.pf_active_out_f: [sink_torax.pf_active_in, validator.pf_active_in]
       loop.core_profiles_out_f: sink_torax.core_profiles_in
-      loop.equilibrium_target_out_f: load_balancer_final.equilibrium_in
-      md_final.wall_out: load_balancer_final.wall_in
-      md_final.pf_passive_out: load_balancer_final.pf_passive_in
-      md_final.iron_core_out: load_balancer_final.iron_core_in
-      load_balancer_final.equilibrium_scatter: nice_final.equilibrium_in
-      load_balancer_final.wall_scatter: nice_final.wall_in
-      load_balancer_final.pf_active_scatter: nice_final.pf_active_in
-      load_balancer_final.pf_passive_scatter: nice_final.pf_passive_in
-      load_balancer_final.iron_core_scatter: nice_final.iron_core_in
-      nice_final.equilibrium_out: load_balancer_final.equilibrium_gather
-      nice_final.pf_active_out: load_balancer_final.pf_active_gather
-resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}, nice_final: {threads: 2}}
+resources: {nice_inv: {threads: 2}, torax: {threads: 8}, rec_nice: {threads: 1}, rec_torax: {threads: 1}}
