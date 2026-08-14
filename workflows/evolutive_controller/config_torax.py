@@ -6,17 +6,6 @@ torax.core_sources_in_f), converted by the actor's receive_core_sources()/source
 and merged in via torax_config.update_fields({"sources.<key>": ...}) -- see
 torax_muscle3/torax_actor.py.
 
-That update_fields() call overrides sources.<key> for every key present in the imported IDS,
-not just 'ecrh' -- so this only stays self-consistent (ohmic/impurity_radiation computed by
-TORAX, not overridden by DINA) because sources_from_IMAS() only converts source entries whose
-identifier.name matches one of its recognized keys ('ec', 'ohmic', 'fusion', ... -- see
-torax/_src/imas_tools/input/core_sources.py) and silently skips everything else. Verified for
-this shot: DINA's raw core_sources record (scenarios/<shot>/tmp/data/<shot>_in) has 15 source
-entries all with an empty identifier.name; waveforms.yaml relabels only source(1) to 'ec', so
-sources_from_IMAS() picks up exactly ecrh and nothing else. If a different shot's DINA data
-carries real identifier names on other sources (e.g. an actual 'ohmic' label), those would
-silently override the physics-based config below -- worth re-checking per shot.
-
 t_initial/t_final below are placeholders that the actor overwrites at run time from the
 received equilibrium.
 """

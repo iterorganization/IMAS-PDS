@@ -1,8 +1,4 @@
 ymmsl_version: v0.2
-# Restrict to flattop only, mirroring 105084's approach (see its settings.ymmsl). Checked
-# Ip(t) in this scenario's inverse_convergence _out_nice seed trace: ramp-up runs to ~t=69s,
-# flattop holds Ip flat at ~-15.05 to -15.12MA from t~69s to t~142s, ramp-down starts ~t=150s.
-# Picked a window inside that, away from both transitions.
 settings:
   source.t_min: 80.0
   source.t_max: 130.0

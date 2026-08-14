@@ -33,14 +33,6 @@ def get_port_list(instance: Instance, operator: Operator) -> list[str]:
     return [port for port in total_port_list if instance.is_connected(port)]
 
 
-# IDS types the coupler can carry on a role (`a_in`/`a_out`/`b_in`/`b_out`),
-# each as a `<role>_<channel>` port (e.g. `a_in_equilibrium`,
-# `a_in_core_profiles`) -- every port follows this scheme, there is no
-# unsuffixed/bare port. MUSCLE3 requires all ports to be declared upfront,
-# so this is the finite universe a given workflow can pick any subset of
-# via its conduits -- wiring a channel that isn't in this list still needs
-# a one-line addition here, but everything else (labels, matching between
-# peers, timing) is fully generic to whatever combination is connected.
 CHANNELS = [
     "equilibrium",
     "core_profiles",

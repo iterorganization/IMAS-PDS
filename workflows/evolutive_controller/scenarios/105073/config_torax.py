@@ -6,12 +6,6 @@ config_torax.py (chi_*_bohm/gyrobohm_multiplier time knots: x1.8 through flattop
 to x4 over the t=140-205s ramp-down where DINA's confinement collapses with Ip) -- tuned
 there against this shot's DINA trace, reused here as-is since it's the same plasma.
 
-core_sources (the DINA-derived ECRH actuator trace) is imported the same way
-inverse_convergence imports its core_sources: over a MUSCLE3 port (waveform_editor.core_sources_out ->
-torax.core_sources_in_f), converted by the actor's receive_core_sources()/sources_from_IMAS()
-and merged in via torax_config.update_fields({"sources.<key>": ...}) -- see
-torax_muscle3/torax_actor.py.
-
 t_initial/t_final below are placeholders that the actor overwrites at run time from the
 received equilibrium.
 """

@@ -35,14 +35,6 @@ equilibrium = imas_deserialize(equilibrium_serial,'equilibrium');
 pf_active_serial=uint8(msg_pfa.data);
 pf_active=imas_deserialize(pf_active_serial,'pf_active');
 
-% nice_imas_evo_rd_muscle3 flags a rejected/rolled-back evolutive step with
-% code.output_flag=-1 (see Solver::_OutputDataFullEqui in run/nice): the
-% equilibrium is still the last valid state, but the derived coil currents
-% have been observed to come out unphysically large on exactly these steps
-% (a leftover-from-a-divergent-Newton-iterate bug in _ComputeCurrents()).
-% TORAX's actor (torax_actor.py) already skips output_flag=-1 messages
-% instead of feeding them into its state; do the same here rather than
-% feeding a spurious measurement into the closed loop.
 eq_flag = double(equilibrium.code.output_flag);
 pfa_flag = double(pf_active.code.output_flag);
 is_stale = (~isempty(eq_flag) && eq_flag(1) == -1) || (~isempty(pfa_flag) && pfa_flag(1) == -1);

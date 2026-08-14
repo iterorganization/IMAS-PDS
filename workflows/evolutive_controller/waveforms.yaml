@@ -23,10 +23,6 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
-# Passthrough of the full received (NICE-reconstructed) equilibrium -- a broad/structural
-# import, applied before the more specific state/targets overrides below (r_inboard/r_outboard/
-# gm1-9/dvolume_dpsi/j_phi/etc. are not touched by anything else in this file and pass straight
-# through, which is what TORAX's geometry builder needs).
 reconstruction:
   equilibrium/*:
     - {ref: eq}
@@ -53,21 +49,11 @@ state:
     - {ref: input}
   core_profiles/profiles_1d/t_i_average:
     - {ref: input}
-  # nice_evo_rd's RD bootstrap dereferences conductivity_parallel(i) with no bounds/size check
-  # (nice_imas.cc:9277) -- an empty array here segfaults it. j_non_inductive IS guarded there
-  # (falls back to j_bootstrap, then 0.0) but include it too since DINA has it and it's the
-  # non-inductive current NICE's RD solve needs, per the same unguarded loop.
   core_profiles/profiles_1d/conductivity_parallel:
     - {ref: input}
   core_profiles/profiles_1d/j_non_inductive:
     - {ref: input}
 
-# Targets: pass the DINA trace through as-is (no designed-pulse overlay -- the magnetic
-# controller and self-consistent transport determine Ip/coil currents/heating going forward,
-# this is only the F_INIT snapshot). core_sources/source(1) is relabeled 'ec' so TORAX's
-# sources_from_IMAS() recognizes it as the ECRH actuator; DINA's other 14 source entries have
-# no identifier.name at all, so sources_from_IMAS() skips them -- see the caveat this resolves
-# in config_torax.py.
 targets:
   equilibrium/vacuum_toroidal_field/r0:
     - {ref: input}
@@ -89,8 +75,5 @@ targets:
     - {value: ec}
   pf_active/coil(*)/current/data:
     - {ref: input}
-  # machine_description's pf_active/* wildcard (input_md) has empty voltage.data per coil;
-  # nice_imas.cc's ReadDataEvolutiveProblemWithRD indexes coil(i).voltage.data(0) with no
-  # size check in its no-supply-data fallback branch -- segfaults on an empty array.
   pf_active/coil(*)/voltage/data:
     - {ref: input}
