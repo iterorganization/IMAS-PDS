@@ -38,8 +38,26 @@ run_workflow_clean() {
   bash run_workflow.sh "$workflow" "$scenario" "$@"
 }
 
-run_workflow_clean prescribed_transport 105084
-run_workflow_clean inverse_convergence 105084
+# prescribed_transport and inverse_convergence no longer have a legacy scenarios/
+# directory: they are driven by cases/ instead, and both were verified bit-exact against
+# the pre-migration definitions before that layer was removed. They need a prepared
+# pds-scenarios checkout, so they are skipped when SCENARIOS_REPO is not set.
+#
+# They also need a PATCHED muscle_manager: the cases name ${PDS_REPO}/${SCENARIOS_REPO} and
+# stock muscle3 passes setting values through verbatim (see ci/patches/). CI now loads a
+# prebuilt shared PDS-IMAS-MUSCLE3 rather than building into run/, and
+# setup_files/apply_patches.sh refuses to modify a read-only shared install -- so check
+# rather than run something that would fail confusingly.
+MANAGER_PY="$(dirname "$MANAGER")/python"
+if [[ ! -d "${SCENARIOS_REPO:-}/105084/data/in" ]]; then
+  echo "SKIP: cases/105084_* need SCENARIOS_REPO pointing at a prepared pds-scenarios" >&2
+elif ! "$MANAGER_PY" -c 'import muscle3,os,sys; sys.exit(0 if "expand_settings" in open(os.path.join(os.path.dirname(muscle3.__file__),"muscle_manager.py")).read() else 1)' 2>/dev/null; then
+  echo "SKIP: cases/105084_* need a patched muscle_manager (ci/patches/); $MANAGER is stock" >&2
+else
+  "$MANAGER" --start-all cases/105084_prescribed.ymmsl
+  "$MANAGER" --start-all cases/105084_convergence.ymmsl
+fi
+
 run_workflow_clean evolutive_controller 105084
 run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
 run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
