@@ -7,16 +7,25 @@ ymmsl_version: v0.2
 #   - from lib.programs import implementation torax
 # and run the manager with YMMSL_PATH pointing at the workflows/ directory.
 #
-# `module load PDS` sets $EBROOTNICE, $EBROOTIMASMUSCLE3, $EBROOTWAVEFORMEDITOR and
-# $EBROOTTORAXMUSCLE3 to each actor's install prefix, and $PDS_REPO to the checkout. The
-# installs are built by setup_files/custom_modules/build_*.sh; setup_files/PDS.lua says why
-# the official SDCC modules cannot be used.
+# Every actor declares `base_env: clean` plus the modules it needs, so MUSCLE3 purges the
+# environment and loads only those in the actor's own subprocess. Actors are separate
+# processes precisely so they can have incompatible toolchains: MATLAB, for one, is killed
+# part-way through if it inherits the eleven-module stack that `module load PDS` produces,
+# while `module purge && module load IMAS-MATLAB` runs it fine. Nothing here should depend
+# on what the person who started the manager happened to have loaded.
 #
-# Only `modules`, `virtual_env`, `executable`, `args` and `script` are shell-expanded.
-# `env:` values are NOT, so anything referencing an install path belongs in a `script:`
-# block. HDF5_USE_FILE_LOCKING=FALSE is a literal, so `env:` is fine for it; it is set on
-# every program that opens an IDS entry, because several actors read the same entry
-# concurrently off a network filesystem.
+# $MODULEPATH is inherited, so `module use` your custom module tree before starting the
+# manager -- `module purge` does not clear it. Module names are deliberately unversioned:
+# the PDS-* builds are per-user (one tree has PDS-IMAS-MUSCLE3/1.0.0-local, another
+# 1.0.0-pds-2026-08-10), so each tree resolves its own default rather than this file
+# pinning one person's.
+#
+# Only `modules`, `virtual_env`, `executable`, `args` and `script` are shell-expanded, and
+# they are expanded AFTER the module loads, so $EBROOT* works in them. `env:` values are
+# NOT expanded, so anything referencing an install path has to go elsewhere.
+#
+# A program that sets `script:` has it used verbatim -- native_instantiator.py:231 skips the
+# generated module loading entirely -- so a script must purge and load for itself.
 #
 # `ports:` are declared only on programs with ONE fixed signature, where they turn a wrong
 # hole fill into a static error. Not declared on: the generic IMAS-MUSCLE3 actors and
@@ -31,6 +40,8 @@ programs:
   source:
     description: IMAS source actor -- reads an IDS entry onto O_I/O_F ports
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.source_component
@@ -38,6 +49,8 @@ programs:
   sink:
     description: IMAS sink actor -- writes received IDSs to an entry
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.sink_component
@@ -45,6 +58,8 @@ programs:
   sink_source:
     description: IMAS sink_source actor -- time-aligned re-emitter
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.sink_source_component
@@ -52,6 +67,8 @@ programs:
   recorder:
     description: IMAS recorder actor -- distill-format run recording
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.recorder_component
@@ -59,6 +76,8 @@ programs:
   validator:
     description: IMAS open-loop-check actor -- rule validation
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.olc_component
@@ -66,6 +85,8 @@ programs:
   accumulator:
     description: IMAS accumulator actor -- gathers timeslices into a full trace
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.accumulator_component
@@ -73,6 +94,8 @@ programs:
   visualization:
     description: IMAS visualization actor -- live plotting
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
@@ -81,6 +104,8 @@ programs:
   waveform_editor:
     description: Waveform-Editor actor -- owns the scenario's waveforms and data pointers
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    base_env: clean
+    modules: PDS-Waveform-Editor
     virtual_env: $EBROOTWAVEFORMEDITOR/venv
     executable: waveform-editor
     args: actor
@@ -91,18 +116,28 @@ programs:
     ports:
       f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
       o_f: [equilibrium_out, pf_active_out]
-    script: |
-      #!/bin/bash
-      export HDF5_USE_FILE_LOCKING=FALSE IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
-      exec $EBROOTNICE/run/nice_imas_inv_muscle3 "$@"
+    env:
+      HDF5_USE_FILE_LOCKING: "FALSE"
+      IMAS_AL_DISABLE_VALIDATE: "1"
+      IMAS_VERSION: "4.0.0"
+    base_env: clean
+    modules: PDS-NICE
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
 
   # ----- TORAX transport ----------------------------------------------------------------
   torax:
     description: TORAX transport actor -- fills the `transport` hole (no ports, see header)
+    # Stays a script: JAX_COMPILATION_CACHE_DIR needs $PDS_REPO expanded, and `env:` values
+    # are not expanded. A script is used verbatim, so it purges and loads for itself.
     script: |
       #!/bin/bash
-      export HDF5_USE_FILE_LOCKING=FALSE
-      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+      source /etc/profile.d/lmod.sh 2>/dev/null
+      module purge
+      module use ${PDS_MODULEPATH:-$HOME/public/modules}
+      module load PDS-TORAX-MUSCLE3
+      export HDF5_USE_FILE_LOCKING=FALSE IMAS_VERSION=4.0.0
+      export JAX_COMPILATION_CACHE_DIR=$PDS_REPO/tmp/jax_cache
+      export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
       exec $EBROOTTORAXMUSCLE3/venv/bin/python -u -m torax_muscle3.torax_actor "$@"
 
   # ----- METIS transport (MATLAB) -------------------------------------------------------
@@ -113,20 +148,33 @@ programs:
   #   0 = none, 1 = Matlab logfile, 2 = +debugger stop on error, 3 = +keyboard stop.
   # 2 is kept for equivalence with the previous definition; production should use 0.
   #
-  # DIR_METIS4MUSCLE3 comes from the PDS-METIS module; the fallback is the wrapper bundled
-  # with the official METIS-IRFM module, which supplies MATLAB either way. Note the
-  # variable is EBROOTMETISMINIRFM, not EBROOTMETISIRFM: EasyBuild rewrites the hyphen in
-  # METIS-IRFM to MIN. Exported in the script rather than set via `env:`, which is not
-  # expanded.
+  # METIS runs in a PURGED environment with only its own modules.
+  #
+  # MATLAB is killed part-way through when it inherits the full PDS stack -- eleven modules
+  # of library paths from NICE, TORAX, Waveform-Editor and the rest. On its own it is fine:
+  # `module purge && module load IMAS-MATLAB` then open/close an entry exits 0, while the
+  # same three lines under the full stack do not. Actors are separate processes precisely so
+  # they can have incompatible toolchains, so METIS gets only what it needs.
+  #
+  # This is done inside `script:` rather than with `base_env: clean` + `modules:` because a
+  # program that defines `script:` has it used verbatim -- native_instantiator.py:231 skips
+  # the generated module-loading entirely.
+  #
+  # IMAS_VERSION matches the DD the IMAS-MATLAB module was built for: imas_serialize takes
+  # no version argument and emits whatever its MEX was compiled against.
   metis:
     description: METIS transport actor (debug_level 2)
     script: |
       #!/bin/bash
-      export DIR_METIS4MUSCLE3=${DIR_METIS4MUSCLE3:-$EBROOTMETISMINIRFM/workflow/muscle3/mfile}
-      # Match the DD the IMAS-MATLAB module was built against: imas_serialize takes no
-      # version argument, so it emits whatever its MEX was compiled for, and the rest of
-      # the stack pins 4.0.0.
+      source /etc/profile.d/lmod.sh 2>/dev/null
+      module purge
+      module use ${PDS_MODULEPATH:-$HOME/public/modules}
+      module load METIS-IRFM
+      module load PDS-METIS
+      module load IMAS-MATLAB
+      module load PDS-IMAS-MUSCLE3
       export IMAS_VERSION=4.1.1
+      export HDF5_USE_FILE_LOCKING=FALSE
       exec matlab -batch "[s,t] = unix('which python'); \
                           pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
                           addpath(getenv('DIR_METIS4MUSCLE3')); \
