@@ -1,0 +1,80 @@
+ymmsl_version: v0.2
+
+# DINA shot 105084, inverse pulse design converged against METIS transport.
+#
+#   export PDS_REPO=/path/to/pds
+#   export SCENARIOS_REPO=/path/to/pds-scenarios
+#   export YMMSL_PATH=$PDS_REPO/workflows
+#   muscle_manager --start-all $PDS_REPO/cases/105084_metis_convergence.ymmsl
+#
+# The TORAX counterpart is 105084_convergence.ymmsl. Everything outside the transport
+# model is deliberately identical, so a diff of the two is the whole difference between
+# converging against TORAX and against METIS.
+#
+# NOT YET RUN: needs a METIS module on the target machine.
+
+imports:
+- from metis_convergence.workflow import implementation metis_convergence
+
+# Resources keys need the full root model name; settings keys do not (see docs/usage).
+resources:
+  metis_convergence.workflow.metis_convergence.run.solve.nice: {threads: 2}
+  metis_convergence.workflow.metis_convergence.run.final_solve.nice: {threads: 2}
+  metis_convergence.workflow.metis_convergence.run.transport.metis: {threads: 8}
+  metis_convergence.workflow.metis_convergence.run.rec_nice: {threads: 1}
+  metis_convergence.workflow.metis_convergence.run.rec_torax: {threads: 1}
+
+settings:
+  # Scenario: the pulse design and its input data.
+  run.waveform_editor.waveforms: ${SCENARIOS_REPO}/105084/waveforms.yaml
+  run.we_final.waveforms: ${SCENARIOS_REPO}/105084/waveforms_md_only.yaml
+  run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in"
+  run.source.iterative: False
+
+  # Convergence.
+  run.loop.cold_start: False
+  run.loop.max_iterations: 2
+  run.loop.max_slices: 0
+  run.loop.tolerance: 1000.0
+  run.loop.rel_tolerance: 0.03
+
+  # Solvers. METIS sits one level deeper than TORAX did, because it is wrapped by the
+  # lib/transport_metis submodel: `run.transport.metis`, not `run.transport`.
+  run.solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
+  run.final_solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
+  run.final_solve.nice.output_for_control: 1
+  run.transport.metis.metis_computation: 1
+  run.transport.metis.metis_psioffset: 9.0
+  # Predictive: METIS computes these itself. Set to 1 for interpretative, where they are
+  # taken from the input data instead. This pair of settings is the whole
+  # interpretative/predictive distinction the four old metis_* workflows encoded as
+  # separate directories.
+  run.transport.metis.metis_external_data_equilibrium: 0
+  run.transport.metis.metis_external_data_current_diffusion: 0
+  run.transport.metis.metis_external_data_electron_temperature: 0
+  run.transport.metis.metis_external_data_electron_density: 0
+  run.transport.metis.metis_external_data_ion_temperature: 0
+  run.transport.metis.metis_external_data_charge_effective: 0
+
+  # Output. Relative URIs resolve against the instance's own work directory.
+  run.sink_nice.sink_uri: "imas:hdf5?path=out_nice"
+  run.sink_nice.sink_mode: "w"
+  run.sink_torax.sink_uri: "imas:hdf5?path=out_metis"
+  run.sink_torax.sink_mode: "w"
+
+  # Recording.
+  run.rec_nice.format: distill
+  run.rec_nice.auto: False
+  run.rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  run.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in_md"
+  run.rec_torax.format: distill
+  run.rec_torax.auto: False
+  run.rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+
+  # Validation.
+  run.validator.halt_on_error: False
+  run.validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
+  run.validator.rulesets: iter-olc
+  run.validator.apply_generic: False
+
+  muscle_remote_log_level: 'INFO'

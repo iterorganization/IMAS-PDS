@@ -99,6 +99,7 @@ the instance's working directory, not the run directory.
 |---|---|---|
 | `105084_prescribed` | `prescribed_transport` | `105084` |
 | `105084_convergence` | `inverse_convergence` | `105084` |
+| `105084_metis_convergence` | `metis_convergence` | `105084` |
 
 Two unmerged upstream patches are required; `setup_files/apply_patches.sh` applies and
 verifies them. See `ci/patches/`.

@@ -1,0 +1,48 @@
+ymmsl_version: v0.2
+
+# Submodel: METIS as a filler for lib/design's `transport` hole.
+#
+# The hole's contract is TORAX's signature:
+#   f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+#   o_f:    [equilibrium_out_f, core_profiles_out_f]
+#
+# METIS declares all five of those names with matching operators -- see
+# metis4muscle3_port_list.m, which defines one fixed superset and notes "ports is only used
+# if they are connected !" -- so no renaming is needed and the conduits below are a
+# straight forward.
+#
+# This exists as a submodel rather than a bare `custom_implementations` swap to give METIS
+# somewhere to grow: it emits summary / plasma_profiles / plasma_sources / core_transport
+# that the hole does not carry, and it takes pulse_schedule that the hole does not supply.
+# Wire those here, not in lib/design, so the hole keeps TORAX's shape.
+#
+# UNVERIFIED AT RUNTIME. The port names line up, but TORAX takes every equilibrium time
+# slice in one f_init message whereas METIS drives its own reuse loop
+# (metis4muscle3.m:383). Whether METIS reads a whole trace off equilibrium_in_f the way
+# TORAX does has not been tested, and no METIS module is installed to test it with. If it
+# turns out to want one slice at a time, the adapter goes in this file -- a slicer on the
+# input side and an accumulator on the output side, the shape lib/nice_inverse already
+# uses -- and lib/design does not change.
+
+imports:
+- from lib.programs import implementation metis
+
+models:
+  transport_metis:
+    description: METIS filling the design transport hole
+    ports:
+      f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+      o_f: [equilibrium_out_f, core_profiles_out_f]
+    components:
+      metis:
+        description: METIS transport actor
+        implementation: metis
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+          o_f: [equilibrium_out_f, core_profiles_out_f]
+    conduits:
+      equilibrium_in_f: metis.equilibrium_in_f
+      core_profiles_in_f: metis.core_profiles_in_f
+      core_sources_in_f: metis.core_sources_in_f
+      metis.equilibrium_out_f: equilibrium_out_f
+      metis.core_profiles_out_f: core_profiles_out_f

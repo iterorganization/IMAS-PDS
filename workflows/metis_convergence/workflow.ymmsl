@@ -1,0 +1,26 @@
+ymmsl_version: v0.2
+
+# metis_convergence -- inverse pulse design converged against METIS transport.
+#
+# The same lib/design graph inverse_convergence uses, with the `transport` hole filled by
+# METIS instead of TORAX. Everything else -- the outer loop, both NICE solves, the sinks,
+# recorders and validator -- is identical, which is the point: swapping the transport model
+# is one custom_implementations line, not a second workflow definition.
+#
+#   muscle_manager --start-all $PDS_REPO/cases/<shot>_metis_convergence.ymmsl
+
+imports:
+- from lib.design import implementation design
+- from lib.transport_metis import implementation transport_metis
+
+models:
+  metis_convergence:
+    description: Inverse pulse design converged against METIS transport.
+    components:
+      run:
+        description: the design coupling
+        implementation: design
+        ports: {}   # design has no model ports; everything is internal
+
+custom_implementations:
+  metis_convergence.run.transport: transport_metis
