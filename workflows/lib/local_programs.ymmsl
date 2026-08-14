@@ -13,6 +13,8 @@ programs:
   validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
   recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
   waveform_editor: {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
+  passthrough:  {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/utils/passthrough.py}
+  temporal_coupler: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/utils/temporal_coupler.py}
 
   nice_inv:
     script: |
@@ -21,6 +23,35 @@ programs:
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+
+  nice_evo_rd:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_evo_rd_muscle3 "$@"
+
+  # PCS magnetic controller (SCDDS / MATLAB PCSSP). Needs the ssh-gated run/pcs checkout
+  # (setup_files/setup_pcs.sh) plus the IMAS-AL-Matlab / MATLAB modules below.
+  magnetic_controller:
+    env:
+      PCS_PATH: $PDS_REPO/run/pcs
+      CONTROLLER_PATH: $PDS_REPO/controllers
+      SCDDS_COREPATH: $PDS_REPO/run/pcs/pcssp/scdds
+    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
+    executable: matlab
+    # Explicitly pyenv() at the repo-local muscle3-0.10.0 venv python, NOT `which python`:
+    # on this system that resolves to a stray user ~/.local muscle3-0.8.0 libmuscle install,
+    # which is wire-incompatible with the 0.10.0 manager every other actor here uses --
+    # produces a "socket closed while receiving" registration failure after MATLAB startup.
+    args: -batch "pyenv('Version','$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess');
+                  addpath(getenv('PCS_PATH'));
+                  run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m');
+                  pcssp_pcs_add_paths;
+                  comparisons.ExternalSCMLink.setupGitConfig();
+                  addpath(getenv('CONTROLLER_PATH'));
+                  muscle_controller_NICE_IMAS_iter_init;"
 
   torax:
     script: |

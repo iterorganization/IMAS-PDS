@@ -28,6 +28,14 @@ and then iterates via S/O_I (like magnetic_controller) -- whichever ports
 a given workflow actually wires up. An IDS name with no connected input,
 or no connected output, is left alone: there is nothing to receive, or
 nowhere to route what was received.
+
+The `forward_f_init` setting (bool, default True) controls whether the
+F_INIT message is also forwarded to `_out_i`. Set it False for a
+stand-in whose real implementation only emits corrections computed from
+its S input, never its initial value verbatim (e.g. magnetic_controller)
+-- otherwise a sink/recorder accumulating O_I messages into one time
+series can see the F_INIT message's shape (e.g. missing fields the real
+per-step messages always set) mixed in as a bogus first slice.
 """
 
 import logging
@@ -50,6 +58,7 @@ def main() -> None:
     })
 
     while instance.reuse_instance():
+        forward_f_init = instance.get_setting("forward_f_init", "bool", default=True)
         in_f = {n for n in IDS_NAMES if instance.is_connected(f"{n}_in_f")}
         in_s = {n for n in IDS_NAMES if instance.is_connected(f"{n}_in_s")}
         out_f = {n for n in IDS_NAMES if instance.is_connected(f"{n}_out_f")}
@@ -61,7 +70,7 @@ def main() -> None:
             last = None
             if name in in_f:
                 last = instance.receive(f"{name}_in_f")
-                if name in out_i:
+                if name in out_i and forward_f_init:
                     instance.send(f"{name}_out_i", last)
             if name in in_s:
                 while True:

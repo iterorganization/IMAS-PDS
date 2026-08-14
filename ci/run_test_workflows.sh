@@ -100,5 +100,5 @@ bash run_workflow.sh inverse_convergence 105084
 # # WAIT FOR METIS EASYBUILD MODULE
 # bash run_workflow.sh metis_interpretative_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_from_dina 105084 N_TIMESLICES=10
-# bash run_workflow.sh metis_interpretative_nicne_inverse_from_dina 105084 N_TIMESLICES=10
+# bash run_workflow.sh metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
 # bash run_workflow.sh metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
