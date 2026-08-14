@@ -11,6 +11,10 @@ sources:
     it a whole trace silently discards everything but the final slice.
   * metis4muscle3_update_metis_input_on_equilibrium.m is the exception: it loops all
     received equilibrium slices and interpolates to METIS's own time.
+  * get_metis_input_from_muscle3.m builds METIS's actual input (cons1t/geo1t/option) from
+    the pulse_schedule port, and errors with "No input data available for METIS" if none
+    is connected. Equilibrium is not an input source -- it only supplies the time stamp
+    and constrains a run that already has input.
 
 So this actor sits between the hole and METIS: it takes the whole traces, splits them per
 time, calls METIS once per slice, collects the per-slice replies and reassembles whole
@@ -33,7 +37,11 @@ from ymmsl.v0_2 import Operator
 
 logger = logging.getLogger()
 
-FWD_LANES = ["equilibrium", "core_profiles", "core_sources"]
+# pulse_schedule is what METIS actually builds its input from
+# (get_metis_input_from_muscle3.m). The design hole does not carry one, so it arrives from
+# a source inside lib/transport_metis.ymmsl rather than from the hole -- but it still has
+# to be re-sent on every call, because METIS re-reads its inputs each reuse iteration.
+FWD_LANES = ["equilibrium", "core_profiles", "core_sources", "pulse_schedule"]
 RES_LANES = ["equilibrium", "core_profiles"]
 
 

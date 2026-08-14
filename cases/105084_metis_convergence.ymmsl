@@ -24,6 +24,7 @@ resources:
   metis_convergence.workflow.metis_convergence.run.final_solve.nice: {threads: 2}
   metis_convergence.workflow.metis_convergence.run.transport.metis: {threads: 8}
   metis_convergence.workflow.metis_convergence.run.transport.driver: {threads: 1}
+  metis_convergence.workflow.metis_convergence.run.transport.source_ps: {threads: 1}
   metis_convergence.workflow.metis_convergence.run.rec_nice: {threads: 1}
   metis_convergence.workflow.metis_convergence.run.rec_torax: {threads: 1}
 
@@ -33,6 +34,9 @@ settings:
   run.we_final.waveforms: ${SCENARIOS_REPO}/105084/waveforms_md_only.yaml
   run.source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in"
   run.source.iterative: False
+  # METIS builds its input from pulse_schedule, which the transport hole does not carry.
+  # data/metis_in is produced by tools/prepare --metis in the scenarios repo.
+  run.transport.source_ps.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/metis_in"
 
   # Convergence.
   run.loop.cold_start: False

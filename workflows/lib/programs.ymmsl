@@ -144,8 +144,8 @@ programs:
   metis_driver:
     description: drives METIS slice-by-slice behind a whole-trace interface
     ports:
-      f_init: [equilibrium_in, core_profiles_in, core_sources_in]
-      o_i: [equilibrium_call, core_profiles_call, core_sources_call]
+      f_init: [equilibrium_in, core_profiles_in, core_sources_in, pulse_schedule_in]
+      o_i: [equilibrium_call, core_profiles_call, core_sources_call, pulse_schedule_call]
       s: [equilibrium_reply, core_profiles_reply]
       o_f: [equilibrium_out_f, core_profiles_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
