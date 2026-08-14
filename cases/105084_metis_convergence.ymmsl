@@ -23,6 +23,7 @@ resources:
   metis_convergence.workflow.metis_convergence.run.solve.nice: {threads: 2}
   metis_convergence.workflow.metis_convergence.run.final_solve.nice: {threads: 2}
   metis_convergence.workflow.metis_convergence.run.transport.metis: {threads: 8}
+  metis_convergence.workflow.metis_convergence.run.transport.driver: {threads: 1}
   metis_convergence.workflow.metis_convergence.run.rec_nice: {threads: 1}
   metis_convergence.workflow.metis_convergence.run.rec_torax: {threads: 1}
 

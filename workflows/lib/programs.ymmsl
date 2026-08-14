@@ -141,6 +141,18 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
 
+  metis_driver:
+    description: drives METIS slice-by-slice behind a whole-trace interface
+    ports:
+      f_init: [equilibrium_in, core_profiles_in, core_sources_in]
+      o_i: [equilibrium_call, core_profiles_call, core_sources_call]
+      s: [equilibrium_reply, core_profiles_reply]
+      o_f: [equilibrium_out_f, core_profiles_out_f]
+    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/metis_driver.py
+
   load_balancer:
     description: IMAS-aware NICE load balancer -- scatters slices over N workers
     ports:

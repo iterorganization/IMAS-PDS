@@ -6,58 +6,62 @@ ymmsl_version: v0.2
 #   f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
 #   o_f:    [equilibrium_out_f, core_profiles_out_f]
 #
-# METIS declares all five of those names with matching operators -- see
-# metis4muscle3_port_list.m, which defines one fixed superset and notes "ports is only used
-# if they are connected !" -- so no renaming is needed and the conduits below are a
-# straight forward.
+# METIS declares all five of those names with matching operators -- metis4muscle3_port_list.m
+# defines one fixed superset and notes "ports is only used if they are connected !" -- so no
+# renaming is needed. The time semantics differ though, which is why a driver sits between
+# the hole and METIS rather than the two being wired straight together. From the sources:
 #
-# This exists as a submodel rather than a bare `custom_implementations` swap to give METIS
-# somewhere to grow: it emits summary / plasma_profiles / plasma_sources / core_transport
-# that the hole does not carry, and it takes pulse_schedule that the hole does not supply.
-# Wire those here, not in lib/design, so the hole keeps TORAX's shape.
-#
-# NOT USABLE AS IT STANDS -- the conduits below are a placeholder, not a working coupling.
-#
-# The port names match, but the time semantics do not. Read from the METIS sources:
-#
-#   equilibrium_in_f    metis4muscle3_update_metis_input_on_equilibrium.m loops over every
-#                       received time slice and interpolates to METIS's current time, so a
-#                       whole trace IS handled here.
-#   core_profiles_in_f  metis4muscle3_make_external_data.m takes profiles_1d{end} -- only
-#   core_sources_in_f   the LAST slice -- and accumulates across reuse iterations. A whole
-#                       trace is silently truncated.
+#   equilibrium_in_f    update_metis_input_on_equilibrium.m loops every received slice and
+#                       interpolates to METIS's current time -- a whole trace works here.
+#   core_profiles_in_f  make_external_data.m takes profiles_1d{end}, only the LAST slice,
+#   core_sources_in_f   then accumulates across reuse iterations. A whole trace is
+#                       silently truncated.
 #   *_out_f             get_ids_time_slice.m emits ids_get_slice(..., t_cur, 2): ONE slice
-#                       per reuse iteration, never the whole trace.
+#                       per reuse iteration, never a whole trace.
 #
-# lib/design's `transport` hole is TORAX-shaped: whole trace in, whole trace out, one
-# exchange per Picard iteration. METIS is slice-at-a-time. Bridging that needs a driver
-# actor between the hole and METIS -- whole traces on F_INIT, per-slice out on O_I,
-# per-slice back on S, reassembled whole traces on O_F, driving METIS through its
-# equilibrium_out_i / *_in_s ports rather than the _f ones used below. That is the shape
-# workflows/lib/actors/nice_load_balancer.py already implements for NICE.
+# lib/actors/metis_driver.py absorbs that difference, so lib/design keeps TORAX's shape and
+# never learns METIS is different. METIS runs one reuse iteration per slice, in time order,
+# because it carries state between calls -- see the actor's docstring.
 #
-# Keeping the seam here rather than in lib/design is the point: the driver lands in this
-# file and lib/design never learns that METIS is different.
+# NOT YET RUN. The structure is verified statically; the coupling is not.
 
 imports:
 - from lib.programs import implementation metis
+- from lib.programs import implementation metis_driver
 
 models:
   transport_metis:
-    description: METIS filling the design transport hole
+    description: METIS filling the design transport hole, driven slice-by-slice
     ports:
       f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
       o_f: [equilibrium_out_f, core_profiles_out_f]
     components:
+      driver:
+        description: splits the traces, calls METIS per slice, reassembles
+        implementation: metis_driver
+        ports:
+          f_init: [equilibrium_in, core_profiles_in, core_sources_in]
+          o_i: [equilibrium_call, core_profiles_call, core_sources_call]
+          s: [equilibrium_reply, core_profiles_reply]
+          o_f: [equilibrium_out_f, core_profiles_out_f]
       metis:
-        description: METIS transport actor
+        description: METIS transport actor -- one reuse iteration per time slice
         implementation: metis
         ports:
           f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
           o_f: [equilibrium_out_f, core_profiles_out_f]
     conduits:
-      equilibrium_in_f: metis.equilibrium_in_f
-      core_profiles_in_f: metis.core_profiles_in_f
-      core_sources_in_f: metis.core_sources_in_f
-      metis.equilibrium_out_f: equilibrium_out_f
-      metis.core_profiles_out_f: core_profiles_out_f
+      # model input ports -> driver
+      equilibrium_in_f: driver.equilibrium_in
+      core_profiles_in_f: driver.core_profiles_in
+      core_sources_in_f: driver.core_sources_in
+      # driver -> METIS, one slice per call
+      driver.equilibrium_call: metis.equilibrium_in_f
+      driver.core_profiles_call: metis.core_profiles_in_f
+      driver.core_sources_call: metis.core_sources_in_f
+      # METIS -> driver, one slice per reply
+      metis.equilibrium_out_f: driver.equilibrium_reply
+      metis.core_profiles_out_f: driver.core_profiles_reply
+      # driver -> model output ports
+      driver.equilibrium_out_f: equilibrium_out_f
+      driver.core_profiles_out_f: core_profiles_out_f
