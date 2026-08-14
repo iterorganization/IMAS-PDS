@@ -157,23 +157,44 @@ implementations:
       JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS: 0
     executable: python
     args: "-u -m torax_muscle3.torax_actor"
-  magnetic_controller: 
-    env:
-      PCS_PATH: [BASEDIR_PLACEHOLDER]/run/pcs
-      CONTROLLER_PATH: [BASEDIR_PLACEHOLDER]/controllers
-      SCDDS_COREPATH: [BASEDIR_PLACEHOLDER]/run/pcs/pcssp/scdds
-    base_env: clean
-    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
-    executable: matlab
-    # args: -r "[s,t] = unix('which python');
-    args: -batch "[s,t] = unix('which python');
-                  pyenv('Version',strtrim(t),'ExecutionMode','InProcess');
-                  addpath(getenv('PCS_PATH'));
-                  run('[BASEDIR_PLACEHOLDER]/run/nice/runmatlab/initNice4matlab.m');
-                  pcssp_pcs_add_paths;
-                  comparisons.ExternalSCMLink.setupGitConfig();
-                  addpath(getenv('CONTROLLER_PATH'));
-                  muscle_controller_NICE_IMAS_iter_init;"
+  magnetic_controller:
+    # `env:` values are set before this actor's own module loads run (see
+    # metis's `script:` block in workflows/lib/local_programs.ymmsl for the
+    # full explanation, confirmed there empirically) -- so `$EBROOTPCS`
+    # inside an `env:` value is never shell-expanded, it's passed to matlab
+    # as the literal 6-character string "$EBROOTPCS" (confirmed: MATLAB
+    # warned `addpath` got a nonexistent directory containing that literal
+    # text). A `script:` block is required here, same reasoning as metis,
+    # so PCS_PATH/SCDDS_COREPATH can be `export`ed as real bash statements
+    # after `module load PDS-PCS` has actually set $EBROOTPCS.
+    #
+    # muscle_controller_NICE_IMAS_iter_init.m calls `py.libmuscle.Instance(...)`
+    # directly (same as metis4muscle3.m) -- confirmed empirically the exact
+    # same failure as metis: `unix('which python')` resolved to a bare
+    # Python/3.11.5-GCCcore-13.2.0 (from IMAS-AL-Matlab's own dependency
+    # chain) whose only importable `libmuscle` came from a personal
+    # ~/.local pip install at 0.8.0, two minor versions behind the real
+    # muscle_manager's 0.10.0 -- so the actor ran to completion (exit 0) but
+    # never actually registered ("no error, but it never registered ...
+    # Maybe it never created an Instance object?"). Fixed the same way:
+    # PDS-PCS's own dedicated Python-3.11 + muscle3==0.10.0 venv (built by
+    # build_pcs.sh), plus `unset PYTHONPATH` since IMAS-AL-Matlab leaks a
+    # numpy onto PYTHONPATH here too.
+    script: |
+      #!/bin/bash
+      module purge
+      module load PDS-PCS PDS-NICE IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
+      unset PYTHONPATH
+      export PCS_PATH=$EBROOTPCS
+      export CONTROLLER_PATH=[BASEDIR_PLACEHOLDER]/controllers
+      export SCDDS_COREPATH=$EBROOTPCS/pcssp/scdds
+      exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');
+                    addpath(getenv('PCS_PATH'));
+                    run('$EBROOTNICE/runmatlab/initNice4matlab.m');
+                    pcssp_pcs_add_paths;
+                    comparisons.ExternalSCMLink.setupGitConfig();
+                    addpath(getenv('CONTROLLER_PATH'));
+                    muscle_controller_NICE_IMAS_iter_init;"
   visualization:
     base_env: clean
     modules: PDS-IMAS-MUSCLE3

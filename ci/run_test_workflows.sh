@@ -100,20 +100,30 @@ run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
 
 # TODO: torax_nice_controller / torax_nice_rd_controller -- every actor
 # except magnetic_controller already runs correctly under the new
-# module-loading design. magnetic_controller itself needs run/pcs (a PCS +
-# PCSSP checkout), which setup_files/custom_modules/build_pcs.sh can
-# produce, but building it is currently blocked on git access to
-# ssh://git@git.iter.org/pcs/pcs.git ("Repository not found / no
-# permission"). Re-enable once that access is sorted out and PDS-PCS exists.
+# module-loading design. PDS-PCS now exists (setup_files/custom_modules/
+# build_pcs.sh, git access to ssh://git@git.iter.org/pcs/pcs.git resolved),
+# including its own dedicated muscle3==0.10.0 venv (same fix pattern as
+# METIS's). magnetic_controller's actor still fails to register with the
+# manager (exit code 0, no error, but never registers) -- root cause not yet
+# diagnosed. Re-enable once that's fixed.
 # run_workflow_clean torax_nice_controller 105073
 # run_workflow_clean torax_nice_rd_controller 105073
 
 # TODO: metis_interpretative_nice_inverse_from_dina /
 # metis_predictive_nice_inverse_from_dina -- fail at "CREATING RUNNABLE
-# YMMSL FILE" with `tmp/PSI_OFFSET: No such file or directory`. This file is
-# never written by either workflow's own preprocess_data.sh (confirmed by
-# reading it) -- a pre-existing gap in the METIS/NICE coupling itself, not a
-# module-loading issue introduced by this rework. Needs its own
-# investigation into what's supposed to generate tmp/PSI_OFFSET.
+# YMMSL FILE" with `tmp/PSI_OFFSET: No such file or directory`.
+# `create_runnable_files.sh`'s `source $PWD/tmp/PSI_OFFSET` has never had a
+# writer anywhere in this repo's history, back to the commit that first
+# added these workflows -- confirmed via full git log on both
+# preprocess_data.sh and create_runnable_files.sh. `metis_psioffset` is
+# METIS's own poloidal-flux calibration constant between METIS's and the
+# external equilibrium's psi convention (see METIS's own
+# metis4muscle3_setting_list.m: "psi_metis = cocos_sign * psi_equilibrium /
+# (2*pi) - psioffset"); METIS's own sample configs all default it to 0.0.
+# The working sibling metis_interpretative_from_dina instead hardcodes 9.0,
+# an empirically-tuned value for that scenario's data, not a METIS default.
+# Neither 0.0 nor 9.0 is verified correct for the NICE-coupled case, and no
+# script in this repo computes one -- this needs real METIS/NICE physics
+# input, not a guess. Left out of CI until that value exists.
 # run_workflow_clean metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
 # run_workflow_clean metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
