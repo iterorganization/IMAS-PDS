@@ -11,9 +11,8 @@ ymmsl_version: v0.2
 # model is deliberately identical, so a diff of the two is the whole difference between
 # converging against TORAX and against METIS.
 #
-# NOT RUNNABLE YET. lib/transport_metis.ymmsl is a placeholder: METIS emits one time
-# slice per reuse iteration where the design loop expects a whole trace. See that file
-# for what the driver actor has to do.
+# METIS emits one time slice per reuse iteration where the design loop expects a whole
+# trace; lib/transport_metis.ymmsl bridges the two with a driver actor.
 
 imports:
 - from metis_convergence.workflow import implementation metis_convergence

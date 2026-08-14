@@ -85,13 +85,18 @@ def main() -> None:
                     " forwarding %s, expecting %s",
                     n, times[0], times[-1], ",".join(fwd), ",".join(res_lanes))
 
+        # Every call needs a finite next_timestamp, including the last one of the pass.
+        # METIS latches metis_exit the moment it sees a non-finite t_next
+        # (metis4muscle3.m:975) and nothing ever clears it -- not even a reuse_instance()
+        # that returns True -- so telling it "no next slice" at the end of a pass shuts it
+        # down for good, and the following Picard pass finds no peer. The last slice gets
+        # an extrapolated stamp instead; METIS's reuse loop is ended by its ports closing
+        # when this actor shuts down, which is how MUSCLE3 expects it to end.
+        step = (times[-1] - times[0]) / (n - 1) if n > 1 else 1.0
+
         res = {l: [None] * n for l in res_lanes}
         for k, t in enumerate(times):
-            # next_timestamp is not optional here: METIS ends its reuse loop as soon as it
-            # sees a non-finite t_next (metis4muscle3.m:975), so sending only a timestamp
-            # makes it do exactly one slice and exit, and the next receive dies on a closed
-            # socket. None on the last slice is how it is told the pulse is over.
-            nxt = times[k + 1] if k + 1 < n else None
+            nxt = times[k + 1] if k + 1 < n else times[-1] + step
             for l in fwd:
                 inst.send(f"{l}_call", Message(t, nxt, per[l][k]))
             for l in res_lanes:
