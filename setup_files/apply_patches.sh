@@ -1,6 +1,6 @@
 #!/bin/bash
-# Apply the local patches PDS depends on. Run from the 'run' folder, after
-# setup_imas_muscle3.sh and setup_waveform_editor.sh. Idempotent: re-running is a no-op.
+# Apply the local patches PDS depends on. Run after the IMAS-MUSCLE3 and Waveform-Editor
+# installs exist (setup_files/custom_modules/build_*.sh). Idempotent: re-running is a no-op.
 #
 # Both patches are unmerged upstream and both are load-bearing:
 #
@@ -24,7 +24,7 @@ PATCHES="$PDS_REPO/ci/patches"
 M3_VENV="${M3_VENV:-${EBROOTIMASMUSCLE3:+$EBROOTIMASMUSCLE3/venv}}"
 M3_VENV="${M3_VENV:-$PWD/IMAS-MUSCLE3/venv}"
 WE_DIR="${WE_DIR:-${EBROOTWAVEFORMEDITOR:-$PWD/Waveform-Editor}}"
-# Two layouts in use. setup_files/setup_waveform_editor.sh clones the repo directly into
+# Two layouts in use. Older checkouts have the repo cloned directly into
 # run/Waveform-Editor, so the prefix IS the checkout. custom_modules/build_*.sh instead
 # creates <prefix>/{src,venv} and does `pip install -e <prefix>/src`, so the checkout is
 # one level down -- and because that install is editable, patching src/ is what takes
@@ -51,12 +51,12 @@ Two ways forward:
   1. Ask whoever owns the module to fold ci/patches/ into their
      setup_files/custom_modules/build_*.sh, and rebuild. This is the right fix.
   2. Build your own copies and point the module variables at them for your session:
-       cd \$PDS_REPO/run
-       bash ../setup_files/setup_imas_muscle3.sh
-       bash ../setup_files/setup_waveform_editor.sh
-       export EBROOTIMASMUSCLE3=\$PDS_REPO/run/IMAS-MUSCLE3
-       export EBROOTWAVEFORMEDITOR=\$PDS_REPO/run/Waveform-Editor
-       bash ../setup_files/apply_patches.sh
+       cd \$PDS_REPO/setup_files/custom_modules
+       bash build_imas_muscle3.sh 1.0.0-local
+       bash build_waveform_editor.sh 0.3.1-local feature/reference-tendency-old
+       module use \$HOME/public/modules
+       module load PDS-IMAS-MUSCLE3 PDS-Waveform-Editor
+       bash \$PDS_REPO/setup_files/apply_patches.sh
      The rest of the stack (NICE, TORAX, the IMAS modules) still comes from the module.
 MSG
     exit 1
@@ -107,7 +107,7 @@ if [[ -d "$M3_VENV" ]]; then
   apply_to_tree "$SITE" "$PATCHES/muscle3-manager-env-vars-and-input-copies.patch" \
                 "muscle3/muscle_manager.py" "def save_input_files("
 else
-  echo "  SKIPPED: no venv at $M3_VENV -- run setup_imas_muscle3.sh first" >&2
+  echo "  SKIPPED: no venv at $M3_VENV -- run custom_modules/build_imas_muscle3.sh first" >&2
   fail=1
 fi
 
@@ -121,7 +121,7 @@ if [[ -d "$WE_DIR/.git" ]]; then
   fi
   apply_to_git_repo "$WE_DIR" "$PATCHES/waveform-editor-relative-imports.patch"
 else
-  echo "  SKIPPED: no checkout at $WE_DIR -- run setup_waveform_editor.sh first" >&2
+  echo "  SKIPPED: no checkout at $WE_DIR -- run custom_modules/build_waveform_editor.sh first" >&2
   fail=1
 fi
 
