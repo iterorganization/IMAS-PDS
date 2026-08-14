@@ -152,20 +152,25 @@ programs:
   #   0 = none, 1 = Matlab logfile, 2 = +debugger stop on error, 3 = +keyboard stop.
   # 2 is kept for equivalence with the previous definition; production should use 0.
   #
-  # METIS runs in a PURGED environment with only its own modules.
+  # METIS runs in a purged environment with only its own modules, and crucially with its own
+  # Python. metis4muscle3.m has no MATLAB-native MUSCLE3 client -- it drives Python's real
+  # libmuscle through MATLAB's pyenv()/py.* bridge, which constrains that Python twice over:
   #
-  # MATLAB is killed part-way through when it inherits the full PDS stack -- eleven modules
-  # of library paths from NICE, TORAX, Waveform-Editor and the rest. On its own it is fine:
-  # `module purge && module load IMAS-MATLAB` then open/close an entry exits 0, while the
-  # same three lines under the full stack do not. Actors are separate processes precisely so
-  # they can have incompatible toolchains, so METIS gets only what it needs.
+  #   * its libmuscle must match the manager exactly (0.10.0), or registration fails with a
+  #     wire-protocol "Unknown session" error;
+  #   * it must be a version MATLAB's py.* bridge supports -- 3.9-3.12, and not the 3.13 that
+  #     PDS-IMAS-MUSCLE3's venv uses.
   #
-  # This is done inside `script:` rather than with `base_env: clean` + `modules:` because a
-  # program that defines `script:` has it used verbatim -- native_instantiator.py:231 skips
-  # the generated module-loading entirely.
+  # $EBROOTMETIS/muscle3_venv (built by setup_files/custom_modules/build_metis.sh) is a
+  # dedicated Python 3.11 venv with muscle3==0.10.0 that satisfies both. Taking whatever
+  # `which python` returns instead picks up the unsupported 3.13 and MATLAB dies mid-run.
   #
-  # IMAS_VERSION matches the DD the IMAS-MATLAB module was built for: imas_serialize takes
-  # no version argument and emits whatever its MEX was compiled against.
+  # PYTHONPATH is unset because pyenv inherits this process's environment even in InProcess
+  # mode, and would otherwise import a mismatched numpy under the venv's own Python.
+  #
+  # Done in `script:` rather than `base_env: clean` + `modules:` because a program that sets
+  # `script:` has it used verbatim -- native_instantiator.py:231 skips the generated module
+  # loading entirely.
   metis:
     description: METIS transport actor (debug_level 2)
     script: |
@@ -176,13 +181,10 @@ programs:
       module load METIS-IRFM
       module load PDS-METIS
       module load IMAS-MATLAB
-      module load PDS-IMAS-MUSCLE3
+      unset PYTHONPATH
       export IMAS_VERSION=4.1.1
       export HDF5_USE_FILE_LOCKING=FALSE
-      exec matlab -batch "[s,t] = unix('which python'); \
-                          pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
-                          addpath(getenv('DIR_METIS4MUSCLE3')); \
-                          metis4muscle3(2);"
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
 
   # ----- PDS-owned actors (run in the IMAS-MUSCLE3 venv -- all import imas) -------------
   loop:
