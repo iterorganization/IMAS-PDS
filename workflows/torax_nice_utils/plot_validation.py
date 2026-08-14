@@ -142,13 +142,6 @@ def pf_active_plots_dina_nice(args, dbs):
             if coil_name not in coil_dict:
                 next_slot = max(coil_dict.values(), default=-1) + 1
                 if next_slot >= len(axes):
-                    # dina/nice are expected to agree on all 14 physical coils'
-                    # name strings (the grid is sized for exactly that many);
-                    # if they disagree on even one coil for this scenario, a
-                    # 15th unique name shows up here. Skip it rather than
-                    # crash the whole plot -- see also the analogous
-                    # dina/machine-description coil-name mismatch handled in
-                    # workflows/utils/preprocess_dina.py.
                     logger.warning(
                         "pf_active coil name %r (%s) has no free plot slot "
                         "(dina/nice disagree on coil naming for this "

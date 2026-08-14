@@ -75,7 +75,7 @@ This workflow is meant to be rerun multiple times until the results are converge
 
 .. code-block:: bash
 
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084
+  bash run_workflow.sh inverse_convergence 105084
 
 Requirements:
 
@@ -107,7 +107,7 @@ Requirements:
 - Requires equilibrium, pf_active, pf_passive, iron_core and wall IDS for NICE input.
 - Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
 - Requires pf_active IDS to have coil objects with resistance values for NICE input.
-- Requires to run torax_nice_self_consistent_transport for the shot 105073 before.
+- Requires to run inverse_convergence for the shot 105073 before.
 
 TORAX-NICE-RD-CONTROLLER
 ------------------------
@@ -130,6 +130,6 @@ Requirements:
 - Requires equilibrium, core_profiles, pf_active, pf_passive, iron_core and wall IDS for NICE input.
 - Requires pf_active IDS where each coil contains exactly one element in the elements AoS for NICE input.
 - Requires pf_active IDS to have coil objects with resistance values for NICE input.
-- Requires to run torax_nice_self_consistent_transport for the shot 105073 before.
+- Requires to run inverse_convergence for the shot 105073 before.
 
 

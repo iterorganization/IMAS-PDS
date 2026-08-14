@@ -1,14 +1,9 @@
 ymmsl_version: v0.1
-# Smoke test for the NICE muscle3 actors, built by
-# setup_files/custom_modules/build_nice.sh against muscle3 0.10.0
-# and exposed as the PDS-NICE module.
+# Smoke test for the PDS-NICE actors (see setup_files/custom_modules/build_nice.sh).
 #
-# Only nice_inv and nice_dir are tested here: they are one-shot actors
-# (F_INIT in, O_F out) that fit this source -> actor -> sink topology.
-# nice_evo is NOT tested: on the NICE master branch it became an iterative
-# actor (O_I/S ports exchanging equilibrium/pf_active with a peer every
-# t_interval), so it needs a feedback loop (temporal coupler + controller) to
-# run at all -- see workflows/torax_nice_controller for its real coupling.
+# Only nice_inv and nice_dir are tested here: one-shot actors (F_INIT in,
+# O_F out) that fit this source -> actor -> sink topology. nice_evo is
+# iterative (O_I/S, needs a feedback loop) -- see workflows/torax_nice_controller.
 model:
   name: test_nice_actor
   components:

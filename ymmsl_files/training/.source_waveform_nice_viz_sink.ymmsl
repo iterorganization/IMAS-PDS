@@ -52,28 +52,39 @@ settings:
   sink.sink_mode: "x"
   nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
-  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization.plot_file_path: [PWD_PLACEHOLDER]/visualization/nice_inv.py
   visualization.automatic_mode: true
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
 implementations:
   source:
-    virtual_env: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   waveform_editor:
-    modules: Waveform-Editor
+    base_env: clean
+    modules: PDS-Waveform-Editor
+    virtual_env: $EBROOTWAVEFORMEDITOR/venv
     executable: waveform-editor
     args: actor
   sink:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
-    modules: NICE
-    executable: nice_imas_inv_muscle3
+    base_env: clean
+    modules: PDS-NICE
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
   visualization_component:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
 resources:

@@ -1,23 +1,14 @@
 #!/bin/bash
-# Build a custom PCS module: clones the PCS + PCSSP repos into shared storage
-# once, instead of every user cloning both into their own local run/pcs/
-# directory (setup_files/setup_pcs.sh's old per-checkout approach).
+# Build a custom PCS module: clones PCS + PCSSP into shared storage once
+# instead of a per-user local checkout.
 #
-# No compile step: the magnetic_controller actor invokes PCS/PCSSP as raw
-# MATLAB source, not a compiled binary -- see
-# workflows/torax_nice_*controller/workflow.ymmsl.template's
-# `magnetic_controller` actor. The module just needs the checkout to exist
-# somewhere shared and point PCS_PATH/SCDDS_COREPATH at it.
+# No compile step -- the magnetic_controller actor invokes PCS/PCSSP as raw
+# MATLAB source, not a compiled binary. The module just needs the checkout
+# to exist somewhere shared and point PCS_PATH/SCDDS_COREPATH at it.
 #
-# Also builds muscle3_venv: same reasoning as build_metis.sh's own
-# muscle3_venv (confirmed empirically here too, identical symptom --
-# `which python` after loading PDS-PCS/PDS-NICE/IMAS-AL-Matlab/MATLAB
-# resolves to a bare Python/3.11.5-GCCcore-13.2.0, and the only `libmuscle`
-# importable there came from a personal ~/.local pip install at 0.8.0,
-# two minor versions behind the real muscle_manager's 0.10.0 -- controller.m
-# calls `py.libmuscle.Instance(...)` directly, so this must match exactly or
-# the actor silently never registers). A small, dedicated Python-3.11 +
-# muscle3==0.10.0 venv fixes it, same as METIS's.
+# Also builds muscle3_venv, same reasoning as build_metis.sh: MATLAB's
+# `py.libmuscle.Instance(...)` bridge needs a Python whose libmuscle version
+# matches the real manager (0.10.0), which no default Python on PATH provides.
 #
 # Usage: bash build_pcs.sh <module-version> [branch] [git-url]
 # e.g:   bash build_pcs.sh 2026-08-14-pds master

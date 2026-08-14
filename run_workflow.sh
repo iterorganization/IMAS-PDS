@@ -20,7 +20,7 @@ Options:
   -h, --help      Show this help message and exit
 
 Examples:
-  bash $(basename "$0") torax_nice_self_consistent_transport 105092
+  bash $(basename "$0") inverse_convergence 105092
 EOF
 }
 
@@ -43,19 +43,10 @@ shift 2
 export EXTRA_ARGS=("$@")
 
 # ---- module environment ---------------------------------------
-
-# `module load PDS` is the caller's responsibility (see setup_files/PDS.lua)
-# -- workflows/lib/local_programs.ymmsl's actors resolve via the $EBROOT*
-# vars it sets. Check for it here rather than let a missing load surface
-# later as a confusing missing-$EBROOT* error from deep inside a workflow.
-# PDS_REPO must match $PWD: PDS.lua sets it from the cwd `module load PDS`
-# ran in, and this script must itself run from that same checkout root
-# (required below anyway) for the two to agree.
-[[ -n "${PDS_REPO:-}" ]] || error "PDS module not loaded. Run 'module load PDS' first (see setup_files/PDS.lua)."
-[[ "$PDS_REPO" == "$PWD" ]] || error "PDS_REPO ($PDS_REPO) does not match \$PWD ($PWD). Run 'module load PDS' from this checkout's root."
+[[ -n "${PDS_REPO:-}" ]] || error "PDS module not loaded. Run 'module use /home/ITER/blokhus/public/modules && module load PDS' first (see setup_files/PDS.lua)."
+[[ "$PDS_REPO" == "$PWD" ]] || error "PDS_REPO ($PDS_REPO) does not match \$PWD ($PWD). Run 'module use /home/ITER/blokhus/public/modules && module load PDS' from this checkout's root."
 
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
-source "$PWD/run/imas_base_env"
 source $SCENARIO_CONFIG
 source "$MD_COLLECTION"
 

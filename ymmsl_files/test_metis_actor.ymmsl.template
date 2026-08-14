@@ -23,12 +23,6 @@ settings:
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"
   sink.sink_mode: "w"
   metis.metis_computation: 1
-  # PDS-METIS's own certification data (see setup_files/custom_modules/
-  # build_metis.sh) -- hardcoded to this cluster's actual shared module
-  # install, not derived from $EBROOTMETIS: `settings:` values are
-  # substituted once at ymmsl-parse time, before any actor's own
-  # `module load` has run, so a module-provided env var isn't available
-  # here the way it is inside `env:`/`script:` blocks below.
   metis.metis_filename: "/home/ITER/blokhus/public/software/METIS/2026-08-14-pds/certification/metis/ITER_rampup_ECCD.mat"
   metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
@@ -50,15 +44,6 @@ implementations:
       #!/bin/bash
       module purge
       module load PDS-METIS IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
-      # See workflows/metis_*_from_dina/workflow.ymmsl.template's `metis`
-      # actor for the full explanation of both fixes below (confirmed
-      # empirically there): IMAS-AL-Matlab leaks a mismatched-Python-version
-      # numpy onto PYTHONPATH via its own dependency chain, and
-      # metis4muscle3.m needs a Python whose libmuscle version matches the
-      # real muscle_manager (0.10.0) exactly *and* is within MATLAB's
-      # supported Python range -- $EBROOTMETIS/muscle3_venv (built by
-      # build_metis.sh) is a dedicated Python-3.11 + muscle3==0.10.0 venv
-      # that satisfies both.
       unset PYTHONPATH
       export DIR_METIS4MUSCLE3=$EBROOTMETIS/workflow/muscle3/mfile
       export IMAS_VERSION=4.0.0

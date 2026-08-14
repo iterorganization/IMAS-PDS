@@ -15,41 +15,15 @@ module purge
 
 bash setup_files/setup_test_files.sh
 
-# Load the PDS meta-module instead of building NICE/IMAS-MUSCLE3/
-# Waveform-Editor/TORAX-MUSCLE3/METIS fresh into run/ on every single CI run
-# (the old approach -- see setup_files/custom_modules/build_*.sh for why each
-# now has a shared PDS-<Name> module instead). `module load
-# PDS` bootstraps IMAS-Python (+ IMAS-Core/UDA transitively) and
-# PDS-IMAS-MUSCLE3 (muscle_manager, muscle_dashboard); every workflow actor
-# then loads its OWN complete environment when MUSCLE3 spawns it
-# (base_env: clean + modules:, see workflows/lib/local_programs.ymmsl and
-# each workflow's own workflow.ymmsl.template), so nothing else needs
-# loading here. Redeployed fresh from this checkout's own setup_files/PDS.lua
-# on every run (rather than trusting a pre-existing deployment) so CI always
-# tests exactly what's in the checkout, not whatever happened to be
-# deployed last.
-#
-# Assumes /home/ITER/blokhus/public/modules is reachable from wherever this
-# runs (a personal, world-readable publish directory on this cluster, same
-# one setup_files/custom_modules/build_*.sh install the PDS-<Name> actor
-# modules into) -- not yet a properly shared/published location; fine for
-# now since CI runs on the same cluster, but worth moving eventually.
-PDS_MODULES_ROOT="/home/ITER/blokhus/public/modules"
-mkdir -p "$PDS_MODULES_ROOT/PDS"
-sed "s|@@PDS_ROOT@@|$(pwd)|g" setup_files/PDS.lua > "$PDS_MODULES_ROOT/PDS/1.0.lua"
-module use "$PDS_MODULES_ROOT"
-module load PDS
+# --ignore_cache: Lmod's module cache doesn't necessarily know about a path
+# added via `module use` at runtime (especially on a CI agent that's never
+# seen this path before), and reports it as "unknown" otherwise.
+module use "/home/ITER/blokhus/public/modules"
+module --ignore_cache load PDS
 
 # RUN TEST FILES
-# Isolated, single-actor smoke tests -- independent of (and faster than) the
-# full workflow runs below, and still worth keeping even where a real
-# workflow exercises the same actor type: these catch a broken actor
-# environment in seconds instead of minutes, in isolation from everything
-# else in a real workflow. ymmsl_files/test_*.ymmsl.template have all been
-# updated to the new module-loading design (base_env: clean + modules:
-# PDS-<Name>, matching workflows/lib/local_programs.ymmsl), replacing the
-# old bare `modules: IMAS-MUSCLE3` / `NICE` names and manually-exported
-# EBROOT*=$PWD/run/... this script used to rely on before `module load PDS`.
+# Isolated, single-actor smoke tests -- faster than the full workflow runs
+# below, and catch a broken actor environment in seconds instead of minutes.
 MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
 
 "$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
@@ -61,30 +35,15 @@ MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
 "$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
 
-# TODO: test_chease_actor -- chease.exe (built by
-# setup_files/custom_modules/build_chease.sh) loads and resolves all its
-# libraries correctly (confirmed: `ldd` clean from a purged shell), but
-# segfaults (exit -11) with zero output as soon as it's actually run, both
-# as a real muscle3 actor and invoked bare from its own directory (so it's
-# not a working-directory/missing-input-file issue). Likely related to the
-# ifort->ifx compiler swap build_chease.sh uses (see its header comment) --
-# ifx is a from-scratch LLVM rewrite, not a guaranteed drop-in despite
-# accepting the same flags. Needs real debugging (gdb/core dump, or trying
-# -O0 per the Makefile's own F90FLAGS_O0 in case it's an optimization-level
-# miscompile) before this can be re-enabled.
+# TODO: test_chease_actor -- chease.exe builds and loads cleanly but
+# segfaults at runtime (see build_chease.sh). Not yet debugged.
 # "$MANAGER" --start-all ymmsl_files/test_chease_actor.ymmsl
 
 # RUN WORKFLOWS
-# One scenario per workflow, just enough to confirm every actor type's
-# module-loading wiring actually works end to end -- not a physics
-# validation suite. Each is idempotent: clear any stale scenario output from
-# a previous run on this same agent/workspace first, so a rerun can't fail
-# on a leftover "file already exists" from an earlier build (confirmed this
-# happens: IMAS's `imas convert` doesn't overwrite by default).
-#
-# HDF5_USE_FILE_LOCKING=FALSE avoids spurious HDF5 file-locking failures on
-# networked storage (carried over from origin/master's own CI work).
-export HDF5_USE_FILE_LOCKING=FALSE
+# One scenario per workflow, to confirm module-loading wiring works end to
+# end -- not a physics validation suite. Clears stale scenario output first
+# so a rerun can't fail on a leftover file from an earlier build.
+export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
 run_workflow_clean() {
   local workflow="$1" scenario="$2"
@@ -98,32 +57,16 @@ run_workflow_clean inverse_convergence 105084
 run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
 run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
 
-# TODO: torax_nice_controller / torax_nice_rd_controller -- every actor
-# except magnetic_controller already runs correctly under the new
-# module-loading design. PDS-PCS now exists (setup_files/custom_modules/
-# build_pcs.sh, git access to ssh://git@git.iter.org/pcs/pcs.git resolved),
-# including its own dedicated muscle3==0.10.0 venv (same fix pattern as
-# METIS's). magnetic_controller's actor still fails to register with the
-# manager (exit code 0, no error, but never registers) -- root cause not yet
-# diagnosed. Re-enable once that's fixed.
+# TODO: torax_nice_controller / torax_nice_rd_controller -- not yet migrated
+# to the new module-loading design (still bare `modules: NICE` etc.).
 # run_workflow_clean torax_nice_controller 105073
 # run_workflow_clean torax_nice_rd_controller 105073
 
 # TODO: metis_interpretative_nice_inverse_from_dina /
-# metis_predictive_nice_inverse_from_dina -- fail at "CREATING RUNNABLE
-# YMMSL FILE" with `tmp/PSI_OFFSET: No such file or directory`.
-# `create_runnable_files.sh`'s `source $PWD/tmp/PSI_OFFSET` has never had a
-# writer anywhere in this repo's history, back to the commit that first
-# added these workflows -- confirmed via full git log on both
-# preprocess_data.sh and create_runnable_files.sh. `metis_psioffset` is
-# METIS's own poloidal-flux calibration constant between METIS's and the
-# external equilibrium's psi convention (see METIS's own
-# metis4muscle3_setting_list.m: "psi_metis = cocos_sign * psi_equilibrium /
-# (2*pi) - psioffset"); METIS's own sample configs all default it to 0.0.
-# The working sibling metis_interpretative_from_dina instead hardcodes 9.0,
-# an empirically-tuned value for that scenario's data, not a METIS default.
-# Neither 0.0 nor 9.0 is verified correct for the NICE-coupled case, and no
-# script in this repo computes one -- this needs real METIS/NICE physics
-# input, not a guess. Left out of CI until that value exists.
+# metis_predictive_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`, which
+# nothing writes. No script computes METIS's psioffset calibration constant
+# for the NICE-coupled case (METIS defaults it to 0.0; the plain sibling
+# workflow hardcodes 9.0 for its own scenario, unverified here) -- needs real
+# METIS/NICE physics input, not a guess. Left out of CI until that exists.
 # run_workflow_clean metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
 # run_workflow_clean metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10

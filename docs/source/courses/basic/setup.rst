@@ -14,10 +14,12 @@ You will need read access to the repositories:
 
 First clone the project.
 
-Each actor is built once into a shared ``PDS-<Name>`` module (see ``setup_files/PDS.lua``).
-Loading the PDS meta-module is enough to use any of them -- there is nothing to install
-per-checkout. Some actors require a specific virtual environment; this is already taken
-care of by each actor's own module.
+Each actor is built once into a shared ``PDS-<Name>`` module by its own ``build_*.sh``
+script in ``setup_files/custom_modules/``. Loading the PDS meta-module (``module load PDS``)
+sets up IMAS-Python and PDS-IMAS-MUSCLE3; each workflow actor then loads its own
+``PDS-<Name>`` module itself when MUSCLE3 spawns it. Either way, there is nothing to
+install per-checkout. Some actors require a specific virtual environment; this is already
+taken care of by each actor's own module.
 
 .. code-block:: console
 

@@ -1,27 +1,15 @@
 #!/bin/bash
-# Build a custom NICE module, linked against the official MUSCLE3/0.10.0
-# module.
+# Build a custom NICE module, linked against MUSCLE3/0.10.0.
 #
-# Why this is needed: the official NICE/3.0.0-intel-2025b-DD-4.1.1 module's
-# binaries have MUSCLE3/0.9.1's lib/ dir hardcoded into their RPATH (verified
-# with `readelf -d`). RPATH always wins over environment variables, so no
-# modulefile trick can point them at a different MUSCLE3 -- and
-# IMAS-MUSCLE3/Waveform-Editor both require MUSCLE3/0.10.0. The only real fix
-# is rebuilding NICE from source against 0.10.0, which is what this does.
+# The official NICE module's binaries have MUSCLE3/0.9.1 hardcoded into
+# their RPATH (verified via readelf), which always wins over env vars, so
+# this rebuilds NICE from source against 0.10.0 instead.
 #
-# Named PDS-NICE, not bare NICE: several workflow .ymmsl(.template) files
-# (torax_nice_controller, the metis_*_from_dina workflows,
-# workflows/lib/easybuild_programs.ymmsl) specify `modules: NICE` directly --
-# MUSCLE3's own per-actor module-load mechanism, separate from
-# local_programs.ymmsl's $EBROOT*-based approach. If this were also just
-# "NICE", those actors' bare `module load NICE` could resolve to the official
-# (RPATH-broken) one instead of this build, depending on Lmod's tie-breaking
-# across merged module trees -- not hypothetical, a real collision risk.
-#
-# We still `module load NICE` (the official one) first purely to pull in its
-# OTHER build dependencies for free (IMAS-Cpp, SuiteSparse, Eigen, libxml2)
-# via its own depends_on chain; MUSCLE3/0.10.0 loaded right after overrides
-# just the MUSCLE3 piece for the actual build/link step.
+# Named PDS-NICE, not bare NICE: several ymmsl actors specify `modules: NICE`
+# directly, which could otherwise collide with the official (RPATH-broken)
+# module depending on Lmod's tie-breaking. We still `module load NICE` first
+# to pull in its other build dependencies for free, then override just the
+# MUSCLE3 piece.
 #
 # Usage: bash build_nice.sh <module-version> [branch] [git-url]
 # e.g:   bash build_nice.sh 3.0.0-pds-intel-2025b master
@@ -40,12 +28,9 @@ MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 echo "############## Building PDS-NICE/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
-# Loading NICE then overriding its MUSCLE3 dependency to 0.10.0 leaves NICE's
-# bookkeeping permanently unsatisfied (it wanted 0.9.1) for the rest of this
-# shell -- Lmod re-warns about that on *every* subsequent module command, not
-# just the one that caused it, and can return non-zero for it even though the
-# load itself succeeds. So: don't let `set -e` treat any of these as fatal,
-# and verify success explicitly via env vars afterward instead of exit codes.
+# Overriding NICE's MUSCLE3 dependency to 0.10.0 leaves Lmod re-warning (and
+# sometimes non-zero-exiting) on every later module command -- don't let
+# `set -e` treat that as fatal; verify success via env vars instead.
 module purge || true
 module load NICE || true
 module load MUSCLE3/0.10.0-intel-2025b || true
@@ -55,26 +40,14 @@ if [[ -z "${EBROOTMUSCLE3:-}" ]]; then
   exit 1
 fi
 
-# The Makefile only bakes in explicit -Wl,-rpath for IMAS-Cpp/IMAS-Core;
-# everything else NICE links against (SuiteSparse, Blitz++, Boost, libxml2,
-# ...) relies on LD_LIBRARY_PATH at runtime instead -- fine for the official
-# module (which reloads the same dependencies every time via depends_on), not
-# fine for our custom module (which only sets PATH, so none of this would be
-# on LD_LIBRARY_PATH later). Capture the full build-time library path now, so
-# every one of those directories gets baked into the RPATH below too -- same
-# fix as MUSCLE3, just for everything at once, matching what the official
-# EasyBuild-built NICE binary itself does (confirmed via `readelf -d`: it has
-# 60+ RPATH entries, not just its own).
+# NICE only bakes explicit RPATH for IMAS-Cpp/IMAS-Core; everything else
+# relies on LD_LIBRARY_PATH at runtime, which our PATH-only custom module
+# won't provide later. Capture it now to bake into the RPATH below.
 NICE_BUILD_LDPATH="$LD_LIBRARY_PATH"
-# NOTE: patchelf is deliberately NOT loaded here. patchelf/0.18.0-GCCcore-14.3.0
-# (the default) SIGILLs on at least one cluster compute node -- the older
-# GCCcore-13.2.0 build works everywhere tested, but loading it here would
-# swap the *whole* GCCcore toolchain (g++/ld) down to 13.2.0 for the rest of
-# this shell, breaking links against the GCCcore-14.3.0-built IMAS-Cpp/
-# IMAS-Core/CapnProto libs NICE needs (confirmed: caused
-# `undefined reference to __cxa_call_terminate`). It's loaded in its own
-# subshell per binary instead, after all compiling is done, so the swap never
-# reaches a `make` call.
+# patchelf/0.18.0-GCCcore-14.3.0 (default) SIGILLs on some nodes; loading the
+# working 13.2.0 build here would swap the whole GCCcore toolchain out from
+# under the build. Load it in its own subshell per binary instead, after
+# compiling is done.
 
 if [[ ! -d "$CHECKOUT/.git" ]]; then
   git clone "$NICE_URL" "$CHECKOUT"

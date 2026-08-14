@@ -129,10 +129,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
                 if slice.coil[i].name != slice_backup.coil[i].name:
                     # Source (DINA-derived) and machine-description pf_active use
                     # different naming conventions (e.g. "CS3U" vs "Central Solenoid
-                    # 3U (CS3U)", or "VS3U" vs "...(VSU)" -- not even a substring
-                    # match). Coil order is fixed ITER machine geometry and lines up
-                    # correctly by index (verified), so this is not a misalignment --
-                    # just log it in case a real mismatch ever does occur.
+                    # 3U (CS3U)"
                     logger.warning(
                         "pf_active coil name mismatch at index %d: "
                         "source=%r machine description=%r",

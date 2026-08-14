@@ -3,29 +3,17 @@
 # TORAX-MUSCLE3. Sourced by build_<name>.sh; not run directly.
 #
 # Produces a versioned install under $PDS_SOFTWARE_ROOT and a matching Lmod
-# modulefile under $PDS_MODULES_ROOT, so `module load <module-name>/<version>`
-# works the same way as the official cluster modules, but tracking whatever
-# branch/tag you point it at.
+# modulefile under $PDS_MODULES_ROOT. The modulefile only prepends PATH to
+# the venv's bin/, never PYTHONPATH, so it can't leak into other actors'
+# venvs the way a module with a PYTHONPATH prepend can.
 #
-# The generated modulefile only ever prepends PATH to the venv's bin/ -- the
-# same as a plain `source venv/bin/activate` -- and deliberately never touches
-# PYTHONPATH, so it can't leak into other actors' venvs the way a module with
-# a PYTHONPATH prepend can (see bin/pds-run's comment on the MUSCLE3 module
-# for why that matters).
-#
-# The Lmod module name (first arg, e.g. "PDS-IMAS-MUSCLE3") is deliberately
-# decoupled from the software install path and the $EBROOT* variable name,
-# which both use the name with any "PDS-" prefix stripped. This isn't just
-# cosmetic: several workflow .ymmsl(.template) files (e.g.
-# torax_nice_controller, the metis_*_from_dina workflows,
-# workflows/lib/easybuild_programs.ymmsl) specify actor implementations via a
-# bare `modules: NICE` / `modules: IMAS-MUSCLE3` key -- MUSCLE3's own
-# per-actor `module load` mechanism, completely separate from
-# local_programs.ymmsl's $EBROOT*-based virtual_env: approach. If our custom
-# builds used those same bare names, `module load NICE` inside one of those
-# actor subprocesses could resolve to the official (RPATH-broken) module
-# instead of ours, depending on Lmod's tie-breaking across merged module
-# trees -- a real, silent-failure risk, not a hypothetical one. The PDS-
+# The Lmod module name (e.g. "PDS-IMAS-MUSCLE3") is deliberately decoupled
+# from the install path / $EBROOT* var, which strip the "PDS-" prefix. This
+# matters because some workflows still specify actors via a bare
+# `modules: NICE` / `modules: IMAS-MUSCLE3` key (MUSCLE3's own per-actor
+# module-load mechanism) -- if our builds used those same bare names, that
+# could resolve to the official (RPATH-broken) module instead of ours,
+# depending on Lmod's tie-breaking across merged module trees. The PDS-
 # prefix makes that collision structurally impossible.
 
 build_venv_actor_module() {

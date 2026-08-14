@@ -16,7 +16,7 @@
 -- ACTOR CODES: this module deliberately does NOT eagerly load NICE, Waveform-
 -- Editor, TORAX-MUSCLE3, or METIS-IRFM -- those are pure actor implementations,
 -- never invoked by a human directly, so every actor entry in
--- workflows/lib/programs.ymmsl (and the workflow-specific .ymmsl.template
+-- workflows/lib/local_programs.ymmsl (and the workflow-specific .ymmsl.template
 -- files) declares `base_env: clean` plus its own complete `modules:` list.
 -- MUSCLE3 loads that fresh, from a clean slate, in the actor's own subprocess
 -- when it spawns it -- completely independent of whatever this module loaded,
@@ -142,7 +142,7 @@ checkout into PATH/PYTHONPATH.
 Deliberately does NOT eagerly load NICE, Waveform-Editor, TORAX-MUSCLE3, or
 METIS-IRFM: those are pure actor implementations (never run by a human
 directly), so every actor declares its own `modules:` + `base_env: clean` in
-workflows/lib/programs.ymmsl, and MUSCLE3 loads that fresh in the actor's own
+workflows/lib/local_programs.ymmsl, and MUSCLE3 loads that fresh in the actor's own
 subprocess when it spawns it. See this file's source comments for why this
 matters: different actors (even within one workflow) can need genuinely
 incompatible toolchains, and there is no single eagerly-loaded environment
@@ -206,7 +206,7 @@ prepend_path("PATH", pathJoin(pds_repo, "bin"))
 prepend_path("PYTHONPATH", pds_repo)
 setenv("PDS_REPO", pds_repo)
 
--- Match run/imas_base_env
+-- Env settings every workflow actor needs.
 execute{cmd="ulimit -s unlimited", modeA={"load"}}
 unsetenv("MPLBACKEND")
 setenv("IMAS_VERSION", "4.0.0")

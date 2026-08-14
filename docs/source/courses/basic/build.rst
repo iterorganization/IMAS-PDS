@@ -131,7 +131,7 @@ For more information on the visualization actor read the `IMAS-MUSCLE3 docs <htt
 You can also look at the `Visualization Actor training material <https://imas-muscle3.readthedocs.io/en/latest/training.html>_`, 
 which shows how to work with live data visualization, how to create custom plotting scripts,
 how to set it up in MUSCLE3 and how to use in in standalone mode.
-A visualization actor config file has been defined at ``<pds root>/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py``.
+A visualization actor config file has been defined at ``<pds root>/visualization/nice_inv.py``.
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
 

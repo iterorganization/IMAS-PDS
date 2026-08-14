@@ -1,18 +1,14 @@
 #!/bin/bash
 # pds-run -- run a MUSCLE3 workflow for one scenario (shot).
 #
-# Stacks the workflow's static workflow.ymmsl, its shared settings.ymmsl knobs and the
-# scenario's settings.ymmsl (if present), expanding ${PDS_REPO}, ${SCEN} and ${SHOT} in each
-# (MUSCLE3 does not interpolate settings and runs each instance in its own work_dir, so paths
-# must be absolute). The manager creates its own run_<model>_<timestamp>/ in the runs directory.
+# Stacks workflow.ymmsl + settings.ymmsl (+ scenario overrides), expanding
+# ${PDS_REPO}/${SCEN}/${SHOT} since MUSCLE3 doesn't interpolate settings itself.
 #
 #   pds-run <workflow> [shot]        # shot defaults to $SHOT_NR if unset
+#   e.g. pds-run inverse_convergence 105084
 #
-# e.g. pds-run inverse_convergence 105084
-#      pds-run prescribed_transport 105073
-#
-# PDS_REPO defaults to this script's repo (its parent dir); export it to pin a fixed install.
-# Runs land in $PDS_RUNS (default <scenario>/tmp/runs).
+# PDS_REPO defaults to this script's repo; PDS_RUNS controls where runs land
+# (default <scenario>/tmp/runs).
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
@@ -25,25 +21,16 @@ export PDS_REPO
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 
-# lib.local_programs' actors reference $PDS_REPO directly (e.g. `args: -u
-# $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py`), expanded by bash inside
-# each actor's own generated launch script -- which runs *after* that actor's own
-# `base_env: clean` (a `module purge`), and Lmod's purge unconditionally unsets whatever
-# setenv() PDS.lua did, including $PDS_REPO, regardless of how it was set or re-exported
-# since (confirmed empirically: a plain `export PDS_REPO=$PDS_REPO` before the purge does
-# not survive it either -- Lmod purge just re-runs PDS.lua in unload mode). So $PDS_REPO
-# must never be a *live* shell reference by the time an actor's script runs. Substitute it
-# to a literal path here, once, before the manager ever starts, the same way the stack
-# below already does for workflow.ymmsl/settings.ymmsl/waveforms.yaml.
+# $PDS_REPO must be a literal path here, not a live shell var: an actor's own
+# `base_env: clean` (a `module purge`) unsets whatever PDS.lua's setenv() did,
+# $PDS_REPO included, before that actor's script runs.
 mkdir -p "$gen/lib"
 envsubst '${PDS_REPO} ${SCEN} ${SHOT}' \
   < "$PDS_REPO/workflows/lib/local_programs.ymmsl" > "$gen/lib/local_programs.ymmsl"
 
-# Workflows resolve `imports: - from lib.<...> import implementation <...>` (e.g.
-# lib.local_programs) against YMMSL_PATH, which the manager consults when it loads the
-# stacked config files below. $gen first, so lib.local_programs resolves to the
-# substituted copy above instead of the raw checked-in one; anything else under lib/ (not
-# overridden there) still falls through to the real checkout right after it.
+# $gen first in YMMSL_PATH, so `imports: - from lib.local_programs import ...`
+# resolves to the substituted copy above; anything else under lib/ falls
+# through to the real checkout.
 export YMMSL_PATH="$gen:$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
@@ -51,28 +38,23 @@ export SHOT="${2:-${SHOT_NR:-}}"
 [[ -n "$SHOT" ]] || { echo "pds-run: no shot given and \$SHOT_NR unset" >&2; exit 1; }
 export SCEN="$WF/scenarios/$SHOT"
 
-# muscle_manager 0.10.0 (to match the actors) comes from the self-contained
-# IMAS-MUSCLE3 venv (built by setup_imas_muscle3.sh) whenever it's present --
-# its python has a clean sys.path, so it can't leak a foreign numpy build into
-# the actor subprocesses it spawns (each of which activates its own venv via
-# `. venv/bin/activate`, which only prepends PATH and does not touch
-# PYTHONPATH). Falls back to the EasyBuild MUSCLE3 module -- published under
-# the not-yet-default modules-2025b tree -- if that venv isn't there; in that
-# case its PYTHONPATH (a python3.13 SciPy-bundle tree) does leak into and break
-# the python3.11 actor venvs, so this path is best avoided.
+# muscle_manager must come from PDS-IMAS-MUSCLE3's own venv (matching version 0.10.0,
+# clean PYTHONPATH) -- never the official MUSCLE3 module, which leaks a numpy build
+# that breaks the actor venvs (see setup_files/PDS.lua). Uses $EBROOTIMASMUSCLE3 if
+# already set (module load PDS already ran); otherwise loads PDS-IMAS-MUSCLE3 directly.
 if [[ -z "${MANAGER:-}" ]]; then
-  MANAGER="$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
-  if [[ ! -x "$MANAGER" ]]; then
+  : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules}"
+  if [[ -z "${EBROOTIMASMUSCLE3:-}" ]]; then
     LMOD_INIT="/usr/share/lmod/lmod/init/bash"
     if [[ -f "$LMOD_INIT" ]]; then
       # shellcheck source=/usr/share/lmod/lmod/init/bash
       source "$LMOD_INIT"
-      module use /work/imas/etc/modules-2025b/all 2>/dev/null || true
-      module load MUSCLE3/0.10.0-intel-2025b 2>/dev/null || true
+      module use "$PDS_MODULEPATH" 2>/dev/null || true
+      module load PDS-IMAS-MUSCLE3 2>/dev/null || true
     fi
-    MANAGER="${EBROOTMUSCLE3:+$EBROOTMUSCLE3/bin/muscle_manager}"
-    MANAGER="${MANAGER:-$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/muscle_manager}"
   fi
+  : "${EBROOTIMASMUSCLE3:?pds-run: PDS-IMAS-MUSCLE3 not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
 fi
 RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
 [[ -d "$WF" ]] || { echo "pds-run: no workflow dir $WF" >&2; exit 1; }
@@ -91,9 +73,8 @@ if [[ -f "$SCEN/settings.ymmsl" ]]; then
   stack+=("$out"); i=$((i + 1))
 fi
 
-# The `waveform_editor` actor reads its waveform config by path (the waveform_editor.waveforms
-# setting), not as a stacked file, but that config also contains ${SCEN}; expand it too and
-# override waveform_editor.waveforms to point at the expanded copy (last in the stack wins).
+# waveforms.yaml is read by path, not stacked, but also contains ${SCEN} --
+# expand it too and point waveform_editor.waveforms at the expanded copy.
 waveforms_src=""
 [[ -f "$SCEN/waveforms.yaml" ]] && waveforms_src="$SCEN/waveforms.yaml"
 [[ -z "$waveforms_src" ]] && [[ -f "$WF/waveforms.yaml" ]] && waveforms_src="$WF/waveforms.yaml"

@@ -1,49 +1,17 @@
 #!/bin/bash
-# Build a custom CHEASE module, targeting the full intel-2025b toolchain
-# generation throughout (IMAS-Fortran, iWrap 2.0.0, MUSCLE3 0.10.0,
-# iWrap-plugins-MUSCLE3), instead of CHEASE's own upstream
-# python/config_muscle3.sh, which mixes generations and cannot work at all
-# on this cluster -- see the two paragraphs below for exactly why, both
-# confirmed empirically, not assumed.
+# Build a custom CHEASE module against a single consistent toolchain
+# generation (IMAS-Fortran, iWrap 2.0.0, MUSCLE3 0.10.0,
+# iWrap-plugins-MUSCLE3, all intel-2025b) -- CHEASE's own upstream
+# python/config_muscle3.sh mixes intel-2023b/2025b modules and can't build or
+# register with the real 0.10.0 manager on this cluster.
 #
-# Why not just source CHEASE's own python/config_muscle3.sh (like
-# setup_chease.sh does): it does `module load IMAS/4.0.0-2024.12-intel-2023b`
-# then bare `module load INTERPOS XMLlib iWrap MUSCLE3 iWrap-plugins-MUSCLE3
-# yMMSL-dot`. On this cluster iWrap's only major version (2.0.0) has no
-# intel-2023b build at all (only intel-2025b/foss-2025b), so that bare load
-# silently swaps the whole toolchain to intel-2025b mid-script, taking
-# `ifort` (2023b-only) out from under the Fortran compile that follows
-# (confirmed: `ifort: command not found`). There is no combination of
-# existing modules that keeps everything in one generation via that script's
-# own approach: IMAS-AL-Fortran (2023b's binding) has no 2025b build, and
-# iWrap-plugins-MUSCLE3's 2023b build depends on MUSCLE3/0.7.2-intel-2023b,
-# two minor versions behind the actual 0.10.0 manager everything else uses --
-# even if the ifort issue were dodged, actor registration would fail the
-# same way METIS's did (see build_metis.sh) with a wire-protocol "Unknown
-# session" error.
+# intel-2025b no longer ships `ifort`, only `ifx`, and CHEASE's Makefile
+# hardcodes `ifort`; an `ifort` -> `ifx` wrapper script on PATH covers that
+# without touching CHEASE's vendored Makefile.
 #
-# The fix used here instead: go the other direction entirely -- IMAS-Fortran
-# (the 2025b-native rename of IMAS-AL-Fortran) + iWrap/2.0.0-intel-2025b +
-# MUSCLE3/0.10.0-intel-2025b + iWrap-plugins-MUSCLE3/0.4.0-intel-2025b, all
-# one consistent generation, no swap. The one remaining gap: intel/2025b no
-# longer ships classic `ifort` at all (only `ifx`, confirmed via `which
-# ifort` finding nothing), and CHEASE's own Makefile hardcodes literal
-# `ifort` as the compiler command with zero `ifx` awareness anywhere in the
-# repo (confirmed by grepping the whole source tree). Since `ifx` accepts
-# every flag CHEASE's Makefile passes it (confirmed with a standalone test
-# compile using the exact flags: -O3 -r8 -g -heap-arrays -fPIC
-# -diag-disable:5462), the fix is a tiny wrapper script named literally
-# "ifort" that just execs `ifx "$@"`, put first on PATH -- avoids touching
-# CHEASE's vendored Makefile at all.
-#
-# Also needs IDS_main_version_number=4 (or a correctly-exported IMAS_VERSION
-# starting with "4") set explicitly before the build: CHEASE's Makefile
-# derives this from the first digit of $IMAS_VERSION to choose between its
-# own copy_ids_to_itm_equilibrium_default_DD3.f90 vs _DD4.f90 mapping files
-# (DD 3.x vs 4.x equilibrium IDS schema -- genuinely different field names,
-# e.g. boundary%lcfs vs boundary%outline). Without it the Makefile warns
-# "cannot decide on main IDS version" and silently defaults to DD3, which
-# fails to compile against the DD 4.1.1 IMAS-Fortran headers loaded here.
+# IDS_main_version_number=4 must be set explicitly: CHEASE's Makefile derives
+# it from $IMAS_VERSION's first digit to pick its DD3 vs DD4 equilibrium
+# mapping file, and silently defaults to DD3 (wrong here) if unset.
 #
 # Usage: bash build_chease.sh <module-version> [branch] [git-url]
 # e.g:   bash build_chease.sh 2026-08-14-pds feature/muscle3
@@ -107,20 +75,16 @@ sed -i "s|<cocos_in>[0-9]\+</cocos_in>|<cocos_in>17</cocos_in>|" "input/chease_i
 sed -i "s|<cocos_out>[0-9]\+</cocos_out>|<cocos_out>17</cocos_out>|" "input/chease_input_choices.xml"
 rm -f bin/chease.exe
 
-# See header comment (build_nice.sh has the same fix, same reasoning):
-# capture the build-time library path so it can be baked into chease.exe's
-# RPATH afterward -- the Makefile's link line only sets explicit -rpath for
-# IMAS-Fortran/IMAS-Core, everything else (MUSCLE3, XMLlib, INTERPOS, ...)
-# relies on LD_LIBRARY_PATH at runtime instead, which a future actor
-# subprocess spawned via `base_env: clean` would never have.
+# Capture the build-time library path to bake into chease.exe's RPATH below
+# (same fix as build_nice.sh): the Makefile only sets explicit -rpath for
+# IMAS-Fortran/IMAS-Core, everything else relies on LD_LIBRARY_PATH at
+# runtime, which a `base_env: clean` actor subprocess won't have.
 CHEASE_BUILD_LDPATH="$LD_LIBRARY_PATH"
 make
 
-# Isolated subshell, same as build_nice.sh: patchelf/0.18.0-GCCcore-14.3.0
-# (the default) SIGILLs on at least one cluster compute node, and loading
-# the older GCCcore-13.2.0 build directly in this shell would swap the
-# whole GCCcore toolchain out from under any later step. Confined to its
-# own subshell, after all compiling is done.
+# Isolated subshell, same as build_nice.sh: the older patchelf build needed
+# here would otherwise swap the whole GCCcore toolchain out from under any
+# later step in this same shell.
 (
   module purge
   module use "$PDS_MODULES_ROOT" 2>/dev/null || true

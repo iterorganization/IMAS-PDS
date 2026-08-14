@@ -11,16 +11,16 @@ General
 
 Runnable scenarios are found in the ``workflows`` directory in the PDS repository.
 A runnable scenario for a given workflow is contained in a named directory like
-``workflows/torax_nice_self_consistent_transport/scenarios/105092``.
+``workflows/inverse_convergence/scenarios/105092``.
 It is executed by running the ``run_workflow.sh`` script with the workflow name as first argument
 and the scenario as second argument like:
 
 .. code-block:: bash
 
   # run test workflow of choice, in this case:
-  # workflow: torax-nice_self_consistent_transport
+  # workflow: inverse_convergence
   # scenario: 105084
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084
+  bash run_workflow.sh inverse_convergence 105084
 
 In the workflow directories are the default configuration and workflow files that are reused between scenarios.
 If a scenario needs its own config or workflow files, they should be added to the scenario subdirectory.
@@ -77,13 +77,13 @@ where the placeholders are filled in. For example:
 
   # part of the .workflow.ymmsl template file in the workflow directory
   settings:
-    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/torax_nice_self_consistent_transport/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/" 
+    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/inverse_convergence/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/"
 
 .. code-block:: bash
 
   # part of the resulting workflow.ymmsl runnable file in the scenario directory
   settings:
-    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/torax_nice_self_consistent_transport/scenarios/105092/tmp/data/105092_out/" 
+    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/inverse_convergence/scenarios/105092/tmp/data/105092_out/"
 
 Running the Simulation
 ----------------------
