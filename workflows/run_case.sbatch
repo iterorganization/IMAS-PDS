@@ -21,6 +21,19 @@ shift
 # Any further arguments are stacked after the case, last value for a key winning.
 OVERLAYS=("$@")
 
+# Resolve the checkout and export it BEFORE loading the module, so the PDS module wires
+# itself to THIS one. Every PDS.lua falls back to the clone it was built from when
+# PDS_REPO is unset, so a shared module tree would otherwise silently run its owner's
+# code and try to write output into their read-only checkout.
+#
+# Falls back to the submit directory, not ${BASH_SOURCE[0]}: SLURM copies the batch script
+# into its spool directory, so the script's own path is /var/spool/... and not the repo.
+REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
+[[ -f "$REPO/workflows/lib/programs.ymmsl" ]] || {
+  echo "PDS_REPO=$REPO is not a PDS checkout; export PDS_REPO or submit from the repo root" >&2
+  exit 1; }
+export PDS_REPO="$REPO"
+
 # Load the PDS module stack unless the caller already has one, so a submitted job does not
 # depend on the submitting shell. Prefer submitting with --export=NONE so it never does.
 if [[ -z "${MANAGER:-}" ]] && ! command -v muscle_manager >/dev/null 2>&1; then
@@ -39,18 +52,9 @@ if [[ -z "${MANAGER:-}" ]] && ! command -v muscle_manager >/dev/null 2>&1; then
   [[ $loaded -eq 1 ]] || { echo "could not load the PDS module; set PDS_MODULEPATH to your module tree" >&2; exit 1; }
 fi
 
-# Resolve the checkout only AFTER the module, which sets PDS_REPO. Deriving it from
-# ${BASH_SOURCE[0]} does not work here: SLURM copies the batch script into its spool
-# directory, so the script's own path is /var/spool/... and not the repo at all.
-REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
-[[ -f "$REPO/workflows/lib/programs.ymmsl" ]] || {
-  echo "PDS_REPO=$REPO is not a PDS checkout; export PDS_REPO or submit from the repo root" >&2
-  exit 1; }
-
 CASE="$REPO/cases/${CASE_NAME%.ymmsl}.ymmsl"
 [[ -f "$CASE" ]] || { echo "no case file $CASE" >&2; exit 1; }
 
-export PDS_REPO="$REPO"
 : "${SCENARIOS_REPO:=$(cd "$REPO/../pds-scenarios" && pwd)}"
 export SCENARIOS_REPO
 export YMMSL_PATH="$REPO/workflows"
