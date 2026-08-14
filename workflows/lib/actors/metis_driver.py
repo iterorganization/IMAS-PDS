@@ -65,27 +65,41 @@ def main() -> None:
         Operator.S: [f"{l}_reply" for l in RES_LANES],
         Operator.O_F: [f"{l}_out_f" for l in RES_LANES],
     })
+    # Only the lanes actually wired to METIS. The coupling METIS is known to work in does
+    # not feed it an equilibrium at all -- it computes its own -- so lib/transport_metis can
+    # leave that conduit out, and this keeps the driver working either way.
+    fwd = [l for l in FWD_LANES if inst.is_connected(f"{l}_call")]
+    res_lanes = [l for l in RES_LANES if inst.is_connected(f"{l}_reply")]
+
     while inst.reuse_instance():
-        traces = {l: inst.receive(f"{l}_in").data for l in FWD_LANES}
+        traces = {l: inst.receive(f"{l}_in").data
+                  for l in FWD_LANES if inst.is_connected(f"{l}_in")}
 
         with DBEntry("imas:memory?path=/", "w") as db:
             eq = IDSFactory().new("equilibrium"); eq.deserialize(traces["equilibrium"])
             db.put(eq)
             times = [float(t) for t in db.get("equilibrium").time]
         n = len(times)
-        per = {l: _split(traces[l], l, times) for l in FWD_LANES}
-        logger.info("metis_driver: %d slices, t=%.4g..%.4g, sequential (METIS is stateful)",
-                    n, times[0], times[-1])
+        per = {l: _split(traces[l], l, times) for l in fwd}
+        logger.info("metis_driver: %d slices, t=%.4g..%.4g, sequential (METIS is stateful);"
+                    " forwarding %s, expecting %s",
+                    n, times[0], times[-1], ",".join(fwd), ",".join(res_lanes))
 
-        res = {l: [None] * n for l in RES_LANES}
+        res = {l: [None] * n for l in res_lanes}
         for k, t in enumerate(times):
-            for l in FWD_LANES:
+            for l in fwd:
                 inst.send(f"{l}_call", Message(t, data=per[l][k]))
-            for l in RES_LANES:
+            for l in res_lanes:
                 res[l][k] = inst.receive(f"{l}_reply").data
 
         for l in RES_LANES:
-            inst.send(f"{l}_out_f", Message(times[0], data=_assemble(res[l], l)))
+            if not inst.is_connected(f"{l}_out_f"):
+                continue
+            # A lane METIS was not asked for is echoed back unchanged, so the design loop
+            # still sees the whole trace it expects on that port.
+            data = _assemble(res[l], l) if l in res_lanes else traces.get(l)
+            if data is not None:
+                inst.send(f"{l}_out_f", Message(times[0], data=data))
 
 
 if __name__ == "__main__":

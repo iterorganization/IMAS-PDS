@@ -61,11 +61,9 @@ models:
         # _in_f set wired it finds none, concludes it is in replay mode, and exits looking
         # for a saved METIS data file. lib/metis_dina.ymmsl fans out the same way.
         ports:
-          f_init: [equilibrium_f_init, core_profiles_f_init, core_sources_f_init,
-                   pulse_schedule_f_init,
-                   equilibrium_in_f, core_profiles_in_f, core_sources_in_f,
-                   pulse_schedule_in_f]
-          o_f: [equilibrium_out_f, core_profiles_out_f]
+          f_init: [pulse_schedule_f_init, pulse_schedule_in_f,
+                   core_profiles_in_f, core_sources_in_f]
+          o_f: [equilibrium_out_f]
     conduits:
       # model input ports -> driver
       equilibrium_in_f: driver.equilibrium_in
@@ -73,14 +71,18 @@ models:
       core_sources_in_f: driver.core_sources_in
       # the pulse programme, which the hole does not carry
       source_ps.pulse_schedule_out: driver.pulse_schedule_in
-      # driver -> METIS, one slice per call, to both port sets (see the note above)
-      driver.equilibrium_call: [metis.equilibrium_f_init, metis.equilibrium_in_f]
-      driver.core_profiles_call: [metis.core_profiles_f_init, metis.core_profiles_in_f]
-      driver.core_sources_call: [metis.core_sources_f_init, metis.core_sources_in_f]
+      # driver -> METIS, one slice per call. Deliberately the same port set the old
+      # metis_*_from_dina workflows used, which is the only configuration METIS is known to
+      # work in: pulse_schedule drives it, core_profiles/core_sources constrain it, and it
+      # is NOT given an equilibrium -- it computes its own. Feeding it one pulls in the
+      # external-equilibrium and LCFS-resize paths and segfaults imas_serialize on the way
+      # out. pulse_schedule goes to both its port sets so mode detection sees an _f_init.
+      driver.core_profiles_call: metis.core_profiles_in_f
+      driver.core_sources_call: metis.core_sources_in_f
       driver.pulse_schedule_call: [metis.pulse_schedule_f_init, metis.pulse_schedule_in_f]
-      # METIS -> driver, one slice per reply
+      # METIS -> driver, one slice per reply. core_profiles is not requested back, so the
+      # driver echoes the trace it was given on that lane.
       metis.equilibrium_out_f: driver.equilibrium_reply
-      metis.core_profiles_out_f: driver.core_profiles_reply
       # driver -> model output ports
       driver.equilibrium_out_f: equilibrium_out_f
       driver.core_profiles_out_f: core_profiles_out_f
