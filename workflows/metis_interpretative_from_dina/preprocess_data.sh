@@ -29,6 +29,13 @@ mkdir -p tmp
 # the same way a `base_env: clean` MUSCLE3 actor would. Confirmed
 # empirically: `module purge; module load IMAS-AL-Matlab` from an
 # already-PDS-loaded shell puts a working matlab on PATH with no conflicts.
+#
+# Tried switching to IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1 (the 2025b-
+# native rename) for toolchain consistency -- reverted: it has no DD-4.0.0
+# build (only DD-4.1.0/4.1.1/3.42.2), and the DD bump broke METIS's own
+# code with "Unknown IDS name: dataset_description" (confirmed via a real
+# run). Not worth chasing since the original mixing issue this comment
+# describes is already fully handled below regardless.
 module purge
 module load IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"

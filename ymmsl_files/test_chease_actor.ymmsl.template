@@ -25,15 +25,21 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   chease:
-    executable: [PWD_PLACEHOLDER]/run/chease/chease_m3/bin/chease.exe
+    base_env: clean
+    modules: PDS-CHEASE
+    executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
 resources:
   source:
     threads: 1

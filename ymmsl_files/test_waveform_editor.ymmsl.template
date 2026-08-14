@@ -23,17 +23,25 @@ settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_waveform_editor"
   sink.sink_mode: "w"
-  waveform_editor.waveforms: [PWD_PLACEHOLDER]/run/Waveform-Editor/tests/muscle3_integration/waveforms.yaml
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/test_waveforms_config.yaml
 implementations:
   sink:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.source_component
   waveform_editor:
-    executable: [PWD_PLACEHOLDER]/run/Waveform-Editor/venv/bin/waveform-editor
+    base_env: clean
+    modules: PDS-Waveform-Editor
+    virtual_env: $EBROOTWAVEFORMEDITOR/venv
+    executable: waveform-editor
     args: actor
 resources:
   source:

@@ -1,6 +1,7 @@
 ymmsl_version: v0.1
-# Smoke test for the source-built NICE actors (run/nice/run/nice_imas_*_muscle3,
-# built by setup_files/setup_nice.sh against muscle3 0.10.0).
+# Smoke test for the NICE muscle3 actors, built by
+# setup_files/custom_modules/build_nice.sh against muscle3 0.10.0
+# and exposed as the PDS-NICE module.
 #
 # Only nice_inv and nice_dir are tested here: they are one-shot actors
 # (F_INIT in, O_F out) that fit this source -> actor -> sink topology.
@@ -58,21 +59,33 @@ settings:
   muscle_remote_log_level: 'DEBUG'
 implementations:
   source:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
+    base_env: clean
+    modules: PDS-NICE
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE/3.0.0-intel-2023b-DD-4.1.0
-    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_inv_muscle3
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
   nice_dir:
+    base_env: clean
+    modules: PDS-NICE
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
-    modules: NICE/3.0.0-intel-2023b-DD-4.1.0
-    executable: [PWD_PLACEHOLDER]/run/nice/run/nice_imas_dir_muscle3
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_dir_muscle3
 resources:
   source:
     threads: 1

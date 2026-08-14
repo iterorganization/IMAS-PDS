@@ -38,13 +38,22 @@ settings:
   sink_optional_port.sink_mode: "w"
 implementations:
   sink:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.sink_component
   source:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.source_component
   accumulator:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.accumulator_component
 resources:
   source:

@@ -20,10 +20,16 @@ settings:
   visualization_component.open_browser: false
 implementations:
   visualization_component:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.visualization_component
   source_component:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
     args: -u -m imas_muscle3.actors.source_component
 resources:
   source_component:
