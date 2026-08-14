@@ -87,8 +87,13 @@ def main() -> None:
 
         res = {l: [None] * n for l in res_lanes}
         for k, t in enumerate(times):
+            # next_timestamp is not optional here: METIS ends its reuse loop as soon as it
+            # sees a non-finite t_next (metis4muscle3.m:975), so sending only a timestamp
+            # makes it do exactly one slice and exit, and the next receive dies on a closed
+            # socket. None on the last slice is how it is told the pulse is over.
+            nxt = times[k + 1] if k + 1 < n else None
             for l in fwd:
-                inst.send(f"{l}_call", Message(t, data=per[l][k]))
+                inst.send(f"{l}_call", Message(t, nxt, per[l][k]))
             for l in res_lanes:
                 res[l][k] = inst.receive(f"{l}_reply").data
 
