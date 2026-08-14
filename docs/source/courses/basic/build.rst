@@ -10,9 +10,8 @@ These exercises are mostly relevant for developers.
 
 .. code-block:: console
 
-    cd run
-    source imas_base_env
-    module load MUSCLE3
+    module use /home/ITER/blokhus/public/modules  # or wherever PDS.lua was deployed
+    module load PDS
     module load IDStools
 
 Exercise 1
@@ -36,15 +35,17 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 .. note::
     MUSCLE3 uses the locally set environment variables by default.
     It also enables the user to pick a specific virtual environment for a given implementation of an actor.
-    Many of the python based actors were installed in the `pds_setup.sh` script using virtual environments.
-    Make sure to use those virtual environments when using these actors.
+    Python-based actors each have their own dedicated virtual environment, already wired up
+    through their ``PDS-<Name>`` module -- reference it via that module's ``$EBROOT*`` variable.
     An example for setting the virtual environment of the source actor from the IMAS-MUSCLE3 code is shown below.
 
     .. code-block:: console
 
         implementations:
         source:
-            modules: IMAS-MUSCLE3
+            base_env: clean
+            modules: PDS-IMAS-MUSCLE3
+            virtual_env: $EBROOTIMASMUSCLE3/venv
             executable: python
             args: "-u -m imas_muscle3.actors.source_component"
 

@@ -5,16 +5,14 @@ Using the IMAS PDS
 
 Setting up actors
 -----------------
-A setup script is provided with an installation of the necessary repositories.
-Make sure you have access rights to all the relevant codes.
-It is best to do this on a compute node as it can take a long time put a strain on the login nodes.
+Each actor (IMAS-MUSCLE3, NICE, METIS, TORAX-MUSCLE3, Waveform-Editor, PCS, ...) is built once
+into a shared ``PDS-<Name>`` module (see ``setup_files/PDS.lua``). Loading the PDS meta-module
+is enough to use any of them -- there is nothing to install per-checkout.
 
 .. code-block:: bash
 
-  # open interactive bash console on compute node
-  srun --pty bash
-  # install repos
-  bash pds_setup.sh
+  module use /home/ITER/blokhus/public/modules  # or wherever PDS.lua was deployed
+  module load PDS
 
 
 Test workflows
@@ -25,12 +23,12 @@ These workflows can be used as a template for your own workflows.
 
 .. code-block:: bash
 
-  # move to run folder where all the generated code is ignored by git
-  cd run/
-  # prepare base environment and loaded modules
-  source imas_base_env
+  # generate runnable .ymmsl files from the .template sources
+  bash setup_files/setup_test_files.sh
+  module use /home/ITER/blokhus/public/modules
+  module load PDS
   # run test workflow of choice
-  muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
+  muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 
 Example cases
 -------------
@@ -43,6 +41,9 @@ Note that this way of running the PDS workflows will change in the future as mor
 
 .. code-block:: bash
 
+  # run_workflow.sh requires the PDS module stack to already be loaded
+  module use /home/ITER/blokhus/public/modules
+  module load PDS
   # to enable tab completion of the workflows and scenarios
   source completion.sh
   # run test workflow of choice, in this case:

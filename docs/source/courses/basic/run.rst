@@ -50,6 +50,8 @@ The shell script currently expects to be run from the repository base directory.
 
 .. code-block:: console
 
+    # run_workflow.sh requires the PDS module stack to already be loaded
+    module load PDS
     # to enable tab completion of the workflows and scenarios
     source completion.sh
     # to run the premade workflow
@@ -102,12 +104,11 @@ They are saved in the ``ymmsl_files`` directory.
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
 This exercise is mostly relevant for developers.
-The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
 
-    cd run/
-    source imas_base_env
+    bash setup_files/setup_test_files.sh  # generate runnable .ymmsl files from the .template sources
+    module load PDS
     muscle_manager --start-all path/to/my/workflow.ymmsl
 
 .. md-tab-set::
@@ -129,7 +130,7 @@ The ``run`` subdirectory can be used as a sandbox for installing and running man
 
         .. code-block:: console
 
-            muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
+            muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 
         ``test_sink_source_actor.ymmsl`` simply loads data from 1 Data Entry and saves it in a new one.
         The input and output are expected to be the same.

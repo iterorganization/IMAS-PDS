@@ -17,8 +17,8 @@ bash setup_files/setup_test_files.sh
 
 # Load the PDS meta-module instead of building NICE/IMAS-MUSCLE3/
 # Waveform-Editor/TORAX-MUSCLE3/METIS fresh into run/ on every single CI run
-# (the old approach -- see setup_files/setup_*.sh, still used by
-# pds_setup.sh's informal guide script, but no longer by CI). `module load
+# (the old approach -- see setup_files/custom_modules/build_*.sh for why each
+# now has a shared PDS-<Name> module instead). `module load
 # PDS` bootstraps IMAS-Python (+ IMAS-Core/UDA transitively) and
 # PDS-IMAS-MUSCLE3 (muscle_manager, muscle_dashboard); every workflow actor
 # then loads its OWN complete environment when MUSCLE3 spawns it
