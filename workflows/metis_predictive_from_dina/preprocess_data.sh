@@ -1,12 +1,5 @@
 set -euo pipefail # stop if anything doesn't work
 
-# NOTE: IMAS-AL-Matlab has no 2025b build at all yet (newest is
-# 5.4.0-intel-2023b-DD-4.0.0) -- this workflow's Matlab IDS access is an
-# unresolved gap, not something PDS.lua/module load PDS currently covers
-# (ci/run_test_workflows.sh already treats METIS *_from_dina workflows as
-# blocked pending a proper module, see its "WAIT FOR METIS EASYBUILD MODULE"
-# comment).
-
 echo "Inputs:"
 echo "SHOT_NR=" $SHOT_NR
 echo "SOURCE_URI=" $SOURCE_URI
@@ -26,4 +19,14 @@ export metis_dina_source=$SINK_UPDATE_URI
 export metis_imas_dataset=$SINK_METIS_URI
 echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
 mkdir -p tmp
+
+# IMAS-AL-Matlab has no intel-2025b build (only 5.4.0-intel-2023b-DD-4.0.0),
+# so it can't coexist in the same shell as the intel-2025b IMAS-Python/
+# IMAS-Core/UDA stack `module load PDS` already loaded above for `imas
+# convert` -- purge first, then load it fresh, isolating this MATLAB step
+# the same way a `base_env: clean` MUSCLE3 actor would. Confirmed
+# empirically: `module purge; module load IMAS-AL-Matlab` from an
+# already-PDS-loaded shell puts a working matlab on PATH with no conflicts.
+module purge
+module load IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"

@@ -11,6 +11,19 @@
 # module just needs METIS's checkout to exist somewhere shared and point
 # DIR_METIS4MUSCLE3 at its workflow/muscle3/mfile subdirectory.
 #
+# Also builds muscle3_venv: metis4muscle3.m doesn't use a matlab-native
+# MUSCLE3 client -- it calls Python's real libmuscle via MATLAB's
+# `pyenv(...)`/`py.*` bridge. That Python must satisfy two constraints at
+# once: (1) its libmuscle version must exactly match the actual
+# muscle_manager (0.10.0, from PDS-IMAS-MUSCLE3) or actor registration fails
+# with a wire-protocol "Unknown session X requested" error (confirmed), and
+# (2) it must be a Python version MATLAB's `py.*` bridge actually supports
+# (3.9-3.12 as of MATLAB/2025b-r1 -- 3.13, what PDS-IMAS-MUSCLE3's own venv
+# uses, isn't supported by any MATLAB version installed on this cluster,
+# confirmed against MathWorks' own compatibility table). No existing PDS
+# venv satisfies both, so this builds a small, dedicated one on Python 3.11
+# with just `muscle3==0.10.0` pip-installed.
+#
 # Usage: bash build_metis.sh <module-version> [branch] [git-url]
 # e.g:   bash build_metis.sh 2026-08-14-pds muscle3_develop
 set -euo pipefail
@@ -45,6 +58,17 @@ if ! command -v matlab >/dev/null; then
   exit 1
 fi
 matlab -nodisplay -batch zineb_path
+module purge || true
+
+# See header comment: a dedicated Python-3.11 + muscle3==0.10.0 venv for
+# metis4muscle3.m's own `pyenv(...)` call, kept separate from
+# PDS-IMAS-MUSCLE3's venv (Python 3.13, unsupported by any installed MATLAB).
+module load Python/3.11.5-GCCcore-13.2.0
+if [[ ! -d "$CHECKOUT/muscle3_venv" ]]; then
+  python3 -m venv "$CHECKOUT/muscle3_venv"
+fi
+"$CHECKOUT/muscle3_venv/bin/pip" install --quiet "muscle3==0.10.0"
+"$CHECKOUT/muscle3_venv/bin/python" -c "import libmuscle; assert libmuscle.__version__ == '0.10.0'"
 module purge || true
 
 cat > "$MODULE_FILE" << EOF
