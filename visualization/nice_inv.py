@@ -152,6 +152,8 @@ class State(BaseState):
                     [ts.profiles_1d.dpressure_dpsi],
                 ),
                 "psi_profile": (("time", "profile"), [ts.profiles_1d.psi]),
+                "q": (("time", "profile"), [ts.profiles_1d.q]),
+                "j_phi": (("time", "profile"), [ts.profiles_1d.j_phi]),
             },
             coords={
                 "time": [ids.time[itime]],
@@ -225,6 +227,8 @@ class Plotter(BasePlotter):
         coil_currents = self.make_coil_current_plots()
         f_df_dpsi = hv.DynamicMap(self.plot_f_df_dpsi_profile)
         dpressure_dpsi = hv.DynamicMap(self.plot_dpressure_dpsi)
+        q_profile = hv.DynamicMap(self.plot_q_profile)
+        j_phi_profile = hv.DynamicMap(self.plot_j_phi_profile)
         ip = hv.DynamicMap(self.plot_ip)
         beta_tor = hv.DynamicMap(self.plot_beta_tor)
 
@@ -235,6 +239,7 @@ class Plotter(BasePlotter):
             ),
             pn.Column(
                 pn.Row(f_df_dpsi, dpressure_dpsi),
+                pn.Row(q_profile, j_phi_profile),
                 pn.Row(ip, beta_tor),
                 coil_currents,
             ),
@@ -481,6 +486,42 @@ class Plotter(BasePlotter):
             psi, dpressure_dpsi, title = [], [], "Waiting for data..."
 
         return hv.Curve((psi, dpressure_dpsi), xlabel, ylabel).opts(
+            framewise=True, height=200, width=600, title=title
+        )
+
+    @param.depends("time")
+    def plot_q_profile(self):
+        xlabel = "Psi"
+        ylabel = "q"
+        state = self.active_state.data.get("equilibrium")
+
+        if state:
+            selected_data = state.sel(time=self.time)
+            psi = selected_data.psi_profile
+            q = selected_data.q
+            title = "Safety factor profile"
+        else:
+            psi, q, title = [], [], "Waiting for data..."
+
+        return hv.Curve((psi, q), xlabel, ylabel).opts(
+            framewise=True, height=200, width=600, title=title
+        )
+
+    @param.depends("time")
+    def plot_j_phi_profile(self):
+        xlabel = "Psi"
+        ylabel = "j_phi [A/m^2]"
+        state = self.active_state.data.get("equilibrium")
+
+        if state:
+            selected_data = state.sel(time=self.time)
+            psi = selected_data.psi_profile
+            j_phi = selected_data.j_phi
+            title = "Toroidal current density profile"
+        else:
+            psi, j_phi, title = [], [], "Waiting for data..."
+
+        return hv.Curve((psi, j_phi), xlabel, ylabel).opts(
             framewise=True, height=200, width=600, title=title
         )
 
