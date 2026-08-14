@@ -66,6 +66,7 @@ models:
         # which is what a per-slice conversation needs.
         ports:
           f_init: [pulse_schedule_f_init, pulse_schedule_in_f,
+                   equilibrium_f_init, equilibrium_in_f,
                    core_profiles_in_f, core_sources_in_f]
           o_i: [equilibrium_out_i]
     conduits:
@@ -75,12 +76,16 @@ models:
       core_sources_in_f: driver.core_sources_in
       # the pulse programme, which the hole does not carry
       source_ps.pulse_schedule_out: driver.pulse_schedule_in
-      # driver -> METIS, one slice per call. Deliberately the same port set the old
-      # metis_*_from_dina workflows used, which is the only configuration METIS is known to
-      # work in: pulse_schedule drives it, core_profiles/core_sources constrain it, and it
-      # is NOT given an equilibrium -- it computes its own. Feeding it one pulls in the
-      # external-equilibrium and LCFS-resize paths and segfaults imas_serialize on the way
-      # out. pulse_schedule goes to both its port sets so mode detection sees an _f_init.
+      # driver -> METIS, one slice per call. pulse_schedule drives METIS's clock;
+      # core_profiles/core_sources constrain it; the equilibrium is NICE's solve, which is
+      # the whole point of putting METIS in the design hole rather than running it first as
+      # the old metis_*_from_dina workflows did. Each lane goes to both its _f_init and
+      # _in_f port: both carry operator F_INIT, and mode detection needs to see an _f_init.
+      #
+      # The equilibrium ALSO needs metis_external_data_equilibrium: 1 in the case --
+      # get_external_data_state.m requires both a connected port and that setting before
+      # METIS will use it, so wiring alone would silently do nothing.
+      driver.equilibrium_call: [metis.equilibrium_f_init, metis.equilibrium_in_f]
       driver.core_profiles_call: metis.core_profiles_in_f
       driver.core_sources_call: metis.core_sources_in_f
       driver.pulse_schedule_call: [metis.pulse_schedule_f_init, metis.pulse_schedule_in_f]

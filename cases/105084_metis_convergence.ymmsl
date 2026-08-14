@@ -56,7 +56,9 @@ settings:
   # taken from the input data instead. NOTE these settings are only half of the
   # interpretative/predictive distinction -- the other half is the mode argument to
   # prepare_IDS4METIS_from_dina when the METIS input dataset is built.
-  run.transport.metis.metis_external_data_equilibrium: 0
+  # 1, not 0: the equilibrium comes from NICE via the design hole, and METIS only reads a
+  # connected equilibrium port when this is set (get_external_data_state.m).
+  run.transport.metis.metis_external_data_equilibrium: 1
   run.transport.metis.metis_external_data_current_diffusion: 0
   run.transport.metis.metis_external_data_electron_temperature: 0
   run.transport.metis.metis_external_data_electron_density: 0
