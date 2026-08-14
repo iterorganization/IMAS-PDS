@@ -123,11 +123,11 @@ programs:
     script: |
       #!/bin/bash
       export DIR_METIS4MUSCLE3=${DIR_METIS4MUSCLE3:-$EBROOTMETISMINIRFM/workflow/muscle3/mfile}
-      # Match the DD the IMAS-MATLAB module was built against. imas_serialize takes no
-      # version argument, so it emits whatever its MEX was compiled for; leaving the
-      # inherited IMAS_VERSION=4.0.0 in place has it segfault building the equilibrium
-      # message. imas-python on the receiving side converts within DD 4 on read.
-      export IMAS_VERSION=${METIS_IMAS_VERSION:-4.1.1}
+      # Match the DD the IMAS-MATLAB module was built against: imas_serialize takes no
+      # version argument, so it emits whatever its MEX was compiled for. A literal, not
+      # ${VAR:-default} -- these scripts go through os.path.expandvars, which does not
+      # understand :- defaults and silently collapses them to an empty string.
+      export IMAS_VERSION=4.1.1
       exec matlab -batch "[s,t] = unix('which python'); \
                           pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
                           addpath(getenv('DIR_METIS4MUSCLE3')); \
