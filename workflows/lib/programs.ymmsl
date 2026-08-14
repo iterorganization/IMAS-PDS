@@ -165,6 +165,12 @@ programs:
   # dedicated Python 3.11 venv with muscle3==0.10.0 that satisfies both. Taking whatever
   # `which python` returns instead picks up the unsupported 3.13 and MATLAB dies mid-run.
   #
+  # IMAS-AL-Matlab (not IMAS-MATLAB) because it pulls in MATLAB/2023b-r5, whose py.* bridge
+  # supports the venv's 3.11; MATLAB/2025b-r1 does not go past 3.12 either but the 2023b
+  # pairing is the one that has actually been run. It also supplies imas_deserialize, which
+  # metis4muscle3_read.m needs and METIS does not ship. Its DD is 4.0.0, matching the rest
+  # of the stack, so IMAS_VERSION goes back to 4.0.0 here.
+  #
   # PYTHONPATH is unset because pyenv inherits this process's environment even in InProcess
   # mode, and would otherwise import a mismatched numpy under the venv's own Python.
   #
@@ -178,11 +184,9 @@ programs:
       source /etc/profile.d/lmod.sh 2>/dev/null
       module purge
       module use ${PDS_MODULEPATH:-$HOME/public/modules}
-      module load METIS-IRFM
-      module load PDS-METIS
-      module load IMAS-MATLAB
+      module load PDS-METIS IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
       unset PYTHONPATH
-      export IMAS_VERSION=4.1.1
+      export IMAS_VERSION=4.0.0
       export HDF5_USE_FILE_LOCKING=FALSE
       exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
 
