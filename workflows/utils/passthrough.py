@@ -50,12 +50,14 @@ IDS_NAMES = IDSFactory().ids_names()
 
 
 def main() -> None:
-    instance = Instance({
-        Operator.F_INIT: [f"{ids_name}_in_f" for ids_name in IDS_NAMES],
-        Operator.S: [f"{ids_name}_in_s" for ids_name in IDS_NAMES],
-        Operator.O_F: [f"{ids_name}_out_f" for ids_name in IDS_NAMES],
-        Operator.O_I: [f"{ids_name}_out_i" for ids_name in IDS_NAMES],
-    })
+    instance = Instance(
+        {
+            Operator.F_INIT: [f"{ids_name}_in_f" for ids_name in IDS_NAMES],
+            Operator.S: [f"{ids_name}_in_s" for ids_name in IDS_NAMES],
+            Operator.O_F: [f"{ids_name}_out_f" for ids_name in IDS_NAMES],
+            Operator.O_I: [f"{ids_name}_out_i" for ids_name in IDS_NAMES],
+        }
+    )
 
     while instance.reuse_instance():
         forward_f_init = instance.get_setting("forward_f_init", "bool", default=True)

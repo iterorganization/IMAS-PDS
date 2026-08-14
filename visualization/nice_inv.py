@@ -48,12 +48,8 @@ class State(BaseState):
         if current_data is None:
             self.data["pf_active"] = new_point
         else:
-            combined = xr.concat(
-                [current_data, new_point], dim="time", join="outer"
-            )
-            self.data["pf_active"] = combined.drop_duplicates(
-                "time", keep="last"
-            )
+            combined = xr.concat([current_data, new_point], dim="time", join="outer")
+            self.data["pf_active"] = combined.drop_duplicates("time", keep="last")
 
     def _extract_equilibrium(self, ids):
         # A live stream sends one slice per message; the recorder receives a
