@@ -91,7 +91,6 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 
 ###### RUN WORKFLOWS ######
 export HDF5_USE_FILE_LOCKING=FALSE
-
 bash run_workflow.sh prescribed_transport 105084
 bash run_workflow.sh inverse_convergence 105084
 # # EXPECT CRASH, HOW TO HANDLE?
