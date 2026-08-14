@@ -113,13 +113,14 @@ programs:
   #   0 = none, 1 = Matlab logfile, 2 = +debugger stop on error, 3 = +keyboard stop.
   # 2 is kept for equivalence with the previous definition; production should use 0.
   #
-  # DIR_METIS4MUSCLE3 is exported in the script rather than set via `env:`, which is not
-  # expanded.
+  # DIR_METIS4MUSCLE3 comes from the PDS-METIS module; the fallback is the wrapper bundled
+  # with the official METIS-IRFM module, which also supplies MATLAB either way. Exported in
+  # the script rather than set via `env:`, which is not expanded.
   metis:
-    description: METIS transport actor, coupling mode 2 (from-DINA co-simulation)
+    description: METIS transport actor (debug_level 2)
     script: |
       #!/bin/bash
-      export DIR_METIS4MUSCLE3=$EBROOTMETISIRFM/workflow/muscle3/mfile
+      export DIR_METIS4MUSCLE3=${DIR_METIS4MUSCLE3:-$EBROOTMETISIRFM/workflow/muscle3/mfile}
       exec matlab -batch "[s,t] = unix('which python'); \
                           pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); \
                           addpath(getenv('DIR_METIS4MUSCLE3')); \
