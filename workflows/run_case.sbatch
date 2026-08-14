@@ -10,12 +10,16 @@ set -euo pipefail
 
 # SLURM wrapper around a case file. Submit from the repo root, e.g.:
 #   sbatch workflows/run_case.sbatch 105084_convergence      (or run with bash)
+#   sbatch workflows/run_case.sbatch 105084_convergence /tmp/window.ymmsl
 #
 # The defaults above suit a convergence run; override for anything smaller:
 #   sbatch --time=00:20:00 --cpus-per-task=8 workflows/run_case.sbatch 105084_prescribed
 #
 CASE_NAME="${1:-}"
-[[ -n "$CASE_NAME" ]] || { echo "usage: $0 <case>   e.g. 105084_convergence" >&2; exit 1; }
+[[ -n "$CASE_NAME" ]] || { echo "usage: $0 <case> [override.ymmsl ...]" >&2; exit 1; }
+shift
+# Any further arguments are stacked after the case, last value for a key winning.
+OVERLAYS=("$@")
 
 # Load the PDS module stack unless the caller already has one, so a submitted job does not
 # depend on the submitting shell. Prefer submitting with --export=NONE so it never does.
@@ -68,4 +72,4 @@ fi
 
 RUN_DIR="$REPO/run/out/${CASE_NAME%.ymmsl}"
 mkdir -p "$RUN_DIR"
-exec "$MANAGER" --start-all --run-dir "$RUN_DIR" "$CASE"
+exec "$MANAGER" --start-all --run-dir "$RUN_DIR" "$CASE" "${OVERLAYS[@]}"
