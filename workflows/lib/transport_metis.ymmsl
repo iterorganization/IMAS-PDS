@@ -47,18 +47,25 @@ models:
       metis:
         description: METIS transport actor -- one reuse iteration per time slice
         implementation: metis
+        # Both the *_f_init and *_in_f sets, fed the same slice. In METIS's port list both
+        # carry operator F_INIT -- `direction` (init vs input) is METIS's own bookkeeping,
+        # not MUSCLE3's. It decides its running mode by looking for a CONNECTED port whose
+        # name ends in `_f_init` carrying a timestamp (get_workflow_mode.m); with only the
+        # _in_f set wired it finds none, concludes it is in replay mode, and exits looking
+        # for a saved METIS data file. lib/metis_dina.ymmsl fans out the same way.
         ports:
-          f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+          f_init: [equilibrium_f_init, core_profiles_f_init, core_sources_f_init,
+                   equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
           o_f: [equilibrium_out_f, core_profiles_out_f]
     conduits:
       # model input ports -> driver
       equilibrium_in_f: driver.equilibrium_in
       core_profiles_in_f: driver.core_profiles_in
       core_sources_in_f: driver.core_sources_in
-      # driver -> METIS, one slice per call
-      driver.equilibrium_call: metis.equilibrium_in_f
-      driver.core_profiles_call: metis.core_profiles_in_f
-      driver.core_sources_call: metis.core_sources_in_f
+      # driver -> METIS, one slice per call, to both port sets (see the note above)
+      driver.equilibrium_call: [metis.equilibrium_f_init, metis.equilibrium_in_f]
+      driver.core_profiles_call: [metis.core_profiles_f_init, metis.core_profiles_in_f]
+      driver.core_sources_call: [metis.core_sources_f_init, metis.core_sources_in_f]
       # METIS -> driver, one slice per reply
       metis.equilibrium_out_f: driver.equilibrium_reply
       metis.core_profiles_out_f: driver.core_profiles_reply
