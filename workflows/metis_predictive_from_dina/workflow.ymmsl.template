@@ -65,15 +65,18 @@ settings:
 
 implementations:
   sink_metis:
+    base_env: clean
     modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   source_metis:
+    base_env: clean
     modules: PDS-IMAS-MUSCLE3
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   metis: 
-    modules: IMAS-AL-Matlab
+    base_env: clean
+    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
     env: 
       DIR_METIS4MUSCLE3: [BASEDIR_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
     executable: matlab

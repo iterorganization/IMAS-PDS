@@ -23,11 +23,28 @@ fi
 PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PDS_REPO
 
+gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
+
+# lib.local_programs' actors reference $PDS_REPO directly (e.g. `args: -u
+# $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py`), expanded by bash inside
+# each actor's own generated launch script -- which runs *after* that actor's own
+# `base_env: clean` (a `module purge`), and Lmod's purge unconditionally unsets whatever
+# setenv() PDS.lua did, including $PDS_REPO, regardless of how it was set or re-exported
+# since (confirmed empirically: a plain `export PDS_REPO=$PDS_REPO` before the purge does
+# not survive it either -- Lmod purge just re-runs PDS.lua in unload mode). So $PDS_REPO
+# must never be a *live* shell reference by the time an actor's script runs. Substitute it
+# to a literal path here, once, before the manager ever starts, the same way the stack
+# below already does for workflow.ymmsl/settings.ymmsl/waveforms.yaml.
+mkdir -p "$gen/lib"
+envsubst '${PDS_REPO} ${SCEN} ${SHOT}' \
+  < "$PDS_REPO/workflows/lib/local_programs.ymmsl" > "$gen/lib/local_programs.ymmsl"
+
 # Workflows resolve `imports: - from lib.<...> import implementation <...>` (e.g.
 # lib.local_programs) against YMMSL_PATH, which the manager consults when it loads the
-# stacked config files below -- so lib.local_programs resolves to
-# $PDS_REPO/workflows/lib/local_programs.ymmsl. Prepended so a caller can still extend it.
-export YMMSL_PATH="$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
+# stacked config files below. $gen first, so lib.local_programs resolves to the
+# substituted copy above instead of the raw checked-in one; anything else under lib/ (not
+# overridden there) still falls through to the real checkout right after it.
+export YMMSL_PATH="$gen:$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
 export SHOT="${2:-${SHOT_NR:-}}"
@@ -61,7 +78,6 @@ RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
 [[ -d "$WF" ]] || { echo "pds-run: no workflow dir $WF" >&2; exit 1; }
 [[ -d "$SCEN" ]] || { echo "pds-run: no scenario dir $SCEN" >&2; exit 1; }
 
-gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 stack=()
 i=0
 for f in "$WF/workflow.ymmsl" "$WF/settings.ymmsl"; do
