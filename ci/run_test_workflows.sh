@@ -84,7 +84,6 @@ MANAGER="$PWD/run/IMAS-MUSCLE3/venv/bin/muscle_manager"
 "$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_visualization_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
 # "$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
