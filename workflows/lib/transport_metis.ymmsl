@@ -16,13 +16,28 @@ ymmsl_version: v0.2
 # that the hole does not carry, and it takes pulse_schedule that the hole does not supply.
 # Wire those here, not in lib/design, so the hole keeps TORAX's shape.
 #
-# UNVERIFIED AT RUNTIME. The port names line up, but TORAX takes every equilibrium time
-# slice in one f_init message whereas METIS drives its own reuse loop
-# (metis4muscle3.m:383). Whether METIS reads a whole trace off equilibrium_in_f the way
-# TORAX does has not been tested, and no METIS module is installed to test it with. If it
-# turns out to want one slice at a time, the adapter goes in this file -- a slicer on the
-# input side and an accumulator on the output side, the shape lib/nice_inverse already
-# uses -- and lib/design does not change.
+# NOT USABLE AS IT STANDS -- the conduits below are a placeholder, not a working coupling.
+#
+# The port names match, but the time semantics do not. Read from the METIS sources:
+#
+#   equilibrium_in_f    metis4muscle3_update_metis_input_on_equilibrium.m loops over every
+#                       received time slice and interpolates to METIS's current time, so a
+#                       whole trace IS handled here.
+#   core_profiles_in_f  metis4muscle3_make_external_data.m takes profiles_1d{end} -- only
+#   core_sources_in_f   the LAST slice -- and accumulates across reuse iterations. A whole
+#                       trace is silently truncated.
+#   *_out_f             get_ids_time_slice.m emits ids_get_slice(..., t_cur, 2): ONE slice
+#                       per reuse iteration, never the whole trace.
+#
+# lib/design's `transport` hole is TORAX-shaped: whole trace in, whole trace out, one
+# exchange per Picard iteration. METIS is slice-at-a-time. Bridging that needs a driver
+# actor between the hole and METIS -- whole traces on F_INIT, per-slice out on O_I,
+# per-slice back on S, reassembled whole traces on O_F, driving METIS through its
+# equilibrium_out_i / *_in_s ports rather than the _f ones used below. That is the shape
+# workflows/lib/actors/nice_load_balancer.py already implements for NICE.
+#
+# Keeping the seam here rather than in lib/design is the point: the driver lands in this
+# file and lib/design never learns that METIS is different.
 
 imports:
 - from lib.programs import implementation metis
