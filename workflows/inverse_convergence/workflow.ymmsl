@@ -3,18 +3,11 @@ ymmsl_version: v0.2
 # Also needs programs and settings from somewhere else.
 #
 # Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
-# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# Swap to lib.easybuild_programs for EasyBuild-module-based implementations 
+# resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+# To override one actor (e.g. your own build), copy local_programs.ymmsl to
+# lib/local_programs_<yourname>.ymmsl and repoint just that actor's import here.
 #
 # Settings come from workflows/inverse_convergence/settings.ymmsl
-
-# Consolidated inverse_convergence workflow -- structure + programs only; no scenario data.
-# Also needs settings from somewhere else.
-#
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl); resolve
-# with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this). Swap to
-# lib.easybuild_programs for EasyBuild-module-based implementations, but see that file's
-# header -- none of its IMAS-MUSCLE3/NICE-module entries work with the 0.10.0 manager yet.
 imports:
 - from lib.local_programs import implementation source
 - from lib.local_programs import implementation sink

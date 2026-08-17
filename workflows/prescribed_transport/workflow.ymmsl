@@ -3,8 +3,9 @@ ymmsl_version: v0.2
 # Also needs programs and settings from somewhere else.
 #
 # Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
-# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# Swap to lib.easybuild_programs for EasyBuild-module-based implementations 
+# resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+# To override one actor (e.g. your own build), copy local_programs.ymmsl to
+# lib/local_programs_<yourname>.ymmsl and repoint just that actor's import here.
 #
 # Settings come from workflows/prescribed_transport/settings.ymmsl
 
