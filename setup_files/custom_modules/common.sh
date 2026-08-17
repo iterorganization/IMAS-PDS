@@ -8,6 +8,6 @@
 #
 # Override either by exporting it before calling a build script, e.g. to
 # install somewhere other than your own home directory.
-
-: "${PDS_SOFTWARE_ROOT:=$HOME/public/software}"
-: "${PDS_MODULES_ROOT:=$HOME/public/modules}"
+: "${PDS_REPO:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+: "${PDS_SOFTWARE_ROOT:=$PDS_REPO/run/software}"
+: "${PDS_MODULES_ROOT:=$PDS_REPO/run/modules}"

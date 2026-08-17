@@ -5,8 +5,9 @@ Build scripts that produce modules for the PDS actor codes.
 ## Usage
 
 Each script takes a version string you choose plus a branch/tag, and installs
-under `$PDS_SOFTWARE_ROOT` (default `~/public/software`) with a matching
-modulefile under `$PDS_MODULES_ROOT` (default `~/public/modules`). For example:
+under `$PDS_SOFTWARE_ROOT` (default `<this checkout>/run/software`) with a
+matching modulefile under `$PDS_MODULES_ROOT` (default
+`<this checkout>/run/modules`)
 
 ```bash
 bash build_nice.sh              3.0.0-pds-intel-2025b   master
