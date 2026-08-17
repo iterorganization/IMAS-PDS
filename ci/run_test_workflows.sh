@@ -24,7 +24,6 @@ module --ignore_cache load PDS
 # RUN TEST FILES
 # Isolated, single-actor smoke tests -- faster than the full workflow runs
 # below, and catch a broken actor environment in seconds instead of minutes.
-export YMMSL_PATH="$(pwd)/workflows"
 MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
 
 "$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl

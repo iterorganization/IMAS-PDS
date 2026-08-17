@@ -4,7 +4,6 @@ module load MUSCLE3
 
 export matlab_path="$PWD/workflows/metis_nice_utils"
 export IMAS_AL_DISABLE_VALIDATE=1
-export YMMSL_PATH="$PWD/workflows"
 
 RUNDIR="$SUBDIR/tmp/m3_runs/run-$(date +%F)-$(date +%H%M%S)"
 mkdir -p $RUNDIR

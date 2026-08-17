@@ -205,6 +205,7 @@ end
 prepend_path("PATH", pathJoin(pds_repo, "bin"))
 prepend_path("PYTHONPATH", pds_repo)
 setenv("PDS_REPO", pds_repo)
+prepend_path("YMMSL_PATH", pathJoin(pds_repo, "workflows"))
 
 -- Env settings every workflow actor needs.
 execute{cmd="ulimit -s unlimited", modeA={"load"}}
