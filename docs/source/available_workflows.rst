@@ -89,12 +89,10 @@ Per-workflow reference
 
 The workflows below carry their own ``README.md`` (in ``workflows/<name>/``), covering what
 the workflow does, its assumptions, its input requirements, and what its output looks like.
-These are included here directly, so the workflow directory stays the single source of truth.
+The workflow directory is the single source of truth for these, so they are linked rather
+than copied:
 
-.. toctree::
-   :maxdepth: 1
-
-   workflows/prescribed_transport
-   workflows/inverse_convergence
+- :src:`workflows/prescribed_transport/README.md`
+- :src:`workflows/inverse_convergence/README.md`
 
 

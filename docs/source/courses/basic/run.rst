@@ -37,10 +37,14 @@ First we look at some ITER scenarios:
 These workflows are made to demonstrate and validate the performance of the PDS actors.
 The different scenarios can be found in the ``workflows`` directory.
 The workflow can be run by running the ``run_workflow.sh`` shell script.
+
 .. warning::
-   This course uses the legacy ``run_workflow.sh`` invocation and the per-scenario
-   ``scenarios/<shot>/tmp/`` output layout. Migrated workflows are also runnable from a
-   case file (see :doc:`../../usage`); scenario 105092 has no case yet.
+
+   ``run_workflow.sh`` and the per-scenario ``scenarios/<shot>/tmp/`` output layout are the
+   legacy invocation, kept for the workflows that have not been migrated yet. The exercises
+   below use the migrated form instead: a **case** file in ``cases/``, run through
+   ``workflows/run_case.sbatch``. See :doc:`../../usage` for what a case is.
+
 The shell script:
 
 - preprocesses the DINA input data so that it is compatible with the used MUSCLE3 actors.
@@ -87,7 +91,7 @@ its own, before adding the extra complexity of a self-consistently coupled trans
 
         .. code-block:: console
 
-            muscle_manager --start-all cases/105092_prescribed.ymmsl
+            bash workflows/run_case.sbatch 105092_prescribed
 
         Check if the results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to
@@ -127,7 +131,7 @@ calculated by NICE to a transport solve using TORAX.
 
         .. code-block:: console
 
-            muscle_manager --start-all cases/105092_convergence.ymmsl
+            bash workflows/run_case.sbatch 105092_convergence
 
         Check if results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to

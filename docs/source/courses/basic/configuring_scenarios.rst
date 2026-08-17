@@ -152,8 +152,7 @@ Exercise 5: increase the log level in the NICE config
 
             muscle_manager --start-all cases/105092_prescribed.ymmsl my_override.ymmsl
 
-        Then check the ``solve.nice`` log in the
-        :ref:`muscle3-dashboard <basic/muscle3_dashboard>`.
+        Then check the ``solve.nice`` log in the MUSCLE3 dashboard (``m3dash``).
 
 Exercise 6: change the amount of timeslices in scenario_config.env
 ------------------------------------------------------------------------

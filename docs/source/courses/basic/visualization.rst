@@ -5,9 +5,9 @@ Visualization
 
 The **recorder actor** is a sink-only tap: wired onto conduits that already exist in
 a workflow, it does not change the coupling, it just also writes a distilled copy
-of the data flowing past to disk. Point :ref:`basic/muscle3_dashboard` at a run that
-includes one and it gets an extra tab, rendering that data live while the run is
-still going, or afterwards.
+of the data flowing past to disk. Point the MUSCLE3 dashboard (``m3dash``, shipped with
+IMAS-MUSCLE3) at a run that includes one and it gets an extra tab, rendering that data
+live while the run is still going, or afterwards.
 
 We will use ``prescribed_transport`` for the exercises below: of the workflows in
 this repo it is the simplest chain (``source -> waveform_editor -> nice_inv ->
@@ -83,14 +83,15 @@ Running the workflow and opening the dashboard
 
 .. code-block:: console
 
-    bash run_workflow.sh prescribed_transport 105084
+    bash workflows/run_case.sbatch 105084_prescribed
 
-Then, in a separate terminal with the dashboard's own virtual environment
-activated (see :ref:`basic/muscle3_dashboard`):
+``run_case.sbatch`` pins the run directory to ``run/out/<case>``, so the output lands
+somewhere predictable. Then, in a separate terminal with the dashboard's own virtual
+environment activated:
 
 .. code-block:: console
 
-    m3dash open workflows/
+    m3dash open run/out/
 
 Click the run, and a ``rec_nice`` tab appears once the recorder has written its
 first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk
