@@ -12,6 +12,8 @@ programs:
   sink:        {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
   sink_source: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
   validator:   {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  passthrough: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
+  iterator:    {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
 
   # ----- NICE python actors --------------------------------------------------
   # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
