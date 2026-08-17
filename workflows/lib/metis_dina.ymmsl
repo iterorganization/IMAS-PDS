@@ -2,22 +2,20 @@ ymmsl_version: v0.2
 
 # Core model: METIS from DINA, with an optional NICE inverse branch.
 #
-# Consolidates the four metis_*_from_dina workflows. Their graphs are identical apart from
-# the NICE branch, so this is one model with that branch optional:
+# Consolidates the four metis_*_from_dina workflows, whose graphs are identical apart from
+# the NICE branch, so that branch is optional here:
 #
-#   metis_from_dina              NICE branch pruned  (was metis_{interpretative,predictive}_from_dina)
-#   metis_nice_inverse_from_dina NICE branch present (was metis_*_nice_inverse_from_dina)
+#   metis_from_dina              NICE branch pruned
+#   metis_nice_inverse_from_dina NICE branch present
 #
-# The interpretative/predictive distinction is not a separate workflow: it is five
-# settings -- metis.metis_external_data_{electron_temperature,electron_density,
-# ion_temperature,charge_effective,ECRH}, all 1 for interpretative and 0 for predictive.
-# Four old workflows therefore become two workflows and four cases.
+# The interpretative/predictive distinction is not a separate workflow, but five settings:
+# metis.metis_external_data_{electron_temperature,electron_density,ion_temperature,
+# charge_effective,ECRH}, all 1 for interpretative and 0 for predictive.
 #
-# Kept separate from lib/design.ymmsl because the coupling order is reversed: here METIS
-# runs first and NICE fits coils to its equilibrium, whereas in `design` NICE runs first
-# and transport consumes its equilibrium. Likewise `nice` is a bare nice_inv rather than
-# the lib/nice_inverse submodel, since a load balancer would turn METIS's one whole-trace
-# call into per-slice scatter/gather. Neither change would be equivalence-preserving.
+# Separate from lib/design.ymmsl because the coupling order is reversed -- here METIS runs
+# first and NICE fits coils to its equilibrium. `nice` is a bare nice_inv rather than the
+# lib/nice_inverse submodel for the same reason: a load balancer would turn METIS's one
+# whole-trace call into per-slice scatter/gather.
 
 imports:
 - from lib.programs import implementation source

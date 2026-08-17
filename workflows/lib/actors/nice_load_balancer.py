@@ -10,15 +10,12 @@ working purely on whole traces -- the per-slice/scatter/gather/assemble all live
 Lanes fixed to the NICE inverse contract. STATIC lanes (wall/pf_passive/iron_core) are
 forwarded whole to every worker call (NICE re-reads them each F_INIT); the rest are sliced.
 
-Each equilibrium slice is also re-gauged before scatter (_anchor_psi): NICE derives its
-desired boundary flux -- and the normalization of the p'/ff' profile coordinate -- from
-profiles_1d.psi[-1] of the input slice, so whatever gauge the Picard state happens to be
-in becomes a coil-current target (use_desired_psib). The designed psi_b(t) rides along on
-global_quantities.psi_boundary (a waveform-editor target lane, from the scenario's design
-reference), and the whole psi array is shifted by a constant so its edge lands on it: a
-pure gauge shift, p'(psi)/ff'(psi) are invariant, but every iteration's NICE solve is
-anchored to the designed transformer-flux state regardless of the loop's initial state.
-Slices without psi_boundary (or without a psi profile) pass through unchanged.
+Each equilibrium slice is re-gauged before scatter (_anchor_psi). NICE derives its desired
+boundary flux, and the normalization of the p'/ff' coordinate, from profiles_1d.psi[-1], so
+whatever gauge the Picard state is in would become the coil-current target. Shifting the
+whole psi array so its edge lands on the designed global_quantities.psi_boundary anchors
+every iteration to the designed transformer-flux state; p'(psi)/ff'(psi) are invariant
+under it. Slices without psi_boundary or without a psi profile pass through unchanged.
 """
 
 import logging

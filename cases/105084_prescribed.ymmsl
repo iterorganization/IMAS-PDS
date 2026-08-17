@@ -23,8 +23,9 @@ settings:
 
   solve.nice.xml_path: ${PDS_REPO}/workflows/lib/config_nice_inverse.xml
 
-  # Relative URIs resolve against the instance's own work directory.
-  sink.sink_uri: "imas:hdf5?path=out_nice"
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  sink.sink_uri: "imas:hdf5?path=../../../out_nice"
   sink.sink_mode: "w"
 
   # Recording.

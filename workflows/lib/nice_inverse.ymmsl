@@ -8,13 +8,9 @@ ymmsl_version: v0.2
 #     components:
 #       solve: {description: ..., implementation: nice_inverse, ports: {...}}
 #
-# Each use is independently customisable, so `solve.nice.xml_path` and
-# `final_solve.nice.xml_path` are separate settings.
-#
-# LIMITATION: `multiplicity` cannot be overridden from a case, so every use of this
-# submodel shares one worker count. Both uses are [1] today.
-#
-# Port names come from workflows/lib/actors/nice_load_balancer.py:68-73.
+# Each use is settable independently, so `solve.nice.xml_path` and
+# `final_solve.nice.xml_path` are separate settings. `multiplicity` is the exception: it
+# cannot be overridden from a case, so every use shares one worker count.
 
 imports:
 - from lib.programs import implementation load_balancer

@@ -63,9 +63,9 @@ The last value given for a key wins:
 The run directory receives ``input/``, holding the yMMSL files exactly as passed, and
 ``configuration.ymmsl``, the fully resolved configuration that was executed.
 
-Sink outputs land in each sink's own work directory,
-``<run_dir>/instances/<sink>/workdir/<name>``: relative IMAS URIs resolve against the
-instance's working directory, not the run directory.
+Sink outputs land directly in the run directory, ``<run_dir>/<name>``. Relative IMAS URIs
+resolve against the instance's own work directory (``<run_dir>/instances/<sink>/workdir``),
+so the cases write to ``../../../<name>`` to climb back out to the run directory.
 
 Setting keys and resources keys are written differently, which is worth knowing before you
 edit a case. Settings are matched by walking instance prefixes, so the short instance name

@@ -73,14 +73,13 @@ Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
 
 ## Output
 
-Relative sink URIs resolve against each instance's own work directory, so results land under
-`<run_dir>/instances/<sink>/workdir/`:
+The sinks write into the run directory itself:
 
 - `sink_nice` writes the converged per-time-slice `equilibrium` and `pf_active` to
-  `instances/run.sink_nice/workdir/out_nice`; `sink_torax` writes TORAX's evolved
-  `equilibrium`, `core_profiles` and the static machine description to
-  `instances/run.sink_torax/workdir/out_torax`.
+  `<run_dir>/out_nice`; `sink_torax` writes TORAX's evolved `equilibrium` and
+  `core_profiles` to `<run_dir>/out_torax`.
 - `rec_nice`/`rec_torax` write distilled copies of the NICE and TORAX output for the
   muscle3-dashboard (`visualization/nice_inv.py` / `visualization/kinetic_profiles.py`).
-- The final linear-model pass (`nice_final`) writes timestamped `linearModel_t<time>/`
-  directories containing the A, B, C matrices for control design.
+- The final linear-model pass writes timestamped `linearModel_t<time>/` directories with
+  the A, B, C matrices for control design. NICE writes these itself rather than through a
+  sink, so they stay in `<run_dir>/instances/run.final_solve.nice/workdir/`.

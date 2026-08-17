@@ -95,9 +95,9 @@ def check_case(case: Path, errors: list) -> None:
                       f"{', '.join(sorted(missing))}")
         return
 
-    # Reference([]) is exactly what muscle_manager passes (muscle3/muscle_manager.py:110).
-    # Do not use the filename: case names like "105084_prescribed" are not valid ymmsl
-    # Identifiers, and using one here would fail on files the manager accepts happily.
+    # Reference([]) is what muscle_manager passes. Do not use the filename: case names
+    # like "105084_prescribed" are not valid ymmsl Identifiers, so that would fail on
+    # files the manager accepts happily.
     try:
         resolve(Reference([]), cfg)
     except RuntimeError as e:
@@ -125,9 +125,9 @@ def check_case(case: Path, errors: list) -> None:
     flat = flatten(cfg, Reference(root))
     instances = {str(c) for c in flat.root_model().components}
 
-    # An imported workflow's own `resources`/`settings` are dropped by the resolver
-    # (resolve_impl_imports copies only models and programs), so a self-contained case
-    # must carry them itself. Silent when wrong: the component just gets 1 thread.
+    # The resolver copies only models and programs, dropping an imported workflow's own
+    # `resources`/`settings`, so a self-contained case must carry them. Silent when wrong:
+    # the component just gets 1 thread.
     if self_contained and not cfg.resources:
         _fail(errors, f"{case.name}: imports its workflow but declares no `resources:`. "
                       f"An imported file's resources are discarded, so every component "
@@ -146,16 +146,13 @@ def check_case(case: Path, errors: list) -> None:
                 f"silently ignored. Instances: {sorted(instances)}",
             )
 
-    # Resources are looked up by EXACT dict key, with no prefix walk (unlike settings):
-    # instance_manager.py:142 calls `get_resources(model.name + component.name)` and
-    # Configuration.get_resources does a plain `self.resources.get(name)`. So the key must
-    # be the root model name followed by the instance name -- and for a self-contained
-    # case the root model name is the full dotted import path
-    # (`inverse_convergence.workflow.inverse_convergence`), because resolver.py:177 sets
-    # `impl.name = module + impl.name` and offers no way to alias it shorter.
+    # Resources are looked up by exact dict key, with no prefix walk (unlike settings), so
+    # the key must be the root model name followed by the instance name. For a
+    # self-contained case that root name is the full dotted import path
+    # (`inverse_convergence.workflow.inverse_convergence`), which cannot be aliased shorter.
     #
-    # Getting this wrong costs nothing visible: get_resources logs at DEBUG and hands back
-    # 1 thread, so a TORAX asking for 8 quietly runs on one core.
+    # Getting it wrong is invisible: get_resources logs at DEBUG and returns 1 thread, so a
+    # TORAX asking for 8 quietly runs on one core.
     wanted = {f"{root}.{inst}": inst for inst in instances}
     for key in (str(k) for k in cfg.resources):
         if key not in wanted:
@@ -248,9 +245,8 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
                               f"(it produces {sorted(produced)})")
 
         # And the reverse: every port-import the config reads from must be an input port
-        # on this instance. The exporter builds every IDS the config mentions, not just
-        # the ones whose output ports are connected, so an unreachable port-import fails
-        # the run with KeyError: no IDS received on import port '<name>'.
+        # on this instance. The exporter builds every IDS the config mentions, so an
+        # unreachable port-import fails the run with "no IDS received on import port".
         imports = (doc.get("globals") or {}).get("imports") or {}
         needed = {
             spec["port"]

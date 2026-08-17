@@ -52,7 +52,5 @@ models:
       solve.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
       solve.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
 
-# No `resources:` or `settings:` here, deliberately: an imported file's settings and
-# resources are silently discarded, so anything declared here would vanish with no
-# diagnostic. Both live in the case instead, and ci/check_ymmsl.py fails a case that
-# omits them.
+# No `resources:` or `settings:` here: an imported file's are discarded, so both
+# live in the case instead. ci/check_ymmsl.py fails a case that omits them.

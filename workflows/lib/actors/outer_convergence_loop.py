@@ -1,24 +1,21 @@
 """Outer Picard driver as a MUSCLE3 submodel: one full-pulse exchange per iteration.
 
 Each iteration sends a whole-trace pulse on the O_I ports (designed target, core_profiles)
-and receives a whole-trace pulse on the S ports (coils from NICE, evolved equilibrium +
-core_profiles from TORAX). It then restores the prescribed boundary outline on the evolved
-equilibrium and iterates until the max coil-current change between iterations drops below
-the tolerance, or its relative change between iterations stalls below rel_tolerance. The
-driver only paces the iteration; the coupling itself is a pipeline
-(loop -> waveform_editor -> nice/load_balancer -> torax -> loop). The boundary is
-held from the input IDS until a shape editor is wired in; Ip is held by the waveform_editor.
-Both the equilibrium target and core_profiles go to `waveform_editor` (equilibrium drives
-its export time base; core_profiles is a straight port-import, mirrored through unchanged)
-before reaching TORAX -- there is no longer a direct loop -> TORAX core_profiles conduit. The
-static machine-description lanes (wall, pf_passive, iron_core) never change across the pulse
-or across iterations, so `waveform_editor` re-exports the scenario's reference copy
-straight to the NICE load_balancer; the loop never sees them. The coil-current seed sent to
-NICE each iteration is likewise never fed back from the previous iteration's result (there is
-no `pf_active` in the F_INIT/O_I lanes below), so it is also produced by `waveform_editor`
-(its own reference copy, or an explicit per-coil waveform) and sent straight to the NICE
-load_balancer -- only the *result* NICE returns for pf_active still
-flows through the loop (S, then O_F), since that is what the convergence check watches.
+and receives one on the S ports (coils from NICE, evolved equilibrium + core_profiles from
+TORAX). It restores the prescribed boundary outline on the evolved equilibrium and iterates
+until the max coil-current change drops below `tolerance`, or its relative change stalls
+below `rel_tolerance`. The driver only paces the iteration; the coupling itself is a
+pipeline (loop -> waveform_editor -> nice -> torax -> loop).
+
+The boundary is held from the input IDS until a shape editor is wired in; Ip is held by the
+waveform_editor. Both the equilibrium target and core_profiles reach TORAX via
+`waveform_editor` -- the equilibrium drives its export time base, core_profiles is mirrored
+through unchanged.
+
+Three things deliberately never travel around the loop, because they do not change between
+iterations: the static machine description (wall, pf_passive, iron_core) and the
+coil-current seed, both re-exported by `waveform_editor` straight to NICE. Only the
+pf_active NICE *returns* flows through the loop, since that is what convergence watches.
 """
 
 import logging
@@ -189,10 +186,8 @@ def main() -> None:
         boundary = _split(init["equilibrium"], "equilibrium", times)
         cp_slices = _split(init["core_profiles"], "core_profiles", times)
         if cold_start:
-            # No DINA warm start: iteration 0 gets a generic, Ip-scaled state
-            # instead of the DINA profiles (see _cold_equilibrium/_cold_core_profiles).
-            # `boundary` itself is replaced so the padding path can't reintroduce
-            # DINA profiles either; _hold_boundary only ever reads its outline.
+            # No DINA warm start: iteration 0 gets a generic, Ip-scaled state. `boundary`
+            # is replaced too, so the padding path cannot reintroduce DINA profiles.
             logger.info(
                 "cold_start: replacing the DINA initial state with generic profiles"
             )
@@ -205,9 +200,8 @@ def main() -> None:
         prev_dI = None
         torax_eq = coilr = None
 
-        # The `transport` hole may be pruned (prescribed_transport). flatten() then drops
-        # the conduits into these S ports, so they are simply unconnected -- receiving on
-        # them would block forever.
+        # A pruned `transport` hole leaves these S ports unconnected, and receiving on an
+        # unconnected port blocks forever.
         transport_connected = (
             inst.is_connected("equilibrium_in_s") and inst.is_connected("core_profiles_in_s"))
 
@@ -224,10 +218,8 @@ def main() -> None:
             coilr = inst.receive("pf_active_in_s").data
 
             if not transport_connected:
-                # No transport in this workflow (the `transport` hole is pruned): NICE has
-                # solved the prescribed boundary once and there is nothing to iterate
-                # against, so `target` and `cp` stay as they are and we stop after one
-                # pass. torax_eq is left None; the design target is emitted below.
+                # Nothing to iterate against: NICE has solved the prescribed boundary
+                # once, so keep `target`/`cp` and stop after this pass.
                 logger.info("no transport connected: single pass, emitting the design target")
                 break
 

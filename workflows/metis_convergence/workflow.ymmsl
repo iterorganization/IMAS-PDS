@@ -4,8 +4,7 @@ ymmsl_version: v0.2
 #
 # The same lib/design graph inverse_convergence uses, with the `transport` hole filled by
 # METIS instead of TORAX. Everything else -- the outer loop, both NICE solves, the sinks,
-# recorders and validator -- is identical, which is the point: swapping the transport model
-# is one custom_implementations line, not a second workflow definition.
+# recorders and validator -- is identical.
 #
 #   muscle_manager --start-all $PDS_REPO/cases/<shot>_metis_convergence.ymmsl
 

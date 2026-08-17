@@ -67,10 +67,9 @@ Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
 
 ## Output
 
-Relative sink URIs resolve against each instance's own work directory, so results land under
-`<run_dir>/instances/<sink>/workdir/`:
+The sink writes into the run directory itself:
 
-- `sink` writes an IMAS HDF5 dataset at `instances/sink/workdir/out_nice`, containing the
+- `sink` writes an IMAS HDF5 dataset at `<run_dir>/out_nice`, containing the
   per-time-slice free-boundary `equilibrium` and the solved `pf_active` coil currents.
 - `rec_nice` writes a distilled copy of the same data for the muscle3-dashboard (see
   `visualization/nice_inv.py`).

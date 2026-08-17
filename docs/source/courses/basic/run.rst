@@ -91,7 +91,7 @@ its own, before adding the extra complexity of a self-consistently coupled trans
 
         Check if the results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to
-        ``run/out/105092_prescribed/instances/sink/workdir/out_nice``.
+        ``run/out/105092_prescribed/out_nice``.
 
         Since transport is not solved, there are no profile comparison plots here, unlike
         in the self-consistent transport workflow below.
@@ -131,8 +131,8 @@ calculated by NICE to a transport solve using TORAX.
 
         Check if results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to
-        ``run/out/105092_convergence/instances/run.sink_nice/workdir/out_nice``, and the
-        converged pulse to ``.../run.sink_torax/workdir/out_torax``.
+        ``run/out/105092_convergence/out_nice``, and the converged pulse to
+        ``run/out/105092_convergence/out_torax``.
 
         .. image:: pds_coils_105092.png
         .. image:: pds_equilibrium_0D_105092.png

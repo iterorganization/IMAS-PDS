@@ -7,9 +7,8 @@ ymmsl_version: v0.2
 #   export YMMSL_PATH=$PDS_REPO/workflows
 #   muscle_manager --start-all $PDS_REPO/cases/105084_metis_convergence.ymmsl
 #
-# The TORAX counterpart is 105084_convergence.ymmsl. Everything outside the transport
-# model is deliberately identical, so a diff of the two is the whole difference between
-# converging against TORAX and against METIS.
+# The TORAX counterpart is 105084_convergence.ymmsl, identical outside the transport
+# model.
 #
 # METIS emits one time slice per reuse iteration where the design loop expects a whole
 # trace; lib/transport_metis.ymmsl bridges the two with a driver actor.
@@ -51,12 +50,11 @@ settings:
   run.final_solve.nice.output_for_control: 1
   run.transport.metis.metis_computation: 1
   run.transport.metis.metis_psioffset: 9.0
-  # Predictive: METIS computes these itself. Set to 1 for interpretative, where they are
-  # taken from the input data instead. NOTE these settings are only half of the
-  # interpretative/predictive distinction -- the other half is the mode argument to
-  # prepare_IDS4METIS_from_dina when the METIS input dataset is built.
-  # 1, not 0: the equilibrium comes from NICE via the design hole, and METIS only reads a
-  # connected equilibrium port when this is set (get_external_data_state.m).
+  # Predictive: METIS computes these itself. Set to 1 for interpretative, taking them from
+  # the input data. The other half of that distinction is the mode the METIS input dataset
+  # was built with (tools/prepare --metis).
+  # 1, not 0: the equilibrium comes from NICE via the design hole, and METIS reads a
+  # connected equilibrium port only when this is set.
   run.transport.metis.metis_external_data_equilibrium: 1
   run.transport.metis.metis_external_data_current_diffusion: 0
   run.transport.metis.metis_external_data_electron_temperature: 0
@@ -64,10 +62,11 @@ settings:
   run.transport.metis.metis_external_data_ion_temperature: 0
   run.transport.metis.metis_external_data_charge_effective: 0
 
-  # Output. Relative URIs resolve against the instance's own work directory.
-  run.sink_nice.sink_uri: "imas:hdf5?path=out_nice"
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  run.sink_nice.sink_uri: "imas:hdf5?path=../../../out_nice"
   run.sink_nice.sink_mode: "w"
-  run.sink_torax.sink_uri: "imas:hdf5?path=out_metis"
+  run.sink_torax.sink_uri: "imas:hdf5?path=../../../out_metis"
   run.sink_torax.sink_mode: "w"
 
   # Recording.

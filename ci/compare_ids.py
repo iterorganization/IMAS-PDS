@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Compare the IDSs written by two runs, and report any difference.
 
-This is the check that gates deleting an old workflow definition: a flatten-diff proves
-two graphs have the same shape, but only comparing outputs proves they compute the same
-thing. Run the old definition and the new one on the same scenario, then point this at
-both output entries.
+A flatten-diff proves two graphs have the same shape; only comparing outputs proves they
+compute the same thing. Run both definitions on the same scenario, then point this at the
+two output entries.
 
     python ci/compare_ids.py <reference_uri> <new_uri> [--ids equilibrium,pf_active]
     python ci/compare_ids.py <reference_dir> <new_dir>      # bare paths are taken as

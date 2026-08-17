@@ -24,16 +24,13 @@ PATCHES="$PDS_REPO/ci/patches"
 M3_VENV="${M3_VENV:-${EBROOTIMASMUSCLE3:+$EBROOTIMASMUSCLE3/venv}}"
 M3_VENV="${M3_VENV:-$PWD/IMAS-MUSCLE3/venv}"
 WE_DIR="${WE_DIR:-${EBROOTWAVEFORMEDITOR:-$PWD/Waveform-Editor}}"
-# Two layouts in use. Older checkouts have the repo cloned directly into
-# run/Waveform-Editor, so the prefix IS the checkout. custom_modules/build_*.sh instead
-# creates <prefix>/{src,venv} and does `pip install -e <prefix>/src`, so the checkout is
-# one level down -- and because that install is editable, patching src/ is what takes
-# effect.
+# Two layouts: older checkouts are cloned straight into run/Waveform-Editor, so the prefix
+# is the checkout; build_*.sh creates <prefix>/{src,venv} with an editable install, so the
+# checkout is one level down and src/ is what to patch.
 [[ -d "$WE_DIR/.git" ]] || [[ ! -d "$WE_DIR/src/.git" ]] || WE_DIR="$WE_DIR/src"
 
-# A shared module install belongs to whoever built it, so patching it in place is not
-# possible -- and silently skipping would leave a run that fails much later, for reasons
-# that look nothing like a missing patch.
+# A shared module install belongs to whoever built it, so refuse rather than skip: a
+# missing patch surfaces much later as something that looks unrelated.
 for target in "$M3_VENV" "$WE_DIR"; do
   if [[ -e "$target" && ! -w "$target" ]]; then
     cat >&2 <<MSG
@@ -81,11 +78,9 @@ apply_to_git_repo() {  # <repo> <patch>
 }
 
 apply_to_tree() {  # <dir> <patch> <marker_file> <marker> -- for non-git installed packages
-  # "Already applied?" is decided by looking for <marker> in <marker_file>, not by
-  # `patch -R --dry-run`: patch matches with fuzz and cheerfully reports that a reverse
-  # apply would succeed against a pristine file, which would skip the real apply.
-  #
-  # --batch is equally essential: without it patch prompts on a failed hunk, and a prompt
+  # Detect "already applied" via <marker> in <marker_file>, not `patch -R --dry-run`:
+  # patch matches with fuzz and reports a reverse apply would succeed even against a
+  # pristine file. --batch matters too -- without it a failed hunk prompts, and a prompt
   # answered by EOF looks like success while changing nothing.
   local dir="$1" patch="$2" marker_file="$3" marker="$4"
   if grep -q -- "$marker" "$dir/$marker_file" 2>/dev/null; then
@@ -131,8 +126,7 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 
-# Verify rather than assume: a patch that applied cleanly can still be a no-op if the
-# upstream code moved underneath it.
+# A patch can apply cleanly and still be a no-op if the upstream code moved.
 echo "Verifying:"
 if [[ -d "$M3_VENV" ]]; then
   # Block style, not flow: the '{' in ${HOME} would break a flow mapping.
@@ -156,8 +150,8 @@ import muscle3.muscle_manager as m; raise SystemExit(0 if hasattr(m, 'save_input
   fi
 fi
 
-# Verify the Waveform-Editor patch in the interpreter that will actually import it, not
-# just in the checkout -- an editable install can point somewhere other than $WE_DIR.
+# Verify in the interpreter that will import it: an editable install can point somewhere
+# other than $WE_DIR.
 WE_PY="${WE_PY:-${EBROOTWAVEFORMEDITOR:+$EBROOTWAVEFORMEDITOR/venv/bin/python}}"
 if [[ -x "${WE_PY:-}" ]]; then
   if "$WE_PY" -c "

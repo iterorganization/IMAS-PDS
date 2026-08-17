@@ -21,13 +21,12 @@ shift
 # Any further arguments are stacked after the case, last value for a key winning.
 OVERLAYS=("$@")
 
-# Resolve the checkout and export it BEFORE loading the module, so the PDS module wires
-# itself to THIS one. Every PDS.lua falls back to the clone it was built from when
-# PDS_REPO is unset, so a shared module tree would otherwise silently run its owner's
-# code and try to write output into their read-only checkout.
+# Export the checkout BEFORE loading the module, so PDS.lua wires itself to this one rather
+# than falling back to the clone it was built from (a shared module tree would otherwise run
+# its owner's code and write into their checkout).
 #
 # Falls back to the submit directory, not ${BASH_SOURCE[0]}: SLURM copies the batch script
-# into its spool directory, so the script's own path is /var/spool/... and not the repo.
+# into its spool directory, so the script's own path is not the repo.
 REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 [[ -f "$REPO/workflows/lib/programs.ymmsl" ]] || {
   echo "PDS_REPO=$REPO is not a PDS checkout; export PDS_REPO or submit from the repo root" >&2

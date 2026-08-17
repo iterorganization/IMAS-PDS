@@ -45,9 +45,11 @@ settings:
   run.transport.python_config_module: ${SCENARIOS_REPO}/105073/config_torax.py
   run.transport.output_all_timeslices: True
 
-  run.sink_nice.sink_uri: "imas:hdf5?path=out_nice"
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  run.sink_nice.sink_uri: "imas:hdf5?path=../../../out_nice"
   run.sink_nice.sink_mode: "w"
-  run.sink_torax.sink_uri: "imas:hdf5?path=out_torax"
+  run.sink_torax.sink_uri: "imas:hdf5?path=../../../out_torax"
   run.sink_torax.sink_mode: "w"
 
   # Recording.
