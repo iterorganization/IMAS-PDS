@@ -30,7 +30,8 @@ source lib_venv_actor.sh
 MODULE_VERSION="${1:?usage: build_imas_muscle3.sh <module-version> [branch]}"
 BRANCH="${2:-develop}"
 
-build_venv_actor_module "PDS-IMAS-MUSCLE3" "$MODULE_VERSION" \
+MODULE_NAME="${PDS_MODULE_PREFIX}IMAS-MUSCLE3"
+build_venv_actor_module "$MODULE_NAME" "$MODULE_VERSION" \
   "https://github.com/iterorganization/IMAS-MUSCLE3.git" "$BRANCH"
 
 PREFIX="$PDS_SOFTWARE_ROOT/IMAS-MUSCLE3/$MODULE_VERSION"
@@ -66,5 +67,5 @@ python -c 'from ymmsl.v0_2 import TimelineTree; from ymmsl2svg.main import confi
   || echo "NOTE: graph card import chain still broken -- dashboard will show the dropdown fallback instead (harmless, see muscle3_dashboard/components/ymmsl_graph.py's own try/except for this)."
 deactivate
 
-echo "Installed PDS-IMAS-MUSCLE3/$MODULE_VERSION -> $PREFIX/venv"
+echo "Installed $MODULE_NAME/$MODULE_VERSION -> $PREFIX/venv"
 echo "  muscle_dashboard / m3dash available once this module is loaded"

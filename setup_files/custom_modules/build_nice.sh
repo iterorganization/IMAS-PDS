@@ -5,11 +5,6 @@
 # their RPATH (verified via readelf), which always wins over env vars, so
 # this rebuilds NICE from source against 0.10.0 instead.
 #
-# Named PDS-NICE, not bare NICE: several ymmsl actors specify `modules: NICE`
-# directly, which could otherwise collide with the official (RPATH-broken)
-# module depending on Lmod's tie-breaking. We still `module load NICE` first
-# to pull in its other build dependencies for free, then override just the
-# MUSCLE3 piece.
 #
 # Usage: bash build_nice.sh <module-version> [branch] [git-url]
 # e.g:   bash build_nice.sh 3.0.0-pds-intel-2025b master
@@ -22,10 +17,11 @@ BRANCH="${2:-master}"
 NICE_URL="${3:-https://gitlab.inria.fr/blfauger/nice.git}"
 
 CHECKOUT="$PDS_SOFTWARE_ROOT/NICE/$MODULE_VERSION"
-MODULE_DIR="$PDS_MODULES_ROOT/PDS-NICE"
+MODULE_NAME="${PDS_MODULE_PREFIX}NICE"
+MODULE_DIR="$PDS_MODULES_ROOT/$MODULE_NAME"
 MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 
-echo "############## Building PDS-NICE/$MODULE_VERSION (branch: $BRANCH) ##############"
+echo "############## Building $MODULE_NAME/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
 # Overriding NICE's MUSCLE3 dependency to 0.10.0 leaves Lmod re-warning (and
@@ -98,7 +94,7 @@ cat > "$MODULE_FILE" << EOF
 -- Rebuild/update: bash setup_files/custom_modules/build_nice.sh <new-version> <branch>
 
 help([[
-PDS-NICE (custom PDS build of NICE, MUSCLE3/0.10.0-linked)
+$MODULE_NAME (custom PDS build of NICE, MUSCLE3/0.10.0-linked)
 
 Source: $NICE_URL @ $BRANCH
 Installed: $CHECKOUT
@@ -110,7 +106,7 @@ prepend_path("PATH", "$CHECKOUT/run")
 setenv("EBROOTNICE", "$CHECKOUT")
 EOF
 
-echo "Installed PDS-NICE/$MODULE_VERSION -> $CHECKOUT/run"
+echo "Installed $MODULE_NAME/$MODULE_VERSION -> $CHECKOUT/run"
 echo "Module:    $MODULE_FILE"
 echo ""
 echo "NOTE: verify $CHECKOUT/run/nice_imas_inv_muscle3 actually runs and links"

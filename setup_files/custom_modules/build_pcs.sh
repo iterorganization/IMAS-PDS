@@ -21,10 +21,11 @@ BRANCH="${2:-master}"
 PCS_URL="${3:-ssh://git@git.iter.org/pcs/pcs.git}"
 
 CHECKOUT="$PDS_SOFTWARE_ROOT/PCS/$MODULE_VERSION"
-MODULE_DIR="$PDS_MODULES_ROOT/PDS-PCS"
+MODULE_NAME="${PDS_MODULE_PREFIX}PCS"
+MODULE_DIR="$PDS_MODULES_ROOT/$MODULE_NAME"
 MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 
-echo "############## Building PDS-PCS/$MODULE_VERSION (branch: $BRANCH) ##############"
+echo "############## Building $MODULE_NAME/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
 if [[ ! -d "$CHECKOUT/.git" ]]; then
@@ -61,7 +62,7 @@ cat > "$MODULE_FILE" << EOF
 -- Rebuild/update: bash setup_files/custom_modules/build_pcs.sh <new-version> <branch>
 
 help([[
-PDS-PCS (shared PCS + PCSSP checkout for the magnetic_controller actor)
+$MODULE_NAME (shared PCS + PCSSP checkout for the magnetic_controller actor)
 
 Source: $PCS_URL @ $BRANCH (+ PCSSP submodule)
 Installed: $CHECKOUT
@@ -73,5 +74,5 @@ setenv("EBROOTPCS", "$CHECKOUT")
 setenv("SCDDS_COREPATH", "$CHECKOUT/pcssp/scdds")
 EOF
 
-echo "Installed PDS-PCS/$MODULE_VERSION -> $CHECKOUT"
+echo "Installed $MODULE_NAME/$MODULE_VERSION -> $CHECKOUT"
 echo "Module:    $MODULE_FILE"

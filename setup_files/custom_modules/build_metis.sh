@@ -17,10 +17,11 @@ BRANCH="${2:-muscle3_develop}"
 METIS_URL="${3:-ssh://git@git.iter.org/scen/metis.git}"
 
 CHECKOUT="$PDS_SOFTWARE_ROOT/METIS/$MODULE_VERSION"
-MODULE_DIR="$PDS_MODULES_ROOT/PDS-METIS"
+MODULE_NAME="${PDS_MODULE_PREFIX}METIS"
+MODULE_DIR="$PDS_MODULES_ROOT/$MODULE_NAME"
 MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 
-echo "############## Building PDS-METIS/$MODULE_VERSION (branch: $BRANCH) ##############"
+echo "############## Building $MODULE_NAME/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
 if [[ ! -d "$CHECKOUT/.git" ]]; then
@@ -62,7 +63,7 @@ cat > "$MODULE_FILE" << EOF
 -- Rebuild/update: bash setup_files/custom_modules/build_metis.sh <new-version> <branch>
 
 help([[
-PDS-METIS (shared METIS checkout for the metis actor's muscle3 wrapper)
+$MODULE_NAME (shared METIS checkout for the metis actor's muscle3 wrapper)
 
 Source: $METIS_URL @ $BRANCH
 Installed: $CHECKOUT
@@ -74,5 +75,5 @@ setenv("EBROOTMETIS", "$CHECKOUT")
 setenv("DIR_METIS4MUSCLE3", "$CHECKOUT/workflow/muscle3/mfile")
 EOF
 
-echo "Installed PDS-METIS/$MODULE_VERSION -> $CHECKOUT"
+echo "Installed $MODULE_NAME/$MODULE_VERSION -> $CHECKOUT"
 echo "Module:    $MODULE_FILE"

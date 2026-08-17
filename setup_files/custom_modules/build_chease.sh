@@ -24,10 +24,11 @@ BRANCH="${2:-feature/muscle3}"
 CHEASE_URL="${3:-https://gitlab.epfl.ch/spc/chease.git}"
 
 CHECKOUT="$PDS_SOFTWARE_ROOT/CHEASE/$MODULE_VERSION"
-MODULE_DIR="$PDS_MODULES_ROOT/PDS-CHEASE"
+MODULE_NAME="${PDS_MODULE_PREFIX}CHEASE"
+MODULE_DIR="$PDS_MODULES_ROOT/$MODULE_NAME"
 MODULE_FILE="$MODULE_DIR/$MODULE_VERSION.lua"
 
-echo "############## Building PDS-CHEASE/$MODULE_VERSION (branch: $BRANCH) ##############"
+echo "############## Building $MODULE_NAME/$MODULE_VERSION (branch: $BRANCH) ##############"
 mkdir -p "$(dirname "$CHECKOUT")" "$MODULE_DIR"
 
 if [[ ! -d "$CHECKOUT/.git" ]]; then
@@ -106,7 +107,7 @@ cat > "$MODULE_FILE" << EOF
 -- Rebuild/update: bash setup_files/custom_modules/build_chease.sh <new-version> <branch>
 
 help([[
-PDS-CHEASE (custom PDS build of CHEASE, full intel-2025b toolchain)
+$MODULE_NAME (custom PDS build of CHEASE, full intel-2025b toolchain)
 
 Source: $CHEASE_URL @ $BRANCH
 Installed: $CHECKOUT
@@ -118,7 +119,7 @@ prepend_path("PATH", "$CHECKOUT/chease_m3/bin")
 setenv("EBROOTCHEASE", "$CHECKOUT")
 EOF
 
-echo "Installed PDS-CHEASE/$MODULE_VERSION -> $CHECKOUT/chease_m3/bin"
+echo "Installed $MODULE_NAME/$MODULE_VERSION -> $CHECKOUT/chease_m3/bin"
 echo "Module:    $MODULE_FILE"
 echo ""
 echo "NOTE: verify $CHECKOUT/chease_m3/bin/chease.exe actually runs from a"

@@ -12,5 +12,5 @@ source lib_venv_actor.sh
 MODULE_VERSION="${1:?usage: build_waveform_editor.sh <module-version> [branch]}"
 BRANCH="${2:-main}"
 
-build_venv_actor_module "PDS-Waveform-Editor" "$MODULE_VERSION" \
+build_venv_actor_module "${PDS_MODULE_PREFIX}Waveform-Editor" "$MODULE_VERSION" \
   "https://github.com/iterorganization/Waveform-Editor.git" "$BRANCH"
