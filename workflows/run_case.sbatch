@@ -54,7 +54,16 @@ fi
 CASE="$REPO/cases/${CASE_NAME%.ymmsl}.ymmsl"
 [[ -f "$CASE" ]] || { echo "no case file $CASE" >&2; exit 1; }
 
-: "${SCENARIOS_REPO:=$(cd "$REPO/../pds-scenarios" && pwd)}"
+# Resolved explicitly rather than with `: "${SCENARIOS_REPO:=$(cd ... && pwd)}"`: a failing
+# cd inside that substitution leaves the := assigning an empty string, and `:` still returns
+# 0, so set -e never fires. An empty value then expands to nothing in every case path -- and
+# the manager's undefined-${VAR} check does not catch a variable that is set but empty.
+if [[ -z "${SCENARIOS_REPO:-}" ]]; then
+  SCENARIOS_REPO="$(cd "$REPO/../pds-scenarios" 2>/dev/null && pwd)" || {
+    echo "no pds-scenarios checkout beside $REPO; export SCENARIOS_REPO" >&2; exit 1; }
+fi
+[[ -d "$SCENARIOS_REPO" ]] || {
+  echo "SCENARIOS_REPO=$SCENARIOS_REPO is not a directory" >&2; exit 1; }
 export SCENARIOS_REPO
 export YMMSL_PATH="$REPO/workflows"
 MANAGER="${MANAGER:-$(command -v muscle_manager)}"

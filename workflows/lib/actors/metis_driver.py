@@ -66,11 +66,24 @@ def main() -> None:
         traces = {l: inst.receive(f"{l}_in").data
                   for l in FWD_LANES if inst.is_connected(f"{l}_in")}
 
+        # `traces` is keyed by which `_in` ports are wired, `fwd` by which `_call` ports
+        # are. They are allowed to differ, so neither can be indexed by the other's keys
+        # without checking -- a rewiring would otherwise surface as a bare KeyError with
+        # nothing naming the port that is missing.
+        if "equilibrium" not in traces:
+            raise RuntimeError(
+                "metis_driver: equilibrium_in is not connected, and the slice times are"
+                " taken from it. Wire it, or teach the driver another time source.")
+
         with DBEntry("imas:memory?path=/", "w") as db:
             eq = IDSFactory().new("equilibrium"); eq.deserialize(traces["equilibrium"])
             db.put(eq)
             times = [float(t) for t in db.get("equilibrium").time]
         n = len(times)
+        if missing := [lane for lane in fwd if lane not in traces]:
+            logger.warning("metis_driver: %s wired for _call but not _in; not forwarding",
+                           ",".join(missing))
+            fwd = [lane for lane in fwd if lane in traces]
         per = {l: _split(traces[l], l, times) for l in fwd}
         logger.info("metis_driver: %d slices, t=%.4g..%.4g, sequential (METIS is stateful);"
                     " forwarding %s, expecting %s",

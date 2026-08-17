@@ -34,14 +34,28 @@ muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
 
 # RUN WORKFLOWS
 # One scenario per workflow, to confirm the wiring works end to end -- not a physics
-# validation suite. Clears stale output so a rerun cannot fail on a leftover file.
+# validation suite.
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
+# Cases resolve their workflow through an import (`from prescribed_transport.workflow
+# import ...`), which yMMSL looks up along YMMSL_PATH. The PDS module does not set it.
+export YMMSL_PATH="$PWD/workflows"
 
+# Clears the scenario's stale output first, so a rerun cannot fail on a leftover file.
 run_workflow_clean() {
   local workflow="$1" scenario="$2"
   shift 2
   rm -rf "workflows/$workflow/scenarios/$scenario/tmp"
   bash run_workflow.sh "$workflow" "$scenario" "$@"
+}
+
+# Same idea for the case runs, which write to a run directory rather than a scenario tmp/.
+# Without an explicit --run-dir the manager creates run_<model>_<timestamp> in the CI
+# workspace, and nothing ever prunes them.
+run_case_clean() {
+  local case_name="$1"
+  rm -rf "run/out/$case_name"
+  mkdir -p "run/out/$case_name"
+  muscle_manager --start-all --run-dir "run/out/$case_name" "cases/$case_name.ymmsl"
 }
 
 # prescribed_transport and inverse_convergence are driven by cases/, which need a prepared
@@ -55,8 +69,8 @@ if [[ ! -d "${SCENARIOS_REPO:-}/105084/data/in" ]]; then
 elif ! python -c 'import muscle3,os,sys; sys.exit(0 if "expand_settings" in open(os.path.join(os.path.dirname(muscle3.__file__),"muscle_manager.py")).read() else 1)' 2>/dev/null; then
   echo "SKIP: cases/105084_* need a patched muscle_manager (ci/patches/); this one is stock" >&2
 else
-  muscle_manager --start-all cases/105084_prescribed.ymmsl
-  muscle_manager --start-all cases/105084_convergence.ymmsl
+  run_case_clean 105084_prescribed
+  run_case_clean 105084_convergence
 fi
 
 run_workflow_clean evolutive_controller 105084

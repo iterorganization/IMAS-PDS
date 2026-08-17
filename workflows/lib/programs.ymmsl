@@ -7,10 +7,12 @@ ymmsl_version: v0.2
 #   - from lib.programs import implementation torax
 # and run the manager with YMMSL_PATH pointing at the workflows/ directory.
 #
-# Every actor declares `base_env: clean` plus the modules it needs, so MUSCLE3 purges the
-# environment and loads only those in the actor's own subprocess. Actors need incompatible
+# Every actor declares the modules it needs, so MUSCLE3 loads them in the actor's own
+# subprocess rather than relying on the manager's environment. Actors need incompatible
 # toolchains (MATLAB dies part-way through if it inherits the stack `module load PDS`
-# produces), so nothing here may depend on what the manager was started with.
+# produces), so no $EBROOT* or toolchain here may come from what the manager was started
+# with. Most also declare `base_env: clean`, purging first; the three PDS-owned actors at
+# the bottom cannot, because a purge would take $PDS_REPO with it (see the note there).
 #
 # $MODULEPATH is inherited -- `module use` your module tree before starting the manager.
 # Module names are unversioned on purpose: the PDS-* builds are per-user, so each tree
@@ -130,11 +132,21 @@ programs:
     script: |
       #!/bin/bash
       source /etc/profile.d/lmod.sh 2>/dev/null
+      # Read PDS_REPO before the purge, which unsets what the PDS module exported: PDS.lua
+      # sets it with setenv, so unloading PDS takes it with it. Read afterwards, this would
+      # silently expand to nothing and put the cache in /tmp/jax_cache.
+      JAX_CACHE="${PDS_REPO:+$PDS_REPO/tmp/jax_cache}"
       module purge
       module use ${PDS_MODULEPATH:-$HOME/public/modules}
       module load PDS-TORAX-MUSCLE3
       export HDF5_USE_FILE_LOCKING=FALSE IMAS_VERSION=4.0.0
-      export JAX_COMPILATION_CACHE_DIR=$PDS_REPO/tmp/jax_cache
+      # No PDS_REPO means no persistent JAX cache -- slower first compile, but not worth
+      # failing the actor over, and MUSCLE3 would take the rest of the run down with it.
+      if [ -n "$JAX_CACHE" ]; then
+        export JAX_COMPILATION_CACHE_DIR="$JAX_CACHE"
+      else
+        echo "torax: PDS_REPO unset, running without a persistent JAX cache" >&2
+      fi
       export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
       exec $EBROOTTORAXMUSCLE3/venv/bin/python -u -m torax_muscle3.torax_actor "$@"
 
@@ -142,7 +154,9 @@ programs:
   # No `ports:`: METIS declares one fixed superset and uses only the connected ones.
   #
   # metis4muscle3's first argument is `debug_level` (0 = none, 1 = logfile, 2 = + debugger
-  # stop on error, 3 = + keyboard stop), not a coupling mode. Production should use 0.
+  # stop on error, 3 = + keyboard stop), not a coupling mode. Kept at 1: a logfile is worth
+  # having while the coupling is still being shaken out, but 2's debugger-stop-on-error has
+  # no interactive session to stop into under `matlab -batch`. Drop to 0 once it is stable.
   #
   # METIS has no MATLAB-native MUSCLE3 client: it drives libmuscle through MATLAB's
   # pyenv()/py.* bridge, which pins the Python twice over -- libmuscle must match the
@@ -157,7 +171,7 @@ programs:
   # InProcess mode, so PYTHONPATH must be unset before MATLAB starts or it imports a
   # mismatched numpy under the venv's Python.
   metis:
-    description: METIS transport actor (debug_level 2)
+    description: METIS transport actor (debug_level 1)
     script: |
       #!/bin/bash
       source /etc/profile.d/lmod.sh 2>/dev/null
@@ -176,9 +190,16 @@ programs:
       # anything added, but MATLAB resolves the current folder first, and this runs in the
       # instance's workdir.
       cp -f "$PDS_PATCHES"/*.m . 2>/dev/null || true
-      exec matlab -batch "setappdata(0,'IMAS_VERSION',4);pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));fprintf('resolved: %s\\n',which('make_metis4muscle3_external_equilibrium'));metis4muscle3(2);"
+      exec matlab -batch "setappdata(0,'IMAS_VERSION',4);pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));fprintf('resolved: %s\\n',which('make_metis4muscle3_external_equilibrium'));metis4muscle3(1);"
 
   # ----- PDS-owned actors (run in the IMAS-MUSCLE3 venv -- all import imas) -------------
+  # These three declare `modules:` but not `base_env: clean`, unlike every actor above.
+  # `modules:` is what matters here: it sets $EBROOTIMASMUSCLE3 itself, so `virtual_env`
+  # resolves whether or not the manager was started with the PDS stack loaded. A purge
+  # would additionally unset $PDS_REPO -- PDS.lua sets it, so unloading PDS takes it with
+  # it -- and `args` below needs it to find the actor source. $PDS_REPO is the one thing
+  # these actors do inherit from the manager, deliberately: it names which checkout to run,
+  # so it cannot come from a module.
   loop:
     description: outer convergence loop (SEL submodel)
     ports:
@@ -187,6 +208,7 @@ programs:
       s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s]
       o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
@@ -199,6 +221,7 @@ programs:
       s: [equilibrium_reply, core_profiles_reply]
       o_f: [equilibrium_out_f, core_profiles_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/metis_driver.py
@@ -211,6 +234,7 @@ programs:
       s: [equilibrium_gather, pf_active_gather]
       o_f: [equilibrium_out_f, pf_active_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
+    modules: PDS-IMAS-MUSCLE3
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py

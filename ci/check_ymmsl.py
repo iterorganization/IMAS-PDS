@@ -177,7 +177,7 @@ def check_case(case: Path, errors: list) -> None:
 # Settings naming an input that must already exist. Outputs (sink_uri) are excluded --
 # they are created by the run.
 INPUT_SUFFIXES = (".waveforms", ".xml_path", ".python_config_module", ".config",
-                  ".extra_rule_dirs", ".source_uri")
+                  ".extra_rule_dirs", ".source_uri", ".md")
 
 
 def check_input_paths(cfg, case_name, errors: list) -> None:
@@ -196,7 +196,10 @@ def check_input_paths(cfg, case_name, errors: list) -> None:
         # A value may hold several whitespace-separated entries (rec_*.md does).
         for token in value.split():
             path = token.split("path=", 1)[1] if "path=" in token else token
-            path = path.split("?", 1)[0]
+            # Stop at whichever URI separator comes first: `path=` is not necessarily the
+            # last parameter, so splitting on '?' alone leaves a trailing '&x=1' attached
+            # and turns a valid URI into a path that cannot exist.
+            path = re.split(r"[?&#]", path, maxsplit=1)[0]
             if not path.startswith("/"):
                 continue  # relative: resolved at run time against the instance work dir
             if not Path(path).exists():

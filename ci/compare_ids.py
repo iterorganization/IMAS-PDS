@@ -123,13 +123,23 @@ def main() -> int:
     total, compared = 0, 0
     with imas.DBEntry(ref_uri, "r") as ref_e, imas.DBEntry(new_uri, "r") as new_e:
         for name in names:
+            # Read the two sides separately. Reading both in one try cannot tell "this
+            # workflow does not write this IDS" from "the new run died before writing it":
+            # the second is a regression, and folding it into the skip lets a half-finished
+            # run pass the gate on whatever it did manage to write.
             try:
-                ref, new = ref_e.get(name), new_e.get(name)
+                ref = ref_e.get(name)
             except Exception:
                 continue                      # not written by this workflow
             if not len(getattr(ref, "time", [])) and not len(getattr(ref, "coil", [])):
                 continue                      # present but empty
             compared += 1
+            try:
+                new = new_e.get(name)
+            except Exception as e:
+                total += 1
+                print(f"{name}: MISSING from the new run ({e})")
+                continue
             n, lines = compare_ids(ref, new, name, args.rtol, args.atol,
                                    args.max_report, args.all_fields)
             total += n

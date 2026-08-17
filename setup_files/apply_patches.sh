@@ -129,12 +129,19 @@ fi
 # A patch can apply cleanly and still be a no-op if the upstream code moved.
 echo "Verifying:"
 if [[ -d "$M3_VENV" ]]; then
+  # mktemp, not a fixed /tmp name: on a shared machine another user's leftover file makes
+  # the redirect fail, and under `set -e` that aborts here -- after both patches have
+  # already been applied, so the exit status misreports a half-done verification.
+  probe=$(mktemp -t pds_patch_probe.XXXXXX.ymmsl)
+  trap 'rm -f "$probe"' EXIT
   # Block style, not flow: the '{' in ${HOME} would break a flow mapping.
-  printf 'ymmsl_version: v0.2\nsettings:\n  probe: ${HOME}/x\n' > /tmp/pds_patch_probe.ymmsl
+  printf 'ymmsl_version: v0.2\nsettings:\n  probe: ${HOME}/x\n' > "$probe"
   got=$("$M3_VENV/bin/python" -c "
 from muscle3.muscle_manager import load_configuration
-print(load_configuration(['/tmp/pds_patch_probe.ymmsl']).settings['probe'])" 2>&1 || true)
-  rm -f /tmp/pds_patch_probe.ymmsl
+import sys
+print(load_configuration([sys.argv[1]]).settings['probe'])" "$probe" 2>&1 || true)
+  rm -f "$probe"
+  trap - EXIT
   if [[ "$got" == "$HOME/x" ]]; then
     echo "  muscle3 expands \${VAR} in settings: yes"
   else
