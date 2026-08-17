@@ -1,84 +1,15 @@
 # Custom PDS dependency modules
 
-Build scripts that produce Lmod modules for the PDS actor codes
-(`NICE`, `IMAS-MUSCLE3`, `Waveform-Editor`, `TORAX-MUSCLE3`), instead of using
-SDCC's official modules for them. Exposed as `PDS-NICE`, `PDS-IMAS-MUSCLE3`,
-`PDS-Waveform-Editor`, `PDS-TORAX-MUSCLE3` -- see `../PDS.lua`'s header
-comment for the full reasoning; in short:
-
-- `NICE`'s official module is RPATH-linked to `MUSCLE3/0.9.1`, which conflicts
-  with `IMAS-MUSCLE3`/`Waveform-Editor`'s `MUSCLE3/0.10.0` dependency. RPATH
-  always wins over any modulefile trick, so this can only be fixed by
-  rebuilding against `0.10.0`, which is what `build_nice.sh` does.
-- `IMAS-MUSCLE3`/`Waveform-Editor`'s official modules are EasyBuild
-  "PythonPackage" installs (shared interpreter + `PYTHONPATH` prepend, not a
-  self-contained venv). Loading either pulls `MUSCLE3/0.10.0`'s `PYTHONPATH`
-  into your interactive shell, which then leaks into every actor subprocess
-  `muscle_manager` spawns from that shell -- the exact problem `bin/pds-run`
-  was written to avoid for the manager itself. A real venv (`python -m venv`)
-  sidesteps this: its own `bin/python` needs no `PYTHONPATH` at all. That's
-  what `build_imas_muscle3.sh` / `build_waveform_editor.sh` produce.
-- `TORAX-MUSCLE3` has neither problem itself, but the official `TORAX` module
-  is `-foss-2025b` only (confirmed to conflict with this cluster's
-  `intel-2025b` stack) and doesn't include the MUSCLE3 actor wrapper anyway,
-  so it's built the same from-source-venv way for consistency.
-- The `PDS-` prefix itself is not cosmetic: several workflow
-  `.ymmsl(.template)` files (`torax_nice_controller`, the
-  `metis_*_from_dina` workflows, `workflows/lib/easybuild_programs.ymmsl`)
-  specify actor implementations via a bare `modules: NICE` /
-  `modules: IMAS-MUSCLE3` key -- MUSCLE3's own per-actor module-load
-  mechanism, unrelated to `local_programs.ymmsl`'s `$EBROOT*`-based
-  `virtual_env:` approach. If our builds used the same bare names, those
-  actors' `module load NICE` could resolve to the official (broken) module
-  instead of ours, depending on Lmod's tie-breaking across merged module
-  trees -- a real collision risk. Those workflow files reference
-  `PDS-<Name>` now too.
-
-`muscle_dashboard`/`m3dash` land in the *same* venv as `IMAS-MUSCLE3`, rather
-than a separate one, for free: IMAS-MUSCLE3's `develop` branch declares
-`muscle3-dashboard[recording]` as a core dependency (see its
-`pyproject.toml`), so the plain `pip install -e .` `build_venv_actor_module`
-already does is enough. Per
-`docs/source/courses/basic/muscle3_dashboard.rst`, a recorder tab's plot file
-imports `imas_muscle3.visualization`, which needs `imas_muscle3` and the full
-IMAS stack installed in the dashboard's own venv to render -- a lean,
-separate `muscle3-dashboard` venv doesn't have that, but the `IMAS-MUSCLE3`
-venv already does. `build_imas_muscle3.sh` additionally installs the optional
-per-run graph card (`ymmsl2svg`), using the exact pin IMAS-MUSCLE3's own
-`pyproject.toml` documents, then reasserts the correct `ymmsl` afterward
-(that pin's own dependency chain wants an older, incompatible one -- see the
-comment in the script). **Do not** clone/install `muscle3-dashboard` itself
-separately here -- that overwrites the correct feature-branch install
-`pip install -e .` already resolved with one missing the `recorder` submodule
-entirely (this happened once; see the script's header comment).
+Build scripts that produce modules for the PDS actor codes.
 
 ## Usage
 
 Each script takes a version string you choose plus a branch/tag, and installs
 under `$PDS_SOFTWARE_ROOT` (default `~/public/software`) with a matching
-modulefile under `$PDS_MODULES_ROOT` (default `~/public/modules`):
+modulefile under `$PDS_MODULES_ROOT` (default `~/public/modules`). For example:
 
 ```bash
 bash build_nice.sh              3.0.0-pds-intel-2025b   master
 bash build_imas_muscle3.sh      1.0.0-pds-2026-08-10    develop
-bash build_waveform_editor.sh   0.3.1-pds-2026-08-10    main
 bash build_torax_muscle3.sh     develop-2026-08-10      develop
 ```
-
-Then uncomment the matching `load(...)` line in `../PDS.lua` with the version
-string you passed. Old and new versions coexist side by side under Lmod --
-re-running a script with a new version string never overwrites the old one,
-so rolling back is just switching which version `PDS.lua` loads.
-
-## What each script sets
-
-- `build_imas_muscle3.sh` / `build_waveform_editor.sh` / `build_torax_muscle3.sh`
-  (via the shared `lib_venv_actor.sh`): `prepend_path("PATH", "<prefix>/venv/bin")`
-  and `setenv("EBROOT<NAME>", "<prefix>")` -- nothing else. `PYTHONPATH` is
-  never touched; the venv's own interpreter already knows its own
-  site-packages.
-- `build_nice.sh`: `prepend_path("PATH", "<checkout>/run")` and
-  `setenv("EBROOTNICE", "<checkout>")`.
-
-`workflows/lib/local_programs.ymmsl` consumes these `$EBROOT*` variables
-directly (e.g. `$EBROOTIMASMUSCLE3/venv`, `$EBROOTNICE/run/nice_imas_inv_muscle3`).
