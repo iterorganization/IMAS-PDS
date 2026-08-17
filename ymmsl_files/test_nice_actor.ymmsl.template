@@ -1,48 +1,58 @@
-ymmsl_version: v0.1
+ymmsl_version: v0.2
 # Smoke test for the PDS-NICE actors (see setup_files/custom_modules/build_nice.sh).
 #
 # Only nice_inv and nice_dir are tested here: one-shot actors (F_INIT in,
 # O_F out) that fit this source -> actor -> sink topology. nice_evo is
 # iterative (O_I/S, needs a feedback loop) -- see workflows/torax_nice_controller.
-model:
-  name: test_nice_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
-    nice_inv:
-      implementation: nice_inv
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out, pf_active_out]
-    nice_dir:
-      implementation: nice_dir
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out]
-    sink_inv:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in, pf_active_in]
-    sink_dir:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: nice_inv.equilibrium_in
-    source.pf_active_out: nice_inv.pf_active_in
-    source.wall_out: nice_inv.wall_in
-    source.wall_out: nice_dir.wall_in
-    source.pf_passive_out: nice_inv.pf_passive_in
-    source.pf_passive_out: nice_dir.pf_passive_in
-    source.iron_core_out: nice_inv.iron_core_in
-    source.iron_core_out: nice_dir.iron_core_in
-    nice_inv.equilibrium_out: nice_dir.equilibrium_in
-    nice_inv.equilibrium_out: sink_inv.equilibrium_in
-    nice_inv.pf_active_out: nice_dir.pf_active_in
-    nice_inv.pf_active_out: sink_inv.pf_active_in
-    nice_dir.equilibrium_out: sink_dir.equilibrium_in
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+- from lib.local_programs import implementation nice_inv
+- from lib.local_programs import implementation nice_dir
+models:
+  test_nice_actor:
+    components:
+      source:
+        description: source
+        implementation: source
+        ports:
+          o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+      nice_inv:
+        description: NICE inverse equilibrium
+        implementation: nice_inv
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      nice_dir:
+        description: NICE direct equilibrium
+        implementation: nice_dir
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out]
+      sink_inv:
+        description: sink for nice_inv
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in, pf_active_in]
+      sink_dir:
+        description: sink for nice_dir
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: nice_inv.equilibrium_in
+      source.pf_active_out: nice_inv.pf_active_in
+      source.wall_out: nice_inv.wall_in
+      source.wall_out: nice_dir.wall_in
+      source.pf_passive_out: nice_inv.pf_passive_in
+      source.pf_passive_out: nice_dir.pf_passive_in
+      source.iron_core_out: nice_inv.iron_core_in
+      source.iron_core_out: nice_dir.iron_core_in
+      nice_inv.equilibrium_out: nice_dir.equilibrium_in
+      nice_inv.equilibrium_out: sink_inv.equilibrium_in
+      nice_inv.pf_active_out: nice_dir.pf_active_in
+      nice_inv.pf_active_out: sink_inv.pf_active_in
+      nice_dir.equilibrium_out: sink_dir.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink_inv.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_nice_inv"
@@ -52,35 +62,6 @@ settings:
   nice_inv.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
   nice_dir.xml_path: [PWD_PLACEHOLDER]/workflows/inverse_convergence/config_nice.xml
   muscle_remote_log_level: 'DEBUG'
-implementations:
-  source:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
-  nice_inv:
-    base_env: clean
-    modules: PDS-NICE
-    env:
-      IMAS_AL_DISABLE_VALIDATE: 1
-      IMAS_VERSION: "4.0.0"
-      OMP_NUM_THREADS: 2
-    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
-  nice_dir:
-    base_env: clean
-    modules: PDS-NICE
-    env:
-      IMAS_AL_DISABLE_VALIDATE: 1
-      IMAS_VERSION: "4.0.0"
-      OMP_NUM_THREADS: 2
-    executable: $EBROOTNICE/run/nice_imas_dir_muscle3
 resources:
   source:
     threads: 1

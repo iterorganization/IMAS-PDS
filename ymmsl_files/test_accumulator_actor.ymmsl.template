@@ -1,60 +1,50 @@
-ymmsl_version: v0.1
-model:
-  name: test_accumulator_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    accumulator:
-      implementation: accumulator
-      ports:
-        s: [equilibrium_in]
-        o_f: [equilibrium_out]
-    accumulator_optional_port:
-      implementation: accumulator
-      ports:
-        s: [equilibrium_in, t_next]
-        o_f: [equilibrium_out]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-    sink_optional_port:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: accumulator.equilibrium_in
-    source.equilibrium_out: accumulator_optional_port.equilibrium_in
-    source.equilibrium_out: accumulator_optional_port.t_next
-    accumulator.equilibrium_out: sink.equilibrium_in
-    accumulator_optional_port.equilibrium_out: sink_optional_port.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+- from lib.local_programs import implementation accumulator
+models:
+  test_accumulator_actor:
+    components:
+      source:
+        description: source
+        implementation: source
+        ports:
+          o_i: [equilibrium_out]
+      accumulator:
+        description: accumulator
+        implementation: accumulator
+        ports:
+          s: [equilibrium_in]
+          o_f: [equilibrium_out]
+      accumulator_optional_port:
+        description: accumulator with an optional port connected
+        implementation: accumulator
+        ports:
+          s: [equilibrium_in, t_next]
+          o_f: [equilibrium_out]
+      sink:
+        description: sink
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in]
+      sink_optional_port:
+        description: sink for the optional-port accumulator
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: accumulator.equilibrium_in
+      source.equilibrium_out: accumulator_optional_port.equilibrium_in
+      source.equilibrium_out: accumulator_optional_port.t_next
+      accumulator.equilibrium_out: sink.equilibrium_in
+      accumulator_optional_port.equilibrium_out: sink_optional_port.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_accumulator"
   sink.sink_mode: "w"
   sink_optional_port.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_accumulator_optional_port"
   sink_optional_port.sink_mode: "w"
-implementations:
-  sink:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.sink_component
-  source:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.source_component
-  accumulator:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.accumulator_component
 resources:
   source:
     threads: 1
@@ -66,4 +56,3 @@ resources:
     threads: 1
   accumulator_optional_port:
     threads: 1
-

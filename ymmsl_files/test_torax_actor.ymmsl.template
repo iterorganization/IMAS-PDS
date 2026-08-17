@@ -1,23 +1,29 @@
-ymmsl_version: v0.1
-model:
-  name: test_torax_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    torax:
-      implementation: torax
-      ports:
-        f_init: [equilibrium_in_f]
-        o_f: [equilibrium_out_f]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: torax.equilibrium_in_f
-    torax.equilibrium_out_f: sink.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+models:
+  test_torax_actor:
+    components:
+      source:
+        description: source
+        implementation: source
+        ports:
+          o_i: [equilibrium_out]
+      torax:
+        description: TORAX transport
+        implementation: torax
+        ports:
+          f_init: [equilibrium_in_f]
+          o_f: [equilibrium_out_f]
+      sink:
+        description: sink
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: torax.equilibrium_in_f
+      torax.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids_torax"
   source.iterative: False
@@ -25,19 +31,13 @@ settings:
   sink.sink_mode: "w"
   muscle_remote_log_level: 'DEBUG'
   python_config_module: 'examples/basic_config.py'
-implementations:
-  source:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
+programs:
+  # NOT imported from lib.local_programs: that shared `torax` entry's
+  # JAX_COMPILATION_CACHE_DIR references $PDS_REPO, which only resolves
+  # because bin/pds-run runs envsubst over local_programs.ymmsl before
+  # MUSCLE3 parses it. This file is rendered by setup_files/setup_test_files.sh
+  # instead (plain sed, no envsubst), so importing it here would leave
+  # $PDS_REPO as a literal, unexpanded string.
   torax:
     base_env: clean
     modules: PDS-TORAX-MUSCLE3
@@ -53,4 +53,3 @@ resources:
     threads: 1
   torax:
     threads: 1
-

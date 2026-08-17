@@ -1,5 +1,5 @@
 % make METIS data from dina for pds test case
-addpath ../run/metis
+addpath(getenv('EBROOTMETIS'))
 zineb_path;
 p = fileparts(which('metis'));
 root = fileparts(fileparts(p));

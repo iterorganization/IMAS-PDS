@@ -1,23 +1,29 @@
-ymmsl_version: v0.1
-model:
-  name: test_metis_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    metis:
-      implementation: metis
-      ports:
-        f_init: [equilibrium_in_f]
-        o_f: [equilibrium_out_f]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: metis.equilibrium_in_f
-    metis.equilibrium_out_f: sink.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+models:
+  test_metis_actor:
+    components:
+      source:
+        description: source
+        implementation: source
+        ports:
+          o_i: [equilibrium_out]
+      metis:
+        description: METIS transport (standalone metis4muscle3 test mode)
+        implementation: metis
+        ports:
+          f_init: [equilibrium_in_f]
+          o_f: [equilibrium_out_f]
+      sink:
+        description: sink
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: metis.equilibrium_in_f
+      metis.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"
@@ -26,19 +32,7 @@ settings:
   metis.metis_filename: "/home/ITER/blokhus/public/software/METIS/2026-08-14-pds/certification/metis/ITER_rampup_ECCD.mat"
   metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
-implementations:
-  source:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
+programs:
   metis:
     script: |
       #!/bin/bash

@@ -1,48 +1,36 @@
-ymmsl_version: v0.1
-model:
-  name: test_waveform_editor_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    waveform_editor:
-      implementation: waveform_editor
-      ports:
-        f_init: [equilibrium_in]
-        o_f: [ec_launchers_out, nbi_out]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [ec_launchers_in, nbi_in]
-  conduits:
-    source.equilibrium_out: waveform_editor.equilibrium_in
-    waveform_editor.ec_launchers_out: sink.ec_launchers_in
-    waveform_editor.nbi_out: sink.nbi_in
+ymmsl_version: v0.2
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+- from lib.local_programs import implementation waveform_editor
+models:
+  test_waveform_editor_actor:
+    components:
+      source:
+        description: source
+        implementation: source
+        ports:
+          o_i: [equilibrium_out]
+      waveform_editor:
+        description: waveform editor
+        implementation: waveform_editor
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [ec_launchers_out, nbi_out]
+      sink:
+        description: sink
+        implementation: sink
+        ports:
+          f_init: [ec_launchers_in, nbi_in]
+    conduits:
+      source.equilibrium_out: waveform_editor.equilibrium_in
+      waveform_editor.ec_launchers_out: sink.ec_launchers_in
+      waveform_editor.nbi_out: sink.nbi_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_waveform_editor"
   sink.sink_mode: "w"
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/test_waveforms_config.yaml
-implementations:
-  sink:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.sink_component
-  source:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.source_component
-  waveform_editor:
-    base_env: clean
-    modules: PDS-Waveform-Editor
-    virtual_env: $EBROOTWAVEFORMEDITOR/venv
-    executable: waveform-editor
-    args: actor
 resources:
   source:
     threads: 1

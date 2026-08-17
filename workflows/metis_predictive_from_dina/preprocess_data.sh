@@ -28,5 +28,5 @@ mkdir -p tmp
 # consistency -- reverted: no DD-4.0.0 build, and the DD bump broke METIS's
 # own "Unknown IDS name: dataset_description" lookup.
 module purge
-module load IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+module load PDS-METIS IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"

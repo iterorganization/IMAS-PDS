@@ -50,6 +50,20 @@ programs:
     executable: python
     args: -u -m imas_muscle3.actors.recorder_component
 
+  accumulator:
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.accumulator_component
+
+  visualization:
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.visualization_component
+
   waveform_editor:
     base_env: clean
     modules: PDS-Waveform-Editor
@@ -65,6 +79,15 @@ programs:
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_inv_muscle3
+
+  nice_dir:
+    base_env: clean
+    modules: PDS-NICE
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_dir_muscle3
 
   torax:
     base_env: clean

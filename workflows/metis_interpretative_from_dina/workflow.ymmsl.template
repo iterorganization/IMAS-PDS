@@ -1,30 +1,36 @@
-ymmsl_version: v0.1
-model:
-  name: metis_nice_inv_from_dina_[SHOT_NR]
-  components:
-    source_metis:
-      implementation: source_metis
-      ports:
-        o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]
-    sink_metis:
-      implementation: sink_metis
-      ports:
-        f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in,summary_in]         
-    metis:
-      implementation: metis
-      ports:
-        f_init: [pulse_schedule_f_init,pulse_schedule_in_f,core_profiles_in_f,core_sources_in_f]
-        o_f: [equilibrium_out_f,pulse_schedule_out_f,plasma_profiles_out_f,plasma_sources_out_f,summary_out_f]
-  conduits:
-    metis.equilibrium_out_f: sink_metis.equilibrium_in
-    source_metis.pulse_schedule_out: metis.pulse_schedule_f_init
-    source_metis.pulse_schedule_out: metis.pulse_schedule_in_f
-    source_metis.core_profiles_out: metis.core_profiles_in_f
-    source_metis.core_sources_out: metis.core_sources_in_f
-    metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
-    metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
-    metis.plasma_sources_out_f: sink_metis.plasma_sources_in 
-    metis.summary_out_f: sink_metis.summary_in 
+ymmsl_version: v0.2
+imports:
+- from lib.local_programs import implementation source
+- from lib.local_programs import implementation sink
+models:
+  metis_nice_inv_from_dina_[SHOT_NR]:
+    components:
+      source_metis:
+        description: METIS pulse_schedule/core_profiles/core_sources source
+        implementation: source
+        ports:
+          o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]
+      sink_metis:
+        description: METIS output sink
+        implementation: sink
+        ports:
+          f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in,summary_in]
+      metis:
+        description: METIS transport
+        implementation: metis
+        ports:
+          f_init: [pulse_schedule_f_init,pulse_schedule_in_f,core_profiles_in_f,core_sources_in_f]
+          o_f: [equilibrium_out_f,pulse_schedule_out_f,plasma_profiles_out_f,plasma_sources_out_f,summary_out_f]
+    conduits:
+      metis.equilibrium_out_f: sink_metis.equilibrium_in
+      source_metis.pulse_schedule_out: metis.pulse_schedule_f_init
+      source_metis.pulse_schedule_out: metis.pulse_schedule_in_f
+      source_metis.core_profiles_out: metis.core_profiles_in_f
+      source_metis.core_sources_out: metis.core_sources_in_f
+      metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
+      metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
+      metis.plasma_sources_out_f: sink_metis.plasma_sources_in
+      metis.summary_out_f: sink_metis.summary_in
 settings:
   source_metis.source_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_metis_in/"
   sink_metis.sink_uri: "imas:hdf5?path=[SUBDIR_PLACEHOLDER]/tmp/data/[SHOT_NR]_metis_out/"
@@ -37,7 +43,7 @@ settings:
 
 #----------------- -------------
 # 3- external data used in METIS
-#------------------------------- 
+#-------------------------------
 # METIS switch for the use of external data read in IDSs
 
 # From equilibrium IDS
@@ -63,17 +69,7 @@ settings:
   metis.metis_external_data_runaway: 0
 
 
-implementations:
-  sink_metis:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
-  source_metis:
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
+programs:
   metis:
     script: |
       #!/bin/bash
@@ -93,4 +89,3 @@ resources:
     threads: 1
   metis:
     threads: 10
-  
