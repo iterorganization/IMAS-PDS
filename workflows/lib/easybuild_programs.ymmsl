@@ -14,6 +14,8 @@ programs:
   sink:        {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
   sink_source: {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
   validator:   {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  passthrough: {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
+  iterator:    {modules: PDS-IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
 
   # ----- NICE python actors --------------------------------------------------
   # PDS-NICE is a custom PDS build, rebuilt against MUSCLE3/0.10.0 -- the official NICE

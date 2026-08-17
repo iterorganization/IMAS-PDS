@@ -71,6 +71,31 @@ programs:
     executable: waveform-editor
     args: actor
 
+  iterator:
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.iterator_component
+
+  passthrough:
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u -m imas_muscle3.actors.passthrough_component
+
+  # NOTE: origin/master's own new entry for this pointed at
+  # workflows/utils/temporal_coupler.py, which doesn't exist -- the real
+  # file lives at workflows/torax_nice_utils/temporal_coupler.py (unchanged
+  # on both branches), used below instead.
+  temporal_coupler:
+    base_env: clean
+    modules: PDS-IMAS-MUSCLE3
+    virtual_env: $EBROOTIMASMUSCLE3/venv
+    executable: python
+    args: -u $PDS_REPO/workflows/torax_nice_utils/temporal_coupler.py
+
   nice_inv:
     base_env: clean
     modules: PDS-NICE
@@ -88,6 +113,14 @@ programs:
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_dir_muscle3
+
+  nice_evo_rd:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/run/nice/run/nice_imas_evo_rd_muscle3 "$@"
 
   torax:
     base_env: clean
