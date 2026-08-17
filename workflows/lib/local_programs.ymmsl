@@ -96,6 +96,19 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/torax_nice_utils/temporal_coupler.py
 
+  metis:
+    script: |
+      #!/bin/bash
+      module purge
+      module load PDS-METIS IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
+      # $EBROOTMETIS/muscle3_venv's numpy.
+      unset PYTHONPATH
+      # $EBROOTMETIS/muscle3_venv is a dedicated Python 3.11 + muscle3==0.10.0
+      # venv, matching both MATLAB's supported Python range and the real
+      # manager's libmuscle version (see build_metis.sh).
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+
   nice_inv:
     base_env: clean
     modules: PDS-NICE
