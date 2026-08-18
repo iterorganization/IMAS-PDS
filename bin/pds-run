@@ -22,7 +22,7 @@ export PDS_REPO
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 
 # $PDS_REPO must be a literal path here, not a live shell var: an actor's own
-# `base_env: clean` (a `module purge`) unsets whatever PDS.lua's setenv() did,
+# `base_env: clean` (a `module purge`) unsets whatever the PDS module's setenv() did,
 # $PDS_REPO included, before that actor's script runs.
 mkdir -p "$gen/lib"
 envsubst '${PDS_REPO} ${SCEN} ${SHOT}' \
@@ -38,23 +38,26 @@ export SHOT="${2:-${SHOT_NR:-}}"
 [[ -n "$SHOT" ]] || { echo "pds-run: no shot given and \$SHOT_NR unset" >&2; exit 1; }
 export SCEN="$WF/scenarios/$SHOT"
 
-# muscle_manager must come from PDS-IMAS-MUSCLE3's own venv (matching version 0.10.0,
-# clean PYTHONPATH) -- never the official MUSCLE3 module, which leaks a numpy build
-# that breaks the actor venvs (see setup_files/PDS.lua). Uses $EBROOTIMASMUSCLE3 if
-# already set (module load PDS already ran); otherwise loads PDS-IMAS-MUSCLE3 directly.
+# muscle_manager comes from the MUSCLE3 module that IMAS-MUSCLE3 depends on, so
+# loading IMAS-MUSCLE3 puts the right one (0.10.0) on PATH. Every actor now
+# resolves against that same EasyBuild module rather than a private venv, so
+# there is no longer a second MUSCLE3 to pick the wrong one of.
+# Uses whatever is already loaded if `module load PDS` ran; otherwise loads
+# IMAS-MUSCLE3 itself.
 if [[ -z "${MANAGER:-}" ]]; then
-  : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules}"
+  : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules/all}"
   if [[ -z "${EBROOTIMASMUSCLE3:-}" ]]; then
     LMOD_INIT="/usr/share/lmod/lmod/init/bash"
     if [[ -f "$LMOD_INIT" ]]; then
       # shellcheck source=/usr/share/lmod/lmod/init/bash
       source "$LMOD_INIT"
       module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load PDS-IMAS-MUSCLE3 2>/dev/null || true
+      module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
     fi
   fi
-  : "${EBROOTIMASMUSCLE3:?pds-run: PDS-IMAS-MUSCLE3 not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
-  MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
+  : "${EBROOTIMASMUSCLE3:?pds-run: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  MANAGER="$(command -v muscle_manager)"
+  : "${MANAGER:?pds-run: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi
 RUNS="${PDS_RUNS:-$SCEN/tmp/runs}"
 [[ -d "$WF" ]] || { echo "pds-run: no workflow dir $WF" >&2; exit 1; }

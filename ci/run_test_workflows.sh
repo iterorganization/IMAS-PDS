@@ -18,13 +18,16 @@ bash setup_files/setup_test_files.sh
 # --ignore_cache: Lmod's module cache doesn't necessarily know about a path
 # added via `module use` at runtime (especially on a CI agent that's never
 # seen this path before), and reports it as "unknown" otherwise.
-module use "/home/ITER/blokhus/public/modules"
+module use "/home/ITER/blokhus/public/modules/all"
 module --ignore_cache load PDS
 
 # RUN TEST FILES
 # Isolated, single-actor smoke tests -- faster than the full workflow runs
 # below, and catch a broken actor environment in seconds instead of minutes.
-MANAGER="$EBROOTIMASMUSCLE3/venv/bin/muscle_manager"
+# `module load PDS` above pulls in IMAS-MUSCLE3, which depends on MUSCLE3 0.10.0
+# and so puts the matching muscle_manager on PATH.
+MANAGER="$(command -v muscle_manager)"
+: "${MANAGER:?run_test_workflows: muscle_manager not on PATH after loading PDS}"
 
 "$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
 "$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl

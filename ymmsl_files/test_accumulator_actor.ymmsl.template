@@ -1,36 +1,36 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
-- from lib.local_programs import implementation accumulator
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation accumulator_component
 models:
   test_accumulator_actor:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out]
       accumulator:
         description: accumulator
-        implementation: accumulator
+        implementation: accumulator_component
         ports:
           s: [equilibrium_in]
           o_f: [equilibrium_out]
       accumulator_optional_port:
         description: accumulator with an optional port connected
-        implementation: accumulator
+        implementation: accumulator_component
         ports:
           s: [equilibrium_in, t_next]
           o_f: [equilibrium_out]
       sink:
         description: sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
       sink_optional_port:
         description: sink for the optional-port accumulator
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
     conduits:

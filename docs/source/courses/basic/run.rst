@@ -51,7 +51,7 @@ The shell script currently expects to be run from the repository base directory.
 .. code-block:: console
 
     # run_workflow.sh requires the PDS module stack to already be loaded
-    module use /home/ITER/blokhus/public/modules  # or wherever PDS.lua was deployed
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
     module load PDS
     # to enable tab completion of the workflows and scenarios
     source completion.sh
@@ -109,7 +109,7 @@ This exercise is mostly relevant for developers.
 .. code-block:: console
 
     bash setup_files/setup_test_files.sh  # generate runnable .ymmsl files from the .template sources
-    module use /home/ITER/blokhus/public/modules  # or wherever PDS.lua was deployed
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
     module load PDS
     muscle_manager --start-all path/to/my/workflow.ymmsl
 

@@ -1,14 +1,14 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
 - from lib.local_programs import implementation waveform_editor
 models:
   test_waveform_editor_actor:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out]
       waveform_editor:
@@ -19,7 +19,7 @@ models:
           o_f: [ec_launchers_out, nbi_out]
       sink:
         description: sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [ec_launchers_in, nbi_in]
     conduits:

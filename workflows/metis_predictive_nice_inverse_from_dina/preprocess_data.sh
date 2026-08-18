@@ -32,5 +32,5 @@ echo "$(date +%H):$(date +%M):$(date +%S) Making METIS dataset"
 mkdir -p tmp
 
 module purge
-module load PDS-METIS IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath(getenv('matlab_path'));cd('tmp');make_metis_from_dina_interpretative;"

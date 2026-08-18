@@ -1,13 +1,13 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
 models:
   test_torax_actor:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out]
       torax:
@@ -18,7 +18,7 @@ models:
           o_f: [equilibrium_out_f]
       sink:
         description: sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
     conduits:
@@ -40,8 +40,7 @@ programs:
   # $PDS_REPO as a literal, unexpanded string.
   torax:
     base_env: clean
-    modules: PDS-TORAX-MUSCLE3
-    virtual_env: $EBROOTTORAXMUSCLE3/venv
+    modules: TORAX-MUSCLE3/0.1.2-intel-2025b-pds
     env:
       IMAS_VERSION: "4.0.0"
     executable: python

@@ -1,0 +1,90 @@
+# PDS build of PCS + PCSSP, for the magnetic_controller actor.
+#
+# TOOLCHAIN: system, and no compile step -- the actor invokes PCS/PCSSP as raw
+# MATLAB/Simulink source. All this module does is place a shared checkout (so
+# each user no longer needs their own run/pcs clone) and export the paths the
+# actor reads.
+#
+# VERSION: no release tags on either repository, so this pins explicit commits
+# and date-stamps the version. Bump together.
+#
+# Requires an SSH key registered with git.iter.org at build time -- PCS itself
+# is not public. PCSSP is, and comes from GitHub with its submodules.
+
+easyblock = 'Bundle'
+
+name = 'PCS'
+version = '2026.08'
+versionsuffix = '-pds'
+
+homepage = 'https://git.iter.org/projects/PCS/repos/pcs'
+description = """ITER Plasma Control System sources together with PCSSP, the
+Plasma Control System Simulation Platform, as used by the PDS
+magnetic_controller actor."""
+
+toolchain = SYSTEM
+
+# Same reasoning as METIS-IRFM: MATLAB's in-process py.libmuscle bridge needs a
+# 3.9-3.12 interpreter, and the manager it talks to is libmuscle 0.10.0.
+dependencies = [
+    ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
+    ('MATLAB', '2023b'),
+]
+
+components = [
+    (name, version, {
+        'easyblock': 'Tarball',
+        'sources': [{
+            'git_config': {
+                'url': 'ssh://git@git.iter.org/pcs',
+                'repo_name': 'pcs',
+                'commit': 'master',
+            },
+            'filename': 'pcs-%(version)s.tar.gz',
+        }],
+        'checksums': [None],
+        'start_dir': 'pcs',
+    }),
+    ('PCSSP', version, {
+        'easyblock': 'Tarball',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/iterorganization',
+                'repo_name': 'PCSSP',
+                'commit': 'd7ae81d96ab7024b611493e7d99c798b6a3a65aa',
+                'recursive': True,
+            },
+            'filename': 'pcssp-%(version)s.tar.gz',
+        }],
+        'checksums': [None],
+        'start_dir': 'PCSSP',
+        # SCDDS_COREPATH below points at pcssp/scdds, so PCSSP has to land
+        # inside the PCS tree under that exact name, as it did when
+        # build_pcs.sh cloned it into place. Tarball's 'subdir' install type
+        # targets <installdir>/<name.lower()>, i.e. exactly pcssp/. It also has
+        # to stay second in this list: the PCS component above uses the default
+        # install type, which cleans the install root before copying.
+        'install_type': 'subdir',
+    }),
+]
+
+postinstallcmds = [
+    'python -m venv %(installdir)s/muscle3_venv',
+    '%(installdir)s/muscle3_venv/bin/pip install --quiet "muscle3==0.10.0"',
+]
+
+sanity_check_paths = {
+    'files': ['muscle3_venv/bin/python'],
+    'dirs': ['pcssp/scdds'],
+}
+
+sanity_check_commands = [
+    '%(installdir)s/muscle3_venv/bin/python -c '
+    '\'import libmuscle; assert libmuscle.__version__ == "0.10.0", libmuscle.__version__\'',
+]
+
+modextravars = {
+    'SCDDS_COREPATH': '%(installdir)s/pcssp/scdds',
+}
+
+moduleclass = 'phys'

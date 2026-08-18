@@ -1,18 +1,18 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
 models:
   test_chease_actor:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out]
       sink:
         description: sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
       chease:
@@ -32,7 +32,7 @@ settings:
 programs:
   chease:
     base_env: clean
-    modules: PDS-CHEASE
+    modules: CHEASE/2026.08-intel-2025b-pds
     executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
 resources:
   source:

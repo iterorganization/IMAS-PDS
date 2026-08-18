@@ -10,19 +10,19 @@ ymmsl_version: v0.2
 # Settings come from workflows/prescribed_transport/settings.ymmsl
 
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
-- from lib.local_programs import implementation recorder
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
 - from lib.local_programs import implementation waveform_editor
 - from lib.local_programs import implementation nice_inv
 models:
   prescribed_transport:
     components:
-      source:   {description: source, implementation: source, ports: {o_i: [equilibrium_out]}}
+      source:   {description: source, implementation: source_component, ports: {o_i: [equilibrium_out]}}
       waveform_editor: {description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed), implementation: waveform_editor, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]}}
       nice_inv: {description: nice, implementation: nice_inv, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
-      sink:     {description: sink, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
-      rec_nice: {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
+      sink:     {description: sink, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
+      rec_nice: {description: distill recorder (NICE inverse outputs), implementation: recorder_component, ports: {s: [equilibrium_in, pf_active_in]}}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
       waveform_editor.equilibrium_out: nice_inv.equilibrium_in

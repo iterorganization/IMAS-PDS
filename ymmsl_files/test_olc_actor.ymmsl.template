@@ -1,18 +1,18 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation validator
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation olc_component
 models:
   test_olc_actor:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [pf_active_out]
       olc:
         description: open-loop-check validator
-        implementation: validator
+        implementation: olc_component
         ports:
           f_init: [pf_active_in]
     conduits:

@@ -1,18 +1,18 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
 models:
   test_sink_source_actor:
     components:
       source_component:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out]
       sink_component:
         description: sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
     conduits:

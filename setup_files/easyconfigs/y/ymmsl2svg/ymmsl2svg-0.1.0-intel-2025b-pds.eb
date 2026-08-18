@@ -1,0 +1,78 @@
+# Optional muscle3-dashboard add-on: the per-run workflow graph card.
+#
+# This exists as its own module purely so IMAS-MUSCLE3 does not have to be
+# forked. It used to be two extra `pip install` lines inside
+# build_imas_muscle3.sh's venv; keeping it separate means IMAS-MUSCLE3 is
+# installed byte-for-byte from upstream PR #26551.
+#
+# Load it alongside IMAS-MUSCLE3 to get the graph card; leave it out and the
+# dashboard falls back to a dropdown. muscle3_dashboard already guards the
+# import (see its components/ymmsl_graph.py try/except), so nothing breaks
+# either way -- which is exactly why this is optional and not a dependency.
+#
+# Neither package is on PyPI, and ymmsl2svg imports ymmsl.v0_2.TimelineTree at
+# module scope, which exists only on ymmsl-python's feature/timelines branch.
+# So both are git_config extensions, and the timelines ymmsl deliberately
+# shadows the release that MUSCLE3 provides.
+
+easyblock = 'PythonBundle'
+
+name = 'ymmsl2svg'
+version = '0.1.0'
+versionsuffix = '-pds'
+
+homepage = 'https://github.com/DaanVanVugt/ymmsl2svg'
+description = """Renders a yMMSL configuration as an SVG graph. Used by
+muscle3-dashboard for its per-run workflow graph card."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+builddependencies = [
+    ('git', '2.50.1'),
+]
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('MUSCLE3', '0.10.0'),
+    ('IMAS-MUSCLE3', '1.0.0', '-pds'),
+]
+
+exts_list = [
+    ('ymmsl', '0.17.0-timelines', {
+        'modulename': 'ymmsl',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/multiscale',
+                'repo_name': 'ymmsl-python',
+                'commit': 'feature/timelines',
+            },
+            'filename': 'ymmsl-python-timelines.tar.gz',
+        }],
+        'checksums': [None],
+    }),
+    ('ymmsl2svg', version, {
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/DaanVanVugt',
+                'repo_name': 'ymmsl2svg',
+                'commit': 'feat/conduit-hover-labels',
+            },
+            'filename': 'ymmsl2svg-conduit-hover-labels.tar.gz',
+        }],
+        'checksums': [None],
+    }),
+]
+
+# The feature/timelines ymmsl reports a version string outside the range muscle3
+# declares. Confirmed to be a version-string mismatch only -- the actors and a
+# full workflow run both work -- but it does fail pip's consistency check.
+sanity_pip_check = False
+
+sanity_check_commands = [
+    "python -c 'from ymmsl.v0_2 import TimelineTree'",
+    "python -c 'from ymmsl2svg.main import configuration2svg'",
+    # Loading this module must not break the actors it sits next to.
+    "python -c 'import libmuscle, muscle3, imas_muscle3.actors.source_component'",
+]
+
+moduleclass = 'vis'

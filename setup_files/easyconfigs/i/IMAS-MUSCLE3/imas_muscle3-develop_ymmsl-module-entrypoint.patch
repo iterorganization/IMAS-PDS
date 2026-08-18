@@ -1,0 +1,80 @@
+Register the IMAS-MUSCLE3 actors as an importable yMMSL module, so workflows can
+say
+
+    imports:
+    - from imas_muscle3 import implementation source_component
+
+instead of repeating an executable/args block per actor.
+
+This is upstream commit 8e7102d ("Register imas-muscle3 actors as importable
+ymmsl modules", branch feature/ymmsl-path-entrypoints), rebased onto develop and
+extended:
+
+ * That branch was cut on 2026-05-19 and exposes only the six actors that
+   existed then. develop has since added iterator_component,
+   passthrough_component and recorder_component -- all three used by PDS
+   workflows -- so ACTORS here lists all nine.
+ * Its imas_muscle3/utils.py hunk is dropped: it added a try/except fallback for
+   importing SettingValue, which develop already solved properly with
+   `from ymmsl.v0_2 import ...`.
+
+Requires ymmsl >= 0.16 for the "ymmsl.module" entry point group; MUSCLE3 0.10.0
+ships 0.17.0.
+
+Drop this patch once the branch is merged and released.
+author: Yannick de Jong (ITER PDS), from upstream commit 8e7102d by Maarten Sebregts
+diff --git a/imas_muscle3/actors/__init__.py b/imas_muscle3/actors/__init__.py
+index e69de29..dc6a3eb 100644
+--- a/imas_muscle3/actors/__init__.py
++++ b/imas_muscle3/actors/__init__.py
+@@ -0,0 +1,36 @@
++import sys
++
++
++ACTORS = f"""
++ymmsl_version: v0.2
++description: yMMSL configuration for actors exposed by IMAS-MUSCLE3.
++programs:
++  accumulator_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.accumulator_component
++  iterator_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.iterator_component
++  olc_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.olc_component
++  passthrough_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.passthrough_component
++  recorder_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.recorder_component
++  sink_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.sink_component
++  sink_source_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.sink_source_component
++  source_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.source_component
++  visualization_component:
++    executable: {sys.executable}
++    args: -u -m imas_muscle3.actors.visualization_component
++"""
++"""yMMSL configuration for all actors exposed by IMAS-MUSCLE3."""
+diff --git a/pyproject.toml b/pyproject.toml
+index 81e3633..91baf70 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -95,6 +95,9 @@ linting = [
+ [project.urls]
+ homepage = "https://github.com/iterorganization/IMAS-MUSCLE3"
+ 
++[project.entry-points."ymmsl.module"]
++imas_muscle3 = "imas_muscle3.actors:ACTORS"
++
+ [tool.setuptools.packages.find]
+ where = ["."]
+ include = ["imas_muscle3*"]

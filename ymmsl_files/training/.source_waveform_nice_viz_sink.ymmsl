@@ -58,33 +58,29 @@ settings:
 implementations:
   source:
     base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   waveform_editor:
     base_env: clean
-    modules: PDS-Waveform-Editor
-    virtual_env: $EBROOTWAVEFORMEDITOR/venv
+    modules: Waveform-Editor/0.3.1-intel-2025b
     executable: waveform-editor
     args: actor
   sink:
     base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
     base_env: clean
-    modules: PDS-NICE
+    modules: NICE/3.0.0-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
     executable: $EBROOTNICE/run/nice_imas_inv_muscle3
   visualization_component:
     base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
 resources:

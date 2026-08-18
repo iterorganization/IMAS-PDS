@@ -1,0 +1,162 @@
+# PDS build of IMAS-MUSCLE3.
+#
+# The dependency and extension lists below are a verbatim copy of upstream
+# PR #26551 (IMAS-MUSCLE3-1.0.0-intel-2025b.eb). Only the imas_muscle3 source
+# itself differs, plus one patch -- keep the rest in step with that PR.
+#
+# WHY NOT JUST THE 1.0.0 RELEASE
+#
+# 1. The 1.0.0 sdist ships six actors. PDS also uses recorder_component,
+#    iterator_component and passthrough_component, all added to develop after
+#    the release, so a release build cannot run the current workflows at all.
+#
+# 2. Workflows import their actors from the package rather than redeclaring
+#    each one (see workflows/lib/local_programs.ymmsl). That needs the
+#    "ymmsl.module" entry point, which exists only on the unmerged branch
+#    feature/ymmsl-path-entrypoints.
+#
+# The branch does not solve 1 -- it was cut on 2026-05-19, before those three
+# actors existed, and exposes only the original six. So this builds develop and
+# applies the entry point as a patch, with all nine actors registered. See the
+# patch header for the detail.
+#
+# Once the branch is merged and released, this collapses back to plain
+# `eb --from-pr` on whatever supersedes PR #26551.
+
+easyblock = 'PythonBundle'
+
+name = 'IMAS-MUSCLE3'
+version = '1.0.0'
+versionsuffix = '-pds'
+
+# develop, 2026-08-17 -- 1.0.0 plus the three extra actors. Bump deliberately.
+local_commit = 'd3403fd443421b7472c7ff38353e26a3c396d416'
+
+description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
+homepage = "https://imas-muscle3.readthedocs.io"
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+builddependencies = [
+    ('meson-python', '0.18.0'),
+    ('pybind11', '3.0.0'),
+    ('hatch-jupyter-builder', '0.9.1'),
+    ('git', '2.50.1'),
+]
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('SciPy-bundle', '2025.07'),
+    ('Python-bundle-PyPI', '2025.07'),
+    ('IMAS-Python', '2.3.0'),
+    # Unsuffixed on purpose: our local easyconfig of the same name is the
+    # patched one -- see i/IMAS-Validator/.
+    ('IMAS-Validator', '1.0.0'),
+    ('MUSCLE3', '0.10.0'),
+    ('xarray', '2025.10.0'),
+    ('nodejs', '22.17.1'),
+    ('tornado', '6.5.1'),
+    ('tqdm', '4.67.1'),
+    ('Markdown', '3.8.2'),
+]
+
+exts_list = [
+    ('pyviz_comms', '3.0.6', {
+        'checksums': ['73d66b620390d97959b2c4d8a2c0778d41fe20581be4717f01e46b8fae8c5695'],
+    }),
+    ('packaging', '26.0', {
+        'checksums': ['00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4'],
+    }),
+    ('pyct', '0.6.0', {
+        'checksums': ['d4e513b2cf35b6165605ae5fce5f2a49985bc67473c579de85134b8c71d374a8'],
+    }),
+    ('param', '2.3.2', {
+        'checksums': ['ec70669bda9a3c13491098e7f5b640f60022b58b2f5bc7997099d54ea237d1de'],
+    }),
+    ('colorcet', '3.1.0', {
+        'checksums': ['2921b3cd81a2288aaf2d63dbc0ce3c26dcd882e8c389cc505d6886bf7aa9a4eb'],
+    }),
+    ('holoviews', '1.22.1', {
+        'checksums': ['7dde3a10bb77aff0982e21786b4f5249c6a9d70c463f5604a49fcf30c0247756'],
+    }),
+    ('hvplot', '0.12.2', {
+        'checksums': ['9e29bbe65f94937d4eeaeccf33566540df936c8f9aeadfa12ea9f306d5237938'],
+    }),
+    ('xyzservices', '2025.11.0', {
+        'checksums': ['2fc72b49502b25023fd71e8f532fb4beddbbf0aa124d90ea25dba44f545e17ce'],
+    }),
+    ('narwhals', '2.18.0', {
+        'checksums': ['1de5cee338bc17c338c6278df2c38c0dd4290499fcf70d75e0a51d5f22a6e960'],
+    }),
+    ('bokeh', '3.9.0', {
+        'preinstallopts': """sed -i 's/setup(/setup(version="%(version)s",/g' setup.py && """,
+        'checksums': ['775219714a8496973ddbae16b1861606ba19fe670a421e4d43267b41148e07a3'],
+    }),
+    ('bleach', '6.3.0', {
+        'checksums': ['6f3b91b1c0a02bb9a78b5a454c92506aa0fdf197e1d5e114d2e00c6f64306d22'],
+    }),
+    ('uc-micro-py', '2.0.0', {
+        'modulename': 'uc_micro',
+        'checksums': ['c53691e495c8db60e16ffc4861a35469b0ba0821fe409a8a7a0a71864d33a811'],
+    }),
+    ('linkify-it-py', '2.1.0', {
+        'modulename': 'linkify_it',
+        'checksums': ['43360231720999c10e9328dc3691160e27a718e280673d444c38d7d3aaa3b98b'],
+    }),
+    ('mdit_py_plugins', '0.5.0', {
+        'checksums': ['f4918cb50119f50446560513a8e311d574ff6aaed72606ddae6d35716fe809c6'],
+    }),
+    ('panel', '1.8.10', {
+        'checksums': ['762881b06efb99f3d201749a3634c6b5f18f46cfca520970c2c1bb31bed42c90'],
+    }),
+    ('imas_muscle3', version, {
+        'modulename': 'imas_muscle3',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/iterorganization',
+                'repo_name': 'IMAS-MUSCLE3',
+                'commit': local_commit,
+            },
+            'filename': 'imas_muscle3-develop.tar.gz',
+        }],
+        'patches': ['imas_muscle3-develop_ymmsl-module-entrypoint.patch'],
+        # git_config archives carry no .git dir, so setuptools_scm cannot derive
+        # a version and aborts the build unless it is told one.
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
+        'checksums': [
+            None,
+            {'imas_muscle3-develop_ymmsl-module-entrypoint.patch':
+             '19541740b3b2a5f0d9d39d13a965436e174094c9cc9ffbcda52ce41f54697a4c'},
+        ],
+    }),
+]
+
+sanity_check_paths = {
+    'files': ['bin/muscle_manager', 'bin/muscle_dashboard'],
+    'dirs': ['lib/python%(pyshortver)s/site-packages/imas_muscle3'],
+}
+
+# Every actor entry point workflows import, so a broken install fails here
+# rather than mid-run under the manager. The last check is the one that matters
+# for the patch: it proves the entry point is registered and that every actor
+# named in it resolves through ymmsl's importer.
+sanity_check_commands = [
+    "python -c 'import libmuscle, muscle3'",
+    "python -c 'import imas_muscle3.actors.source_component'",
+    "python -c 'import imas_muscle3.actors.sink_component'",
+    "python -c 'import imas_muscle3.actors.sink_source_component'",
+    "python -c 'import imas_muscle3.actors.olc_component'",
+    "python -c 'import imas_muscle3.actors.recorder_component'",
+    "python -c 'import imas_muscle3.actors.accumulator_component'",
+    "python -c 'import imas_muscle3.actors.visualization_component'",
+    "python -c 'import imas_muscle3.actors.iterator_component'",
+    "python -c 'import imas_muscle3.actors.passthrough_component'",
+    "muscle_manager --help",
+    "python -c \"from importlib.metadata import entry_points; "
+    "eps = entry_points(group='ymmsl.module', name='imas_muscle3'); assert eps, 'entry point not registered'; "
+    "import ymmsl; from ymmsl.v0_2 import Configuration; "
+    "cfg = ymmsl.load_as(Configuration, next(iter(eps)).load()); "
+    "assert len(cfg.programs) == 9, cfg.programs\"",
+]
+
+moduleclass = 'tools'

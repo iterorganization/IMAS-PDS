@@ -14,18 +14,17 @@ You will need read access to the repositories:
 
 First clone the project.
 
-Each actor is built once into a shared ``PDS-<Name>`` module by its own ``build_*.sh``
-script in ``setup_files/custom_modules/``. Loading the PDS meta-module (``module load PDS``)
-sets up IMAS-Python and PDS-IMAS-MUSCLE3; each workflow actor then loads its own
-``PDS-<Name>`` module itself when MUSCLE3 spawns it. Either way, there is nothing to
-install per-checkout. Some actors require a specific virtual environment; this is already
-taken care of by each actor's own module.
+Each actor is an EasyBuild module, built once with ``setup_files/easyconfigs/build.sh``.
+Loading the PDS meta-module (``module load PDS``) sets up IMAS-Python and IMAS-MUSCLE3;
+each workflow actor then loads its own module itself when MUSCLE3 spawns it. Either way,
+there is nothing to install per-checkout -- the module an actor declares is its complete
+environment.
 
 .. code-block:: console
 
     git clone https://github.com/iterorganization/IMAS-PDS.git
     cd IMAS-PDS
-    module use /home/ITER/blokhus/public/modules  # or wherever PDS.lua was deployed
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
     module load PDS
 
 For this training you will need access to a graphical environment to visualize

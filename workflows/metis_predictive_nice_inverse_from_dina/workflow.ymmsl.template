@@ -1,8 +1,8 @@
 ymmsl_version: v0.2
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
-- from lib.local_programs import implementation sink_source
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation sink_source_component
 - from lib.local_programs import implementation nice_inv
 - from lib.local_programs import implementation metis
 models:
@@ -10,13 +10,13 @@ models:
     components:
       source_nice:
         description: NICE machine-description source
-        implementation: sink_source
+        implementation: sink_source_component
         ports:
           f_init: [equilibrium_in]
           o_f: [pf_active_out, pf_passive_out, wall_out,  iron_core_out]
       source_metis:
         description: METIS pulse_schedule/core_profiles/core_sources source
-        implementation: source
+        implementation: source_component
         ports:
           o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]
       nice_inv:
@@ -27,12 +27,12 @@ models:
           o_f: [equilibrium_out, pf_active_out]
       sink_metis:
         description: METIS output sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in,pulse_schedule_in,plasma_profiles_in,plasma_sources_in,summary_in]
       sink_nice:
         description: NICE output sink
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in,pf_active_in]
       metis:

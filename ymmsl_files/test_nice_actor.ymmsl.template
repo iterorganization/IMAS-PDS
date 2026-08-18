@@ -1,12 +1,12 @@
 ymmsl_version: v0.2
-# Smoke test for the PDS-NICE actors (see setup_files/custom_modules/build_nice.sh).
+# Smoke test for the NICE actors (see setup_files/easyconfigs/n/NICE/).
 #
 # Only nice_inv and nice_dir are tested here: one-shot actors (F_INIT in,
 # O_F out) that fit this source -> actor -> sink topology. nice_evo is
 # iterative (O_I/S, needs a feedback loop) -- see workflows/torax_nice_controller.
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
 - from lib.local_programs import implementation nice_inv
 - from lib.local_programs import implementation nice_dir
 models:
@@ -14,7 +14,7 @@ models:
     components:
       source:
         description: source
-        implementation: source
+        implementation: source_component
         ports:
           o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
       nice_inv:
@@ -31,12 +31,12 @@ models:
           o_f: [equilibrium_out]
       sink_inv:
         description: sink for nice_inv
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in, pf_active_in]
       sink_dir:
         description: sink for nice_dir
-        implementation: sink
+        implementation: sink_component
         ports:
           f_init: [equilibrium_in]
     conduits:
