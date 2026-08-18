@@ -37,8 +37,7 @@ muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
 # validation suite.
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 # Cases resolve their workflow through an import (`from prescribed_transport.workflow
-# import ...`), which yMMSL looks up along YMMSL_PATH. The PDS module does not set it.
-export YMMSL_PATH="$PWD/workflows"
+# import ...`), which yMMSL looks up along YMMSL_PATH -- set by the PDS module above.
 
 # Clears the scenario's stale output first, so a rerun cannot fail on a leftover file.
 run_workflow_clean() {
