@@ -12,8 +12,9 @@ programs:
   sink_source: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
   validator:   {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
   recorder:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
+  iterator:    {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
   waveform_editor: {virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
-  passthrough:  {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/utils/passthrough.py}
+  passthrough:  {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
   temporal_coupler: {virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/utils/temporal_coupler.py}
 
   nice_inv:
