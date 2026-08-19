@@ -22,24 +22,17 @@ module use "/home/ITER/blokhus/public/modules/all"
 module --ignore_cache load PDS
 
 # RUN TEST FILES
-# Isolated, single-actor smoke tests -- faster than the full workflow runs
-# below, and catch a broken actor environment in seconds instead of minutes.
-# `module load PDS` above pulls in IMAS-MUSCLE3, which depends on MUSCLE3 0.10.0
-# and so puts the matching muscle_manager on PATH.
-MANAGER="$(command -v muscle_manager)"
-: "${MANAGER:?run_test_workflows: muscle_manager not on PATH after loading PDS}"
-
-"$MANAGER" --start-all ymmsl_files/test_sink_source_actor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_accumulator_actor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_olc_actor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_waveform_editor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_torax_actor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_nice_actor.ymmsl
-"$MANAGER" --start-all ymmsl_files/test_metis_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_accumulator_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_olc_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_waveform_editor.ymmsl
+muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
 
 # TODO: test_chease_actor -- chease.exe builds and loads cleanly but
-# segfaults at runtime (see build_chease.sh). Not yet debugged.
-# "$MANAGER" --start-all ymmsl_files/test_chease_actor.ymmsl
+# segfaults at runtime (see the CHEASE easyconfig). Not yet debugged.
+# muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
 
 # RUN WORKFLOWS
 # One scenario per workflow, to confirm module-loading wiring works end to

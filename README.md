@@ -37,11 +37,10 @@ make -C docs html
 
 
 # Setting up actors
-Each actor (IMAS-MUSCLE3, NICE, METIS-IRFM, TORAX-MUSCLE3, Waveform-Editor, PCS, ...) is an
-EasyBuild module. Each workflow actor loads its own module when MUSCLE3 spawns it.
+Each actor is an EasyBuild module. Each workflow actor loads its own module when MUSCLE3 spawns it.
 
 ```bash
-module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+module use /home/ITER/blokhus/public/modules/all  # Or point to another directory containing the modules
 module load PDS
 ```
 
@@ -52,10 +51,6 @@ module load EasyBuild
 bash setup_files/easyconfigs/build.sh          # or: build.sh NICE CHEASE
 ```
 
-Most of it comes straight from upstream easyconfigs; see
-[`setup_files/easyconfigs/README.md`](setup_files/easyconfigs/README.md) for which ones, and
-why a handful are still maintained here.
-
 # Test workflows
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
@@ -63,7 +58,7 @@ These workflows can be used as a template for your own workflows.
 ```bash
 # generate runnable .ymmsl files from the .template sources
 bash setup_files/setup_test_files.sh
-module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+module use /home/ITER/blokhus/public/modules/all
 module load PDS
 # run test workflow of choice
 muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
@@ -79,7 +74,7 @@ Note that this way of running the PDS workflows will change in the future as mor
 
 ```bash
 # load the PDS module
-module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+module use /home/ITER/blokhus/public/modules/all
 module load PDS
 # to enable tab completion of the workflows and scenarios
 source completion.sh
