@@ -24,7 +24,7 @@ dependencies = [
     ('Python-bundle-PyPI', '2025.07'),
     ('IMAS-Python', '2.3.0'),
 
-    ('IMAS-Validator', '1.0.0', '-pds'),
+    ('IMAS-Validator', '1.0.0.dev69', '-pds'),
     ('MUSCLE3', '0.10.0'),
     ('xarray', '2025.10.0'),
     ('nodejs', '22.17.1'),

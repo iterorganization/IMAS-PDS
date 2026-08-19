@@ -1,13 +1,15 @@
 easyblock = 'PythonBundle'
 
 name = 'IMAS-Validator'
-version = '1.0.0'
+version = '1.0.0.dev69'
 versionsuffix = '-pds'
 
 description = """A pure-python library to handle IDSs"""
 homepage = "https://github.com/iterorganization/IMAS-Validator"
 
 toolchain = {'name': 'intel', 'version': '2025b'}
+
+local_commit = 'b3443a2d4f97'
 
 dependencies = [
     ('Python', '3.13.5'),
@@ -25,13 +27,16 @@ exts_list = [
     }),
     ('imas_validator', version, {
         'modulename': False,
-        'sources': ['%(name)s-%(version)s.tar.gz'],
-        'patches': ['imas_validator-1.0.0_remove-has_imas-check.patch'],
-        'checksums': [
-            '132d73b7b7f24628e8e12a60381fc8c65bf1ed996f817c442a0a4d1124e8c63b',
-            {'imas_validator-1.0.0_remove-has_imas-check.patch':
-             '7eac78850b84b62e36979d0123567460808b48ec24fe4e7bf296ac6ce32f3d01'},
-        ],
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/iterorganization',
+                'repo_name': 'imas-validator',
+                'commit': local_commit,
+            },
+            'filename': 'imas_validator-%(version)s.tar.gz',
+        }],
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
+        'checksums': [None],
     }),
 ]
 

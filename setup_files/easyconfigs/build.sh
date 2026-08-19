@@ -43,7 +43,7 @@ export PDS_REPO
 EB_OPTS=(--robot="$PWD")
 
 declare -A LOCAL_EC=(
-  [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-1.0.0-intel-2025b-pds.eb
+  [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-1.0.0.dev69-intel-2025b-pds.eb
   [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb
   [Waveform-Editor]=w/Waveform-Editor/Waveform-Editor-0.3.2-intel-2025b-pds.eb
   [NICE]=n/NICE/NICE-3.0.0.dev258-intel-2025b-pds.eb
