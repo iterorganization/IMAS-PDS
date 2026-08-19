@@ -49,16 +49,11 @@ run_workflow_clean inverse_convergence 105084
 run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
 run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
 
-# TODO: torax_nice_controller / torax_nice_rd_controller -- not yet migrated
-# to the new module-loading design (still bare `modules: NICE` etc.).
+# TODO: torax_nice_controller / torax_nice_rd_controller
 # run_workflow_clean torax_nice_controller 105073
 # run_workflow_clean torax_nice_rd_controller 105073
 
 # TODO: metis_interpretative_nice_inverse_from_dina /
-# metis_predictive_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`, which
-# nothing writes. No script computes METIS's psioffset calibration constant
-# for the NICE-coupled case (METIS defaults it to 0.0; the plain sibling
-# workflow hardcodes 9.0 for its own scenario, unverified here) -- needs real
-# METIS/NICE physics input, not a guess. Left out of CI until that exists.
+# metis_predictive_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`
 # run_workflow_clean metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
 # run_workflow_clean metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10

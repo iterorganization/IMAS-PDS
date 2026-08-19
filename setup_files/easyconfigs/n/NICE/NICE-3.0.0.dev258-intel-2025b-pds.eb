@@ -131,10 +131,11 @@ files_to_copy = [
       'run/nice_imas_evo_muscle3', 'run/nice_imas_evo_rd_muscle3'], 'run'),
     (['run/input'], 'run'),
     (['data'], '.'),
+    (['runmatlab'], '.'),
 ]
 
 sanity_check_paths = {
-    'files': ['run/%s' % t for t in _targets],
+    'files': ['run/%s' % t for t in _targets] + ['runmatlab/initNice4matlab.m'],
     'dirs': ['run/input', 'data'],
 }
 
