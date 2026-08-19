@@ -1,37 +1,3 @@
-# PDS build of NICE, rebuilt against MUSCLE3 0.10.0.
-#
-# Why this exists at all: SDCC's own NICE/3.0.0-intel-2025b-DD-4.1.1 binaries
-# have MUSCLE3/0.9.1 baked into their RPATH (verified with `readelf -d`), and
-# RPATH beats any environment variable, so a NICE actor from that module cannot
-# talk to the 0.10.0 manager the rest of the PDS stack runs. The only fix is to
-# rebuild -- no modulefile trick reaches it.
-#
-# Sources: a pinned develop commit, NOT the v3.0.0 release tag. The tag is 258
-# commits behind it, and the difference is load-bearing: against the tag, the
-# nice_inv actor completes ~40 niceInv calls in inverse_convergence and then
-# segfaults (SIGSEGV) at the first timeslice of the next convergence pass,
-# taking the whole simulation down with it. The pinned commit's most recent
-# merge is `bugfix/non_converge_handling`. This is the commit
-# build_nice.sh's build tracked, and the only one confirmed to run the PDS
-# workflows end to end.
-#
-# NICE vendors Eigen, SuiteSparse and MUSCLE3 as git submodules, which the
-# release tarball does not contain. That is a feature here: all three are proper
-# EasyBuild dependencies below, so the build uses the same MUSCLE3 as every
-# other actor instead of a second, separately-compiled copy -- which is the
-# whole point of the rebuild.
-#
-# The RPATH problem that motivated this easyconfig applies to our own build too:
-# NICE's Makefile emits explicit -rpath only for IMAS-Cpp/IMAS-Core and expects
-# LD_LIBRARY_PATH to cover the rest, which a `base_env: clean` actor subprocess
-# does not have. build_nice.sh papered over that with a post-hoc
-# `patchelf --add-rpath "$LD_LIBRARY_PATH"`; here, build the whole module with
-# EasyBuild's own RPATH linking instead:
-#
-#   eb NICE-3.0.0.dev258-intel-2025b-pds.eb --rpath
-#
-# See setup_files/easyconfigs/README.md -- --rpath is required, not optional.
-
 easyblock = 'MakeCp'
 
 name = 'NICE'
@@ -47,8 +13,6 @@ variants."""
 toolchain = {'name': 'intel', 'version': '2025b'}
 toolchainopts = {'openmp': True, 'pic': True}
 
-# develop, 2026-07-28 -- v3.0.0-258-g7ad1ea8f. Bump deliberately, together with
-# the version above.
 local_commit = '7ad1ea8f3da4fee25a61a7c2c01b1773db5f4906'
 
 sources = [{
@@ -74,39 +38,10 @@ dependencies = [
     ('Boost', '1.88.0'),
 ]
 
-# NICE ships src/Makefile.TEMPLATE and expects you to copy it to src/Makefile
-# and hand-edit the CHOOSE_* switches. Its defaults already match a cluster
-# install (system SuiteSparse and libxml2 via pkg-config, IMAS and MUSCLE3 on,
-# MPI off, OpenMP on), so copy it unedited and override the toolchain-specific
-# variables on the make command line instead of patching the file.
-# The actors read their parameter and schema files from run/input at startup;
-# NICE's own tree keeps the masters under run/iwrap/param and expects the build
-# to stage them. build_nice.sh did this with two `cp` calls.
 prebuildopts = 'cp run/iwrap/param/inv/iter/param.x* run/input/ && ' \
                'cp run/iwrap/param/xsd/param.x* run/input/ && ' \
                'cd src && cp -f Makefile.TEMPLATE Makefile && '
 
-# DO NOT override CPP/FORT/LINK to the Intel toolchain compilers here.
-#
-# The template hardcodes g++/gfortran, and that is what NICE must be built
-# with. An earlier version of this easyconfig set CPP="$CXX" FORT="$F90"
-# LINK="$CXX" (plus OPTL="-lifcore") to make it "really" an intel-2025b build.
-# The resulting icpx/ifx binary links and passes the ldd sanity check below,
-# and runs correctly for a while -- then segfaults (SIGSEGV) partway through
-# inverse_convergence, after ~40 niceInv calls, at the first timeslice of the
-# next convergence pass. build_nice.sh, which this easyconfig replaces, copied
-# Makefile.TEMPLATE unedited and compiled with GCC/gfortran; that binary runs
-# the same workflow to completion (verified: 74 niceInv calls). Confirmed by
-# comparing the two binaries -- the working one reports "GCC: (GNU) 14.3.0",
-# the segfaulting one Intel.
-#
-# Mixing a GCC-compiled NICE with the intel-built IMAS-Cpp/MUSCLE3 it links
-# against is fine in practice (icpx uses the GNU C++ ABI and libstdc++), and is
-# exactly what the working build did.
-#
-# INCEIGEN is not compiler-related and stays: sources say `#include <Sparse>`
-# (headers reached directly) as well as `#include <Eigen/Dense>`, so both
-# levels have to be on the include path.
 _make_vars = ' '.join([
     'INCEIGEN="-I$EBROOTEIGEN/include/Eigen -I$EBROOTEIGEN/include"',
 ])
@@ -118,12 +53,8 @@ _targets = [
     'nice_imas_evo_rd_muscle3',
 ]
 
-# One make invocation per target, matching build_nice.sh -- the Makefile has no
-# aggregate target covering just these four.
 buildopts = ' && make '.join('%s %s' % (t, _make_vars) for t in _targets)
 
-# Parallel builds are capped: a bare `make -j` here spawns one job per source
-# file and gets the compiler OOM-killed on a login node.
 maxparallel = 8
 
 files_to_copy = [
@@ -139,18 +70,10 @@ sanity_check_paths = {
     'dirs': ['run/input', 'data'],
 }
 
-# workflows/lib/local_programs.ymmsl runs these under `base_env: clean`, so the
-# binaries must resolve every library with no modules loaded beyond this one --
-# which is exactly what --rpath buys and what the old patchelf hack faked. A
-# plain --help would not catch a missing RPATH entry, hence ldd.
 sanity_check_commands = [
     "! ldd %(installdir)s/run/nice_imas_inv_muscle3 | grep 'not found'",
     "! ldd %(installdir)s/run/nice_imas_dir_muscle3 | grep 'not found'",
     "ldd %(installdir)s/run/nice_imas_inv_muscle3 | grep -q libmuscle",
 ]
-
-# local_programs.ymmsl refers to the actors as $EBROOTNICE/run/<target>, so no
-# PATH entry is needed -- and deliberately none is added, to keep these four
-# binaries out of the way of anything else named nice*.
 
 moduleclass = 'phys'

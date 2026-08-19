@@ -1,5 +1,3 @@
-# PDS build of Waveform-Editor.
-
 easyblock = 'PythonBundle'
 
 name = 'Waveform-Editor'
@@ -57,12 +55,12 @@ exts_list = [
     ('xyzservices', '2026.3.0', {
         'checksums': ['d226866a5d8e9fef337034d8da37a8298f0a1d9d1489b4018e69579eb321fea4'],
     }),
-    # install from wheel: narwhals sdist requires the uv_build backend, which is not available
+
     ('narwhals', '2.24.0', {
         'source_tmpl': '%(name)s-%(version)s-py3-none-any.whl',
         'checksums': ['42fdedf44e5b2ca7505630d45b4ac3058f38d8485cba9fe1652ca23152df7489'],
     }),
-    # bokeh < 3.9.0 required by panel 1.8.x
+
     ('bokeh', '3.8.2', {
         'preinstallopts': """sed -i 's/setup(/setup(version="%(version)s",/g' setup.py && """,
         'checksums': ['8e7dcacc21d53905581b54328ad2705954f72f2997f99fc332c1de8da53aa3cc'],

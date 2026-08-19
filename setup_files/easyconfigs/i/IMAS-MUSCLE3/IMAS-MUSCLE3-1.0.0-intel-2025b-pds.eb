@@ -1,35 +1,9 @@
-# PDS build of IMAS-MUSCLE3.
-#
-# The dependency and extension lists below are a verbatim copy of upstream
-# PR #26551 (IMAS-MUSCLE3-1.0.0-intel-2025b.eb). Only the imas_muscle3 source
-# itself differs, plus one patch -- keep the rest in step with that PR.
-#
-# WHY NOT JUST THE 1.0.0 RELEASE
-#
-# 1. The 1.0.0 sdist ships six actors. PDS also uses recorder_component,
-#    iterator_component and passthrough_component, all added to develop after
-#    the release, so a release build cannot run the current workflows at all.
-#
-# 2. Workflows import their actors from the package rather than redeclaring
-#    each one (see workflows/lib/local_programs.ymmsl). That needs the
-#    "ymmsl.module" entry point, which exists only on the unmerged branch
-#    feature/ymmsl-path-entrypoints.
-#
-# The branch does not solve 1 -- it was cut on 2026-05-19, before those three
-# actors existed, and exposes only the original six. So this builds develop and
-# applies the entry point as a patch, with all nine actors registered. See the
-# patch header for the detail.
-#
-# Once the branch is merged and released, this collapses back to plain
-# `eb --from-pr` on whatever supersedes PR #26551.
-
 easyblock = 'PythonBundle'
 
 name = 'IMAS-MUSCLE3'
 version = '1.0.0'
 versionsuffix = '-pds'
 
-# develop, 2026-08-17 -- 1.0.0 plus the three extra actors. Bump deliberately.
 local_commit = 'd3403fd443421b7472c7ff38353e26a3c396d416'
 
 description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
@@ -49,9 +23,8 @@ dependencies = [
     ('SciPy-bundle', '2025.07'),
     ('Python-bundle-PyPI', '2025.07'),
     ('IMAS-Python', '2.3.0'),
-    # Unsuffixed on purpose: our local easyconfig of the same name is the
-    # patched one -- see i/IMAS-Validator/.
-    ('IMAS-Validator', '1.0.0'),
+
+    ('IMAS-Validator', '1.0.0', '-pds'),
     ('MUSCLE3', '0.10.0'),
     ('xarray', '2025.10.0'),
     ('nodejs', '22.17.1'),
@@ -163,8 +136,7 @@ exts_list = [
             'filename': 'imas_muscle3-develop.tar.gz',
         }],
         'patches': ['imas_muscle3-develop_ymmsl-module-entrypoint.patch'],
-        # git_config archives carry no .git dir, so setuptools_scm cannot derive
-        # a version and aborts the build unless it is told one.
+
         'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
         'checksums': [
             None,
@@ -179,10 +151,6 @@ sanity_check_paths = {
     'dirs': ['lib/python%(pyshortver)s/site-packages/imas_muscle3'],
 }
 
-# Every actor entry point workflows import, so a broken install fails here
-# rather than mid-run under the manager. The last check is the one that matters
-# for the patch: it proves the entry point is registered and that every actor
-# named in it resolves through ymmsl's importer.
 sanity_check_commands = [
     "python -c 'import libmuscle, muscle3'",
     "python -c 'import imas_muscle3.actors.source_component'",

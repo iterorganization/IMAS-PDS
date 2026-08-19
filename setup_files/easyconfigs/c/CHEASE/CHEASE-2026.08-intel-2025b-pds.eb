@@ -1,18 +1,3 @@
-# PDS build of CHEASE as a MUSCLE3 actor.
-#
-# Why not upstream's own recipe: CHEASE ships python/config_muscle3.sh, which
-# mixes intel-2023b and intel-2025b modules. On SDCC that neither builds nor
-# registers with the real MUSCLE3 0.10.0 manager, so it is deliberately not
-# sourced. This easyconfig pins one consistent intel-2025b generation instead
-# (IMAS-Fortran, INTERPOS, XMLlib, iWrap 2.0.0, MUSCLE3 0.10.0,
-# iWrap-plugins-MUSCLE3) and sets by hand the few variables config_muscle3.sh
-# would otherwise have provided.
-#
-# Version: CHEASE has no release tag carrying the MUSCLE3 work -- the only tags
-# in the repo (crpptbx-release-*) belong to a different toolbox -- so this
-# pins an explicit commit on feature/muscle3 and date-stamps the version.
-# Bump both together.
-
 easyblock = 'MakeCp'
 
 name = 'CHEASE'
@@ -52,11 +37,6 @@ dependencies = [
     ('iWrap-plugins-MUSCLE3', '0.4.0'),
 ]
 
-# intel-2025b dropped ifort and ships only ifx. CHEASE's src-f90 Makefile
-# hardcodes the literal command name `ifort` with no ifx awareness, but ifx
-# accepts every flag it passes -- so put a one-line shim on PATH rather than
-# patch CHEASE's vendored Makefile. iWrap, unlike that Makefile, reads $FC
-# directly, which is why FC is also set to the shimmed name.
 local_ifort_shim = ' && '.join([
     'mkdir -p %(builddir)s/shim',
     'printf \'#!/bin/bash\\nexec ifx "$@"\\n\' > %(builddir)s/shim/ifort',
@@ -65,11 +45,6 @@ local_ifort_shim = ' && '.join([
     'export FC=ifort',
 ])
 
-# IDS_main_version_number must be set explicitly: CHEASE's Makefile derives it
-# from the first digit of $IMAS_VERSION to choose between its DD3 and DD4
-# equilibrium mapping files, and silently falls back to DD3 -- wrong here -- if
-# it is unset. XML_USE_CHOICE selects the choices (not reflist) actor variant,
-# which is the one iwrap generates from below.
 local_imas_env = ' && '.join([
     'export XML_USE_CHOICE=yes',
     'export IDS_main_version_number=4',
@@ -77,10 +52,6 @@ local_imas_env = ' && '.join([
     'export PYTHONPATH="$PWD:$PYTHONPATH"',
 ])
 
-# build_imas.csh builds libchease_module_imas; iwrap then generates the actor
-# tree from that library plus the choices_M3 descriptor. iwrap always emits into
-# ./chease, which collides with the source directory name, so it is moved aside
-# immediately -- same sequence as build_chease.sh.
 prebuildopts = ' && '.join([
     local_ifort_shim,
     local_imas_env,
@@ -89,12 +60,10 @@ prebuildopts = ' && '.join([
     'iwrap -f iwrap/chease_choices_M3.yaml -i "$PWD"',
     'mv chease chease_m3',
     'cd chease_m3',
-    # COCOS 17 is the convention the rest of the PDS workflow exchanges IDSs in;
-    # the generated descriptor defaults to a different one.
+
     'sed -i "s|<cocos_in>[0-9]\\+</cocos_in>|<cocos_in>17</cocos_in>|" input/chease_input_choices.xml',
     'sed -i "s|<cocos_out>[0-9]\\+</cocos_out>|<cocos_out>17</cocos_out>|" input/chease_input_choices.xml',
-    # iwrap stages a prebuilt chease.exe; drop it so `make` links a real one
-    # against the modules loaded here rather than whatever it was built with.
+
     'rm -f bin/chease.exe',
     '',
 ])
@@ -108,10 +77,6 @@ sanity_check_paths = {
     'dirs': ['chease_m3/input'],
 }
 
-# The actor runs under `base_env: clean`, so chease.exe has to resolve all of
-# IMAS-Fortran, INTERPOS, XMLlib and MUSCLE3 with only this module loaded.
-# Build with `eb ... --rpath` (see setup_files/easyconfigs/README.md); this
-# check is what catches it if you forget.
 sanity_check_commands = [
     "! ldd %(installdir)s/chease_m3/bin/chease.exe | grep 'not found'",
 ]

@@ -1,14 +1,9 @@
 #!/bin/bash
 # pds-run -- run a MUSCLE3 workflow for one scenario (shot).
 #
-# Stacks workflow.ymmsl + settings.ymmsl (+ scenario overrides), expanding
-# ${PDS_REPO}/${SCEN}/${SHOT} since MUSCLE3 doesn't interpolate settings itself.
-#
 #   pds-run <workflow> [shot]        # shot defaults to $SHOT_NR if unset
 #   e.g. pds-run inverse_convergence 105084
 #
-# PDS_REPO defaults to this script's repo; PDS_RUNS controls where runs land
-# (default <scenario>/tmp/runs).
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
@@ -21,16 +16,10 @@ export PDS_REPO
 
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 
-# $PDS_REPO must be a literal path here, not a live shell var: an actor's own
-# `base_env: clean` (a `module purge`) unsets whatever the PDS module's setenv() did,
-# $PDS_REPO included, before that actor's script runs.
 mkdir -p "$gen/lib"
 envsubst '${PDS_REPO} ${SCEN} ${SHOT}' \
   < "$PDS_REPO/workflows/lib/local_programs.ymmsl" > "$gen/lib/local_programs.ymmsl"
 
-# $gen first in YMMSL_PATH, so `imports: - from lib.local_programs import ...`
-# resolves to the substituted copy above; anything else under lib/ falls
-# through to the real checkout.
 export YMMSL_PATH="$gen:$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
@@ -38,18 +27,11 @@ export SHOT="${2:-${SHOT_NR:-}}"
 [[ -n "$SHOT" ]] || { echo "pds-run: no shot given and \$SHOT_NR unset" >&2; exit 1; }
 export SCEN="$WF/scenarios/$SHOT"
 
-# muscle_manager comes from the MUSCLE3 module that IMAS-MUSCLE3 depends on, so
-# loading IMAS-MUSCLE3 puts the right one (0.10.0) on PATH. Every actor now
-# resolves against that same EasyBuild module rather than a private venv, so
-# there is no longer a second MUSCLE3 to pick the wrong one of.
-# Uses whatever is already loaded if `module load PDS` ran; otherwise loads
-# IMAS-MUSCLE3 itself.
 if [[ -z "${MANAGER:-}" ]]; then
   : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules/all}"
   if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
     LMOD_INIT="/usr/share/lmod/lmod/init/bash"
     if [[ -f "$LMOD_INIT" ]]; then
-      # shellcheck source=/usr/share/lmod/lmod/init/bash
       source "$LMOD_INIT"
       module use "$PDS_MODULEPATH" 2>/dev/null || true
       module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
@@ -76,8 +58,6 @@ if [[ -f "$SCEN/settings.ymmsl" ]]; then
   stack+=("$out"); i=$((i + 1))
 fi
 
-# waveforms.yaml is read by path, not stacked, but also contains ${SCEN} --
-# expand it too and point waveform_editor.waveforms at the expanded copy.
 waveforms_src=""
 [[ -f "$SCEN/waveforms.yaml" ]] && waveforms_src="$SCEN/waveforms.yaml"
 [[ -z "$waveforms_src" ]] && [[ -f "$WF/waveforms.yaml" ]] && waveforms_src="$WF/waveforms.yaml"
@@ -87,5 +67,5 @@ if [[ -n "$waveforms_src" ]]; then
   stack+=("$gen/99_waveform_editor.ymmsl")
 fi
 
-mkdir -p "$RUNS"; cd "$RUNS"   # manager creates run_<model>_<timestamp>/ here
+mkdir -p "$RUNS"; cd "$RUNS"
 "$MANAGER" --start-all "${stack[@]}"

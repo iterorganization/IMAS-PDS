@@ -1,16 +1,3 @@
-# PDS build of PCS + PCSSP, for the magnetic_controller actor.
-#
-# TOOLCHAIN: system, and no compile step -- the actor invokes PCS/PCSSP as raw
-# MATLAB/Simulink source. All this module does is place a shared checkout (so
-# each user no longer needs their own run/pcs clone) and export the paths the
-# actor reads.
-#
-# VERSION: no release tags on either repository, so this pins explicit commits
-# and date-stamps the version. Bump together.
-#
-# Requires an SSH key registered with git.iter.org at build time -- PCS itself
-# is not public. PCSSP is, and comes from GitHub with its submodules.
-
 easyblock = 'Bundle'
 
 name = 'PCS'
@@ -24,8 +11,6 @@ magnetic_controller actor."""
 
 toolchain = SYSTEM
 
-# Same reasoning as METIS-IRFM: MATLAB's in-process py.libmuscle bridge needs a
-# 3.9-3.12 interpreter, and the manager it talks to is libmuscle 0.10.0.
 dependencies = [
     ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
     ('MATLAB', '2023b-r5'),
@@ -58,12 +43,7 @@ components = [
         }],
         'checksums': [None],
         'start_dir': 'PCSSP',
-        # SCDDS_COREPATH below points at pcssp/scdds, so PCSSP has to land
-        # inside the PCS tree under that exact name, as it did when
-        # build_pcs.sh cloned it into place. Tarball's 'subdir' install type
-        # targets <installdir>/<name.lower()>, i.e. exactly pcssp/. It also has
-        # to stay second in this list: the PCS component above uses the default
-        # install type, which cleans the install root before copying.
+
         'install_type': 'subdir',
     }),
 ]

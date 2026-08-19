@@ -1,37 +1,3 @@
-# PDS build of TORAX-MUSCLE3.
-#
-# Named TORAX-MUSCLE3 rather than TORAX: SDCC's TORAX module is published as
-# -foss-2025b only, which swaps IMAS-Core/IMAS-Python down to older foss builds
-# when loaded next to this stack, and it does not ship the MUSCLE3 actor wrapper
-# in any case.
-#
-# READ THIS BEFORE "TIDYING" THE DEPENDENCY LIST
-# ----------------------------------------------
-# Unlike the other Python easyconfigs here, this one does NOT enumerate its
-# dependencies as exts_list, and that is deliberate:
-#
-#  * torax (1.4.0 here) requires jax>=0.8.1, jaxlib, jaxopt, flax, chex,
-#    equinox, jaxtyping, optax, fusion_surrogates, eqdsk and treelib. EasyBuild
-#    has no easyconfig for any of flax, chex, equinox, jaxtyping or optax, and
-#    its only jaxlib recipes are from the 0.1.71 era -- jaxlib is a Bazel build
-#    and is one of the hardest packages in the whole repository to package.
-#    Enumerating this tree properly is a multi-week easyconfig project in its
-#    own right, not part of this migration.
-#
-#  * torax hard-pins an imas-python older than the 2.3.0 the rest of the
-#    intel-2025b stack is built on. So this package could not share the
-#    IMAS-Python module even if the JAX tree were packaged -- it genuinely needs
-#    its own resolved set.
-#
-# So pip resolves the tree from PyPI into this module's own prefix, which is the
-# same thing build_torax_muscle3.sh's venv did, but versioned and installed as a
-# real module rather than a hand-managed venv. The actor runs with
-# `base_env: clean` plus `modules: TORAX-MUSCLE3/...` in
-# workflows/lib/local_programs.ymmsl, so nothing else sees this PYTHONPATH.
-#
-# Consequence: this easyconfig needs network access at build time and is not
-# upstream-mergeable. Revisit if and when the JAX stack lands in EasyBuild.
-
 easyblock = 'PythonPackage'
 
 name = 'TORAX-MUSCLE3'
@@ -67,19 +33,11 @@ use_pip = True
 use_pip_for_deps = True
 download_dep_fail = False
 
-# torax_muscle3 0.1.2 declares muscle3 with no upper bound but was released
-# against 0.8.x; pin the version the PDS manager actually runs, exactly as
-# build_torax_muscle3.sh did with its `muscle3==0.10.0` override.
 postinstallcmds = [
     'PYTHONPATH=%(installdir)s/lib/python%(pyshortver)s/site-packages:$PYTHONPATH '
     'python -m pip install --prefix=%(installdir)s --no-warn-script-location "muscle3==0.10.0"',
 ]
 
-# imas-python 2.1.0 (pinned by torax) against the wider set pip resolves here
-# does not satisfy pip's own consistency check, and torax pins typeguard to an
-# old release that several siblings declare out of range. Both are declared
-# version-range mismatches rather than functional breaks -- the sanity commands
-# below exercise the real import chain instead.
 sanity_pip_check = False
 
 options = {'modulename': 'torax_muscle3'}
@@ -89,9 +47,6 @@ sanity_check_paths = {
     'dirs': ['lib/python%(pyshortver)s/site-packages/torax_muscle3'],
 }
 
-# The actor entry point is `python -u -m torax_muscle3.torax_actor`; importing
-# it is what forces jax, torax and libmuscle to all load together, which is
-# where a bad resolution shows up.
 sanity_check_commands = [
     "python -c 'import jax, torax, libmuscle'",
     "python -c 'import libmuscle; assert libmuscle.__version__ == \"0.10.0\", libmuscle.__version__'",

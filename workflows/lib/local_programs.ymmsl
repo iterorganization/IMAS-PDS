@@ -1,38 +1,5 @@
 ymmsl_version: v0.2
 
-# Program (implementation) definitions for the PDS actor codes that are NOT part
-# of IMAS-MUSCLE3. Import into a workflow with e.g.:
-#   imports:
-#   - from lib.local_programs import implementation torax
-# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-#
-# The IMAS-MUSCLE3 actors (source_component, sink_component, sink_source_component,
-# olc_component, recorder_component, accumulator_component, visualization_component,
-# iterator_component, passthrough_component) are deliberately NOT redeclared here.
-# IMAS-MUSCLE3 registers them itself as an importable yMMSL module, so workflows take
-# them straight from the package:
-#
-#   imports:
-#   - from imas_muscle3 import implementation source_component
-#
-# Those imported programs run under `base_env: manager` -- MUSCLE3 gives them the
-# manager's own environment, and their executable is the interpreter that resolved the
-# entry point. That is correct here precisely because the manager itself comes from the
-# IMAS-MUSCLE3 module (bin/pds-run loads it), so an actor and the manager are the same
-# install by construction. It is a real departure from the isolation rule below, and it
-# applies ONLY to actors that share the manager's module.
-#
-# Everything defined here is a separate code with its own, mutually incompatible
-# toolchain, so each declares `base_env: clean` plus its own `modules:`. MUSCLE3 loads
-# that fresh, from a purged environment, in the actor's own subprocess.
-#
-# Module names are fully versioned on purpose: a bare name in a purged subprocess could
-# resolve to SDCC's own build of the same code across merged module trees -- which for
-# NICE means silently getting the MUSCLE3 0.9.1 binaries this stack exists to avoid.
-# Pinning also stops an actor drifting onto a new (D)efault when the module tree changes.
-#
-# These are EasyBuild modules rather than venvs, so there is no `virtual_env:` line:
-# `modules:` alone is the whole environment.
 programs:
   waveform_editor:
     base_env: clean
@@ -40,8 +7,6 @@ programs:
     executable: waveform-editor
     args: actor
 
-  # PDS's own scripts, not IMAS-MUSCLE3 actors -- they just need the same module for
-  # imas/libmuscle, so they stay declared here rather than coming from the package.
   temporal_coupler:
     base_env: clean
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
@@ -79,8 +44,6 @@ programs:
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_dir_muscle3
 
-  # Now built by the same easyconfig as the other two, rather than reaching into a
-  # per-user $PDS_REPO/run/nice checkout via SDCC's 2023b NICE module.
   nice_evo_rd:
     base_env: clean
     modules: NICE/3.0.0.dev258-intel-2025b-pds
@@ -121,14 +84,11 @@ programs:
     modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
     env:
       IMAS_VERSION: "4.0.0"
-      # $PDS_REPO is resolved by bin/pds-run's own envsubst pass over this
-      # file before MUSCLE3 parses it, not by MUSCLE3's own env: handling.
       JAX_COMPILATION_CACHE_DIR: $PDS_REPO/tmp/jax_cache
       JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS: 0
     executable: python
     args: -u -m torax_muscle3.torax_actor
 
-  # inverse_convergence specific:
   loop:
     base_env: clean
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds

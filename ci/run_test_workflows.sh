@@ -15,9 +15,6 @@ module purge
 
 bash setup_files/setup_test_files.sh
 
-# --ignore_cache: Lmod's module cache doesn't necessarily know about a path
-# added via `module use` at runtime (especially on a CI agent that's never
-# seen this path before), and reports it as "unknown" otherwise.
 module use "/home/ITER/blokhus/public/modules/all"
 module --ignore_cache load PDS
 
@@ -32,9 +29,6 @@ muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
 
 # RUN WORKFLOWS
-# One scenario per workflow, to confirm module-loading wiring works end to
-# end -- not a physics validation suite. Clears stale scenario output first
-# so a rerun can't fail on a leftover file from an earlier build.
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
 run_workflow_clean() {

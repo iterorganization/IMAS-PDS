@@ -1,58 +1,3 @@
-# PDS meta-module.
-#
-# Replaces the hand-written setup_files/PDS.lua and its
-# `sed s|@@PDS_ROOT@@|$(pwd)|` deploy step. Two things are better for being an
-# easyconfig: IMAS-Python and IMAS-MUSCLE3 are real dependencies that Lmod
-# resolves and unloads correctly rather than bare load() calls, and the module
-# lands in the same tree as everything else, so one `module use` covers the
-# whole stack.
-#
-# Goal is unchanged: `git clone` this repo + `module load PDS` should be enough
-# to (a) use muscle_manager/muscle_dashboard/m3dash directly, and (b) run any
-# workflow.
-#
-# Installs nothing. PDS is a checkout you work in, not software with a prefix;
-# the module's whole job is to load the right stack and wire your checkout into
-# PATH/PYTHONPATH/YMMSL_PATH. Which checkout is decided at load time by the Lua
-# at the bottom -- $PDS_REPO if you set it, else the current directory if it
-# looks like a PDS checkout. There is deliberately no third fallback to a
-# baked-in path: PDS.lua used to point at whoever deployed it, which silently
-# forced everyone else's run output into a directory only that person could
-# write to (confirmed: a second user hit exactly this as permission-denied).
-# Erroring is the better failure.
-#
-# Versions are pinned exactly, never bare names, so this doesn't drift onto a
-# new (D)efault the next time SDCC's module tree is updated.
-#
-# ACTOR CODES: deliberately NOT dependencies here. NICE, Waveform-Editor,
-# TORAX-MUSCLE3, METIS-IRFM and CHEASE are pure actor implementations, never run
-# by a human directly. Every actor entry in workflows/lib/local_programs.ymmsl
-# declares `base_env: clean` plus its own complete `modules:` list, and MUSCLE3
-# loads that fresh, in the actor's own subprocess, when it spawns it. That is
-# not an optimisation but the load-bearing design decision: different actors --
-# even within one workflow, e.g. NICE next to a MATLAB/IMAS-AL-Matlab
-# controller -- need genuinely incompatible toolchains, and no single eagerly
-# loaded environment can serve all of them (IMAS-AL-Matlab has no intel-2025b
-# build at all, only foss-2023b/intel-2023b, so there is no "upgrade it" escape
-# hatch).
-#
-# IMAS-MUSCLE3 is the exception, and is a dependency below: it is also a
-# human-facing tool (muscle_manager, muscle_dashboard/m3dash), so `module load
-# PDS` alone should be enough to use those. Its actors are imported from the
-# package by workflows (see local_programs.ymmsl) and run in the manager's own
-# environment, so they get this same module by construction.
-#
-# IMAS-Python is a dependency because preprocess_data.sh / postprocess_data.sh
-# run in the orchestrator's own shell, not through MUSCLE3, and assume it is
-# loaded. IMAS-Core and UDA are NOT listed: IMAS-Python's own modulefile has
-# `depends_on("IMAS-Core/...")`, which in turn depends on UDA, so Lmod already
-# resolves both. Listing them here would duplicate a version Lmod gets right on
-# its own, and would go stale unnoticed if that chain ever changed.
-#
-# MUSCLE3 is likewise not listed directly: it arrives via IMAS-MUSCLE3, which is
-# what makes bin/pds-run's muscle_manager and the actors provably the same
-# install.
-
 easyblock = 'Bundle'
 
 name = 'PDS'
@@ -62,8 +7,6 @@ homepage = 'https://github.com/iterorganization/IMAS-PDS'
 description = """Meta-module for the ITER Pulse Design Simulator: loads the PDS
 module stack and wires a PDS checkout into PATH/PYTHONPATH."""
 
-# No compiler involved -- this module only loads other modules and sets
-# environment variables.
 toolchain = SYSTEM
 
 dependencies = [
