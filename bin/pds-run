@@ -46,7 +46,7 @@ export SCEN="$WF/scenarios/$SHOT"
 # IMAS-MUSCLE3 itself.
 if [[ -z "${MANAGER:-}" ]]; then
   : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules/all}"
-  if [[ -z "${EBROOTIMASMUSCLE3:-}" ]]; then
+  if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
     LMOD_INIT="/usr/share/lmod/lmod/init/bash"
     if [[ -f "$LMOD_INIT" ]]; then
       # shellcheck source=/usr/share/lmod/lmod/init/bash
@@ -55,7 +55,7 @@ if [[ -z "${MANAGER:-}" ]]; then
       module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
     fi
   fi
-  : "${EBROOTIMASMUSCLE3:?pds-run: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${EBROOTIMASMINMUSCLE3:?pds-run: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
   MANAGER="$(command -v muscle_manager)"
   : "${MANAGER:?pds-run: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi

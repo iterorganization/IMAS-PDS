@@ -109,6 +109,49 @@ exts_list = [
     ('panel', '1.8.10', {
         'checksums': ['762881b06efb99f3d201749a3634c6b5f18f46cfca520970c2c1bb31bed42c90'],
     }),
+    ('py-cpuinfo', '9.0.0', {
+        'modulename': 'cpuinfo',
+        'checksums': ['3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690'],
+    }),
+    ('Cython', '3.2.9', {
+        'sources': ['cython-3.2.9.tar.gz'],
+        'source_urls': ['https://files.pythonhosted.org/packages/f6/de/db48b8870e766cfea809986cc50c1e986c663a9ab7bafd0ac1a2512c4a26/'],
+        'checksums': ['d249c9022ab13286b17bd66f30609e800c5f95efeecb06168990c7a66cecde6c'],
+    }),
+    ('PyYAML', '6.0.3', {
+        'modulename': 'yaml',
+        'sources': ['pyyaml-6.0.3.tar.gz'],
+        'source_urls': ['https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/'],
+        'checksums': ['d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f'],
+    }),
+    ('donfig', '0.8.1.post1', {
+        'checksums': ['3bef3413a4c1c601b585e8d297256d0c1470ea012afa6e8461dc28bfb7c23f52'],
+    }),
+    ('google-crc32c', '1.8.0', {
+        'modulename': 'google_crc32c',
+        'sources': ['google_crc32c-1.8.0.tar.gz'],
+        'source_urls': ['https://files.pythonhosted.org/packages/03/41/4b9c02f99e4c5fb477122cd5437403b552873f014616ac1d19ac8221a58d/'],
+        'checksums': ['a428e25fb7691024de47fecfbff7ff957214da51eddded0da0ae0e0f03a2cf79'],
+    }),
+    ('numcodecs', '0.16.5', {
+        'checksums': ['0d0fb60852f84c0bd9543cc4d2ab9eefd37fc8efcc410acd4777e62a1d300318'],
+    }),
+    ('zarr', '3.3.0', {
+        'checksums': ['cd0c8cf738b4bb4807815bc1255acad5bdf1a7b7264b606c5a1bc0d0392a306b'],
+    }),
+    ('muscle3-dashboard', '2026.08.17', {
+        'modulename': 'muscle3_dashboard',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/multiscale',
+                'repo_name': 'muscle3-dashboard',
+                'commit': '0b7d9b52dfeeea087ac248f3883747ea8f6c90ed',
+            },
+            'filename': 'muscle3-dashboard-2026.08.17.tar.gz',
+        }],
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
+        'checksums': [None],
+    }),
     ('imas_muscle3', version, {
         'modulename': 'imas_muscle3',
         'sources': [{
@@ -132,7 +175,7 @@ exts_list = [
 ]
 
 sanity_check_paths = {
-    'files': ['bin/muscle_manager', 'bin/muscle_dashboard'],
+    'files': ['bin/muscle_dashboard'],
     'dirs': ['lib/python%(pyshortver)s/site-packages/imas_muscle3'],
 }
 

@@ -36,7 +36,7 @@ ymmsl_version: v0.2
 programs:
   waveform_editor:
     base_env: clean
-    modules: Waveform-Editor/0.3.1-intel-2025b
+    modules: Waveform-Editor/0.3.2-intel-2025b-pds
     executable: waveform-editor
     args: actor
 
@@ -63,7 +63,7 @@ programs:
 
   nice_inv:
     base_env: clean
-    modules: NICE/3.0.0-intel-2025b-pds
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -72,7 +72,7 @@ programs:
 
   nice_dir:
     base_env: clean
-    modules: NICE/3.0.0-intel-2025b-pds
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -83,7 +83,7 @@ programs:
   # per-user $PDS_REPO/run/nice checkout via SDCC's 2023b NICE module.
   nice_evo_rd:
     base_env: clean
-    modules: NICE/3.0.0-intel-2025b-pds
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -92,7 +92,7 @@ programs:
 
   torax:
     base_env: clean
-    modules: TORAX-MUSCLE3/0.1.2-intel-2025b-pds
+    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
     env:
       IMAS_VERSION: "4.0.0"
       # $PDS_REPO is resolved by bin/pds-run's own envsubst pass over this

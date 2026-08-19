@@ -28,7 +28,7 @@ toolchain = SYSTEM
 # 3.9-3.12 interpreter, and the manager it talks to is libmuscle 0.10.0.
 dependencies = [
     ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
-    ('MATLAB', '2023b'),
+    ('MATLAB', '2023b-r5'),
 ]
 
 components = [
@@ -52,7 +52,7 @@ components = [
                 'url': 'https://github.com/iterorganization',
                 'repo_name': 'PCSSP',
                 'commit': 'd7ae81d96ab7024b611493e7d99c798b6a3a65aa',
-                'recursive': True,
+                'recurse_submodules': ['scdds'],
             },
             'filename': 'pcssp-%(version)s.tar.gz',
         }],

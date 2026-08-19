@@ -40,7 +40,7 @@ programs:
   # $PDS_REPO as a literal, unexpanded string.
   torax:
     base_env: clean
-    modules: TORAX-MUSCLE3/0.1.2-intel-2025b-pds
+    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
     env:
       IMAS_VERSION: "4.0.0"
     executable: python

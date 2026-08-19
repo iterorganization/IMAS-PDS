@@ -5,7 +5,7 @@ set -euo pipefail # stop if anything doesn't work
 # IMAS-MUSCLE3 module the actors do (imas 2.3.0 + matplotlib -- see
 # workflows/lib/local_programs.ymmsl), falling back to a pinned IMAS-Python if
 # this runs outside a shell that already loaded it.
-if [[ -z "${EBROOTIMASMUSCLE3:-}" ]]; then
+if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
   module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds || module load IMAS-Python/2.3.0-intel-2025b
 fi
 PYTHON=python

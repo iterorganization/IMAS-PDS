@@ -71,11 +71,7 @@ dependencies = [
     ('IMAS-MUSCLE3', '1.0.0', '-pds', ('intel', '2025b')),
 ]
 
-# Nothing is installed, so there is nothing to check for.
-sanity_check_paths = {
-    'files': [],
-    'dirs': [],
-}
+skipsteps = ['sanitycheck']
 
 modluafooter = """
 -- Resolve which PDS checkout this module should wire in. In order:

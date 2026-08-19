@@ -50,6 +50,11 @@ exts_list = [
         }],
         'checksums': [None],
     }),
+    ('svg.py', '1.10.0', {
+        'modulename': 'svg',
+        'sources': ['svg_py-1.10.0.tar.gz'],
+        'checksums': ['2e1391411a205220a0e72ca303f3c2d11dbd564cb1dbc445406c5e11421bcc4b'],
+    }),
     ('ymmsl2svg', version, {
         'sources': [{
             'git_config': {

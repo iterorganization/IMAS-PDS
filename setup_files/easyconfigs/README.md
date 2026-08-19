@@ -34,8 +34,7 @@ once its PR merges and SDCC installs it.
 | MUSCLE3 0.10.0 | [#26276](https://github.com/easybuilders/easybuild-easyconfigs/pull/26276) | |
 | INTERPOS 9.2.3 | [#25841](https://github.com/easybuilders/easybuild-easyconfigs/pull/25841) | CHEASE dependency |
 | iWrap 2.0.0 | [#26506](https://github.com/easybuilders/easybuild-easyconfigs/pull/26506) | CHEASE dependency |
-| IMAS-Validator 1.0.0 | [#26550](https://github.com/easybuilders/easybuild-easyconfigs/pull/26550) | **locally overridden** — see below |
-| Waveform-Editor 0.3.1 | [#26553](https://github.com/easybuilders/easybuild-easyconfigs/pull/26553) | used unmodified |
+| IMAS-Validator 1.0.0 | [#26550](https://github.com/easybuilders/easybuild-easyconfigs/pull/26550) | **not used** — built from the local easyconfig instead, see below |
 
 ## What is ours, and why
 
@@ -45,9 +44,9 @@ Each file says this at more length in its own header; this is the index.
 
 | File | Why it is here |
 |---|---|
-| `n/NICE/NICE-3.0.0-intel-2025b-pds.eb` | SDCC's NICE has MUSCLE3 0.9.1 in its RPATH, which beats any env var, so it cannot talk to the 0.10.0 manager. Rebuilt from the `v3.0.0` tag against EasyBuild's Eigen/SuiteSparse/MUSCLE3 instead of NICE's vendored submodules. |
+| `n/NICE/NICE-3.0.0.dev258-intel-2025b-pds.eb` | SDCC's NICE has MUSCLE3 0.9.1 in its RPATH, which beats any env var, so it cannot talk to the 0.10.0 manager. Rebuilt against EasyBuild's Eigen/SuiteSparse/MUSCLE3 instead of NICE's vendored submodules. Pinned to a develop commit, not the `v3.0.0` tag: the tag is 258 commits behind and its nice_inv segfaults partway through `inverse_convergence` (see the easyconfig header). |
 | `c/CHEASE/CHEASE-2026.08-intel-2025b-pds.eb` | CHEASE's own `config_muscle3.sh` mixes intel-2023b and intel-2025b and cannot work on SDCC. Pins one consistent generation, runs the iWrap codegen, and shims `ifort`→`ifx` (intel-2025b dropped `ifort`; CHEASE's Makefile hardcodes the name). |
-| `t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.2-intel-2025b-pds.eb` | The official TORAX module is foss-2025b only and has no MUSCLE3 wrapper. Note this one lets pip resolve its own dependency tree — the header explains why that is not laziness. |
+| `t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.3-intel-2025b-pds.eb` | The official TORAX module is foss-2025b only and has no MUSCLE3 wrapper. Note this one lets pip resolve its own dependency tree — the header explains why that is not laziness. |
 | `m/METIS-IRFM/METIS-IRFM-2026.08-pds.eb` | Named `-IRFM` because EasyBuild's `METIS` is the Karypis graph partitioner, an unrelated package this stack also pulls in. MATLAB source, no compile step. |
 | `p/PDS/PDS-1.0.eb` | The PDS meta-module itself, replacing the hand-written `setup_files/PDS.lua` and its `sed`-based deploy step. Installs nothing: it declares IMAS-Python and IMAS-MUSCLE3 as real dependencies and wires your checkout into PATH/PYTHONPATH/YMMSL_PATH from a `modluafooter`. |
 | `p/PCS/PCS-2026.08-pds.eb` | PCS + PCSSP as a shared checkout, so nobody needs their own `run/pcs` clone. MATLAB/Simulink source, no compile step. |
@@ -56,8 +55,9 @@ Each file says this at more length in its own header; this is the index.
 
 | File | Why it is here |
 |---|---|
-| `i/IMAS-Validator/IMAS-Validator-1.0.0-intel-2025b.eb` | Released imas_validator 1.0.0 calls `has_imas`, removed in IMAS-Python 2.3.0 — so PR #26550, which pairs exactly those two, crashes the OLC actor on every `validate()`. Carries a patch backporting the upstream fix. Deliberately keeps the **unsuffixed** name so PR #26551's IMAS-MUSCLE3 resolves to it and needs no local fork. |
+| `i/IMAS-Validator/IMAS-Validator-1.0.0-intel-2025b.eb` | Released imas_validator 1.0.0 calls `has_imas`, removed in IMAS-Python 2.3.0 — so PR #26550, which pairs exactly those two, crashes the OLC actor on every `validate()`. Carries a patch backporting the upstream fix. Deliberately keeps the **unsuffixed** name so PR #26551's IMAS-MUSCLE3 resolves to it and needs no local fork. That same unsuffixed name collides with the unpatched copy SDCC already has installed centrally, so `build.sh` builds this one with `--rebuild` (only when it is missing from `$EASYBUILD_PREFIX`) — without that, EasyBuild reports "already installed, skipping" and the patch is silently never applied. |
 | `i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb` | Copy of PR [#26551](https://github.com/easybuilders/easybuild-easyconfigs/pull/26551) with the imas_muscle3 source swapped to a pinned develop commit, plus a patch. Two reasons: the 1.0.0 release ships only six actors (PDS also needs `recorder`, `iterator`, `passthrough`, added to develop afterwards), and workflows import actors from the package, which needs the `ymmsl.module` entry point from the unmerged `feature/ymmsl-path-entrypoints`. That branch predates the three extra actors, so the patch rebases it onto develop and registers all nine. |
+| `w/Waveform-Editor/Waveform-Editor-0.3.2-intel-2025b-pds.eb` | Copy of PR [#26553](https://github.com/easybuilders/easybuild-easyconfigs/pull/26553) with the waveform_editor source swapped to a pinned `main` commit. Every workflow's `waveforms.yaml` uses `globals: imports:` (external IMAS data entries), which 0.3.1 does not have — its `YamlGlobals` takes only `dd_version`/`machine_description`/`name`, so the actor aborts at startup. The smoke test does not use `imports`, which is why it passes on 0.3.1 and the workflows do not. |
 | `y/ymmsl2svg/ymmsl2svg-0.1.0-intel-2025b-pds.eb` | The muscle3-dashboard graph card, which `build_imas_muscle3.sh` used to pip-install into the shared venv. Split into its own optional module for the same reason: so IMAS-MUSCLE3 stays untouched upstream. Load it next to IMAS-MUSCLE3, or don't — the dashboard degrades gracefully. |
 
 ## Why `--rpath`

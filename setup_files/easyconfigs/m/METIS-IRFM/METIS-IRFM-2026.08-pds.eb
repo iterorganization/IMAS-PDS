@@ -36,7 +36,7 @@ toolchain = SYSTEM
 # alongside this module by the actor, is built against.
 dependencies = [
     ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
-    ('MATLAB', '2023b'),
+    ('MATLAB', '2023b-r5'),
 ]
 
 sources = [{
@@ -48,7 +48,6 @@ sources = [{
     'filename': 'metis-%(version)s.tar.gz',
 }]
 checksums = [None]
-start_dir = 'metis'
 
 # zineb_path is METIS's own initialisation step: it walks the checkout and
 # writes the MATLAB path//cache files the rest of the code expects to find.

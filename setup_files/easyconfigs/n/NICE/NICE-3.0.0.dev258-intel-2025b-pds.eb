@@ -6,9 +6,14 @@
 # talk to the 0.10.0 manager the rest of the PDS stack runs. The only fix is to
 # rebuild -- no modulefile trick reaches it.
 #
-# Sources: the v3.0.0 release tag, which is genuinely 3.0.0 and carries all four
-# MUSCLE3 targets this needs. The build_nice.sh script this replaces tracked
-# `master` (~5 months ahead of the tag) purely because it predated the tag.
+# Sources: a pinned develop commit, NOT the v3.0.0 release tag. The tag is 258
+# commits behind it, and the difference is load-bearing: against the tag, the
+# nice_inv actor completes ~40 niceInv calls in inverse_convergence and then
+# segfaults (SIGSEGV) at the first timeslice of the next convergence pass,
+# taking the whole simulation down with it. The pinned commit's most recent
+# merge is `bugfix/non_converge_handling`. This is the commit
+# build_nice.sh's build tracked, and the only one confirmed to run the PDS
+# workflows end to end.
 #
 # NICE vendors Eigen, SuiteSparse and MUSCLE3 as git submodules, which the
 # release tarball does not contain. That is a feature here: all three are proper
@@ -23,14 +28,14 @@
 # `patchelf --add-rpath "$LD_LIBRARY_PATH"`; here, build the whole module with
 # EasyBuild's own RPATH linking instead:
 #
-#   eb NICE-3.0.0-intel-2025b-pds.eb --rpath
+#   eb NICE-3.0.0.dev258-intel-2025b-pds.eb --rpath
 #
 # See setup_files/easyconfigs/README.md -- --rpath is required, not optional.
 
 easyblock = 'MakeCp'
 
 name = 'NICE'
-version = '3.0.0'
+version = '3.0.0.dev258'
 versionsuffix = '-pds'
 
 homepage = 'https://gitlab.inria.fr/blfauger/nice'
@@ -42,9 +47,19 @@ variants."""
 toolchain = {'name': 'intel', 'version': '2025b'}
 toolchainopts = {'openmp': True, 'pic': True}
 
-source_urls = ['https://gitlab.inria.fr/blfauger/%(namelower)s/-/archive/v%(version)s/']
-sources = ['%(namelower)s-v%(version)s.tar.gz']
-checksums = ['a4a2faa0318a726d4dd1ba72c56461b498022c068b657142dd240cad6a5e8fc6']
+# develop, 2026-07-28 -- v3.0.0-258-g7ad1ea8f. Bump deliberately, together with
+# the version above.
+local_commit = '7ad1ea8f3da4fee25a61a7c2c01b1773db5f4906'
+
+sources = [{
+    'git_config': {
+        'url': 'https://gitlab.inria.fr/blfauger',
+        'repo_name': 'nice',
+        'commit': local_commit,
+    },
+    'filename': '%(namelower)s-%(version)s.tar.gz',
+}]
+checksums = [None]
 
 builddependencies = [
     ('pkgconf', '2.4.3'),
@@ -54,8 +69,8 @@ dependencies = [
     ('MUSCLE3', '0.10.0'),
     ('IMAS-Cpp', '5.6.0', '-DD-4.1.1'),
     ('Eigen', '3.4.0'),
-    ('SuiteSparse', '7.10.1'),
-    ('libxml2', '2.14.5'),
+    ('SuiteSparse', '7.11.0'),
+    ('libxml2', '2.14.3'),
     ('Boost', '1.88.0'),
 ]
 
@@ -71,17 +86,28 @@ prebuildopts = 'cp run/iwrap/param/inv/iter/param.x* run/input/ && ' \
                'cp run/iwrap/param/xsd/param.x* run/input/ && ' \
                'cd src && cp -f Makefile.TEMPLATE Makefile && '
 
-# CPP/FORT/LINK: the template hardcodes g++/gfortran. Use the toolchain
-# compilers so this really is an intel-2025b build and matches IMAS-Cpp's ABI.
-# OPTL: the template's -lgfortran is the GCC Fortran runtime; with ifx the
-# equivalent is -lifcore.
-# INCEIGEN: sources say `#include <Sparse>` (headers reached directly) as well
-# as `#include <Eigen/Dense>`, so both levels have to be on the include path.
+# DO NOT override CPP/FORT/LINK to the Intel toolchain compilers here.
+#
+# The template hardcodes g++/gfortran, and that is what NICE must be built
+# with. An earlier version of this easyconfig set CPP="$CXX" FORT="$F90"
+# LINK="$CXX" (plus OPTL="-lifcore") to make it "really" an intel-2025b build.
+# The resulting icpx/ifx binary links and passes the ldd sanity check below,
+# and runs correctly for a while -- then segfaults (SIGSEGV) partway through
+# inverse_convergence, after ~40 niceInv calls, at the first timeslice of the
+# next convergence pass. build_nice.sh, which this easyconfig replaces, copied
+# Makefile.TEMPLATE unedited and compiled with GCC/gfortran; that binary runs
+# the same workflow to completion (verified: 74 niceInv calls). Confirmed by
+# comparing the two binaries -- the working one reports "GCC: (GNU) 14.3.0",
+# the segfaulting one Intel.
+#
+# Mixing a GCC-compiled NICE with the intel-built IMAS-Cpp/MUSCLE3 it links
+# against is fine in practice (icpx uses the GNU C++ ABI and libstdc++), and is
+# exactly what the working build did.
+#
+# INCEIGEN is not compiler-related and stays: sources say `#include <Sparse>`
+# (headers reached directly) as well as `#include <Eigen/Dense>`, so both
+# levels have to be on the include path.
 _make_vars = ' '.join([
-    'CPP="$CXX"',
-    'FORT="$F90"',
-    'LINK="$CXX"',
-    'OPTL="-lifcore -qopenmp"',
     'INCEIGEN="-I$EBROOTEIGEN/include/Eigen -I$EBROOTEIGEN/include"',
 ])
 
