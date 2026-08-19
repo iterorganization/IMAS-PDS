@@ -29,10 +29,7 @@ muscle_manager --start-all ymmsl_files/test_waveform_editor.ymmsl
 muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
 muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
-
-# TODO: test_chease_actor -- chease.exe builds and loads cleanly but
-# segfaults at runtime (see the CHEASE easyconfig). Not yet debugged.
-# muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
+muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
 
 # RUN WORKFLOWS
 # One scenario per workflow, to confirm module-loading wiring works end to
