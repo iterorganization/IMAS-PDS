@@ -15,10 +15,10 @@ ymmsl_version: v0.2
 # stops after one iteration.
 
 imports:
-- from lib.programs import implementation source
-- from lib.programs import implementation sink
-- from lib.programs import implementation recorder
-- from lib.programs import implementation validator
+- from imas_muscle3 import implementation source
+- from imas_muscle3 import implementation sink
+- from imas_muscle3 import implementation recorder
+- from imas_muscle3 import implementation validator
 - from lib.programs import implementation loop
 - from lib.programs import implementation waveform_editor
 - from lib.programs import implementation torax

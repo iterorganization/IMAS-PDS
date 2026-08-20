@@ -31,81 +31,12 @@ ymmsl_version: v0.2
 # signatures, so declaring either breaks the other).
 
 programs:
-
-  # ----- IMAS-MUSCLE3 python actors ----------------------------------------------------
-  source:
-    description: IMAS source actor -- reads an IDS entry onto O_I/O_F ports
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.source_component
-
-  sink:
-    description: IMAS sink actor -- writes received IDSs to an entry
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.sink_component
-
-  sink_source:
-    description: IMAS sink_source actor -- time-aligned re-emitter
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.sink_source_component
-
-  recorder:
-    description: IMAS recorder actor -- distill-format run recording
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    # matplotlib too: this actor runs the plot config named by its `config` setting
-    # (visualization/*.py), and those import pyplot.
-    modules: [PDS-IMAS-MUSCLE3, matplotlib]
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.recorder_component
-
-  validator:
-    description: IMAS open-loop-check actor -- rule validation
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.olc_component
-
-  accumulator:
-    description: IMAS accumulator actor -- gathers timeslices into a full trace
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    modules: PDS-IMAS-MUSCLE3
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.accumulator_component
-
-  visualization:
-    description: IMAS visualization actor -- live plotting
-    env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    base_env: clean
-    # matplotlib too: this actor runs the plot config named by its `config` setting
-    # (visualization/*.py), and those import pyplot.
-    modules: [PDS-IMAS-MUSCLE3, matplotlib]
-    virtual_env: $EBROOTIMASMUSCLE3/venv
-    executable: python
-    args: -u -m imas_muscle3.actors.visualization_component
-
   # ----- Waveform-Editor ---------------------------------------------------------------
   waveform_editor:
     description: Waveform-Editor actor -- owns the scenario's waveforms and data pointers
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
     base_env: clean
-    modules: PDS-Waveform-Editor
+    modules: Waveform-Editor/0.3.2-intel-2025b-pds
     virtual_env: $EBROOTWAVEFORMEDITOR/venv
     executable: waveform-editor
     args: actor
@@ -121,34 +52,19 @@ programs:
       IMAS_AL_DISABLE_VALIDATE: "1"
       IMAS_VERSION: "4.0.0"
     base_env: clean
-    modules: PDS-NICE
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     executable: $EBROOTNICE/run/nice_imas_inv_muscle3
 
   # ----- TORAX transport ----------------------------------------------------------------
   torax:
-    description: TORAX transport actor -- fills the `transport` hole (no ports, see header)
-    # Stays a script: JAX_COMPILATION_CACHE_DIR needs $PDS_REPO expanded, and `env:` values
-    # are not expanded. A script is used verbatim, so it purges and loads for itself.
-    script: |
-      #!/bin/bash
-      source /etc/profile.d/lmod.sh 2>/dev/null
-      # Read PDS_REPO before the purge, which unsets what the PDS module exported: PDS.lua
-      # sets it with setenv, so unloading PDS takes it with it. Read afterwards, this would
-      # silently expand to nothing and put the cache in /tmp/jax_cache.
-      JAX_CACHE="${PDS_REPO:+$PDS_REPO/tmp/jax_cache}"
-      module purge
-      module use ${PDS_MODULEPATH:-$HOME/public/modules}
-      module load PDS-TORAX-MUSCLE3
-      export HDF5_USE_FILE_LOCKING=FALSE IMAS_VERSION=4.0.0
-      # No PDS_REPO means no persistent JAX cache -- slower first compile, but not worth
-      # failing the actor over, and MUSCLE3 would take the rest of the run down with it.
-      if [ -n "$JAX_CACHE" ]; then
-        export JAX_COMPILATION_CACHE_DIR="$JAX_CACHE"
-      else
-        echo "torax: PDS_REPO unset, running without a persistent JAX cache" >&2
-      fi
-      export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
-      exec $EBROOTTORAXMUSCLE3/venv/bin/python -u -m torax_muscle3.torax_actor "$@"
+    base_env: clean
+    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
+    env:
+      IMAS_VERSION: "4.0.0"
+      JAX_COMPILATION_CACHE_DIR: $PDS_REPO/tmp/jax_cache
+      JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS: 0
+    executable: python
+    args: -u -m torax_muscle3.torax_actor
 
   # ----- METIS transport (MATLAB) -------------------------------------------------------
   # No `ports:`: METIS declares one fixed superset and uses only the connected ones.
@@ -170,27 +86,18 @@ programs:
   # Uses `script:` rather than `modules:` because pyenv inherits this environment even in
   # InProcess mode, so PYTHONPATH must be unset before MATLAB starts or it imports a
   # mismatched numpy under the venv's Python.
-  metis:
-    description: METIS transport actor (debug_level 1)
+    metis:
     script: |
       #!/bin/bash
-      source /etc/profile.d/lmod.sh 2>/dev/null
-      # Read PDS_REPO before the purge, which unsets what the PDS module exported.
-      PDS_PATCHES="${PDS_REPO:-}/workflows/lib/metis_patches"
       module purge
-      module use ${PDS_MODULEPATH:-$HOME/public/modules}
-      module load PDS-METIS IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
+      # $EBROOTMETIS/muscle3_venv's numpy.
       unset PYTHONPATH
-      export IMAS_VERSION=4.0.0
-      export HDF5_USE_FILE_LOCKING=FALSE
-      # setappdata primes what get_imas_version() caches: METIS's external-equilibrium path
-      # reads the appdata directly and dies on [] with "SWITCH expression must be a scalar
-      # or a character vector".
-      # Copy rather than addpath: METIS's own zineb_path prepends its whole tree over
-      # anything added, but MATLAB resolves the current folder first, and this runs in the
-      # instance's workdir.
-      cp -f "$PDS_PATCHES"/*.m . 2>/dev/null || true
-      exec matlab -batch "setappdata(0,'IMAS_VERSION',4);pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));fprintf('resolved: %s\\n',which('make_metis4muscle3_external_equilibrium'));metis4muscle3(1);"
+      # $EBROOTMETIS/muscle3_venv is a dedicated Python 3.11 + muscle3==0.10.0
+      # venv, matching both MATLAB's supported Python range and the real
+      # manager's libmuscle version (see the METIS-IRFM easyconfig).
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
 
   # ----- PDS-owned actors (run in the IMAS-MUSCLE3 venv -- all import imas) -------------
   # These three declare `modules:` but not `base_env: clean`, unlike every actor above.
@@ -208,7 +115,7 @@ programs:
       s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s]
       o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    modules: PDS-IMAS-MUSCLE3
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
@@ -221,7 +128,7 @@ programs:
       s: [equilibrium_reply, core_profiles_reply]
       o_f: [equilibrium_out_f, core_profiles_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    modules: PDS-IMAS-MUSCLE3
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/metis_driver.py
@@ -234,7 +141,7 @@ programs:
       s: [equilibrium_gather, pf_active_gather]
       o_f: [equilibrium_out_f, pf_active_out_f]
     env: {HDF5_USE_FILE_LOCKING: "FALSE"}
-    modules: PDS-IMAS-MUSCLE3
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     virtual_env: $EBROOTIMASMUSCLE3/venv
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
