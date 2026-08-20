@@ -1,10 +1,10 @@
 easyblock = 'PythonBundle'
 
 name = 'Waveform-Editor'
-version = '0.3.2'
+version = '0.3.2.dev154'
 versionsuffix = '-pds'
 
-local_commit = '13c13efcf70dd7bf0a0a7781b8ee82b6e791c3a3'
+local_commit = '08eebe840e274ba471e33ebd0038bb3462183d0d'
 
 description = """Python tool for creating and managing 1D time-dependent data"""
 homepage = "https://github.com/iterorganization/Waveform-Editor"

@@ -3,7 +3,7 @@ ymmsl_version: v0.2
 programs:
   waveform_editor:
     base_env: clean
-    modules: Waveform-Editor/0.3.2-intel-2025b-pds
+    modules: Waveform-Editor/0.3.2.dev154-intel-2025b-pds
     executable: waveform-editor
     args: actor
 
