@@ -24,7 +24,7 @@ environment.
 
     git clone https://github.com/iterorganization/IMAS-PDS.git
     cd IMAS-PDS
-    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+    module use /home/ITER/dejongy/projects/modules/all  # or wherever build.sh installed it
     module load PDS
 
 For this training you will need access to a graphical environment to visualize

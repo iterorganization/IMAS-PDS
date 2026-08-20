@@ -23,9 +23,9 @@ resources:
 
 settings:
   # Scenario: the pulse design and its input data.
-  run.waveform_editor.waveforms: /home/ITER/blokhus/public/pds-scenarios/105073/waveforms.yaml
-  run.we_final.waveforms: /home/ITER/blokhus/public/pds-scenarios/105073/waveforms_md_only.yaml
-  run.source.source_uri: "imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105073/data/in"
+  run.waveform_editor.waveforms: /home/ITER/dejongy/projects/pds-scenarios/105073/waveforms.yaml
+  run.we_final.waveforms: /home/ITER/dejongy/projects/pds-scenarios/105073/waveforms_md_only.yaml
+  run.source.source_uri: "imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105073/data/in"
   run.source.iterative: False
 
   # Convergence.
@@ -39,10 +39,10 @@ settings:
   run.loop.rel_tolerance: 0.03
 
   # Solvers.
-  run.solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
-  run.final_solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
+  run.solve.nice.xml_path: /home/ITER/dejongy/projects/pds/workflows/lib/config_nice_inverse.xml
+  run.final_solve.nice.xml_path: /home/ITER/dejongy/projects/pds/workflows/lib/config_nice_inverse.xml
   run.final_solve.nice.output_for_control: 1
-  run.transport.python_config_module: /home/ITER/blokhus/public/pds-scenarios/105073/config_torax.py
+  run.transport.python_config_module: /home/ITER/dejongy/projects/pds-scenarios/105073/config_torax.py
   run.transport.output_all_timeslices: True
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
@@ -55,15 +55,15 @@ settings:
   # Recording.
   run.rec_nice.format: distill
   run.rec_nice.auto: False
-  run.rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
-  run.rec_nice.md: "wall=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105073/data/in pf_active=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105073/data/in"
+  run.rec_nice.config: /home/ITER/dejongy/projects/pds/visualization/nice_inv.py
+  run.rec_nice.md: "wall=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105073/data/in pf_active=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105073/data/in"
   run.rec_torax.format: distill
   run.rec_torax.auto: False
-  run.rec_torax.config: /home/ITER/blokhus/public/pds/visualization/kinetic_profiles.py
+  run.rec_torax.config: /home/ITER/dejongy/projects/pds/visualization/kinetic_profiles.py
 
   # Validation.
   run.validator.halt_on_error: False
-  run.validator.extra_rule_dirs: /home/ITER/blokhus/public/pds/pds_validation_tests
+  run.validator.extra_rule_dirs: /home/ITER/dejongy/projects/pds/pds_validation_tests
   run.validator.rulesets: iter-olc
   run.validator.apply_generic: False
 

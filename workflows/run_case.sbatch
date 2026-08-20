@@ -21,7 +21,7 @@ shift
 
 OVERLAYS=("$@")
 
-export PDS_REPO="/home/ITER/blokhus/public/pds"
+export PDS_REPO="/home/ITER/dejongy/projects/pds"
 
 if [[-f $CASE_NAME ]]; then
   CASE="$CASE_NAME"

@@ -17,11 +17,11 @@ resources:
 
 settings:
   # Scenario: the pulse design and its input data.
-  waveform_editor.waveforms: /home/ITER/blokhus/public/pds-scenarios/105099/waveforms_no_transport.yaml
-  source.source_uri: "imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105099/data/in"
+  waveform_editor.waveforms: /home/ITER/dejongy/projects/pds-scenarios/105099/waveforms_no_transport.yaml
+  source.source_uri: "imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105099/data/in"
   source.iterative: true
 
-  solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
+  solve.nice.xml_path: /home/ITER/dejongy/projects/pds/workflows/lib/config_nice_inverse.xml
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.
@@ -31,7 +31,7 @@ settings:
   # Recording.
   rec_nice.format: distill
   rec_nice.auto: False
-  rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
-  rec_nice.md: "wall=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105099/data/in_md pf_active=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105099/data/in_md"
+  rec_nice.config: /home/ITER/dejongy/projects/pds/visualization/nice_inv.py
+  rec_nice.md: "wall=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105099/data/in_md pf_active=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105099/data/in_md"
 
   muscle_remote_log_level: 'INFO'
