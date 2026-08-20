@@ -60,7 +60,7 @@ run_case_clean() {
 # prescribed_transport and inverse_convergence are driven by cases/, which need a prepared
 # pds-scenarios checkout -- skipped when SCENARIOS_REPO is unset.
 #
-# They also need a patched muscle_manager: the cases name ${PDS_REPO}/${SCENARIOS_REPO} and
+# They also need a patched muscle_manager: the cases name /home/ITER/blokhus/public/pds//home/ITER/blokhus/public/pds-scenarios and
 # stock muscle3 passes setting values through verbatim (see ci/patches/). Checked rather
 # than applied, since apply_patches.sh refuses to modify a read-only shared install.
 if [[ ! -d "${SCENARIOS_REPO:-}/105084/data/in" ]]; then
