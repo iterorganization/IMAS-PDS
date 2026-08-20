@@ -15,10 +15,10 @@ ymmsl_version: v0.2
 # stops after one iteration.
 
 imports:
-- from imas_muscle3 import implementation source
-- from imas_muscle3 import implementation sink
-- from imas_muscle3 import implementation recorder
-- from imas_muscle3 import implementation validator
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from imas_muscle3 import implementation olc_component
 - from lib.programs import implementation loop
 - from lib.programs import implementation waveform_editor
 - from lib.programs import implementation torax
@@ -30,7 +30,7 @@ models:
     components:
       source:
         description: source -- seeds the equilibrium and core_profiles traces
-        implementation: source
+        implementation: source_component
         ports: {o_i: [equilibrium_out, core_profiles_out]}
 
       loop:
@@ -66,29 +66,29 @@ models:
 
       sink_nice:
         description: sink -- NICE inverse outputs
-        implementation: sink
+        implementation: sink_component
         ports: {f_init: [equilibrium_in, pf_active_in]}
 
       rec_nice:
         description: distill recorder (NICE inverse outputs)
-        implementation: recorder
+        implementation: recorder_component
         ports: {s: [equilibrium_in, pf_active_in]}
 
       sink_torax:
         description: sink -- converged pulse
-        implementation: sink
+        implementation: sink_component
         optional: true
         ports: {f_init: [equilibrium_in, pf_active_in, core_profiles_in]}
 
       rec_torax:
         description: distill recorder (TORAX per-step outputs)
-        implementation: recorder
+        implementation: recorder_component
         optional: true
         ports: {s: [equilibrium_in, core_profiles_in]}
 
       validator:
         description: imas-validator on the converged coil currents
-        implementation: validator
+        implementation: olc_component
         optional: true
         ports: {f_init: [pf_active_in]}
 

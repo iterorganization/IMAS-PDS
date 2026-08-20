@@ -86,7 +86,7 @@ programs:
   # Uses `script:` rather than `modules:` because pyenv inherits this environment even in
   # InProcess mode, so PYTHONPATH must be unset before MATLAB starts or it imports a
   # mismatched numpy under the venv's Python.
-    metis:
+  metis:
     script: |
       #!/bin/bash
       module purge
