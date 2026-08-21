@@ -46,21 +46,28 @@ settings:
   sink.sink_mode: "x"
   nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
-  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization.plot_file_path: [PWD_PLACEHOLDER]/visualization/nice_inv.py
 implementations:
   source:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
-    modules: NICE
-    executable: nice_imas_inv_muscle3
+    base_env: clean
+    modules: NICE/3.0.0-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
   visualization_component:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
 resources:

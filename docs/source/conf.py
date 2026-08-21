@@ -27,9 +27,7 @@ PACKAGE = "pds"
 src_group = GROUP = "IMEX"
 
 # A copyright statement in the style '2008, Author Name'.
-copyright = (
-    f"2020-{datetime.datetime.now(tz=datetime.timezone.utc).year}, ITER Organization"
-)
+copyright = f"2020-{datetime.datetime.now(tz=datetime.UTC).year}, ITER Organization"
 # The author name(s) of the document
 author = "ITER Organization"
 src_host = "github.com"

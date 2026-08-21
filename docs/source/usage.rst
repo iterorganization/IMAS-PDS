@@ -5,16 +5,19 @@ Using the IMAS PDS
 
 Setting up actors
 -----------------
-A setup script is provided with an installation of the necessary repositories.
-Make sure you have access rights to all the relevant codes.
-It is best to do this on a compute node as it can take a long time put a strain on the login nodes.
+Each actor (IMAS-MUSCLE3, NICE, METIS-IRFM, TORAX-MUSCLE3, Waveform-Editor, PCS, ...) is an
+EasyBuild module, built once with ``setup_files/easyconfigs/build.sh``. Loading the PDS
+meta-module (``module load PDS``) sets up IMAS-Python and IMAS-MUSCLE3; each workflow actor
+then loads its own module itself when MUSCLE3 spawns it. Either way, there is nothing to
+install per-checkout.
+
+Most of these come straight from upstream easyconfigs -- see
+``setup_files/easyconfigs/README.md`` for which ones, and why a handful are still built here.
 
 .. code-block:: bash
 
-  # open interactive bash console on compute node
-  srun --pty bash
-  # install repos
-  bash pds_setup.sh
+  module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+  module load PDS
 
 
 Test workflows
@@ -25,12 +28,12 @@ These workflows can be used as a template for your own workflows.
 
 .. code-block:: bash
 
-  # move to run folder where all the generated code is ignored by git
-  cd run/
-  # prepare base environment and loaded modules
-  source imas_base_env
+  # generate runnable .ymmsl files from the .template sources
+  bash setup_files/setup_test_files.sh
+  module use /home/ITER/blokhus/public/modules/all
+  module load PDS
   # run test workflow of choice
-  muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
+  muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 
 Example cases
 -------------
@@ -43,9 +46,12 @@ Note that this way of running the PDS workflows will change in the future as mor
 
 .. code-block:: bash
 
+  # run_workflow.sh requires the PDS module stack to already be loaded
+  module use /home/ITER/blokhus/public/modules/all
+  module load PDS
   # to enable tab completion of the workflows and scenarios
   source completion.sh
   # run test workflow of choice, in this case:
-  # workflow: torax-nice_self_consistent_transport
+  # workflow: inverse_convergence
   # scenario: 105084
-  bash run_workflow.sh torax_nice_self_consistent_transport 105084
+  bash run_workflow.sh inverse_convergence 105084

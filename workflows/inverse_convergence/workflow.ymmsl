@@ -2,44 +2,37 @@ ymmsl_version: v0.2
 # Consolidated inverse_convergence workflow structure; no scenario data.
 # Also needs programs and settings from somewhere else.
 #
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
-# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# Swap to lib.easybuild_programs for EasyBuild-module-based implementations 
+# Programs come from lib.easybuild_programs (see workflows/lib/easybuild_programs.ymmsl);
+# resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
+# To override one actor (e.g. your own build), copy easybuild_programs.ymmsl to
+# lib/easybuild_programs_<yourname>.ymmsl and repoint just that actor's import here.
 #
 # Settings come from workflows/inverse_convergence/settings.ymmsl
-
-# Consolidated inverse_convergence workflow -- structure + programs only; no scenario data.
-# Also needs settings from somewhere else.
-#
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl); resolve
-# with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this). Swap to
-# lib.easybuild_programs for EasyBuild-module-based implementations, but see that file's
-# header -- none of its IMAS-MUSCLE3/NICE-module entries work with the 0.10.0 manager yet.
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation sink
-- from lib.local_programs import implementation sink_source
-- from lib.local_programs import implementation validator
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation sink_source_component
+- from imas_muscle3 import implementation olc_component
 - from lib.local_programs import implementation loop
 - from lib.local_programs import implementation load_balancer
-- from lib.local_programs import implementation recorder
-- from lib.local_programs import implementation waveform_editor
-- from lib.local_programs import implementation nice_inv
-- from lib.local_programs import implementation torax
+- from imas_muscle3 import implementation recorder_component
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation nice_inv
+- from lib.easybuild_programs import implementation torax
 models:
   inverse_convergence:
     components:
-      source:     {description: source, implementation: source, ports: {o_i: [equilibrium_out, core_profiles_out]}}
-      sink_torax: {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
-      sink_nice:  {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
-      validator:  {description: imas-validator, implementation: validator, ports: {f_init: [pf_active_in]}}
+      source:     {description: source, implementation: source_component, ports: {o_i: [equilibrium_out, core_profiles_out]}}
+      sink_torax: {description: sink torax, implementation: sink_component, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in, core_profiles_in]}}
+      sink_nice:  {description: sink nice, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
+      validator:  {description: imas-validator, implementation: olc_component, ports: {f_init: [pf_active_in]}}
       loop:       {description: outer convergence loop (SEL submodel), implementation: loop, ports: {f_init: [equilibrium_in_f, core_profiles_in_f], o_i: [equilibrium_out_i, core_profiles_out_i], s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s], o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]}}
       waveform_editor: {description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed), implementation: waveform_editor, ports: {f_init: [equilibrium_in, core_profiles_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
       load_balancer: {description: IMAS-aware NICE load balancer, implementation: load_balancer, ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter], s: [equilibrium_gather, pf_active_gather], o_f: [equilibrium_out_f, pf_active_out_f]}}
       nice_inv:   {description: nice, implementation: nice_inv, multiplicity: [1], ports: {f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in], o_f: [equilibrium_out, pf_active_out]}}
       torax:      {description: transport, implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], o_f: [equilibrium_out_f, core_profiles_out_f]}}
-      rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
-      rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
+      rec_nice:  {description: distill recorder (NICE inverse outputs), implementation: recorder_component, ports: {s: [equilibrium_in, pf_active_in]}}
+      rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder_component, ports: {s: [equilibrium_in, core_profiles_in]}}
     conduits:
       source.equilibrium_out: loop.equilibrium_in_f
       source.core_profiles_out: loop.core_profiles_in_f

@@ -1,0 +1,65 @@
+easyblock = 'Bundle'
+
+name = 'PDS'
+version = '1.0'
+
+homepage = 'https://github.com/iterorganization/IMAS-PDS'
+description = """Meta-module for the ITER Pulse Design Simulator: loads the PDS
+module stack and wires a PDS checkout into PATH/PYTHONPATH."""
+
+toolchain = SYSTEM
+
+dependencies = [
+    ('IMAS-Python', '2.3.0', '', ('intel', '2025b')),
+    ('IMAS-MUSCLE3', '1.0.0', '-pds', ('intel', '2025b')),
+    ('ymmsl2svg', '0.1.0', '-pds', ('intel', '2025b')),
+]
+
+skipsteps = ['sanitycheck']
+
+modluafooter = """
+-- Resolve which PDS checkout this module should wire in. In order:
+--   1. An already-exported PDS_REPO (explicit override, e.g. from your shell
+--      profile).
+--   2. The current directory, if it looks like a PDS checkout -- covers the
+--      natural `cd ~/my-pds-clone && module load PDS` case with no extra steps.
+-- If neither holds we error out rather than guessing: every path below is
+-- relative to the checkout, and a wrong guess writes run output somewhere the
+-- user may not even be able to write to.
+local pds_repo = os.getenv("PDS_REPO")
+if not pds_repo then
+  local cwd = os.getenv("PWD")
+  if cwd and isFile(pathJoin(cwd, "bin/pds-run")) then
+    pds_repo = cwd
+  end
+end
+
+if not pds_repo then
+  LmodError([[
+PDS: could not determine which PDS checkout to use.
+
+Either cd into your checkout before loading this module:
+
+    cd /path/to/pds && module load PDS
+
+or point PDS_REPO at it explicitly:
+
+    export PDS_REPO=/path/to/pds
+    module load PDS
+]])
+end
+
+-- So `pds-run` and `import pds` work immediately, with no `pip install -e .`.
+prepend_path("PATH", pathJoin(pds_repo, "bin"))
+prepend_path("PYTHONPATH", pds_repo)
+setenv("PDS_REPO", pds_repo)
+-- Lets workflows resolve `from lib.local_programs import ...`.
+prepend_path("YMMSL_PATH", pathJoin(pds_repo, "workflows"))
+
+-- Env settings every workflow actor needs.
+execute{cmd="ulimit -s unlimited", modeA={"load"}}
+unsetenv("MPLBACKEND")
+setenv("IMAS_VERSION", "4.0.0")
+"""
+
+moduleclass = 'tools'

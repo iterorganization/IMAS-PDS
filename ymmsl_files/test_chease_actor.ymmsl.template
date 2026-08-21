@@ -1,39 +1,39 @@
-ymmsl_version: v0.1
-model:
-  name: test_chease_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-    chease:
-      implementation: chease
-      ports:
-        f_init: [equilibrium_in]
-        o_f: [equilibrium_out]
-  conduits:
-    source.equilibrium_out: chease.equilibrium_in
-    chease.equilibrium_out: sink.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+models:
+  test_chease_actor:
+    components:
+      source:
+        description: source
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out]
+      sink:
+        description: sink
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in]
+      chease:
+        description: CHEASE fixed-boundary equilibrium
+        implementation: chease
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [equilibrium_out]
+    conduits:
+      source.equilibrium_out: chease.equilibrium_in
+      chease.equilibrium_out: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_chease"
   sink.sink_mode: "w"
   muscle_remote_log_level: 'DEBUG'
-implementations:
-  source:
-    modules: IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    modules: IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
+programs:
   chease:
-    executable: [PWD_PLACEHOLDER]/run/chease/chease_m3/bin/chease.exe
+    base_env: clean
+    modules: CHEASE/2026.08-intel-2025b-pds
+    executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
 resources:
   source:
     threads: 1
@@ -41,4 +41,3 @@ resources:
     threads: 1
   chease:
     threads: 1
-

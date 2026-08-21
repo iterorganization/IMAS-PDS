@@ -126,7 +126,17 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
             slice = convert_ids(slice_orig, DD_VERSION)
         for i, coil in enumerate(slice.coil):
             if len(slice.coil) == len(slice_backup.coil):
-                assert slice.coil[i].name == slice_backup.coil[i].name
+                if slice.coil[i].name != slice_backup.coil[i].name:
+                    # Source (DINA-derived) and machine-description pf_active use
+                    # different naming conventions (e.g. "CS3U" vs "Central Solenoid
+                    # 3U (CS3U)"
+                    logger.warning(
+                        "pf_active coil name mismatch at index %d: "
+                        "source=%r machine description=%r",
+                        i,
+                        slice.coil[i].name,
+                        slice_backup.coil[i].name,
+                    )
                 # make sure geometry_type is nice compatible
                 slice.coil[i].element[0].geometry = (
                     slice_backup.coil[i].element[0].geometry

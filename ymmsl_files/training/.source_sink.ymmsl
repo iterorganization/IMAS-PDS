@@ -18,11 +18,13 @@ settings:
   sink.sink_mode: "x"
 implementations:
   source:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   sink:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
 resources:

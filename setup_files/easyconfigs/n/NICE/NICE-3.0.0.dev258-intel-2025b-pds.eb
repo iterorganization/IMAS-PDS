@@ -1,0 +1,79 @@
+easyblock = 'MakeCp'
+
+name = 'NICE'
+version = '3.0.0.dev258'
+versionsuffix = '-pds'
+
+homepage = 'https://gitlab.inria.fr/blfauger/nice'
+description = """NICE (Newton direct and Inverse Computation for Equilibrium)
+solves the free-boundary equilibrium problem for tokamak plasmas, in direct,
+inverse and resistive-diffusion modes. This build exposes the MUSCLE3 actor
+variants."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+toolchainopts = {'openmp': True, 'pic': True}
+
+local_commit = '7ad1ea8f3da4fee25a61a7c2c01b1773db5f4906'
+
+sources = [{
+    'git_config': {
+        'url': 'https://gitlab.inria.fr/blfauger',
+        'repo_name': 'nice',
+        'commit': local_commit,
+    },
+    'filename': '%(namelower)s-%(version)s.tar.gz',
+}]
+checksums = [None]
+
+builddependencies = [
+    ('pkgconf', '2.4.3'),
+]
+
+dependencies = [
+    ('MUSCLE3', '0.10.0'),
+    ('IMAS-Cpp', '5.6.0', '-DD-4.1.1'),
+    ('Eigen', '3.4.0'),
+    ('SuiteSparse', '7.11.0'),
+    ('libxml2', '2.14.3'),
+    ('Boost', '1.88.0'),
+]
+
+prebuildopts = 'cp run/iwrap/param/inv/iter/param.x* run/input/ && ' \
+               'cp run/iwrap/param/xsd/param.x* run/input/ && ' \
+               'cd src && cp -f Makefile.TEMPLATE Makefile && '
+
+_make_vars = ' '.join([
+    'INCEIGEN="-I$EBROOTEIGEN/include/Eigen -I$EBROOTEIGEN/include"',
+])
+
+_targets = [
+    'nice_imas_inv_muscle3',
+    'nice_imas_dir_muscle3',
+    'nice_imas_evo_muscle3',
+    'nice_imas_evo_rd_muscle3',
+]
+
+buildopts = ' && make '.join('%s %s' % (t, _make_vars) for t in _targets)
+
+maxparallel = 8
+
+files_to_copy = [
+    (['run/nice_imas_inv_muscle3', 'run/nice_imas_dir_muscle3',
+      'run/nice_imas_evo_muscle3', 'run/nice_imas_evo_rd_muscle3'], 'run'),
+    (['run/input'], 'run'),
+    (['data'], '.'),
+    (['runmatlab'], '.'),
+]
+
+sanity_check_paths = {
+    'files': ['run/%s' % t for t in _targets] + ['runmatlab/initNice4matlab.m'],
+    'dirs': ['run/input', 'data'],
+}
+
+sanity_check_commands = [
+    "! ldd %(installdir)s/run/nice_imas_inv_muscle3 | grep 'not found'",
+    "! ldd %(installdir)s/run/nice_imas_dir_muscle3 | grep 'not found'",
+    "ldd %(installdir)s/run/nice_imas_inv_muscle3 | grep -q libmuscle",
+]
+
+moduleclass = 'phys'

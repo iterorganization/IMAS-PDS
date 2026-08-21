@@ -14,7 +14,7 @@ authors = [
 ]
 description = "Pulse Design Simulator to simulate and prepare experiments"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = {file = "LICENSE.md"}
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -34,8 +34,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Unix Shell",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",

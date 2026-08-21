@@ -1,17 +1,22 @@
-ymmsl_version: v0.1
-model:
-  name: test_olc_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [pf_active_out]
-    olc:
-      implementation: olc
-      ports:
-        f_init: [pf_active_in]
-  conduits:
-    source.pf_active_out: olc.pf_active_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation olc_component
+models:
+  test_olc_actor:
+    components:
+      source:
+        description: source
+        implementation: source_component
+        ports:
+          o_i: [pf_active_out]
+      olc:
+        description: open-loop-check validator
+        implementation: olc_component
+        ports:
+          f_init: [pf_active_in]
+    conduits:
+      source.pf_active_out: olc.pf_active_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"
@@ -19,13 +24,6 @@ settings:
   olc.apply_generic: False
   olc.halt_on_error: False
   muscle_remote_log_level: 'DEBUG'
-implementations:
-  olc:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
-    args: -u -m imas_muscle3.actors.olc_component
-  source:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
-    args: -u -m imas_muscle3.actors.source_component
 resources:
   source:
     threads: 1

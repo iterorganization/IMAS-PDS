@@ -10,15 +10,15 @@
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
 # https://torax.readthedocs.io/en/latest/installation.html
 
-INSTALL_PDS="true"
+INSTALL_PDS="false"
 INSTALL_IMAS_MUSCLE3="false"
-INSTALL_MUSCLE3_DASHBOARD="true"
+INSTALL_MUSCLE3_DASHBOARD="false"
 INSTALL_WAVEFORM_EDITOR="false"
-INSTALL_METIS="true"
+INSTALL_METIS="false"
 INSTALL_NICE="false"
-INSTALL_TORAX="true"
-INSTALL_CHEASE="true"
-INSTALL_PCS="true"
+INSTALL_TORAX="false"
+INSTALL_CHEASE="false"
+INSTALL_PCS="false"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'

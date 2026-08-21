@@ -10,9 +10,8 @@ These exercises are mostly relevant for developers.
 
 .. code-block:: console
 
-    cd run
-    source imas_base_env
-    module load MUSCLE3
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+    module load PDS
     module load IDStools
 
 Exercise 1
@@ -35,16 +34,18 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
 .. note::
     MUSCLE3 uses the locally set environment variables by default.
-    It also enables the user to pick a specific virtual environment for a given implementation of an actor.
-    Many of the python based actors were installed in the `pds_setup.sh` script using virtual environments.
-    Make sure to use those virtual environments when using these actors.
-    An example for setting the virtual environment of the source actor from the IMAS-MUSCLE3 code is shown below.
+    ``base_env: clean`` discards them and gives the actor a purged environment instead, into
+    which MUSCLE3 loads exactly the modules listed under ``modules:`` -- so that list is the
+    actor's complete environment. Name the module with its full version, as below; a bare name
+    could resolve to a different build of the same code.
+    An example for the source actor from the IMAS-MUSCLE3 code is shown below.
 
     .. code-block:: console
 
         implementations:
         source:
-            modules: IMAS-MUSCLE3
+            base_env: clean
+            modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
             executable: python
             args: "-u -m imas_muscle3.actors.source_component"
 
@@ -130,7 +131,7 @@ For more information on the visualization actor read the `IMAS-MUSCLE3 docs <htt
 You can also look at the `Visualization Actor training material <https://imas-muscle3.readthedocs.io/en/latest/training.html>_`, 
 which shows how to work with live data visualization, how to create custom plotting scripts,
 how to set it up in MUSCLE3 and how to use in in standalone mode.
-A visualization actor config file has been defined at ``<pds root>/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py``.
+A visualization actor config file has been defined at ``<pds root>/visualization/nice_inv.py``.
 The visualization actor is set up so that the expected connected IDSs depend on what the user wants to plot.
 The given example config expects the following IDSs connected to the S port:
 

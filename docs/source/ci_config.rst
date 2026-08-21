@@ -17,14 +17,13 @@ Linting
 
     The CI script executed in this job is ``ci/linting.sh``.
 
-Testing
-    This runs all unit tests with pytest.
-
-    The CI script executed in this job is ``ci/run_pytest.sh``, which expects the
-    modules it needs to load as arguments.
-
 Build docs
     This job builds the Sphinx documentation.
 
-    The CI script executed in this job is: ``ci/build_docs_and_dist.sh``, which expects the
-    modules it needs to load as arguments.
+    The CI script executed in this job is ``ci/build_docs.sh``.
+
+Test workflows
+    This runs the actor-specific test workflows and the example ITER scenario workflows
+    end to end (see :ref:`available_workflows`).
+
+    The CI script executed in this job is ``ci/run_test_workflows.sh``.

@@ -1,47 +1,47 @@
-ymmsl_version: v0.1
-model:
-  name: test_metis_actor
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    metis:
-      implementation: metis
-      ports:
-        f_init: [equilibrium_in_f]
-        o_f: [equilibrium_out_f]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: metis.equilibrium_in_f
-    metis.equilibrium_out_f: sink.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+models:
+  test_metis_actor:
+    components:
+      source:
+        description: source
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out]
+      metis:
+        description: METIS transport (standalone metis4muscle3 test mode)
+        implementation: metis
+        ports:
+          f_init: [equilibrium_in_f]
+          o_f: [equilibrium_out_f]
+      sink:
+        description: sink
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: metis.equilibrium_in_f
+      metis.equilibrium_out_f: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"
   sink.sink_mode: "w"
   metis.metis_computation: 1
-  metis.metis_filename: "[PWD_PLACEHOLDER]/run/metis/certification/metis/ITER_rampup_ECCD.mat"
+  metis.metis_filename: "/home/ITER/blokhus/public/software/METIS-IRFM/2026.08-pds/certification/metis/ITER_rampup_ECCD.mat"
   metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
-implementations:
-  source:
-    modules: IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    modules: IMAS-MUSCLE3
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
-  metis: 
-    env:
-      DIR_METIS4MUSCLE3: [PWD_PLACEHOLDER]/run/metis/workflow/muscle3/mfile
-      IMAS_VERSION: '4.0.0'
-    executable: matlab
-    modules: IMAS-AL-Matlab
-    args: -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(1);"
+programs:
+  metis:
+    script: |
+      #!/bin/bash
+      module purge
+      module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      unset PYTHONPATH
+      export DIR_METIS4MUSCLE3=$EBROOTMETIS/workflow/muscle3/mfile
+      export IMAS_VERSION=4.0.0
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(1);"
 resources:
   source:
     threads: 1

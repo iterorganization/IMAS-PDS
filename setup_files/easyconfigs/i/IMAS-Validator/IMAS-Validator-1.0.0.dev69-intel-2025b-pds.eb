@@ -1,0 +1,48 @@
+easyblock = 'PythonBundle'
+
+name = 'IMAS-Validator'
+version = '1.0.0.dev69'
+versionsuffix = '-pds'
+
+description = """A pure-python library to handle IDSs"""
+homepage = "https://github.com/iterorganization/IMAS-Validator"
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+local_commit = 'b3443a2d4f97'
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('SciPy-bundle', '2025.07'),
+    ('netcdf4-python', '1.7.2'),
+    ('h5py', '3.14.0'),
+    ('IMAS-Python', '2.3.0'),
+]
+
+exts_list = [
+    ('junit2html', '31.1.4', {
+        'modulename': False,
+        'sources': ['%(name)s-%(version)s-py3-none-any.whl'],
+        'checksums': ['dfd100dfdc0ee91e1ffbd1774669b209dec115b285e06af9e31d8743db8931e6'],
+    }),
+    ('imas_validator', version, {
+        'modulename': False,
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/iterorganization',
+                'repo_name': 'imas-validator',
+                'commit': local_commit,
+            },
+            'filename': 'imas_validator-%(version)s.tar.gz',
+        }],
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
+        'checksums': [None],
+    }),
+]
+
+sanity_check_commands = [
+    "python -c 'from imas_validator.validate.validate import validate'",
+    "python -c 'import imas_validator.validate.validate as v; assert not hasattr(v, \"_check_imas_version\")'",
+]
+
+moduleclass = 'tools'

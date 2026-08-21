@@ -20,7 +20,7 @@ Options:
   -h, --help      Show this help message and exit
 
 Examples:
-  bash $(basename "$0") torax_nice_self_consistent_transport 105092
+  bash $(basename "$0") inverse_convergence 105092
 EOF
 }
 
@@ -42,8 +42,11 @@ export SUBDIR="$DIR/scenarios/$2"
 shift 2
 export EXTRA_ARGS=("$@")
 
+# ---- module environment ---------------------------------------
+[[ -n "${PDS_REPO:-}" ]] || error "PDS module not loaded. Run 'module use /home/ITER/blokhus/public/modules/all && module load PDS' first (see setup_files/easyconfigs/p/PDS/)."
+[[ "$PDS_REPO" == "$PWD" ]] || error "PDS_REPO ($PDS_REPO) does not match \$PWD ($PWD). Run 'module use /home/ITER/blokhus/public/modules/all && module load PDS' from this checkout's root."
+
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
-source "$PWD/run/imas_base_env"
 source $SCENARIO_CONFIG
 source "$MD_COLLECTION"
 

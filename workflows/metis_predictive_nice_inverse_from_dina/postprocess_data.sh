@@ -1,9 +1,6 @@
 set -euo pipefail # stop if anything doesn't work
 
-module load IMAS-Python
-module load IDStools/2.3.0
-
-PLOTDIR="$SUBDIR/tmp/data" 
+PLOTDIR="$SUBDIR/tmp/data"
 
 # load T_LIST from string
 IFS=' ' read -r -a T_LIST <<< "$T_LIST"

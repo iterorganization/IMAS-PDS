@@ -1,26 +1,102 @@
 ymmsl_version: v0.2
 
-# EasyBuild-module program (implementation) definitions# Import into a workflow with e.g.:
-#   imports:
-#   - from lib.easybuild_programs import implementation torax
-# and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-
 programs:
-  # ----- IMAS-MUSCLE3 python actors --------------------------------------------------
-  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
-  source:      {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.source_component}
-  sink:        {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_component}
-  sink_source: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
-  validator:   {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.olc_component}
-  passthrough: {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
-  iterator:    {modules: IMAS-MUSCLE3, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
+  waveform_editor:
+    base_env: clean
+    modules: Waveform-Editor/0.3.2.dev154-intel-2025b-pds
+    executable: waveform-editor
+    args: actor
 
-  # ----- NICE python actors --------------------------------------------------
-  # module ships muscle3 0.8.0 -- NOT usable with the 0.10.0 manager
+  temporal_coupler:
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/torax_nice_utils/temporal_coupler.py
+
+  metis:
+    script: |
+      #!/bin/bash
+      module purge
+      module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
+      # $EBROOTMETIS/muscle3_venv's numpy.
+      unset PYTHONPATH
+      # $EBROOTMETIS/muscle3_venv is a dedicated Python 3.11 + muscle3==0.10.0
+      # venv, matching both MATLAB's supported Python range and the real
+      # manager's libmuscle version (see the METIS-IRFM easyconfig).
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+
   nice_inv:
+    base_env: clean
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
+
+  nice_dir:
     base_env: clean
-    modules: NICE
-    executable: nice_imas_inv_muscle3
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_dir_muscle3
+
+  nice_evo_rd:
+    base_env: clean
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_evo_rd_muscle3
+
+  nice_evo:
+    base_env: clean
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+      OMP_NUM_THREADS: 2
+    executable: $EBROOTNICE/run/nice_imas_evo_muscle3
+
+  magnetic_controller:
+    script: |
+      #!/bin/bash
+      module purge
+      module load PCS/2026.08-pds NICE/3.0.0.dev258-intel-2025b-pds
+      module load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
+      # $EBROOTPCS/muscle3_venv's numpy (same reason as the metis actor).
+      unset PYTHONPATH
+      # muscle_controller_NICE_IMAS_iter_init reads PCS_PATH itself and errors
+      # out if it is unset. The PCS module exports EBROOTPCS and
+      # SCDDS_COREPATH, but not PCS_PATH -- the old v0.1 workflow set all three
+      # by hand, pointing at a per-user run/pcs checkout.
+      export PCS_PATH="$EBROOTPCS"
+      export CONTROLLER_PATH="$PDS_REPO/controllers"
+      exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));muscle_controller_NICE_IMAS_iter_init;"
+
+  torax:
+    base_env: clean
+    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
+    env:
+      IMAS_VERSION: "4.0.0"
+      JAX_COMPILATION_CACHE_DIR: $PDS_REPO/tmp/jax_cache
+      JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS: 0
+    executable: python
+    args: -u -m torax_muscle3.torax_actor
+
+  loop:
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py
+
+  load_balancer:
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py

@@ -1,0 +1,63 @@
+easyblock = 'PythonBundle'
+
+name = 'ymmsl2svg'
+version = '0.1.0'
+versionsuffix = '-pds'
+
+homepage = 'https://github.com/DaanVanVugt/ymmsl2svg'
+description = """Renders a yMMSL configuration as an SVG graph. Used by
+muscle3-dashboard for its per-run workflow graph card."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+builddependencies = [
+    ('git', '2.50.1'),
+]
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('MUSCLE3', '0.10.0'),
+    ('IMAS-MUSCLE3', '1.0.0', '-pds'),
+]
+
+exts_list = [
+    ('ymmsl', '0.17.0-timelines', {
+        'modulename': 'ymmsl',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/multiscale',
+                'repo_name': 'ymmsl-python',
+                'commit': 'feature/timelines',
+            },
+            'filename': 'ymmsl-python-timelines.tar.gz',
+        }],
+        'checksums': [None],
+    }),
+    ('svg.py', '1.10.0', {
+        'modulename': 'svg',
+        'sources': ['svg_py-1.10.0.tar.gz'],
+        'checksums': ['2e1391411a205220a0e72ca303f3c2d11dbd564cb1dbc445406c5e11421bcc4b'],
+    }),
+    ('ymmsl2svg', version, {
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/DaanVanVugt',
+                'repo_name': 'ymmsl2svg',
+                'commit': 'feat/conduit-hover-labels',
+            },
+            'filename': 'ymmsl2svg-conduit-hover-labels.tar.gz',
+        }],
+        'checksums': [None],
+    }),
+]
+
+sanity_pip_check = False
+
+sanity_check_commands = [
+    "python -c 'from ymmsl.v0_2 import TimelineTree'",
+    "python -c 'from ymmsl2svg.main import configuration2svg'",
+
+    "python -c 'import libmuscle, muscle3, imas_muscle3.actors.source_component'",
+]
+
+moduleclass = 'vis'

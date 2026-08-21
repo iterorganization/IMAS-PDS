@@ -50,6 +50,9 @@ The shell script currently expects to be run from the repository base directory.
 
 .. code-block:: console
 
+    # run_workflow.sh requires the PDS module stack to already be loaded
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+    module load PDS
     # to enable tab completion of the workflows and scenarios
     source completion.sh
     # to run the premade workflow
@@ -59,7 +62,7 @@ The shell script currently expects to be run from the repository base directory.
 
     .. md-tab-item:: Exercise
 
-        Run the ``torax_nice_self_consistent_transport`` workflow for scenario ``105092``.
+        Run the ``inverse_convergence`` workflow for scenario ``105092``.
         This is a simple scenario for an L-mode limiter plasma with low ECH power,
         a short ramp-up phase from t=0 to t=9,
         a flattop phase at ~ 3 MA from t=9 to t=147
@@ -79,14 +82,14 @@ The shell script currently expects to be run from the repository base directory.
 
         .. code-block:: console
 
-            bash run_workflow.sh torax_nice_self_consistent_transport 105092
+            bash run_workflow.sh inverse_convergence 105092
 
         Check if results look as expected using the visualization tool.
         You can also check the default plots: 
         
-        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_coils_105092.png``
-        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
-        ``workflows/torax_nice_self_consistent_tranport/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
+        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_coils_105092.png``
+        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_0D_105092.png``
+        ``workflows/inverse_convergence/scenarios/105092/tmp/pds_equilibrium_1D_105092.png``
 
         .. image:: pds_coils_105092.png
         .. image:: pds_equilibrium_0D_105092.png
@@ -102,12 +105,12 @@ They are saved in the ``ymmsl_files`` directory.
 Test workflows can be run to check if everything is working as expected.
 These workflows can be used as a template for your own workflows.
 This exercise is mostly relevant for developers.
-The ``run`` subdirectory can be used as a sandbox for installing and running many different codes.
 
 .. code-block:: console
 
-    cd run/
-    source imas_base_env
+    bash setup_files/setup_test_files.sh  # generate runnable .ymmsl files from the .template sources
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+    module load PDS
     muscle_manager --start-all path/to/my/workflow.ymmsl
 
 .. md-tab-set::
@@ -129,7 +132,7 @@ The ``run`` subdirectory can be used as a sandbox for installing and running man
 
         .. code-block:: console
 
-            muscle_manager --start-all ../ymmsl_files/test_sink_source_actor.ymmsl
+            muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 
         ``test_sink_source_actor.ymmsl`` simply loads data from 1 Data Entry and saves it in a new one.
         The input and output are expected to be the same.

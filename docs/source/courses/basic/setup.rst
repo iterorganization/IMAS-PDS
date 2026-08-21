@@ -14,23 +14,18 @@ You will need read access to the repositories:
 
 First clone the project.
 
-A setup script ``pds_setup.sh`` is provided with an installation of the necessary repositories.
-The script expects to be run from the repo root directory
-Make sure you have access rights to all the relevant codes.
-The setup script will detect if codes are not yet available and install the missing ones.
-It is also configurable to enable or disable the installation of specific codes. 
-In case the installed codes are outdated, you can either update them by hand in the ``run/`` folder
-or remove directories from the ``run/`` folder and run the setup script again.
-
-Load a base environment ``run/imas_base_env`` with the necessary modules for the PDS workflows.
-Some actors currently require a specific virtual environment, this will be taken into account in the workflow configurations.
+Each actor is an EasyBuild module, built once with ``setup_files/easyconfigs/build.sh``.
+Loading the PDS meta-module (``module load PDS``) sets up IMAS-Python and IMAS-MUSCLE3;
+each workflow actor then loads its own module itself when MUSCLE3 spawns it. Either way,
+there is nothing to install per-checkout -- the module an actor declares is its complete
+environment.
 
 .. code-block:: console
 
     git clone https://github.com/iterorganization/IMAS-PDS.git
     cd IMAS-PDS
-    bash pds_setup.sh
-    source run/imas_base_env
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
+    module load PDS
 
 For this training you will need access to a graphical environment to visualize
 the simulation results. If you are on SDCC, it is recommended to follow this training

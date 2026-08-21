@@ -332,7 +332,15 @@ class Plotter(BasePlotter):
             z = z[0, :]
         psi = equilibrium_data.psi.values
 
-        trics = plt.tricontour(r, z, psi, levels=levels)
+        try:
+            trics = plt.tricontour(r, z, psi, levels=levels)
+        except RuntimeError:
+            logger.warning(
+                "Skipping contour: Delaunay triangulation failed for this "
+                "equilibrium timeslice (likely degenerate/NaN grid points).",
+                exc_info=True,
+            )
+            return hv.Contours(([0], [0], 0), vdims="psi")
         return hv.Contours(self._extract_contour_segments(trics), vdims="psi")
 
     def _extract_contour_segments(self, tricontour):
@@ -432,12 +440,12 @@ class Plotter(BasePlotter):
             # Extract X-points
             x_r = selected_data.x_points_r.values
             x_z = selected_data.x_points_z.values
-            x_points = list(zip(x_r, x_z))
+            x_points = list(zip(x_r, x_z, strict=True))
 
             # Extract O-points
             o_r = selected_data.o_points_r.values
             o_z = selected_data.o_points_z.values
-            o_points = list(zip(o_r, o_z))
+            o_points = list(zip(o_r, o_z, strict=True))
 
         o_scatter = hv.Scatter(o_points).opts(
             marker="o",

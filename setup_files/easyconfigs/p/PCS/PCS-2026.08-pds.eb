@@ -1,0 +1,70 @@
+easyblock = 'Bundle'
+
+name = 'PCS'
+version = '2026.08'
+versionsuffix = '-pds'
+
+homepage = 'https://git.iter.org/projects/PCS/repos/pcs'
+description = """ITER Plasma Control System sources together with PCSSP, the
+Plasma Control System Simulation Platform, as used by the PDS
+magnetic_controller actor."""
+
+toolchain = SYSTEM
+
+dependencies = [
+    ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
+    ('MATLAB', '2023b-r5'),
+]
+
+components = [
+    (name, version, {
+        'easyblock': 'Tarball',
+        'sources': [{
+            'git_config': {
+                'url': 'ssh://git@git.iter.org/pcs',
+                'repo_name': 'pcs',
+                'commit': 'master',
+            },
+            'filename': 'pcs-%(version)s.tar.gz',
+        }],
+        'checksums': [None],
+        'start_dir': 'pcs',
+    }),
+    ('PCSSP', version, {
+        'easyblock': 'Tarball',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/iterorganization',
+                'repo_name': 'PCSSP',
+                'commit': 'd7ae81d96ab7024b611493e7d99c798b6a3a65aa',
+                'recurse_submodules': ['scdds'],
+            },
+            'filename': 'pcssp-%(version)s.tar.gz',
+        }],
+        'checksums': [None],
+        'start_dir': 'PCSSP',
+
+        'install_type': 'subdir',
+    }),
+]
+
+postinstallcmds = [
+    'python -m venv %(installdir)s/muscle3_venv',
+    '%(installdir)s/muscle3_venv/bin/pip install --quiet "muscle3==0.10.0"',
+]
+
+sanity_check_paths = {
+    'files': ['muscle3_venv/bin/python'],
+    'dirs': ['pcssp/scdds'],
+}
+
+sanity_check_commands = [
+    '%(installdir)s/muscle3_venv/bin/python -c '
+    '\'import libmuscle; assert libmuscle.__version__ == "0.10.0", libmuscle.__version__\'',
+]
+
+modextravars = {
+    'SCDDS_COREPATH': '%(installdir)s/pcssp/scdds',
+}
+
+moduleclass = 'phys'

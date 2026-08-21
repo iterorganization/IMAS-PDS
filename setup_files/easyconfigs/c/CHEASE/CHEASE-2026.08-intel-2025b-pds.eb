@@ -1,0 +1,84 @@
+easyblock = 'MakeCp'
+
+name = 'CHEASE'
+version = '2026.08'
+versionsuffix = '-pds'
+local_commit = '30c8070da33dcd3991a0dbe98cd1e7335a88e218'
+
+homepage = 'https://gitlab.epfl.ch/spc/chease'
+description = """CHEASE is a fixed-boundary Grad-Shafranov equilibrium solver
+for toroidal plasmas. This build wraps it as an IMAS actor driven by MUSCLE3,
+generated with iWrap."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+toolchainopts = {'pic': True}
+
+sources = [{
+    'git_config': {
+        'url': 'https://gitlab.epfl.ch/spc',
+        'repo_name': 'chease',
+        'commit': local_commit,
+    },
+    'filename': '%(namelower)s-%(version)s.tar.gz',
+}]
+checksums = [None]
+
+builddependencies = [
+    ('git', '2.50.1'),
+    ('tcsh', '6.24.16'),
+]
+
+dependencies = [
+    ('IMAS-Fortran', '5.6.0', '-DD-4.1.1'),
+    ('INTERPOS', '9.2.3', '', ('iimkl', '2025b')),
+    ('XMLlib', '3.3.2', '', ('intel-compilers', '2025.2.0')),
+    ('iWrap', '2.0.0'),
+    ('MUSCLE3', '0.10.0'),
+    ('iWrap-plugins-MUSCLE3', '0.4.0'),
+]
+
+local_ifort_shim = ' && '.join([
+    'mkdir -p %(builddir)s/shim',
+    'printf \'#!/bin/bash\\nexec ifx "$@"\\n\' > %(builddir)s/shim/ifort',
+    'chmod +x %(builddir)s/shim/ifort',
+    'export PATH="%(builddir)s/shim:$PATH"',
+    'export FC=ifort',
+])
+
+local_imas_env = ' && '.join([
+    'export XML_USE_CHOICE=yes',
+    'export IDS_main_version_number=4',
+    'export IMAS_VERSION=4.1.1',
+    'export PYTHONPATH="$PWD:$PYTHONPATH"',
+])
+
+prebuildopts = ' && '.join([
+    local_ifort_shim,
+    local_imas_env,
+    './build_imas.csh',
+    'rm -rf chease_m3',
+    'iwrap -f iwrap/chease_choices_M3.yaml -i "$PWD"',
+    'mv chease chease_m3',
+    'cd chease_m3',
+
+    'sed -i "s|<cocos_in>[0-9]\\+</cocos_in>|<cocos_in>17</cocos_in>|" input/chease_input_choices.xml',
+    'sed -i "s|<cocos_out>[0-9]\\+</cocos_out>|<cocos_out>17</cocos_out>|" input/chease_input_choices.xml',
+
+    'rm -f bin/chease.exe',
+    '',
+])
+
+files_to_copy = [
+    (['chease_m3/bin', 'chease_m3/input'], 'chease_m3'),
+]
+
+sanity_check_paths = {
+    'files': ['chease_m3/bin/chease.exe'],
+    'dirs': ['chease_m3/input'],
+}
+
+sanity_check_commands = [
+    "! ldd %(installdir)s/chease_m3/bin/chease.exe | grep 'not found'",
+]
+
+moduleclass = 'phys'

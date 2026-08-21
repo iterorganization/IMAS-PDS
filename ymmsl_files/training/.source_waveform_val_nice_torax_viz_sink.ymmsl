@@ -72,7 +72,7 @@ settings:
   sink.sink_mode: "x"
   nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
   muscle_remote_log_level: 'DEBUG'
-  visualization.plot_file_path: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/imas_muscle3/visualization/examples/pds/pds.py
+  visualization.plot_file_path: [PWD_PLACEHOLDER]/visualization/nice_inv.py
   visualization.automatic_mode: true
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
   olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"
@@ -83,41 +83,51 @@ settings:
   torax.output_all_timeslices: true
 implementations:
   source:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.source_component"
   waveform_editor:
-    modules: Waveform-Editor
+    base_env: clean
+    modules: Waveform-Editor/0.3.1-intel-2025b
     executable: waveform-editor
     args: actor
   olc:
-    modules: IDS-Validator, IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u -m imas_muscle3.actors.olc_component
   sink:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
-    modules: NICE
-    executable: nice_imas_inv_muscle3
+    base_env: clean
+    modules: NICE/3.0.0-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+      IMAS_VERSION: "4.0.0"
+    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
   visualization_component:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u -m imas_muscle3.actors.visualization_component
   accumulator:
-    modules: IMAS-MUSCLE3
+    base_env: clean
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: "-u -m imas_muscle3.actors.accumulator_component"
   torax:
-    script: |
-      #!/bin/bash
-      module purge
-      module load Python
-      source [PWD_PLACEHOLDER]/run/TORAX-MUSCLE3/venv/bin/activate
-      export IMAS_VERSION="4.0.0"
-      export JAX_COMPILATION_CACHE_DIR="[PWD_PLACEHOLDER]/run/tmp/jax_cache"
-      python -u -m torax_muscle3.torax_actor
+    base_env: clean
+    modules: TORAX-MUSCLE3/0.1.2-intel-2025b-pds
+    env:
+      IMAS_VERSION: "4.0.0"
+      JAX_COMPILATION_CACHE_DIR: [PWD_PLACEHOLDER]/tmp/jax_cache
+      JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS: 0
+    executable: python
+    args: -u -m torax_muscle3.torax_actor
 
 resources:
   source:

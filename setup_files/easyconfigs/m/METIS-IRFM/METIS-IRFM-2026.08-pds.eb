@@ -1,0 +1,51 @@
+easyblock = 'Tarball'
+
+name = 'METIS-IRFM'
+version = '2026.08'
+versionsuffix = '-pds'
+
+homepage = 'https://git.iter.org/projects/SCEN/repos/metis'
+description = """METIS is a fast integrated tokamak simulator from CEA/IRFM,
+written in MATLAB. This module provides a shared checkout plus the dedicated
+Python environment its MUSCLE3 wrapper drives the manager through."""
+
+toolchain = SYSTEM
+
+dependencies = [
+    ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
+    ('MATLAB', '2023b-r5'),
+]
+
+sources = [{
+    'git_config': {
+        'url': 'ssh://git@git.iter.org/scen',
+        'repo_name': 'metis',
+        'commit': 'muscle3_develop',
+    },
+    'filename': 'metis-%(version)s.tar.gz',
+}]
+checksums = [None]
+
+postinstallcmds = [
+    'cd %(installdir)s && matlab -nodisplay -batch zineb_path',
+
+    'python -m venv %(installdir)s/muscle3_venv',
+    '%(installdir)s/muscle3_venv/bin/pip install --quiet "muscle3==0.10.0"',
+]
+
+sanity_check_paths = {
+    'files': ['muscle3_venv/bin/python', 'workflow/muscle3/mfile/metis4muscle3.m'],
+    'dirs': ['workflow/muscle3/mfile'],
+}
+
+sanity_check_commands = [
+    '%(installdir)s/muscle3_venv/bin/python -c '
+    '\'import libmuscle; assert libmuscle.__version__ == "0.10.0", libmuscle.__version__\'',
+]
+
+modextravars = {
+    'EBROOTMETIS': '%(installdir)s',
+    'DIR_METIS4MUSCLE3': '%(installdir)s/workflow/muscle3/mfile',
+}
+
+moduleclass = 'phys'

@@ -1,8 +1,5 @@
 set -euo pipefail # stop if anything doesn't work
 
-module load IMAS-Python
-module load IDStools/2.3.0
-
 SUMMARY_URI=$SOURCE_URI
 
 export IMAS_LOGLEVEL=WARNING

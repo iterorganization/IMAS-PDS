@@ -126,7 +126,7 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
     -I kept only the first 2 loops. The others are another more complicated representation of the vessel which we already have in wall.
     -added the resistivity by hand
     """
-    pf_passive = db_md_pf_passive.get("pf_passive")
+    pf_passive = db_md_pf_passive.get("pf_passive", autoconvert=False)
 
     # keep only the first 2
     tmp = pf_passive.loop
@@ -160,9 +160,9 @@ def preprocess_wall(db_out, db_md_wall):
     wallIn = db_md_wall.get("wall", autoconvert=False)
     wall = IDSFactory(version=DD_VERSION).wall()
     wall.ids_properties.homogeneous_time = 2  # static
-    wall.ids_properties.creation_date = datetime.datetime.now(
-        tz=datetime.timezone.utc
-    ).strftime("%y-%m-%d")
+    wall.ids_properties.creation_date = datetime.datetime.now(tz=datetime.UTC).strftime(
+        "%y-%m-%d"
+    )
     wall.description_2d.resize(1)
     wall.description_2d[0].type.index = 2
 

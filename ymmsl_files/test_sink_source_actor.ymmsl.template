@@ -1,28 +1,26 @@
-ymmsl_version: v0.1
-model:
-  name: test_sink_source_actor
-  components:
-    source_component:
-      implementation: source_component
-      ports:
-        o_i: [equilibrium_out]
-    sink_component:
-      implementation: sink_component
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source_component.equilibrium_out: sink_component.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+models:
+  test_sink_source_actor:
+    components:
+      source_component:
+        description: source
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out]
+      sink_component:
+        description: sink
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source_component.equilibrium_out: sink_component.equilibrium_in
 settings:
   source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
   sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_inv"
   sink_component.sink_mode: "w"
-implementations:
-  sink_component:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
-    args: -u -m imas_muscle3.actors.sink_component
-  source_component:
-    executable: [PWD_PLACEHOLDER]/run/IMAS-MUSCLE3/venv/bin/python
-    args: -u -m imas_muscle3.actors.source_component
 resources:
   source_component:
     threads: 1
