@@ -256,14 +256,23 @@ class Peer:
         channel is drained from `peer`'s cache (interpolated to this
         peer's next send point) and sent out. Marks this send as done.
 
+        If `peer` (the model supplying the data) is done, there is no
+        more real data coming from it -- any further messages would
+        just repeat its last cached value. Rather than tagging those
+        with our own unrelated next_timestamp (which would tell this
+        peer "more is coming" forever and never let it stop), this is
+        sent as the final message instead.
+
         Args:
             peer: The other peer, whose caches hold the data to send.
         """
         assert self.to_send is not None
+        done = peer.done()
+        next_timestamp = None if done else self.next
         for label, port in self.out_ports.items():
             t, data = peer.caches[label].get_data(self.to_send)
-            self.instance.send(port, Message(t, self.next, data))
-        self.to_send = self.next
+            self.instance.send(port, Message(t, next_timestamp, data))
+        self.to_send = None if done else self.next
 
     def get_state(self) -> dict[str, Any]:
         """Return the current state of this object as a MUSCLE-serializable dict"""
@@ -308,17 +317,19 @@ def main() -> None:
         b_in_ports = channel_ports(instance, Operator.S, "b_in")
         b_out_ports = channel_ports(instance, Operator.O_I, "b_out")
 
-        # if instance.resuming():
-        #     state = instance.load_snapshot().data
-        #     if state is not None:
-        #         a = Peer(instance, a_in_ports, a_out_ports, state['a'])
-        #         b = Peer(instance, b_in_ports, b_out_ports, state['b'])
-        # if instance.should_init():
-        #     # Receive initial messages and initialise state
-        #     a = Peer(instance, a_in_ports, a_out_ports)
-        #     b = Peer(instance, b_in_ports, b_out_ports)
-        a = Peer(instance, a_in_ports, a_out_ports)
-        b = Peer(instance, b_in_ports, b_out_ports)
+        state = None
+        if instance.resuming():
+            state = instance.load_snapshot().data
+
+        if instance.should_init():
+            # Fresh start, or resuming from a final snapshot: receive the
+            # initial messages as usual.
+            a = Peer(instance, a_in_ports, a_out_ports)
+            b = Peer(instance, b_in_ports, b_out_ports)
+        else:
+            # Resuming mid-loop: restore peer state instead of receiving.
+            a = Peer(instance, a_in_ports, a_out_ports, state["a"])
+            b = Peer(instance, b_in_ports, b_out_ports, state["b"])
 
         # Send and receive as needed
         while not a.done() or not b.done():
@@ -335,14 +346,15 @@ def main() -> None:
                 print("send b", a.rcvd, a.to_send, a.next, b.rcvd, b.to_send, b.next)
                 b.send(a)
 
-            # t_cur = min(a.rcvd, b.rcvd)
-            # if instance.should_save_snapshot(t_cur):
-            #     instance.save_snapshot(Message(
-            #             t_cur, data={'a': a.get_state(), 'b': b.get_state()}))
+            t_cur = min(a.rcvd, b.rcvd)
+            if instance.should_save_snapshot(t_cur):
+                instance.save_snapshot(
+                    Message(t_cur, data={"a": a.get_state(), "b": b.get_state()})
+                )
 
-        # t_cur = min(a.rcvd, b.rcvd)
-        # if instance.should_save_final_snapshot():
-        #     instance.save_final_snapshot(Message(t_cur))
+        t_cur = min(a.rcvd, b.rcvd)
+        if instance.should_save_final_snapshot():
+            instance.save_final_snapshot(Message(t_cur))
 
 
 if __name__ == "__main__":

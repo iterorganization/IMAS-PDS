@@ -14,7 +14,8 @@ imports:
 - from imas_muscle3 import implementation recorder_component
 - from imas_muscle3 import implementation passthrough_component
 - from lib.easybuild_programs import implementation waveform_editor
-- from lib.easybuild_programs import implementation torax
+# - from lib.easybuild_programs import implementation torax
+- from lib.local_programs import implementation torax
 - from lib.local_programs import implementation nice_evo_rd
 - from lib.local_programs import implementation temporal_coupler
 

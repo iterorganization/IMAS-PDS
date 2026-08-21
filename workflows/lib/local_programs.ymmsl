@@ -7,14 +7,14 @@ ymmsl_version: v0.2
 # and run with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
 
 programs:
-  source:      {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
-  sink:        {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
-  sink_source: {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
-  validator:   {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
-  recorder:    {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
-  iterator:    {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
+  source_component:      {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.source_component}
+  sink_component:        {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_component}
+  sink_source_component: {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.sink_source_component}
+  olc_component:         {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.olc_component}
+  recorder_component:    {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.recorder_component}
+  iterator_component:    {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.iterator_component}
   waveform_editor: {base_env: clean, virtual_env: $PDS_REPO/run/Waveform-Editor/venv, executable: waveform-editor, args: actor}
-  passthrough:  {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
+  passthrough_component: {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u -m imas_muscle3.actors.passthrough_component}
   temporal_coupler: {base_env: clean, virtual_env: $PDS_REPO/run/IMAS-MUSCLE3/venv, executable: python, args: -u $PDS_REPO/workflows/utils/temporal_coupler.py}
 
   nice_inv:

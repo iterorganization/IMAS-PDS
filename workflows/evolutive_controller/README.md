@@ -50,6 +50,14 @@ shared knobs when needed (105084's restricts the run to flattop only, see below)
 - `torax.fixed_dt` / `nice_evo_rd.t_interval` / `nice_evo_rd.dt` / `config_nice.xml`'s `<dt>`
   are all assumed to be a consistent 0.01s -- a starting point ported from `workflows/evolutive`'s
   default, not a value tuned for this scenario or validated for solver stability.
+- `nice_evo_rd.t_end` (optional, matches `torax.t_final`) bounds `nice_evo_rd`'s own run: once the
+  next coupling checkpoint would exceed it, the actor sends its final output with no
+  `next_timestamp` and stops, instead of running indefinitely off upstream signaling alone (see
+  `run/nice/src/main_imas_evo_rd_muscle3.cc`; same mechanism in `main_imas_evo_muscle3.cc` for the
+  non-RD evolutive actor). Left unset, it defaults to `+inf` (old behavior, unchanged). Without it,
+  once `torax` finishes at `t_final` and `nice_evo_rd` has no stopping condition of its own, the
+  coupled loop livelocks instead of terminating -- this is what `105084/settings.ymmsl` sets it
+  for.
 - `config_torax.py` assumes DINA's raw `core_sources` labels exactly one entry as ECRH: for
   105084 it has 15 source entries all with an empty `identifier.name`, and `waveforms.yaml`
   relabels only `source(1)` to `'ec'`, so TORAX's `sources_from_IMAS()` picks up exactly `ecrh`
