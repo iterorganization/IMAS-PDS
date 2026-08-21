@@ -12,6 +12,7 @@ toolchain = SYSTEM
 dependencies = [
     ('IMAS-Python', '2.3.0', '', ('intel', '2025b')),
     ('IMAS-MUSCLE3', '1.0.0', '-pds', ('intel', '2025b')),
+    ('ymmsl2svg', '0.1.0', '-pds', ('intel', '2025b')),
 ]
 
 skipsteps = ['sanitycheck']
