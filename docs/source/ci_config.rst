@@ -3,27 +3,20 @@
 CI configuration
 ================
 
-PDS uses `ITER Bamboo <https://ci.iter.org/>`_ for CI. This page provides an overview
-of the CI Plan and deployment projects.
-
-CI Plan
--------
-
-The `PDS CI plan <https://ci.iter.org/browse/IC-PYM>`_ consists of 3 types of jobs:
+PDS uses `GitHub Actions <https://docs.github.com/actions>`_ for linting and the
+documentation build, configured in ``.github/workflows/ci.yml``. It runs on every push
+to ``master`` and on every pull request, and has two jobs which run in sequence:
 
 Linting
-    Run ``ruff`` (format check, lint and import sorting) and ``ty`` on the PDS code
-    base. See :ref:`code style and linting`.
+    Runs ``ruff check``, ``ruff format --check`` and the ``ty`` type checker over the
+    repository. See :ref:`code style and linting`.
 
-    The CI script executed in this job is ``ci/linting.sh``.
 
-Build docs
-    This job builds the Sphinx documentation.
-
-    The CI script executed in this job is ``ci/build_docs.sh``.
+Docs
+    Builds the Sphinx documentation and uploads the rendered HTML as a build artifact.
+    ``docs/Makefile`` defaults ``SPHINXOPTS`` to ``-W --keep-going``, so any warning
+    fails the build both here and locally. This job runs only once linting has passed.
 
 Test workflows
-    This runs the actor-specific test workflows and the example ITER scenario workflows
-    end to end (see :ref:`available_workflows`).
-
-    The CI script executed in this job is ``ci/run_test_workflows.sh``.
+    
+    # TODO: Still to be migrated to GitHub Actions
