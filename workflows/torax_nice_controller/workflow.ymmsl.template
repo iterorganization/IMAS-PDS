@@ -4,10 +4,10 @@ imports:
 - from imas_muscle3 import implementation sink_component
 - from imas_muscle3 import implementation sink_source_component
 - from imas_muscle3 import implementation recorder_component
-- from lib.local_programs import implementation torax
-- from lib.local_programs import implementation nice_evo
-- from lib.local_programs import implementation magnetic_controller
-- from lib.local_programs import implementation temporal_coupler
+- from lib.easybuild_programs import implementation torax
+- from lib.easybuild_programs import implementation nice_evo
+- from lib.easybuild_programs import implementation magnetic_controller
+- from lib.easybuild_programs import implementation temporal_coupler
 models:
   magnetically_controlled_[SHOT_NR]:
     components:

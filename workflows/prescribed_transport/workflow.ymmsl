@@ -2,10 +2,10 @@ ymmsl_version: v0.2
 # Consolidated prescribed_transport workflow structure; no scenario data.
 # Also needs programs and settings from somewhere else.
 #
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
+# Programs come from lib.easybuild_programs (see workflows/lib/easybuild_programs.ymmsl);
 # resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# To override one actor (e.g. your own build), copy local_programs.ymmsl to
-# lib/local_programs_<yourname>.ymmsl and repoint just that actor's import here.
+# To override one actor (e.g. your own build), copy easybuild_programs.ymmsl to
+# lib/easybuild_programs_<yourname>.ymmsl and repoint just that actor's import here.
 #
 # Settings come from workflows/prescribed_transport/settings.ymmsl
 
@@ -13,8 +13,8 @@ imports:
 - from imas_muscle3 import implementation source_component
 - from imas_muscle3 import implementation sink_component
 - from imas_muscle3 import implementation recorder_component
-- from lib.local_programs import implementation waveform_editor
-- from lib.local_programs import implementation nice_inv
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation nice_inv
 models:
   prescribed_transport:
     components:

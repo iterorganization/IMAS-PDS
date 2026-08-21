@@ -2,7 +2,7 @@ ymmsl_version: v0.2
 imports:
 - from imas_muscle3 import implementation source_component
 - from imas_muscle3 import implementation sink_component
-- from lib.local_programs import implementation metis
+- from lib.easybuild_programs import implementation metis
 models:
   metis_from_dina_[SHOT_NR]:
     components:
