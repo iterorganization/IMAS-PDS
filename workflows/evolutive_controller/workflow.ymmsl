@@ -9,28 +9,28 @@ ymmsl_version: v0.2
 # Settings come from workflows/magnetic_control/settings.ymmsl
 
 imports:
-- from lib.local_programs import implementation source
-- from lib.local_programs import implementation waveform_editor
-- from lib.local_programs import implementation torax
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from imas_muscle3 import implementation passthrough_component
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation torax
 - from lib.local_programs import implementation nice_evo_rd
-- from lib.local_programs import implementation sink
-- from lib.local_programs import implementation recorder
 - from lib.local_programs import implementation temporal_coupler
-- from lib.local_programs import implementation passthrough
 
 models:
   evolutive_controller:
     components:
-      source:  {description: NICE-reconstructed equilibrium from a completed inverse_convergence run, implementation: source, ports: {o_i: [equilibrium_out]}}
+      source:  {description: NICE-reconstructed equilibrium from a completed inverse_convergence run, implementation: source_component, ports: {o_i: [equilibrium_out]}}
       waveform_editor: {description: waveform editor (passes through received equilibrium + assembles core_sources/core_profiles + static MD + coil-current seed from DINA), implementation: waveform_editor, ports: {f_init: [equilibrium_in], o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
       torax:   {description: transport (self-consistent ohmic + radiation; ECRH actuator imported via core_sources_in_f), implementation: torax, ports: {f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f], s: [equilibrium_in_s], o_i: [equilibrium_out_i, core_profiles_out_i]}}
       nice_evo_rd: {description: nice evolutive free-boundary + resistive-diffusion solve, implementation: nice_evo_rd, ports: {f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init, core_profiles_f_init], s: [equilibrium_s, pf_active_s, core_profiles_s], o_i: [equilibrium_o_i, pf_active_o_i]}}
       magnetic_controller: {description: PCSSP magnetic (SCDDS) controller, implementation: magnetic_controller, ports: {f_init: [equilibrium_in_f, pf_active_in_f], s: [equilibrium_in_s, pf_active_in_s], o_i: [pf_active_out_i]}}
-      sink_nice:       {description: sink nice, implementation: sink, ports: {f_init: [equilibrium_in, pf_active_in]}}
-      sink_torax:      {description: sink torax, implementation: sink, ports: {f_init: [equilibrium_in, core_profiles_in]}}
-      sink_controller: {description: sink controller, implementation: sink, ports: {f_init: [pf_active_in]}}
-      rec_nice:  {description: distill recorder (NICE evo_rd outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
-      rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder, ports: {s: [equilibrium_in, core_profiles_in]}}
+      sink_nice:       {description: sink nice, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
+      sink_torax:      {description: sink torax, implementation: sink_component, ports: {f_init: [equilibrium_in, core_profiles_in]}}
+      sink_controller: {description: sink controller, implementation: sink_component, ports: {f_init: [pf_active_in]}}
+      rec_nice:  {description: distill recorder (NICE evo_rd outputs), implementation: recorder_component, ports: {s: [equilibrium_in, pf_active_in]}}
+      rec_torax: {description: distill recorder (TORAX per-step outputs), implementation: recorder_component, ports: {s: [equilibrium_in, core_profiles_in]}}
       temporal_coupler: {description: temporal coupler between torax and nice_evo_rd equilibrium feedback loop (also carries torax's core_profiles onward to nice_evo_rd), implementation: temporal_coupler, ports: {s: [a_in_equilibrium, a_in_core_profiles, b_in_equilibrium], o_i: [a_out_equilibrium, b_out_equilibrium, b_out_core_profiles]}}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
