@@ -40,12 +40,9 @@ run_workflow_clean() {
 
 run_workflow_clean prescribed_transport 105084
 run_workflow_clean inverse_convergence 105084
+run_workflow_clean evolutive_controller 105084
 run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
 run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
-
-# TODO: torax_nice_controller / torax_nice_rd_controller
-# run_workflow_clean torax_nice_controller 105073
-# run_workflow_clean torax_nice_rd_controller 105073
 
 # TODO: metis_interpretative_nice_inverse_from_dina /
 # metis_predictive_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`
