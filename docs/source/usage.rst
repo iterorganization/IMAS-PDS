@@ -16,7 +16,7 @@ Most of these come straight from upstream easyconfigs -- see
 
 .. code-block:: bash
 
-  module use /home/ITER/dejongy/projects/modules/all  # or wherever build.sh installed it
+  module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
   module load PDS
 
 
@@ -30,7 +30,7 @@ These workflows can be used as a template for your own workflows.
 
   # generate runnable .ymmsl files from the .template sources
   bash setup_files/setup_test_files.sh
-  module use /home/ITER/dejongy/projects/modules/all
+  module use /home/ITER/blokhus/public/modules/all
   module load PDS
   # run test workflow of choice
   muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
@@ -44,7 +44,7 @@ pairing is a **case**, in ``cases/``, and the case is the only file you pass to 
 
 .. code-block:: bash
 
-  module use /home/ITER/dejongy/projects/modules/all
+  module use /home/ITER/blokhus/public/modules/all
   module load PDS
 
   export PDS_REPO=/path/to/pds

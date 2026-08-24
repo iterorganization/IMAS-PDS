@@ -10,7 +10,7 @@ These exercises are mostly relevant for developers.
 
 .. code-block:: console
 
-    module use /home/ITER/dejongy/projects/modules/all  # or wherever build.sh installed it
+    module use /home/ITER/blokhus/public/modules/all  # or wherever build.sh installed it
     module load PDS
     module load IDStools
 

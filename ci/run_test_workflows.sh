@@ -18,7 +18,7 @@ bash setup_files/setup_test_files.sh
 # --ignore_cache: Lmod's module cache doesn't necessarily know about a path added via
 # `module use` at runtime (especially on a CI agent that has never seen this path), and
 # reports it as "unknown" otherwise.
-module use "/home/ITER/dejongy/projects/modules/all"
+module use "/home/ITER/blokhus/public/modules/all"
 module --ignore_cache load PDS
 
 # RUN TEST FILES
@@ -60,7 +60,7 @@ run_case_clean() {
 # prescribed_transport and inverse_convergence are driven by cases/, which need a prepared
 # pds-scenarios checkout -- skipped when SCENARIOS_REPO is unset.
 #
-# They also need a patched muscle_manager: the cases name /home/ITER/dejongy/projects/pds//home/ITER/dejongy/projects/pds-scenarios and
+# They also need a patched muscle_manager: the cases name /home/ITER/blokhus/public/pds//home/ITER/blokhus/public/pds-scenarios and
 # stock muscle3 passes setting values through verbatim (see ci/patches/). Checked rather
 # than applied, since apply_patches.sh refuses to modify a read-only shared install.
 if [[ ! -d "${SCENARIOS_REPO:-}/105084/data/in" ]]; then

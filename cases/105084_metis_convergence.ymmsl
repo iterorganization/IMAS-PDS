@@ -28,13 +28,13 @@ resources:
 
 settings:
   # Scenario: the pulse design and its input data.
-  run.waveform_editor.waveforms: /home/ITER/dejongy/projects/pds-scenarios/105084/waveforms.yaml
-  run.we_final.waveforms: /home/ITER/dejongy/projects/pds-scenarios/105084/waveforms_md_only.yaml
-  run.source.source_uri: "imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105084/data/in"
+  run.waveform_editor.waveforms: /home/ITER/blokhus/public/pds-scenarios/105084/waveforms.yaml
+  run.we_final.waveforms: /home/ITER/blokhus/public/pds-scenarios/105084/waveforms_md_only.yaml
+  run.source.source_uri: "imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105084/data/in"
   run.source.iterative: False
   # METIS builds its input from pulse_schedule, which the transport hole does not carry.
   # data/metis_in is produced by tools/prepare --metis in the scenarios repo.
-  run.transport.source_ps.source_uri: "imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105084/data/metis_in"
+  run.transport.source_ps.source_uri: "imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105084/data/metis_in"
 
   # Convergence.
   run.loop.cold_start: False
@@ -45,8 +45,8 @@ settings:
 
   # Solvers. METIS sits one level deeper than TORAX did, because it is wrapped by the
   # lib/transport_metis submodel: `run.transport.metis`, not `run.transport`.
-  run.solve.nice.xml_path: /home/ITER/dejongy/projects/pds/workflows/lib/config_nice_inverse.xml
-  run.final_solve.nice.xml_path: /home/ITER/dejongy/projects/pds/workflows/lib/config_nice_inverse.xml
+  run.solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
+  run.final_solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
   run.final_solve.nice.output_for_control: 1
   run.transport.metis.metis_computation: 1
   run.transport.metis.metis_psioffset: 9.0
@@ -72,15 +72,15 @@ settings:
   # Recording.
   run.rec_nice.format: distill
   run.rec_nice.auto: False
-  run.rec_nice.config: /home/ITER/dejongy/projects/pds/visualization/nice_inv.py
-  run.rec_nice.md: "wall=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105084/data/in_md pf_active=imas:hdf5?path=/home/ITER/dejongy/projects/pds-scenarios/105084/data/in_md"
+  run.rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
+  run.rec_nice.md: "wall=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105084/data/in_md pf_active=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105084/data/in_md"
   run.rec_torax.format: distill
   run.rec_torax.auto: False
-  run.rec_torax.config: /home/ITER/dejongy/projects/pds/visualization/kinetic_profiles.py
+  run.rec_torax.config: /home/ITER/blokhus/public/pds/visualization/kinetic_profiles.py
 
   # Validation.
   run.validator.halt_on_error: False
-  run.validator.extra_rule_dirs: /home/ITER/dejongy/projects/pds/pds_validation_tests
+  run.validator.extra_rule_dirs: /home/ITER/blokhus/public/pds/pds_validation_tests
   run.validator.rulesets: iter-olc
   run.validator.apply_generic: False
 
