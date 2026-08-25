@@ -15,13 +15,11 @@ TORAX, whose evolved profiles and NICE's coil currents return to the loop. It co
 the max coil-current change between iterations drops below `loop.tolerance` (and
 `loop.rel_tolerance`).
 
-Once converged, a final pass (`we_final`, `final_solve`) re-runs
-NICE-inverse on the converged pf_active with `output_for_control` enabled to additionally
-emit a linear model (A, B, C matrices) for control design. An `imas-validator` actor
-(`validator`) checks the converged pf_active against the `iter-olc` ruleset.
+An `imas-validator` actor (`validator`) checks the converged pf_active against the
+`iter-olc` ruleset.
 
-Structure lives in `workflow.ymmsl`, which builds on `lib/design`; everything scenario- and
-run-specific lives in the case.
+Structure lives entirely in `workflow.ymmsl`; everything scenario- and run-specific lives
+in the case.
 
 ## Running it
 
@@ -56,8 +54,6 @@ Scenario data and waveform configs live in the separate `pds-scenarios` reposito
 - `loop.max_iterations` bounds the run regardless of whether `loop.tolerance` was reached --
   a run that hits the iteration cap without converging still produces output, so check the
   loop's own convergence log rather than assuming the presence of output means convergence.
-- The final linear-model pass assumes the last Picard iteration's pf_active is representative
-  enough to linearize around; it is not re-checked against the convergence tolerance itself.
 
 ## Input requirements
 
@@ -80,6 +76,3 @@ The sinks write into the run directory itself:
   `core_profiles` to `<run_dir>/out_torax`.
 - `rec_nice`/`rec_torax` write distilled copies of the NICE and TORAX output for the
   muscle3-dashboard (`visualization/nice_inv.py` / `visualization/kinetic_profiles.py`).
-- The final linear-model pass writes timestamped `linearModel_t<time>/` directories with
-  the A, B, C matrices for control design. NICE writes these itself rather than through a
-  sink, so they stay in `<run_dir>/instances/run.final_solve.nice/workdir/`.

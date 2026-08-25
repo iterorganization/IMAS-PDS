@@ -8,19 +8,73 @@ ymmsl_version: v0.2
 #   muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
 
 imports:
-- from lib.programs import implementation source
-- from lib.programs import implementation sink
-- from lib.programs import implementation recorder
-- from lib.programs import implementation waveform_editor
-- from lib.nice_inverse import implementation nice_inverse
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation nice_inv
+- from lib.easybuild_programs import implementation load_balancer
 
 models:
+  nice_inverse:
+    description: NICE inverse solve, load-balanced over N workers
+    ports:
+      f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+      o_f: [equilibrium_out_f, pf_active_out_f]
+    components:
+      load_balancer:
+        description: IMAS-aware NICE load balancer -- scatters slices, gathers results
+        implementation: load_balancer
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter]
+          s: [equilibrium_gather, pf_active_gather]
+          o_f: [equilibrium_out_f, pf_active_out_f]
+      nice:
+        description: NICE inverse worker
+        implementation: nice_inv
+        multiplicity: [1]
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      rec_nice:
+        description: distill recorder (NICE inverse outputs)
+        implementation: recorder_component
+        ports: {s: [equilibrium_in, pf_active_in]}
+    conduits:
+      # model input ports -> load balancer
+      equilibrium_in: load_balancer.equilibrium_in
+      wall_in: load_balancer.wall_in
+      pf_active_in: load_balancer.pf_active_in
+      pf_passive_in: load_balancer.pf_passive_in
+      iron_core_in: load_balancer.iron_core_in
+      # scatter to the workers
+      load_balancer.equilibrium_scatter: nice.equilibrium_in
+      load_balancer.wall_scatter: nice.wall_in
+      load_balancer.pf_active_scatter: nice.pf_active_in
+      load_balancer.pf_passive_scatter: nice.pf_passive_in
+      load_balancer.iron_core_scatter: nice.iron_core_in
+      # gather from the workers. rec_nice cannot be wired to nice.equilibrium_out
+      # directly: nice has multiplicity: [1], making it an instance set, and the
+      # generic recorder actor's receive_message() has no slot-addressing support --
+      # it can only connect to a genuine single-instance peer, which load_balancer is
+      # and the raw `nice` worker is not (confirmed by a real run: recording straight
+      # off `nice` fails with `KeyError: Reference("equilibrium.nice")`, because the
+      # manager only registers the indexed peer `equilibrium.nice[0]`).
+      nice.equilibrium_out: load_balancer.equilibrium_gather
+      nice.pf_active_out: load_balancer.pf_active_gather
+      # load balancer -> model output ports, and record the same gathered stream --
+      # rec_nice is inside this model, so this is a plain internal conduit rather than
+      # a port exposed across the model boundary.
+      load_balancer.equilibrium_out_f: [equilibrium_out_f, rec_nice.equilibrium_in]
+      load_balancer.pf_active_out_f: [pf_active_out_f, rec_nice.pf_active_in]
+
   prescribed_transport:
     description: Single-pass inverse solve against a prescribed boundary.
     components:
       source:
         description: source -- seeds the equilibrium trace
-        implementation: source
+        implementation: source_component
         ports: {o_i: [equilibrium_out]}
       waveform_editor:
         description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed)
@@ -28,29 +82,25 @@ models:
         ports:
           f_init: [equilibrium_in]
           o_f: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
-      solve:
-        description: NICE inverse solve (lib/nice_inverse submodel)
+      equilibrium:
+        description: NICE inverse solve (load-balanced over N workers)
         implementation: nice_inverse
         ports:
           f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-          o_f: [equilibrium_out, pf_active_out]
+          o_f: [equilibrium_out_f, pf_active_out_f]
       sink:
         description: sink -- writes the solved equilibrium and coil currents
-        implementation: sink
+        implementation: sink_component
         ports: {f_init: [equilibrium_in, pf_active_in]}
-      rec_nice:
-        description: distill recorder (NICE inverse outputs)
-        implementation: recorder
-        ports: {s: [equilibrium_in, pf_active_in]}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
-      waveform_editor.equilibrium_out: solve.equilibrium_in
-      waveform_editor.wall_out: solve.wall_in
-      waveform_editor.pf_active_out: solve.pf_active_in
-      waveform_editor.pf_passive_out: solve.pf_passive_in
-      waveform_editor.iron_core_out: solve.iron_core_in
-      solve.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
-      solve.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
+      waveform_editor.equilibrium_out: equilibrium.equilibrium_in
+      waveform_editor.wall_out: equilibrium.wall_in
+      waveform_editor.pf_active_out: equilibrium.pf_active_in
+      waveform_editor.pf_passive_out: equilibrium.pf_passive_in
+      waveform_editor.iron_core_out: equilibrium.iron_core_in
+      equilibrium.equilibrium_out_f: sink.equilibrium_in
+      equilibrium.pf_active_out_f: sink.pf_active_in
 
 # No `resources:` or `settings:` here: an imported file's are discarded, so both
 # live in the case instead. ci/check_ymmsl.py fails a case that omits them.

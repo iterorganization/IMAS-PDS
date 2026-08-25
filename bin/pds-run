@@ -17,7 +17,7 @@ export PDS_REPO
 gen=$(mktemp -d); trap 'rm -rf "$gen"' EXIT
 
 mkdir -p "$gen/lib"
-envsubst '/home/ITER/blokhus/public/pds ${SCEN} ${SHOT}' \
+envsubst '${PDS_REPO} ${SCEN} ${SHOT}' \
   < "$PDS_REPO/workflows/lib/local_programs.ymmsl" > "$gen/lib/local_programs.ymmsl"
 
 export YMMSL_PATH="$gen:$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
@@ -49,12 +49,12 @@ stack=()
 i=0
 for f in "$WF/workflow.ymmsl" "$WF/settings.ymmsl"; do
   out="$gen/$(printf '%02d_%s' "$i" "$(basename "$f")")"
-  envsubst '/home/ITER/blokhus/public/pds ${SCEN} ${SHOT}' < "$f" > "$out"
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$f" > "$out"
   stack+=("$out"); i=$((i + 1))
 done
 if [[ -f "$SCEN/settings.ymmsl" ]]; then
   out="$gen/$(printf '%02d_%s' "$i" "settings.ymmsl")"
-  envsubst '/home/ITER/blokhus/public/pds ${SCEN} ${SHOT}' < "$SCEN/settings.ymmsl" > "$out"
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$SCEN/settings.ymmsl" > "$out"
   stack+=("$out"); i=$((i + 1))
 fi
 
@@ -62,7 +62,7 @@ waveforms_src=""
 [[ -f "$SCEN/waveforms.yaml" ]] && waveforms_src="$SCEN/waveforms.yaml"
 [[ -z "$waveforms_src" ]] && [[ -f "$WF/waveforms.yaml" ]] && waveforms_src="$WF/waveforms.yaml"
 if [[ -n "$waveforms_src" ]]; then
-  envsubst '/home/ITER/blokhus/public/pds ${SCEN} ${SHOT}' < "$waveforms_src" > "$gen/waveforms.yaml"
+  envsubst '${PDS_REPO} ${SCEN} ${SHOT}' < "$waveforms_src" > "$gen/waveforms.yaml"
   printf 'ymmsl_version: v0.2\nsettings: {waveform_editor.waveforms: %s}\n' "$gen/waveforms.yaml" > "$gen/99_waveform_editor.ymmsl"
   stack+=("$gen/99_waveform_editor.ymmsl")
 fi

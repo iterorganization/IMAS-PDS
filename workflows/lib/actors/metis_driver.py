@@ -29,9 +29,9 @@ from ymmsl.v0_2 import Operator
 
 logger = logging.getLogger()
 
-# The design hole carries no pulse_schedule, so it comes from a source inside
-# lib/transport_metis.ymmsl -- and must be re-sent every call, since METIS re-reads its
-# inputs each reuse iteration.
+# The design graph carries no pulse_schedule, so it comes from a source inside the
+# `transport_metis` model (workflows/metis_convergence/workflow.ymmsl) -- and must be
+# re-sent every call, since METIS re-reads its inputs each reuse iteration.
 FWD_LANES = ["equilibrium", "core_profiles", "core_sources", "pulse_schedule"]
 RES_LANES = ["equilibrium", "core_profiles"]
 

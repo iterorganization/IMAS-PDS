@@ -11,7 +11,7 @@ ymmsl_version: v0.2
 # model.
 #
 # METIS emits one time slice per reuse iteration where the design loop expects a whole
-# trace; lib/transport_metis.ymmsl bridges the two with a driver actor.
+# trace; the `transport_metis` model bridges the two with a driver actor.
 
 imports:
 - from metis_convergence.workflow import implementation metis_convergence

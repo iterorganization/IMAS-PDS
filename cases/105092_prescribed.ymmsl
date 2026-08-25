@@ -12,16 +12,16 @@ imports:
 
 # Resources keys need the full root model name; settings keys do not (see docs/usage).
 resources:
-  prescribed_transport.workflow.prescribed_transport.solve.nice: {threads: 2}
-  prescribed_transport.workflow.prescribed_transport.rec_nice: {threads: 1}
+  prescribed_transport.workflow.prescribed_transport.equilibrium.nice: {threads: 2}
+  prescribed_transport.workflow.prescribed_transport.equilibrium.rec_nice: {threads: 1}
 
 settings:
   # Scenario: the pulse design and its input data.
   waveform_editor.waveforms: /home/ITER/blokhus/public/pds-scenarios/105092/waveforms_no_transport.yaml
   source.source_uri: "imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105092/data/in"
-  source.iterative: true
+  source.iterative: false
 
-  solve.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
+  equilibrium.nice.xml_path: /home/ITER/blokhus/public/pds/workflows/lib/config_nice_inverse.xml
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.
@@ -29,9 +29,9 @@ settings:
   sink.sink_mode: "w"
 
   # Recording.
-  rec_nice.format: distill
-  rec_nice.auto: False
-  rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
-  rec_nice.md: "wall=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105092/data/in_md pf_active=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105092/data/in_md"
+  equilibrium.rec_nice.format: distill
+  equilibrium.rec_nice.auto: False
+  equilibrium.rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
+  equilibrium.rec_nice.md: "wall=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105092/data/in_md pf_active=imas:hdf5?path=/home/ITER/blokhus/public/pds-scenarios/105092/data/in_md"
 
   muscle_remote_log_level: 'INFO'

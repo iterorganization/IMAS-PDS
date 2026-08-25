@@ -7,11 +7,21 @@ programs:
     executable: waveform-editor
     args: actor
 
+  # No base_env: clean here (unlike most of this file) -- these actors need $PDS_REPO,
+  # which a purge would take with it (see the note by loop/load_balancer/metis_driver
+  # below), and args is expanded in the actor's own shell, after any purge, so a
+  # module-only clean would leave args's $PDS_REPO empty even though virtual_env still
+  # resolves (that one is expanded by the manager itself).
+  #
+  # No `virtual_env:` either, unlike lib/local_programs.ymmsl's version of this actor:
+  # IMAS-MUSCLE3 is a plain EasyBuild PythonBundle install with no private venv of its own
+  # (unlike NICE/TORAX/Waveform-Editor's PDS-owned builds) -- `module load` puts numpy,
+  # muscle3, imas_muscle3, etc. on PYTHONPATH directly, so `unset PYTHONPATH` here would
+  # break the import rather than fix a conflict (there is no venv numpy to protect).
   temporal_coupler:
-    base_env: clean
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
-    args: -u $PDS_REPO/workflows/torax_nice_utils/temporal_coupler.py
+    args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
   metis:
     script: |
@@ -77,7 +87,16 @@ programs:
       # by hand, pointing at a per-user run/pcs checkout.
       export PCS_PATH="$EBROOTPCS"
       export CONTROLLER_PATH="$PDS_REPO/controllers"
-      exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));muscle_controller_NICE_IMAS_iter_init;"
+      # NICE's own runmatlab/muscle3/matlab_iter/ (added to the path by
+      # initNice4matlab.m below) ships its own, much older,
+      # different-port-signature muscle_controller_NICE_IMAS_iter_init.m, which
+      # shadows CONTROLLER_PATH's despite being added to the path first --
+      # confirmed on every NICE install, local and EasyBuild alike, and not
+      # something we can fix by removing that directory from the path (it also
+      # holds the Simulink .slx models the real controller loads by name). So
+      # `run()` it by full path instead of relying on name resolution to find
+      # the right one.
+      exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m'));"
 
   torax:
     base_env: clean
@@ -89,14 +108,19 @@ programs:
     executable: python
     args: -u -m torax_muscle3.torax_actor
 
+  # No base_env: clean and no virtual_env on these three either -- same reasons as
+  # temporal_coupler above.
   loop:
-    base_env: clean
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
-    args: -u $PDS_REPO/workflows/inverse_convergence/outer_convergence_loop.py
+    args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
 
   load_balancer:
-    base_env: clean
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
-    args: -u $PDS_REPO/workflows/inverse_convergence/nice_load_balancer.py
+    args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
+
+  metis_driver:
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/metis_driver.py

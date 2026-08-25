@@ -1,22 +1,24 @@
 ymmsl_version: v0.2
 # Consolidated magnetic_control workflow structure; no scenario data.
-# Also needs programs and settings from somewhere else.
+# Also needs settings from somewhere else.
 #
-# Programs come from lib.local_programs (see workflows/lib/local_programs.ymmsl);
-# resolve # with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run does this).
-# Swap to lib.easybuild_programs for EasyBuild-module-based implementations
+# Programs are mostly lib.easybuild_programs (EasyBuild-module-based), except
+# torax/nice_evo_rd and the imas_muscle3 actors (source/sink/recorder/passthrough
+# _component), which come from lib.local_programs -- this repo's own venv builds --
+# instead. Resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run
+# does this).
 #
-# Settings come from workflows/magnetic_control/settings.ymmsl
+# Settings come from workflows/evolutive_controller/settings.ymmsl
 
 imports:
-- from imas_muscle3 import implementation source_component
-- from imas_muscle3 import implementation sink_component
-- from imas_muscle3 import implementation recorder_component
-- from imas_muscle3 import implementation passthrough_component
-- from lib.easybuild_programs import implementation waveform_editor
-# - from lib.easybuild_programs import implementation torax
+- from lib.local_programs import implementation source_component
+- from lib.local_programs import implementation sink_component
+- from lib.local_programs import implementation recorder_component
+- from lib.local_programs import implementation passthrough_component
+- from lib.local_programs import implementation waveform_editor
 - from lib.local_programs import implementation torax
 - from lib.local_programs import implementation nice_evo_rd
+- from lib.local_programs import implementation magnetic_controller
 - from lib.local_programs import implementation temporal_coupler
 
 models:
@@ -55,28 +57,4 @@ models:
       nice_evo_rd.pf_active_o_i: [magnetic_controller.pf_active_in_s, sink_nice.pf_active_in, rec_nice.pf_active_in]
 
       magnetic_controller.pf_active_out_i: [nice_evo_rd.pf_active_s, sink_controller.pf_active_in]
-programs:
-  # Original pre-refactor inline definition (kept alongside lib.local_programs' version) --
-  # this one lives in $WF/workflow.ymmsl so bin/pds-run's envsubst expands $PDS_REPO before
-  # the manager ever parses it, unlike lib.local_programs.ymmsl which is loaded straight off
-  # YMMSL_PATH. Testing whether that difference (vs. the script: form in local_programs.ymmsl)
-  # matters for the silent early-exit issue.
-  magnetic_controller:
-    env:
-      PCS_PATH: $PDS_REPO/run/pcs
-      CONTROLLER_PATH: $PDS_REPO/controllers
-      SCDDS_COREPATH: $PDS_REPO/run/pcs/pcssp/scdds
-    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
-    executable: matlab
-    # Explicitly pyenv() at the repo-local muscle3-0.10.0 venv python, NOT `which python`:
-    # on this system that resolves to a stray user ~/.local muscle3-0.8.0 libmuscle install,
-    # which is wire-incompatible with the 0.10.0 manager every other actor here uses --
-    # produces a "socket closed while receiving" registration failure after MATLAB startup.
-    args: -batch "pyenv('Version','$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess');
-                  addpath(getenv('PCS_PATH'));
-                  run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m');
-                  pcssp_pcs_add_paths;
-                  comparisons.ExternalSCMLink.setupGitConfig();
-                  addpath(getenv('CONTROLLER_PATH'));
-                  muscle_controller_NICE_IMAS_iter_init;"
 resources: {torax: {threads: 8}, nice_evo_rd: {threads: 2}, magnetic_controller: {threads: 1}, rec_nice: {threads: 1}, rec_torax: {threads: 1}, temporal_coupler: {threads: 1}}

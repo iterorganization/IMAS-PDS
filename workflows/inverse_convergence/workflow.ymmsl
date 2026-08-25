@@ -2,19 +2,194 @@ ymmsl_version: v0.2
 
 # inverse_convergence -- inverse pulse design converged against TORAX transport.
 #
-# The full lib/design graph with nothing pruned. Run it by stacking a case, or use a
-# self-contained case that imports this model:
+# Run it by stacking a case, or use a self-contained case that imports this model:
 #
 #   muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
+#
+# Components:
+#
+#   equilibrium  nice_inverse      load-balanced NICE inverse solve
+#   transport    transport         transport co-simulation (TORAX only, for now)
+#
+# `nice_inverse` is a NICE inverse solve, load-balanced over N workers; `multiplicity`
+# cannot be overridden from a case, so every use shares one worker count.
+#
+# `equilibrium` and `transport` are each a thin single-implementation subworkflow so the
+# code behind them can be swapped later without touching the top-level model.
 
 imports:
-- from lib.design import implementation design
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from imas_muscle3 import implementation olc_component
+- from lib.easybuild_programs import implementation loop
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation torax
+- from lib.easybuild_programs import implementation nice_inv
+- from lib.easybuild_programs import implementation load_balancer
 
 models:
+  nice_inverse:
+    description: NICE inverse solve, load-balanced over N workers
+    ports:
+      f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+      o_f: [equilibrium_out, pf_active_out]
+    components:
+      load_balancer:
+        description: IMAS-aware NICE load balancer -- scatters slices, gathers results
+        implementation: load_balancer
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_i: [equilibrium_scatter, wall_scatter, pf_active_scatter, pf_passive_scatter, iron_core_scatter]
+          s: [equilibrium_gather, pf_active_gather]
+          o_f: [equilibrium_out_f, pf_active_out_f]
+      nice:
+        description: NICE inverse worker
+        implementation: nice_inv
+        multiplicity: [1]
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      rec_nice:
+        description: distill recorder (NICE inverse outputs)
+        implementation: recorder_component
+        ports: {s: [equilibrium_in, pf_active_in]}
+    conduits:
+      # model input ports -> load balancer
+      equilibrium_in: load_balancer.equilibrium_in
+      wall_in: load_balancer.wall_in
+      pf_active_in: load_balancer.pf_active_in
+      pf_passive_in: load_balancer.pf_passive_in
+      iron_core_in: load_balancer.iron_core_in
+      # scatter to the workers
+      load_balancer.equilibrium_scatter: nice.equilibrium_in
+      load_balancer.wall_scatter: nice.wall_in
+      load_balancer.pf_active_scatter: nice.pf_active_in
+      load_balancer.pf_passive_scatter: nice.pf_passive_in
+      load_balancer.iron_core_scatter: nice.iron_core_in
+      # gather from the workers. rec_nice cannot be wired to nice.equilibrium_out
+      # directly: nice has multiplicity: [1], making it an instance set, and the
+      # generic recorder actor's receive_message() has no slot-addressing support --
+      # it can only connect to a genuine single-instance peer, which load_balancer is
+      # and the raw `nice` worker is not (confirmed by a real run: recording straight
+      # off `nice` fails with `KeyError: Reference("equilibrium.nice")`, because the
+      # manager only registers the indexed peer `equilibrium.nice[0]`).
+      nice.equilibrium_out: load_balancer.equilibrium_gather
+      nice.pf_active_out: load_balancer.pf_active_gather
+      # load balancer -> model output ports, and record the same gathered stream --
+      # rec_nice is inside this model, so this is a plain internal conduit rather than
+      # a port exposed across the model boundary.
+      load_balancer.equilibrium_out_f: [equilibrium_out, rec_nice.equilibrium_in]
+      load_balancer.pf_active_out_f: [pf_active_out, rec_nice.pf_active_in]
+
+  transport:
+    description: transport co-simulation (TORAX only, for now)
+    ports:
+      f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+      o_i: [equilibrium_out_i, core_profiles_out_i]
+      o_f: [equilibrium_out_f, core_profiles_out_f]
+    components:
+      torax:
+        description: TORAX transport solve
+        implementation: torax
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+          o_i: [equilibrium_out_i, core_profiles_out_i]
+          o_f: [equilibrium_out_f, core_profiles_out_f]
+    conduits:
+      equilibrium_in_f: torax.equilibrium_in_f
+      core_profiles_in_f: torax.core_profiles_in_f
+      core_sources_in_f: torax.core_sources_in_f
+      torax.equilibrium_out_i: equilibrium_out_i
+      torax.core_profiles_out_i: core_profiles_out_i
+      torax.equilibrium_out_f: equilibrium_out_f
+      torax.core_profiles_out_f: core_profiles_out_f
+
   inverse_convergence:
     description: Inverse pulse design converged against TORAX transport.
     components:
-      run:
-        description: the design coupling
-        implementation: design
-        ports: {}   # design has no model ports; everything is internal
+      source:
+        description: source -- seeds the equilibrium and core_profiles traces
+        implementation: source_component
+        ports: {o_i: [equilibrium_out, core_profiles_out]}
+
+      loop:
+        description: outer convergence loop (SEL submodel)
+        implementation: loop
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f]
+          o_i: [equilibrium_out_i, core_profiles_out_i]
+          s: [pf_active_in_s, equilibrium_in_s, core_profiles_in_s]
+          o_f: [equilibrium_out_f, pf_active_out_f, core_profiles_out_f, equilibrium_target_out_f]
+
+      waveform_editor:
+        description: waveform editor (designed Ip/B0 + imported heating + static machine description + coil-current seed)
+        implementation: waveform_editor
+        ports:
+          f_init: [equilibrium_in, core_profiles_in]
+          o_f: [equilibrium_out, core_sources_out, core_profiles_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]
+
+      equilibrium:
+        description: NICE inverse solve (load-balanced over N workers)
+        implementation: nice_inverse
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+
+      transport:
+        description: transport co-simulation (TORAX only, for now)
+        implementation: transport
+        ports:
+          f_init: [equilibrium_in_f, core_profiles_in_f, core_sources_in_f]
+          o_i: [equilibrium_out_i, core_profiles_out_i]
+          o_f: [equilibrium_out_f, core_profiles_out_f]
+
+      sink_nice:
+        description: sink -- NICE inverse outputs
+        implementation: sink_component
+        ports: {f_init: [equilibrium_in, pf_active_in]}
+
+      sink_torax:
+        description: sink -- converged pulse
+        implementation: sink_component
+        optional: true
+        ports: {f_init: [equilibrium_in, pf_active_in, core_profiles_in]}
+
+      rec_torax:
+        description: distill recorder (TORAX per-step outputs)
+        implementation: recorder_component
+        optional: true
+        ports: {s: [equilibrium_in, core_profiles_in]}
+
+      validator:
+        description: imas-validator on the converged coil currents
+        implementation: olc_component
+        optional: true
+        ports: {f_init: [pf_active_in]}
+
+    conduits:
+      source.equilibrium_out: loop.equilibrium_in_f
+      source.core_profiles_out: loop.core_profiles_in_f
+
+      loop.equilibrium_out_i: waveform_editor.equilibrium_in
+      loop.core_profiles_out_i: waveform_editor.core_profiles_in
+
+      waveform_editor.equilibrium_out: equilibrium.equilibrium_in
+      waveform_editor.wall_out: equilibrium.wall_in
+      waveform_editor.pf_passive_out: equilibrium.pf_passive_in
+      waveform_editor.iron_core_out: equilibrium.iron_core_in
+      waveform_editor.pf_active_out: equilibrium.pf_active_in
+      waveform_editor.core_sources_out: transport.core_sources_in_f
+      waveform_editor.core_profiles_out: transport.core_profiles_in_f
+
+      equilibrium.equilibrium_out: [transport.equilibrium_in_f, sink_nice.equilibrium_in]
+      equilibrium.pf_active_out: [loop.pf_active_in_s, sink_nice.pf_active_in]
+
+      transport.equilibrium_out_i: rec_torax.equilibrium_in
+      transport.core_profiles_out_i: rec_torax.core_profiles_in
+      transport.equilibrium_out_f: loop.equilibrium_in_s
+      transport.core_profiles_out_f: loop.core_profiles_in_s
+
+      loop.equilibrium_out_f: sink_torax.equilibrium_in
+      loop.core_profiles_out_f: sink_torax.core_profiles_in
+      loop.pf_active_out_f: [sink_torax.pf_active_in, validator.pf_active_in]

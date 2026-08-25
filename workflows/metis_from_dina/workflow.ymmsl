@@ -4,20 +4,43 @@ ymmsl_version: v0.2
 #
 # Replaces metis_{interpretative,predictive}_from_dina. Which of those you get is decided
 # by the five metis_external_data_* settings in the case, not by this file.
+#
+# The NICE-inverse counterpart of this graph is metis_nice_inverse_from_dina/workflow.ymmsl
+# -- the two are identical except for the NICE branch.
 
 imports:
-- from lib.metis_dina import implementation metis_dina
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from lib.easybuild_programs import implementation metis
 
 models:
   metis_from_dina:
     description: METIS transport from DINA input.
     components:
-      run:
-        description: the METIS coupling, NICE branch pruned
-        implementation: metis_dina
-        ports: {}
+      source_metis:
+        description: source -- pulse schedule, profiles and sources for METIS
+        implementation: source_component
+        ports: {o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]}
 
-custom_implementations:
-  metis_from_dina.run.source_nice:      null
-  metis_from_dina.run.nice:            null
-  metis_from_dina.run.sink_nice:       null
+      metis:
+        description: METIS transport (coupling mode 2)
+        implementation: metis
+        ports:
+          f_init: [pulse_schedule_f_init, pulse_schedule_in_f, core_profiles_in_f, core_sources_in_f]
+          o_f: [equilibrium_out_f, pulse_schedule_out_f, plasma_profiles_out_f, plasma_sources_out_f, summary_out_f]
+
+      sink_metis:
+        description: sink -- METIS outputs
+        implementation: sink_component
+        ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
+
+    conduits:
+      source_metis.pulse_schedule_out: [metis.pulse_schedule_f_init, metis.pulse_schedule_in_f]
+      source_metis.core_profiles_out: metis.core_profiles_in_f
+      source_metis.core_sources_out: metis.core_sources_in_f
+
+      metis.equilibrium_out_f: sink_metis.equilibrium_in
+      metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
+      metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
+      metis.plasma_sources_out_f: sink_metis.plasma_sources_in
+      metis.summary_out_f: sink_metis.summary_in
