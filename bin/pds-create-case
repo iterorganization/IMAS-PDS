@@ -1,0 +1,103 @@
+#!/bin/bash
+# pds-create-case -- materialize a case folder for one workflow + scenario (shot).
+#
+#   pds-create-case <workflow> <shot> [case-dir]
+#   e.g. pds-create-case inverse_convergence 105084
+#        pds-create-case inverse_convergence 105084 /tmp/my-case
+#
+# Writes, under <case-dir> (default cases/<workflow>_<shot>), substituting
+# ${PDS_REPO}/${SCENARIOS_REPO}/${SHOT} in each file:
+#
+#   workflow.ymmsl           the workflow's structure
+#   workflow_settings.ymmsl  the workflow's generic settings (resources, solver defaults,
+#                            and the ${SHOT}-templated pds-scenarios data/waveform paths)
+#   scenario_settings.ymmsl  cases/overrides/<workflow>_<shot>.ymmsl, if it exists --
+#                            numeric tuning a shot needs beyond the generic template
+#                            (loop windows, a calibrated config_torax.py, ...)
+#   config/<name>            a local copy of every NICE/TORAX/recorder/waveform config file the
+#                             settings above point at (any *.xml_path, *.python_config_module,
+#                             *.config, or *.waveforms setting), with its own placeholders
+#                             resolved too -- the case is a frozen snapshot, not a live
+#                             reference to workflows/lib or pds-scenarios
+#
+# `lib/local_programs.ymmsl` is deliberately NOT copied in: its $PDS_REPO references are
+# plain shell text meant to be expanded by each actor's own shell at run time (see that
+# file's header), not by this script, so it is read straight from workflows/lib/ via
+# YMMSL_PATH instead (bin/pds-run and bin/pds-run-case.sbatch both set this).
+#
+# Prints <case-dir> on success. Does not run anything.
+set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "usage: pds-create-case <workflow> <shot> [case-dir]" >&2
+  exit 1
+fi
+
+PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+export PDS_REPO
+
+WF_NAME="$1"
+WF="$PDS_REPO/workflows/$WF_NAME"
+export SHOT="$2"
+export SCENARIOS_REPO="${SCENARIOS_REPO:-/home/ITER/blokhus/public/pds-scenarios}"
+OVERRIDE="$PDS_REPO/cases/overrides/${WF_NAME}_${SHOT}.ymmsl"
+CASE_DIR="${3:-$PDS_REPO/cases/${WF_NAME}_${SHOT}}"
+VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT}'
+
+[[ -d "$WF" ]] || { echo "pds-create-case: no workflow dir $WF" >&2; exit 1; }
+
+rm -rf "$CASE_DIR"
+mkdir -p "$CASE_DIR"
+
+CONFIG_KEY_RE='^[[:space:]]*[A-Za-z0-9_.]+\.(xml_path|python_config_module|config|waveforms):'
+
+# Config-like keys $1 sets, space-separated -- used so an earlier-stacked file's setting
+# isn't localized (and left cluttering config/) when a later file overrides the same key.
+config_keys() {
+  grep -oE "$CONFIG_KEY_RE" "$1" 2>/dev/null | sed -E 's/^[[:space:]]*//; s/:$//' | tr '\n' ' '
+}
+
+# Rewrite every *.xml_path/*.python_config_module/*.config/*.waveforms setting in $1 to
+# point at a local copy under config/, envsubst-ing the referenced file's own placeholders
+# (e.g. a workflow-owned waveforms.yaml template) as it's copied. Keys listed in $2 are
+# skipped -- a later-stacked file overrides them, so localizing this file's value would
+# just leave an unused decoy copy in config/.
+localize_configs() {
+  local file="$1" skip=" $2 " line indent key path out=()
+  # `|| [[ -n "$line" ]]`: read fails on the last line of a file with no trailing
+  # newline (workflow.ymmsl has none) even though it did read data -- without this,
+  # that last line is silently dropped.
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^([[:space:]]*)([A-Za-z0-9_.]+\.(xml_path|python_config_module|config|waveforms)):[[:space:]]*(.+)$ ]]; then
+      indent="${BASH_REMATCH[1]}"
+      key="${BASH_REMATCH[2]}"
+      path="${BASH_REMATCH[4]}"
+      if [[ "$skip" == *" $key "* ]]; then
+        :
+      elif [[ -f "$path" ]]; then
+        mkdir -p "$CASE_DIR/config"
+        envsubst "$VARS" < "$path" > "$CASE_DIR/config/$(basename "$path")"
+        line="${indent}${key}: $CASE_DIR/config/$(basename "$path")"
+      else
+        echo "pds-create-case: warning: $(basename "$file"): $key points at missing file $path" >&2
+      fi
+    fi
+    out+=("$line")
+  done < "$file"
+  printf '%s\n' "${out[@]}" > "$file"
+}
+
+add() {  # add <src-file> <dest-name> <keys-to-skip>
+  envsubst "$VARS" < "$1" > "$CASE_DIR/$2"
+  localize_configs "$CASE_DIR/$2" "$3"
+}
+
+WS_KEYS=""; OVERRIDE_KEYS=""
+[[ -f "$WF/settings.ymmsl" ]] && WS_KEYS="$(config_keys "$WF/settings.ymmsl")"
+[[ -f "$OVERRIDE" ]] && OVERRIDE_KEYS="$(config_keys "$OVERRIDE")"
+
+[[ -f "$WF/workflow.ymmsl" ]] && add "$WF/workflow.ymmsl" "workflow.ymmsl" "$WS_KEYS $OVERRIDE_KEYS"
+[[ -f "$WF/settings.ymmsl" ]] && add "$WF/settings.ymmsl" "workflow_settings.ymmsl" "$OVERRIDE_KEYS"
+[[ -f "$OVERRIDE" ]] && add "$OVERRIDE" "scenario_settings.ymmsl" ""
+
+echo "$CASE_DIR"

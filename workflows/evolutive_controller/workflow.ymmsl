@@ -57,4 +57,4 @@ models:
       nice_evo_rd.pf_active_o_i: [magnetic_controller.pf_active_in_s, sink_nice.pf_active_in, rec_nice.pf_active_in]
 
       magnetic_controller.pf_active_out_i: [nice_evo_rd.pf_active_s, sink_controller.pf_active_in]
-resources: {torax: {threads: 8}, nice_evo_rd: {threads: 2}, magnetic_controller: {threads: 1}, rec_nice: {threads: 1}, rec_torax: {threads: 1}, temporal_coupler: {threads: 1}}
+resources: {evolutive_controller.torax: {threads: 8}, evolutive_controller.nice_evo_rd: {threads: 2}, evolutive_controller.magnetic_controller: {threads: 1}, evolutive_controller.rec_nice: {threads: 1}, evolutive_controller.rec_torax: {threads: 1}, evolutive_controller.temporal_coupler: {threads: 1}}

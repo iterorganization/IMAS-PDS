@@ -10,7 +10,14 @@ logger = evalin('base','logger');
 
 % Holds the last accepted measurement across calls, for the output_flag=-1
 % case below (persists for the lifetime of the MATLAB session/model).
-persistent last_coils_current last_rgeo last_zgeo last_ip
+persistent last_coils_current last_rgeo last_zgeo last_ip last_t_out
+% Set once nice_evo_rd sends its final message (next_timestamp=None). The
+% Stop Simulation block this feeds only halts at the end of the current
+% step, so this same function still gets called again on a later step --
+% without this guard, that call tries to receive on the now-closed port and
+% crashes with "Port ... was closed while trying to receive on it" instead
+% of the simulation stopping cleanly (confirmed live).
+persistent finished
 
 t_out=0;
 stop_signal=0;
@@ -19,14 +26,26 @@ zgeo=0;
 ip=0;
 coils_current=zeros(14,1);
 
+if isequal(finished, true)
+    coils_current = last_coils_current;
+    rgeo = last_rgeo;
+    zgeo = last_zgeo;
+    ip = last_ip;
+    t_out = last_t_out;
+    stop_signal = 1;
+    return;
+end
+
 msg_eq = instance.receive("equilibrium_in_s");
 msg_pfa = instance.receive("pf_active_in_s");
 
 t_out = msg_eq.timestamp;
 t_next = msg_eq.next_timestamp;
+last_t_out = t_out;
 
 if isequal(t_next, py.None)
     stop_signal  = 1;
+    finished = true;
 end
 
 equilibrium_serial=uint8(msg_eq.data);

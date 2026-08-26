@@ -1,0 +1,23 @@
+ymmsl_version: v0.2
+# Flattop window for 105073 (t=80.0-130.0); MD_LAYOUT=combined needs its own waveforms.yaml
+# and BgB transport calibrated onto this shot's DINA trace needs its own config_torax.py --
+# same values as workflows/inverse_convergence/scenarios/105073 used, adapted for the
+# forward co-simulation's sources: block (see the config's own docstring).
+settings:
+  waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_waveforms.yaml
+  source.t_min: 80.0
+  source.t_max: 130.0
+  # out_nice's native NICE-solve grid doesn't land exactly on t_min; dt anchors the
+  # sampled grid at t_min instead of snapping forward to the next native timestamp
+  # (was landing on ~84.3 instead of 80.0). linear interpolation isn't viable here:
+  # NICE's reconstructed equilibrium has quantities whose shape (grid/boundary point
+  # counts) varies between timeslices, so IMAS core can't interpolate them elementwise
+  # ("Unable to perform interpolation with shape=0"). closest (the default) just picks
+  # the nearest whole slice instead.
+  source.dt: 1
+  torax.python_config_module: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_config_torax.py
+  torax.fixed_dt: 0.01
+  torax.t_final: 80.8
+  nice_evo_rd.dt: 0.01
+  nice_evo_rd.t_interval: 0.01
+  nice_evo_rd.t_end: 80.8

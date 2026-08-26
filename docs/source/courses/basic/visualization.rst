@@ -83,7 +83,7 @@ Running the workflow and opening the dashboard
 
 .. code-block:: console
 
-    bash workflows/run_case.sbatch 105084_prescribed
+    bash bin/run_case.sbatch 105084_prescribed
 
 ``run_case.sbatch`` pins the run directory to ``run/out/<case>``, so the output lands
 somewhere predictable. Then, in a separate terminal with the dashboard's own virtual

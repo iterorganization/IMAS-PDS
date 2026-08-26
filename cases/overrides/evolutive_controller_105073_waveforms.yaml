@@ -1,4 +1,6 @@
-# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap.
+# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap -- 105073
+# variant (MD_LAYOUT=combined: no separate data/in_md, input_md points at data/in too).
+# Same content as ../../workflows/evolutive_controller/waveforms.yaml otherwise.
 # `eq` (the one-shot `source` actor) is a NICE-reconstructed equilibrium, not raw DINA -- see
 # workflow.ymmsl's header comment for why TORAX's geometry builder needs that. `reconstruction:`
 # below passes it through whole (every field, not just the hand-picked ones); `state:`/
@@ -9,7 +11,7 @@ globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     eq: {port: equilibrium_in}
 
 # Static machine-description reference

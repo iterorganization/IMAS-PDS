@@ -86,6 +86,12 @@ programs:
       #!/bin/bash
       unset PYTHONPATH
       source $PDS_REPO/run/Waveform-Editor/venv/bin/activate
+      # Same as nice_inv/nice_evo_rd below: a multi-slice NICE-inverse equilibrium leaves
+      # grids_ggd (not itself time-varying) at shape (1,) while the rest of the IDS has
+      # one entry per slice, which IMAS's strict validator rejects as a coordinate
+      # mismatch on write/convert -- confirmed live passing a 17-slice bootstrap solve
+      # through evolutive_controller's waveform_editor.
+      export IMAS_AL_DISABLE_VALIDATE=1
       exec waveform-editor actor "$@"
 
   temporal_coupler:
@@ -163,25 +169,39 @@ programs:
   # on this system that resolves to a stray user ~/.local muscle3-0.8.0 libmuscle install,
   # which is wire-incompatible with the 0.10.0 manager every other actor here uses --
   # produces a "socket closed while receiving" registration failure after MATLAB startup.
+  # Unlike every other actor above, this one used to be the declarative env/modules/
+  # executable/args form -- but env: values are set directly by the manager (not run
+  # through a shell), so its $PDS_REPO never expanded: MATLAB's own getenv('PCS_PATH')
+  # came back with the literal string "$PDS_REPO/run/pcs", addpath resolved that as a
+  # relative path under the instance's workdir, and pcssp_pcs_add_paths (which that
+  # addpath was supposed to put on the path) came back "unrecognized function or
+  # variable". `export` lines in a script:, like every actor above, are expanded in the
+  # actor's own shell instead, so $PDS_REPO resolves correctly.
   magnetic_controller:
-    env:
-      PCS_PATH: $PDS_REPO/run/pcs
-      CONTROLLER_PATH: $PDS_REPO/controllers
-      SCDDS_COREPATH: $PDS_REPO/run/pcs/pcssp/scdds
-    modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
-    executable: matlab
-    # run() the controller by full path, not by name: NICE's own
-    # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
-    # below) ships its own, much older, different-port-signature
-    # muscle_controller_NICE_IMAS_iter_init.m, which shadows CONTROLLER_PATH's
-    # despite being added to the path first -- confirmed on every NICE
-    # install, local and EasyBuild alike, and not fixable by removing that
-    # directory from the path (it also holds the Simulink .slx models the
-    # real controller loads by name).
-    args: -batch "pyenv('Version','$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess');
-                  addpath(getenv('PCS_PATH'));
-                  run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m');
-                  pcssp_pcs_add_paths;
-                  comparisons.ExternalSCMLink.setupGitConfig();
-                  addpath(getenv('CONTROLLER_PATH'));
-                  run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m'));"
+    script: |
+      #!/bin/bash
+      module load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      module load MATLAB/2025b-r1-GCCcore-13.2.0
+      export PCS_PATH=$PDS_REPO/run/pcs
+      export CONTROLLER_PATH=$PDS_REPO/controllers
+      export SCDDS_COREPATH=$PDS_REPO/run/pcs/pcssp/scdds
+      # run() the controller by full path, not by name: NICE's own
+      # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
+      # below) ships its own, much older, different-port-signature
+      # muscle_controller_NICE_IMAS_iter_init.m, which shadows CONTROLLER_PATH's
+      # despite being added to the path first -- confirmed on every NICE
+      # install, local and EasyBuild alike, and not fixable by removing that
+      # directory from the path (it also holds the Simulink .slx models the
+      # real controller loads by name).
+      # try/catch + exit(1): a bare error inside -batch (especially one thrown from deep
+      # inside the py.* bridge, e.g. libmuscle's Instance() registration) can otherwise
+      # surface as a silent `exit code 0, never registered` with zero output -- indistinguishable
+      # from the script just not running. getReport() forces the real stack trace into
+      # stdout/stderr and exit(1) makes muscle3 report it as an actual crash instead.
+      #
+      # The whole try/catch/end MUST be one physical line: -batch feeds its argument to
+      # the parser more like sequential REPL input than a script file, so a newline
+      # anywhere between `try` and `end` fails immediately with "This statement is
+      # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
+      # above, which parse fine across multiple lines.
+      exec matlab -batch "try; pyenv('Version','$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"

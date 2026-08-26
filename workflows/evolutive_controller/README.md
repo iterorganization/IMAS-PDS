@@ -29,9 +29,30 @@ and `magnetic_controller`.
 A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.
 
-Structure lives in `workflow.ymmsl`; shared knobs in `settings.ymmsl`; per-scenario DINA source
-paths in `scenarios/<shot>/scenario_config.env`; `scenarios/<shot>/settings.ymmsl` overrides
-shared knobs when needed (105084's restricts the run to flattop only, see below).
+Structure lives in `workflow.ymmsl`; shared knobs (including a default `waveforms.yaml`
+template) in `settings.ymmsl`; per-shot solver timing (the flattop window genuinely differs
+per pulse, so has no sane generic default) in `cases/overrides/evolutive_controller_<shot>.ymmsl`
+(105084's restricts the run to flattop only, see below).
+
+## Running it
+
+Requires the scenario's data in `pds-scenarios` (see Input requirements below) and a
+completed `inverse_convergence` case run for the same shot (`bin/pds-create-case
+inverse_convergence <shot>` + `bin/pds-run-case.sbatch`, which writes to
+`run/out/inverse_convergence_<shot>/out_nice` -- this workflow's `source` reads from there).
+Then build a case folder and hand it to SLURM:
+
+```bash
+bin/pds-create-case evolutive_controller 105084       # -> cases/evolutive_controller_105084
+sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105084
+```
+
+`pds-create-case` stacks `workflow.ymmsl`, `settings.ymmsl` (resources, shared knobs), and
+`cases/overrides/evolutive_controller_<shot>.ymmsl` if it exists into numbered files under
+the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
+`run/out/<case>`. To run without SLURM, or without persisting a case folder, use
+`bin/pds-run evolutive_controller 105084` instead (this is what `run_job.sbatch` already
+did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
 
 ## Assumptions
 

@@ -1,0 +1,56 @@
+ymmsl_version: v0.2
+
+# Generic settings for inverse_convergence, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. A shot
+# needing different values (MD_LAYOUT=combined's own waveforms.yaml, a calibrated
+# config_torax.py, a narrower loop window, ...) overrides them via
+# cases/overrides/inverse_convergence_<shot>.ymmsl.
+
+resources:
+  inverse_convergence.equilibrium.nice: {threads: 2}
+  inverse_convergence.transport.torax: {threads: 8}
+  inverse_convergence.equilibrium.rec_nice: {threads: 1}
+  inverse_convergence.rec_torax: {threads: 1}
+
+settings:
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  waveform_editor.waveforms: ${PDS_REPO}/workflows/inverse_convergence/waveforms.yaml
+  source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  source.iterative: False
+  equilibrium.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+
+  # Convergence defaults; a scenario may override any of these.
+  loop.cold_start: False
+  loop.max_iterations: 2
+  loop.max_slices: 0
+  loop.tolerance: 1000.0
+  loop.rel_tolerance: 0.03
+
+  # Solvers.
+  equilibrium.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice_inverse.xml
+  transport.torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
+  transport.torax.output_all_timeslices: True
+  transport.torax.fixed_dt: 0.3
+
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  sink_nice.sink_uri: "imas:hdf5?path=../../../out_nice"
+  sink_nice.sink_mode: "w"
+  sink_torax.sink_uri: "imas:hdf5?path=../../../out_torax"
+  sink_torax.sink_mode: "w"
+
+  # Recording.
+  equilibrium.rec_nice.format: distill
+  equilibrium.rec_nice.auto: False
+  equilibrium.rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+  rec_torax.format: distill
+  rec_torax.auto: False
+  rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+
+  # Validation.
+  validator.halt_on_error: False
+  validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
+  validator.rulesets: iter-olc
+  validator.apply_generic: False
+
+  muscle_remote_log_level: 'INFO'

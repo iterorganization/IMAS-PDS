@@ -1,18 +1,15 @@
-# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap.
-# `eq` (the one-shot `source` actor) is a NICE-reconstructed equilibrium, not raw DINA -- see
-# workflow.ymmsl's header comment for why TORAX's geometry builder needs that. `reconstruction:`
-# below passes it through whole (every field, not just the hand-picked ones); `state:`/
-# `targets:` then overlay specific fields on top, same as inverse_convergence. `cp` (previously
-# a Picard-loop port there) is just this scenario's own DINA data here, so referenced directly
-# via `input` instead of a port.
+# Waveform-Editor configuration for inverse_convergence -- 105073 variant
+# (MD_LAYOUT=combined: no separate data/in_md, input_md points at data/in too). Same
+# content as ../../workflows/inverse_convergence/waveforms.yaml otherwise.
+
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     eq: {port: equilibrium_in}
+    cp: {port: core_profiles_in}
 
-# Static machine-description reference
 machine_description:
   wall/*:
     - {ref: input_md}
@@ -23,11 +20,6 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
-reconstruction:
-  equilibrium/*:
-    - {ref: eq}
-
-# Needed to kick-start NICE and TORAX
 state:
   equilibrium/time_slice/profiles_1d/psi:
     - {ref: eq}
@@ -36,23 +28,19 @@ state:
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
     - {ref: eq}
   core_profiles/global_quantities/v_loop:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/time:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/grid/rho_tor_norm:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/grid/psi:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/electrons/temperature:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/electrons/density:
-    - {ref: input}
+    - {ref: cp}
   core_profiles/profiles_1d/t_i_average:
-    - {ref: input}
-  core_profiles/profiles_1d/conductivity_parallel:
-    - {ref: input}
-  core_profiles/profiles_1d/j_non_inductive:
-    - {ref: input}
+    - {ref: cp}
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
@@ -74,6 +62,4 @@ targets:
   core_sources/source(1)/identifier/name:
     - {value: ec}
   pf_active/coil(*)/current/data:
-    - {ref: input}
-  pf_active/coil(*)/voltage/data:
     - {ref: input}

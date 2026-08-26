@@ -23,24 +23,29 @@ which the load balancer is and a multiplicity worker is not, even at multiplicit
 
 ## Running it
 
-```bash
-export PDS_REPO=/path/to/pds
-export SCENARIOS_REPO=/path/to/pds-scenarios
-export YMMSL_PATH=$PDS_REPO/workflows
-
-muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
-```
-
-Or via SLURM, which sets all of the above for you:
+Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-sbatch --time=00:20:00 --cpus-per-task=8 workflows/run_case.sbatch 105084_prescribed
+export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /home/ITER/blokhus/public/pds-scenarios
+
+bin/pds-create-case prescribed_transport 105084       # -> cases/prescribed_transport_105084
+sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
 ```
 
-Cases available: 105078, 105084, 105092, 105099 (`cases/<shot>_prescribed.ymmsl`).
+`pds-create-case` stacks `workflow.ymmsl`, this workflow's `settings.ymmsl` (resources,
+solver config, this workflow's own `waveforms_no_transport.yaml` pulse-design template, and
+the input DBEntry, all templated from `${SHOT}`), and
+`cases/overrides/prescribed_transport_<shot>.ymmsl` if it exists into numbered files under
+the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
+`run/out/<case>`. To run without SLURM, or without persisting a case folder, use
+`bin/pds-run prescribed_transport 105084` instead.
 
-Scenario data and waveform configs live in the separate `pds-scenarios` repository; see its
-`GENERATING.md` for how `data/` is produced from DINA and machine-description sources.
+Scenarios available: 105078, 105084, 105092, 105099.
+
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+pulse design (`waveforms_no_transport.yaml`) lives in this workflow's own directory, so it's
+versioned and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is
+produced from DINA and machine-description sources.
 
 ## Assumptions
 

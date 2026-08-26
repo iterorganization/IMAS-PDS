@@ -43,7 +43,7 @@ The workflow can be run by running the ``run_workflow.sh`` shell script.
    ``run_workflow.sh`` and the per-scenario ``scenarios/<shot>/tmp/`` output layout are the
    legacy invocation, kept for the workflows that have not been migrated yet. The exercises
    below use the migrated form instead: a **case** file in ``cases/``, run through
-   ``workflows/run_case.sbatch``. See :doc:`../../usage` for what a case is.
+   ``bin/run_case.sbatch``. See :doc:`../../usage` for what a case is.
 
 The shell script:
 
@@ -91,7 +91,7 @@ its own, before adding the extra complexity of a self-consistently coupled trans
 
         .. code-block:: console
 
-            bash workflows/run_case.sbatch 105092_prescribed
+            bash bin/run_case.sbatch 105092_prescribed
 
         Check if the results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to
@@ -131,7 +131,7 @@ calculated by NICE to a transport solve using TORAX.
 
         .. code-block:: console
 
-            bash workflows/run_case.sbatch 105092_convergence
+            bash bin/run_case.sbatch 105092_convergence
 
         Check if results look as expected using the visualization tool. The solved
         equilibrium and coil currents are written to

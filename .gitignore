@@ -26,20 +26,13 @@ run/*
 ymmsl_files/*
 !ymmsl_files/.*
 
-workflows/*/scenarios/*/*
-!workflows/*/scenarios/*/
-!workflows/*/scenarios/*/info.txt
-!workflows/*/scenarios/*/scenario_config.env
+# bin/pds-create-case materializes a case folder per <workflow>_<shot> under cases/, with
+# every path baked in absolute to this checkout -- not portable, so not committed. The
+# hand-authored cases/*.ymmsl (shared blokhus/public paths) and cases/overrides/*.ymmsl
+# (tracked, workflow-generic override templates) are unaffected.
+cases/*/
+!cases/overrides/
+
 !*.template
-
-# Per-scenario settings.ymmsl is a committed static file (the de-templated workflow style).
-!workflows/*/scenarios/*/settings.ymmsl
-
-# Per-scenario waveforms.yaml is a committed static file too.
-!workflows/*/scenarios/*/waveforms.yaml
-
-# Per-scenario config_torax.py overrides the workflow's shared config_torax.py (e.g.
-# scenario-specific transport calibration); also a committed static file.
-!workflows/*/scenarios/*/config_torax.py
 
 .claude

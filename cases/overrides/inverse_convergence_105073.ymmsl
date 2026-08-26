@@ -1,0 +1,12 @@
+ymmsl_version: v0.2
+# t_min/t_max trim the pulse to the interval this shot is designed over.
+#
+# Run this before the 105073 forward co-simulation cases: they start from this run's NICE
+# output, copied into the scenario's data/from_inverse_convergence.
+settings:
+  waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/inverse_convergence_105073_waveforms.yaml
+  loop.max_iterations: 5
+  loop.t_min: 10
+  loop.t_max: 205
+  transport.torax.python_config_module: ${PDS_REPO}/cases/overrides/inverse_convergence_105073_config_torax.py
+  equilibrium.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
