@@ -4,7 +4,7 @@ name = 'TORAX-MUSCLE3'
 version = '0.1.3'
 versionsuffix = '-pds'
 
-local_commit = 'fcbb89bf165a394d4a063148e2ba6baceba2fecc'
+local_commit = 'b4311d3b8cc202cf122109b205fa44f1031e1c36'
 
 homepage = 'https://github.com/iterorganization/TORAX-MUSCLE3'
 description = """MUSCLE3 actor wrapper around TORAX, a differentiable tokamak
@@ -18,7 +18,9 @@ sources = [{
         'repo_name': 'TORAX-MUSCLE3',
         'commit': local_commit,
     },
-    'filename': 'torax_muscle3-%(version)s.tar.gz',
+    # commit in the filename: EasyBuild resolves sources by name, so a
+    # commit-independent one silently reuses the cached tarball
+    'filename': 'torax_muscle3-%s.tar.gz' % local_commit[:10],
 }]
 checksums = [None]
 
