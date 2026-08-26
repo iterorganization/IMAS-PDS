@@ -50,7 +50,9 @@ def _fail(errors, msg):
     errors.append(msg)
 
 
-IMPORT_RE = re.compile(r"^\s*-\s*from\s+(\S+)\s+import\s+implementation\s+(\S+)", re.MULTILINE)
+IMPORT_RE = re.compile(
+    r"^\s*-\s*from\s+(\S+)\s+import\s+implementation\s+(\S+)", re.MULTILINE
+)
 
 
 def check_case(case: Path, errors: list) -> None:
