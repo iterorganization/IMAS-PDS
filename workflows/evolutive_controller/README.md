@@ -84,6 +84,11 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
   relabels only `source(1)` to `'ec'`, so TORAX's `sources_from_IMAS()` picks up exactly `ecrh`
   and nothing else (see the comment in `config_torax.py`). Re-check this for any other shot
   before trusting its self-consistent ohmic/radiation numbers.
+- `magnetic_controller`'s MATLAB script points `pyenv()` explicitly at
+  `$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
+  (`which python`): PATH can resolve to an unrelated Python with its own muscle3 install,
+  which breaks registration silently if that muscle3 is wire-incompatible with the 0.10.0
+  manager every other actor here runs against.
 
 ## Input requirements
 
@@ -105,71 +110,4 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
 equilibrium/pf_active, TORAX's evolved profiles, and the controller's corrected pf_active,
 respectively (see `settings.ymmsl`), with `rec_nice`/`rec_torax` distilling the NICE and TORAX
 output for the muscle3-dashboard. In practice the workflow has not yet run to completion --
-see Status below for how far it currently gets.
-
-### Status
-
-Environment verified locally: `nice_imas_evo_rd_muscle3` is built and runs cleanly (correct
-libs once the `NICE/3.0.0-intel-2023b-DD-4.1.0` module is loaded), and `run/pcs`+`pcssp`
-(including its `scdds` submodule) are checked out and up to date.
-
-Run repeatedly end-to-end against 105084 (flattop-restricted, `t_min=25 t_max=250`), fixing
-real bugs found each time (each confirmed via gdb backtraces on the actual segfaults, not
-guessed):
-
-1. **`magnetic_controller`'s `pyenv` picked up the wrong muscle3.** Its MATLAB script used
-   `unix('which python')` to find a Python for `pyenv()`; on this system that resolves to a
-   stray user `~/.local` install of **muscle3 0.8.0**, wire-incompatible with the 0.10.0
-   manager every other actor here runs against (a `pip show muscle3` confirms the mismatch).
-   Symptom: registration failed after ~2 minutes of MATLAB startup with `SocketClosed: Socket
-   closed while receiving` in `instance._register`. Fixed by pointing `pyenv()` explicitly at
-   `$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python` instead of relying on `PATH`.
-2. **`source` couldn't supply everything from one directory.** The original design read all of
-   `source`'s F_INIT ports from a single directory that didn't have all the needed IDSs.
-   Fixed by adding a `waveform_editor` (Waveform-Editor) actor that assembles the F_INIT
-   message: static machine description, core_profiles and ECRH come from this scenario's own
-   DINA data; equilibrium comes from `source`, which -- per item 3 below -- has to be
-   NICE-reconstructed data, not raw DINA.
-3. **TORAX's F_INIT geometry needs a real reconstructed equilibrium.** Feeding it raw DINA (via
-   `waveform_editor`) crashed TORAX's geometry builder with `IndexError: index -1 is out of
-   bounds ... size 0` (`R_major_profile` from empty `r_inboard`/`r_outboard`). Verified DINA
-   never populates the flux-surface quantities (`r_inboard`/`r_outboard`/`gm1`/`gm2`/`gm3`/
-   `gm7`/`gm9`/`dvolume_dpsi`/`j_phi`) TORAX's `geometry_from_single_IMAS_slice` requires --
-   only a real Grad-Shafranov solve (NICE) computes them, confirmed by inspecting
-   `inverse_convergence`'s `_out_nice` (has all of them) against DINA's raw equilibrium (has
-   none). Fixed by pointing `source` at a completed `inverse_convergence` run's `_out_nice` and
-   adding the wildcard passthrough in `waveform_editor`'s `waveforms.yaml` (item 2) so the full
-   equilibrium survives `waveform_editor`.
-4. **`nice_evo_rd` segfaulted in `ReadDataEvolutiveProblemWithRD`** (confirmed via gdb:
-   `core_profiles.profiles_1d(0).conductivity_parallel(i)` at `nice_imas.cc:9277`, no bounds/size
-   check) because `waveform_editor`'s core_profiles bootstrap never set `conductivity_parallel` (or
-   `j_non_inductive`). Fixed by adding both to `waveforms.yaml`'s `state:` section, sourced from
-   DINA's raw core_profiles (which has them).
-5. **`nice_evo_rd` segfaulted again in the same function**, this time on
-   `pf_active.coil(i).voltage.data(0)`: the `supply`-based branch is guarded with a
-   `.size() > 0` check but the `coil` fallback branch isn't, and the static machine description
-   (`_in_md`) has empty `voltage.data` per coil (only DINA's raw `_in` has real values). Fixed
-   by adding `pf_active/coil(*)/voltage/data: {ref: input}` to `waveforms.yaml`.
-
-**Still crashing** as of the last run: a *third* segfault, now inside NICE's own solver
-internals rather than IDS field access -- gdb backtrace shows `SIGSEGV` in a `memmove` inside
-`Solver::_ComputeCurrents()`, called from `_OutputDataFullEquiEvolutionSpecific` ->
-`_OutputDataFullEqui` -> `OutputDataEqui`, itself called from `niceEvoP1withRD` (i.e. this
-happens on NICE's first real evolutive step, past the F_INIT bootstrap). Coil/circuit counts in
-the machine description look consistent with `config_nice.xml`'s `n_coil_group_index`/
-`n_group_current_index`/etc. (14 coils, 14 supplies) at a glance, but the actual mismatched
-buffer size feeding that `memmove` hasn't been identified -- this requires reading
-`Solver::_ComputeCurrents()`'s implementation in `run/nice/src/nice_imas.cc` (or an equivalent
-solver source file) rather than another IDS-field guess. `workflow.ymmsl`'s `nice_evo_rd`
-program can be temporarily wrapped with
-`gdb -batch -ex run -ex "bt full" --args <binary> "$@"` (as used for the fixes above) to
-continue this from where it left off.
-
-### Still open (once the crash above is resolved)
-
-- No `validator` (olc) actor is wired in, unlike `inverse_convergence` -- straightforward to
-  add later if useful for a time-evolving (not single-final-slice) coil-current check.
-- The overall run has not yet reached a real TORAX<->NICE<->controller exchange cycle (the
-  crash above happens on NICE's very first evolutive step, before it ever sends back to
-  TORAX) -- so none of the coupling's actual runtime behavior (timestep stability, controller
-  response, dt matching) has been observed yet.
+see Status below for the current known limitation.

@@ -1,7 +1,3 @@
-# Waveform-Editor configuration for inverse_convergence -- 105073 variant
-# (MD_LAYOUT=combined: no separate data/in_md, input_md points at data/in too). Same
-# content as ../../workflows/inverse_convergence/waveforms.yaml otherwise.
-
 globals:
   dd_version: 4.0.0
   imports:

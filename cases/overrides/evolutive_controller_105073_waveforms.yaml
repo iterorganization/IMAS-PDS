@@ -1,12 +1,3 @@
-# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap -- 105073
-# variant (MD_LAYOUT=combined: no separate data/in_md, input_md points at data/in too).
-# Same content as ../../workflows/evolutive_controller/waveforms.yaml otherwise.
-# `eq` (the one-shot `source` actor) is a NICE-reconstructed equilibrium, not raw DINA -- see
-# workflow.ymmsl's header comment for why TORAX's geometry builder needs that. `reconstruction:`
-# below passes it through whole (every field, not just the hand-picked ones); `state:`/
-# `targets:` then overlay specific fields on top, same as inverse_convergence. `cp` (previously
-# a Picard-loop port there) is just this scenario's own DINA data here, so referenced directly
-# via `input` instead of a port.
 globals:
   dd_version: 4.0.0
   imports:

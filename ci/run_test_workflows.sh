@@ -28,7 +28,7 @@ module --ignore_cache load PDS
 run_actor_test_clean() {
   local test_name="$1"
   rm -rf "cases/runs/$test_name"
-  mkdir "cases/runs/$test_name"
+  mkdir -p "cases/runs/$test_name"
   muscle_manager --start-all --run-dir "cases/runs/$test_name" "ymmsl_files/$test_name.ymmsl"
 }
 
@@ -52,20 +52,11 @@ run_workflow_clean() {
   bash run_workflow.sh "$workflow" "$scenario" "$@"
 }
 
-# bin/pds-create-case + bin/pds-run-case.sbatch is the same path a real sbatch submission
-# would take (module loading, case/run-dir placement) -- use it here too instead of
-# duplicating that logic. pds-create-case prints the case dir it wrote; pds-run-case.sbatch
-# clears that case's own run/out/<case> dir itself before running, so a rerun cannot fail on
-# a leftover instances/ dir.
 run_case_clean() {
   local workflow="$1" shot="$2"
   bash bin/pds-run-case.sbatch "$(bin/pds-create-case "$workflow" "$shot")"
 }
 
-# 105073 has a validated cases/overrides/ pair for inverse_convergence + evolutive_controller
-# (the latter needs the former's out_nice for the same shot, so run inverse_convergence
-# first); prescribed_transport needs a shot with a separate data/in_md (105073 is
-# MD_LAYOUT=combined -- see workflows/prescribed_transport/README.md's scenario list).
 run_case_clean prescribed_transport 105099
 run_case_clean inverse_convergence 105073
 run_case_clean evolutive_controller 105073

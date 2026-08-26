@@ -1,8 +1,4 @@
 ymmsl_version: v0.2
-# t_min/t_max trim the pulse to the interval this shot is designed over.
-#
-# Run this before the 105073 forward co-simulation cases: they start from this run's NICE
-# output, copied into the scenario's data/from_inverse_convergence.
 settings:
   waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/inverse_convergence_105073_waveforms.yaml
   loop.max_iterations: 5

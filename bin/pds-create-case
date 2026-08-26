@@ -20,11 +20,6 @@
 #                             resolved too -- the case is a frozen snapshot, not a live
 #                             reference to workflows/lib or pds-scenarios
 #
-# `lib/local_programs.ymmsl` is deliberately NOT copied in: its $PDS_REPO references are
-# plain shell text meant to be expanded by each actor's own shell at run time (see that
-# file's header), not by this script, so it is read straight from workflows/lib/ via
-# YMMSL_PATH instead (bin/pds-run and bin/pds-run-case.sbatch both set this).
-#
 # Prints <case-dir> on success. Does not run anything.
 set -euo pipefail
 
