@@ -26,14 +26,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      # TODO: reenable type checking
-      # - name: Install the project
-      #   run: |
-      #     uv sync --all-extras
-      #
-      # - name: Run ty type checker
-      #   run: |
-      #     uv run ty check .
+      - name: Install the project
+        run: |
+          uv sync --all-extras
+
+      - name: Run ty type checker
+        run: |
+          uv run ty check .
 
   docs:
     runs-on: ubuntu-latest
