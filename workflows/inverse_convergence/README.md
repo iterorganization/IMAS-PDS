@@ -26,7 +26,7 @@ in the case.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /home/ITER/blokhus/public/pds-scenarios
+export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
 
 bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_convergence_105084
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084

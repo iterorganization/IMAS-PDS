@@ -18,7 +18,7 @@ bash setup_files/setup_test_files.sh
 # --ignore_cache: Lmod's module cache doesn't necessarily know about a path added via
 # `module use` at runtime (especially on a CI agent that has never seen this path), and
 # reports it as "unknown" otherwise.
-module use "/home/ITER/blokhus/public/modules/all"
+module use "/work/projects/pds/modules/all"
 module --ignore_cache load PDS
 
 # RUN TEST FILES

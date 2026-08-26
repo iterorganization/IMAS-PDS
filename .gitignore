@@ -26,10 +26,6 @@ run/*
 ymmsl_files/*
 !ymmsl_files/.*
 
-# bin/pds-create-case materializes a case folder per <workflow>_<shot> under cases/, with
-# every path baked in absolute to this checkout -- not portable, so not committed. The
-# hand-authored cases/*.ymmsl (shared blokhus/public paths) and cases/overrides/*.ymmsl
-# (tracked, workflow-generic override templates) are unaffected.
 cases/*/
 !cases/overrides/
 

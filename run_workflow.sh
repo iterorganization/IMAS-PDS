@@ -43,8 +43,8 @@ shift 2
 export EXTRA_ARGS=("$@")
 
 # ---- module environment ---------------------------------------
-[[ -n "${PDS_REPO:-}" ]] || error "PDS module not loaded. Run 'module use /home/ITER/blokhus/public/modules/all && module load PDS' first (see setup_files/easyconfigs/p/PDS/)."
-[[ "$PDS_REPO" == "$PWD" ]] || error "PDS_REPO ($PDS_REPO) does not match \$PWD ($PWD). Run 'module use /home/ITER/blokhus/public/modules/all && module load PDS' from this checkout's root."
+[[ -n "${PDS_REPO:-}" ]] || error "PDS module not loaded. Run 'module use /work/projects/pds/modules/all && module load PDS' first (see setup_files/easyconfigs/p/PDS/)."
+[[ "$PDS_REPO" == "$PWD" ]] || error "PDS_REPO ($PDS_REPO) does not match \$PWD ($PWD). Run 'module use /work/projects/pds/modules/all && module load PDS' from this checkout's root."
 
 export SCENARIO_CONFIG="$SUBDIR/scenario_config.env"
 source $SCENARIO_CONFIG

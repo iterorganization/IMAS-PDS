@@ -38,7 +38,7 @@ CASE_DIR="$CASE_ARG"
 export YMMSL_PATH="$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 
 if [[ -z "${MANAGER:-}" ]]; then
-  : "${PDS_MODULEPATH:=/home/ITER/blokhus/public/modules/all}"
+  : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
   if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
     LMOD_INIT="/usr/share/lmod/lmod/init/bash"
     if [[ -f "$LMOD_INIT" ]]; then

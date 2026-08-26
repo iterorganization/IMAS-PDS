@@ -51,7 +51,7 @@ a file always has to exist:
 .. code-block:: yaml
 
     settings:
-      rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
+      rec_nice.config: /work/projects/pds/pds/visualization/nice_inv.py
 
 The config file defines the extraction logic in one of two ways: a plain
 ``def extract(ids) -> dict[str, xarray.Dataset]`` function if you only need to
@@ -181,7 +181,7 @@ Exercise 1: automatic mode
         .. code-block:: yaml
 
             settings:
-              rec_nice.config: /home/ITER/blokhus/public/pds/visualization/auto_explore.py
+              rec_nice.config: /work/projects/pds/pds/visualization/auto_explore.py
               rec_nice.automatic_extract: true
               rec_nice.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
 
@@ -224,7 +224,7 @@ Exercise 2: an explicit extract method
         .. code-block:: yaml
 
             settings:
-              rec_nice.config: /home/ITER/blokhus/public/pds/visualization/nice_inv.py
+              rec_nice.config: /work/projects/pds/pds/visualization/nice_inv.py
 
         In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the
         existing ``ip_beta_tor`` dataset:

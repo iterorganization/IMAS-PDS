@@ -39,7 +39,7 @@ export PDS_REPO
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
 export SHOT="$2"
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/home/ITER/blokhus/public/pds-scenarios}"
+export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 OVERRIDE="$PDS_REPO/cases/overrides/${WF_NAME}_${SHOT}.ymmsl"
 CASE_DIR="${3:-$PDS_REPO/cases/${WF_NAME}_${SHOT}}"
 VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT}'
