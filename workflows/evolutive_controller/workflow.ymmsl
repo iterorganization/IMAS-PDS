@@ -11,13 +11,13 @@ ymmsl_version: v0.2
 # Settings come from workflows/evolutive_controller/settings.ymmsl
 
 imports:
-- from lib.local_programs import implementation source_component
-- from lib.local_programs import implementation sink_component
-- from lib.local_programs import implementation recorder_component
-- from lib.local_programs import implementation passthrough_component
-- from lib.local_programs import implementation waveform_editor
-- from lib.local_programs import implementation torax
-- from lib.local_programs import implementation nice_evo_rd
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from imas_muscle3 import implementation passthrough_component
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation torax
+- from lib.easybuild_programs import implementation nice_evo_rd
 - from lib.local_programs import implementation magnetic_controller
 - from lib.local_programs import implementation temporal_coupler
 
