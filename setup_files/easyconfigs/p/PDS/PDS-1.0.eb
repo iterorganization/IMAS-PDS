@@ -54,7 +54,7 @@ end
 -- against it, and the first symptom is otherwise a missing case file from a job that
 -- already waited in the queue.
 if not isFile(pathJoin(pds_repo, marker)) then
-  LmodError("PDS_REPO=" .. pds_repo .. " is not a PDS checkout (no " .. marker .. ").\n" ..
+  LmodError("PDS_REPO=" .. pds_repo .. " is not a PDS checkout (no " .. marker .. ").\\n" ..
             "Export PDS_REPO or cd into a checkout before loading this module.")
 end
 
