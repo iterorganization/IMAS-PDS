@@ -17,13 +17,13 @@ Exits non-zero if anything differs, so it can be used as a gate in a script.
 Comparison walks the whole IDS via imas.util.idsdiffgen rather than a hand-picked field
 list, so a difference in a field nobody thought to check still fails the run.
 """
+
 import argparse
 import sys
 
-import numpy as np
-
 import imas
 import imas.util
+import numpy as np
 
 DEFAULT_IDS = ("equilibrium", "pf_active", "core_profiles", "core_sources", "summary")
 
@@ -60,10 +60,11 @@ def magnitude(v1, v2):
     d = np.abs(a - b)
     if not d.size:
         return None
-    scale = np.where(np.maximum(np.abs(a), np.abs(b)) == 0, 1.0,
-                     np.maximum(np.abs(a), np.abs(b)))
+    scale = np.where(
+        np.maximum(np.abs(a), np.abs(b)) == 0, 1.0, np.maximum(np.abs(a), np.abs(b))
+    )
     abs_d = float(np.max(d))
-    if np.isnan(abs_d):        # one side unfilled, or the physics went NaN
+    if np.isnan(abs_d):  # one side unfilled, or the physics went NaN
         return None
     return abs_d, float(np.max(d / scale))
 
@@ -95,8 +96,10 @@ def compare_ids(ref, new, name, rtol, atol, max_report, all_fields):
         note = f" ({skipped} run-varying field(s) skipped)" if skipped else ""
         return 0, [f"  {name:<16} equal{note}"]
 
-    lines = [f"  {name:<16} {diffs} DIFFERENT field(s)"
-             + (f", worst max|d|={worst_abs:.6g} rel={worst_rel:.6g}" if worst_abs else "")]
+    lines = [
+        f"  {name:<16} {diffs} DIFFERENT field(s)"
+        + (f", worst max|d|={worst_abs:.6g} rel={worst_rel:.6g}" if worst_abs else "")
+    ]
     lines += shown
     if diffs > len(shown):
         lines.append(f"    ... and {diffs - len(shown)} more")
@@ -104,16 +107,22 @@ def compare_ids(ref, new, name, rtol, atol, max_report, all_fields):
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description=__doc__,
-                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("reference")
     p.add_argument("new")
-    p.add_argument("--ids", help="comma-separated IDS names (default: the usual PDS set)")
+    p.add_argument(
+        "--ids", help="comma-separated IDS names (default: the usual PDS set)"
+    )
     p.add_argument("--rtol", type=float, default=0.0)
     p.add_argument("--atol", type=float, default=0.0)
     p.add_argument("--max-report", type=int, default=20)
-    p.add_argument("--all-fields", action="store_true",
-                   help="also compare creation_date/provider, which vary per run")
+    p.add_argument(
+        "--all-fields",
+        action="store_true",
+        help="also compare creation_date/provider, which vary per run",
+    )
     args = p.parse_args()
 
     names = args.ids.split(",") if args.ids else list(DEFAULT_IDS)
@@ -130,9 +139,9 @@ def main() -> int:
             try:
                 ref = ref_e.get(name)
             except Exception:
-                continue                      # not written by this workflow
+                continue  # not written by this workflow
             if not len(getattr(ref, "time", [])) and not len(getattr(ref, "coil", [])):
-                continue                      # present but empty
+                continue  # present but empty
             compared += 1
             try:
                 new = new_e.get(name)
@@ -140,8 +149,9 @@ def main() -> int:
                 total += 1
                 print(f"{name}: MISSING from the new run ({e})")
                 continue
-            n, lines = compare_ids(ref, new, name, args.rtol, args.atol,
-                                   args.max_report, args.all_fields)
+            n, lines = compare_ids(
+                ref, new, name, args.rtol, args.atol, args.max_report, args.all_fields
+            )
             total += n
             print("\n".join(lines))
 

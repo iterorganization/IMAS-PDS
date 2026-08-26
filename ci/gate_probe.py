@@ -23,13 +23,17 @@ workflow the full dotted import path.
 
 Re-run on the target install to confirm before relying on it.
 """
+
 import sys
 from pathlib import Path
 
 import ymmsl
-from ymmsl.v0_2 import Configuration, Reference  # 0.16 does not re-export these top level
-from ymmsl.v0_2.resolver import resolve
 from libmuscle.manager.hammer import flatten
+from ymmsl.v0_2 import (
+    Configuration,
+    Reference,
+)  # 0.16 does not re-export these top level
+from ymmsl.v0_2.resolver import resolve
 
 DEFAULT = Path(__file__).parent / "gate_probe.ymmsl"
 
@@ -53,7 +57,9 @@ def main() -> int:
 
     print("\n1. INSTANCE NAMES -- the prefix your case setting keys need")
     cfg = load(src)
-    print(f"   custom_implementations after resolve(): {dict(cfg.custom_implementations)}")
+    print(
+        f"   custom_implementations after resolve(): {dict(cfg.custom_implementations)}"
+    )
     print("   (empty => the resolver consumes them; flatten() never sees them)")
     cfg.check_consistent(check_runnable=False)
     flat = flatten(cfg).root_model()
@@ -91,8 +97,10 @@ def main() -> int:
         got = getattr(res, "threads", res)
         note = "  <-- USE THIS" if got == 7 else "  (silently ignored, default 1)"
         print(f"   {form:22s} -> threads={got}{note}")
-    print(f"   (root model here is '{model.name}': module name + model name. For a case "
-          f"that\n    imports its workflow that is the full dotted import path.)")
+    print(
+        f"   (root model here is '{model.name}': module name + model name. For a case "
+        f"that\n    imports its workflow that is the full dotted import path.)"
+    )
 
     return 0
 

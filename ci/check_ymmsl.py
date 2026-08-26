@@ -26,6 +26,7 @@ declares it in a `# workflow: <name>` comment header (stacked, two files).
 
 Usage:  python ci/check_ymmsl.py [--scenarios <dir>]
 """
+
 import argparse
 import os
 import re
@@ -33,12 +34,12 @@ import sys
 from pathlib import Path
 
 import ymmsl
+from libmuscle.manager.hammer import flatten
 from ymmsl.v0_2 import Configuration, Reference
 from ymmsl.v0_2.resolver import resolve
-from libmuscle.manager.hammer import flatten
 
 REPO = Path(__file__).resolve().parent.parent
-WORKFLOW_RE = re.compile(r"^#\s*workflow:\s*(\S+)", re.M)
+WORKFLOW_RE = re.compile(r"^#\s*workflow:\s*(\S+)", re.MULTILINE)
 # globals and machine_description are required; state/targets are not -- an
 # MD-only scenario (feeding a NICE branch with no design of its own) has neither.
 WAVEFORM_REQUIRED = {"globals", "machine_description"}
@@ -49,7 +50,7 @@ def _fail(errors, msg):
     errors.append(msg)
 
 
-IMPORT_RE = re.compile(r"^\s*-\s*from\s+(\S+)\s+import\s+implementation\s+(\S+)", re.M)
+IMPORT_RE = re.compile(r"^\s*-\s*from\s+(\S+)\s+import\s+implementation\s+(\S+)", re.MULTILINE)
 
 
 def check_case(case: Path, errors: list) -> None:
@@ -65,16 +66,21 @@ def check_case(case: Path, errors: list) -> None:
 
     if self_contained:
         cfg = ymmsl.load_as(Configuration, case)
-    else:  # noqa: RET505 -- mirrors the two ways the manager can be invoked
+    else:
         m = WORKFLOW_RE.search(text)
         if not m:
-            _fail(errors, f"{case.name}: neither imports a workflow nor declares one in "
-                          f"a '# workflow: <name>' header, so it cannot be paired")
+            _fail(
+                errors,
+                f"{case.name}: neither imports a workflow nor declares one in "
+                f"a '# workflow: <name>' header, so it cannot be paired",
+            )
             return
         wf = REPO / "workflows" / m.group(1) / "workflow.ymmsl"
         if not wf.exists():
-            _fail(errors, f"{case.name}: names workflow '{m.group(1)}', but {wf} "
-                          f"does not exist")
+            _fail(
+                errors,
+                f"{case.name}: names workflow '{m.group(1)}', but {wf} does not exist",
+            )
             return
         cfg = ymmsl.load_as(Configuration, wf)
         cfg.update(ymmsl.load_as(Configuration, case))
@@ -91,8 +97,11 @@ def check_case(case: Path, errors: list) -> None:
         missing.update(m.group(0) for m in ENV_VAR_RE.finditer(expanded))
         cfg.settings[name] = expanded
     if missing:
-        _fail(errors, f"{case.name}: undefined environment variable(s) in settings: "
-                      f"{', '.join(sorted(missing))}")
+        _fail(
+            errors,
+            f"{case.name}: undefined environment variable(s) in settings: "
+            f"{', '.join(sorted(missing))}",
+        )
         return
 
     # Reference([]) is what muscle_manager passes. Do not use the filename: case names
@@ -106,8 +115,11 @@ def check_case(case: Path, errors: list) -> None:
 
     roots = [str(m.name) for m in cfg._root_models()]
     if len(roots) != 1:
-        _fail(errors, f"{case.name}: expected exactly one root model, got {roots} -- "
-                      f"muscle_manager would need -m/--model to disambiguate")
+        _fail(
+            errors,
+            f"{case.name}: expected exactly one root model, got {roots} -- "
+            f"muscle_manager would need -m/--model to disambiguate",
+        )
         return
     root = roots[0]
 
@@ -129,9 +141,12 @@ def check_case(case: Path, errors: list) -> None:
     # `resources`/`settings`, so a self-contained case must carry them. Silent when wrong:
     # the component just gets 1 thread.
     if self_contained and not cfg.resources:
-        _fail(errors, f"{case.name}: imports its workflow but declares no `resources:`. "
-                      f"An imported file's resources are discarded, so every component "
-                      f"will silently get 1 thread.")
+        _fail(
+            errors,
+            f"{case.name}: imports its workflow but declares no `resources:`. "
+            f"An imported file's resources are discarded, so every component "
+            f"will silently get 1 thread.",
+        )
 
     def resolves(key: str) -> bool:
         """True if some instance is a prefix of key -- mirrors get_setting's walk."""
@@ -158,8 +173,10 @@ def check_case(case: Path, errors: list) -> None:
         if key not in wanted:
             hint = ""
             if key in instances:
-                hint = (f" Did you mean '{root}.{key}'? Resources keys are NOT "
-                        f"prefix-matched the way settings keys are.")
+                hint = (
+                    f" Did you mean '{root}.{key}'? Resources keys are NOT "
+                    f"prefix-matched the way settings keys are."
+                )
             _fail(
                 errors,
                 f"{case.name}: resources key '{key}' is not '{{root}}.{{instance}}' -- that "
@@ -170,14 +187,23 @@ def check_case(case: Path, errors: list) -> None:
     check_waveform_ports(cfg, flat.root_model(), case.name, errors)
 
     kind = "self-contained" if self_contained else "stacked"
-    print(f"ok  {case.name} [{kind}] -> {root}: {len(instances)} instances, "
-          f"{len(flat.root_model().conduits)} conduits")
+    print(
+        f"ok  {case.name} [{kind}] -> {root}: {len(instances)} instances, "
+        f"{len(flat.root_model().conduits)} conduits"
+    )
 
 
 # Settings naming an input that must already exist. Outputs (sink_uri) are excluded --
 # they are created by the run.
-INPUT_SUFFIXES = (".waveforms", ".xml_path", ".python_config_module", ".config",
-                  ".extra_rule_dirs", ".source_uri", ".md")
+INPUT_SUFFIXES = (
+    ".waveforms",
+    ".xml_path",
+    ".python_config_module",
+    ".config",
+    ".extra_rule_dirs",
+    ".source_uri",
+    ".md",
+)
 
 
 def check_input_paths(cfg, case_name, errors: list) -> None:
@@ -203,8 +229,11 @@ def check_input_paths(cfg, case_name, errors: list) -> None:
             if not path.startswith("/"):
                 continue  # relative: resolved at run time against the instance work dir
             if not Path(path).exists():
-                _fail(errors, f"{case_name}: setting '{key}' names "
-                              f"'{path}', which does not exist")
+                _fail(
+                    errors,
+                    f"{case_name}: setting '{key}' names "
+                    f"'{path}', which does not exist",
+                )
 
 
 def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
@@ -241,11 +270,14 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
             for w in content
         }
         for port in ports[instance]:
-            ids = port[: -len("_out")] if port.endswith("_out") else port
+            ids = port.removesuffix("_out")
             if ids not in produced:
-                _fail(errors, f"{case_name}: '{instance}' declares output port "
-                              f"'{port}', but {path.name} produces no '{ids}' IDS "
-                              f"(it produces {sorted(produced)})")
+                _fail(
+                    errors,
+                    f"{case_name}: '{instance}' declares output port "
+                    f"'{port}', but {path.name} produces no '{ids}' IDS "
+                    f"(it produces {sorted(produced)})",
+                )
 
         # And the reverse: every port-import the config reads from must be an input port
         # on this instance. The exporter builds every IDS the config mentions, so an
@@ -258,11 +290,14 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
         }
         missing_in = sorted(needed - in_ports.get(instance, set()))
         if missing_in:
-            _fail(errors, f"{case_name}: {path.name} imports from port(s) "
-                          f"{missing_in}, but '{instance}' has no such input port "
-                          f"(it has {sorted(in_ports.get(instance, set()))}). The editor "
-                          f"resolves every import in the config, so this fails at run "
-                          f"time with \"no IDS received on import port\".")
+            _fail(
+                errors,
+                f"{case_name}: {path.name} imports from port(s) "
+                f"{missing_in}, but '{instance}' has no such input port "
+                f"(it has {sorted(in_ports.get(instance, set()))}). The editor "
+                f"resolves every import in the config, so this fails at run "
+                f'time with "no IDS received on import port".',
+            )
 
 
 def check_lib_ports(errors: list) -> None:
@@ -278,7 +313,8 @@ def check_lib_ports(errors: list) -> None:
                     wired.add(str(c.receiving_port()))
             declared = {
                 str(p)
-                for p in model.ports.receiving_port_names() + model.ports.sending_port_names()
+                for p in model.ports.receiving_port_names()
+                + model.ports.sending_port_names()
             }
             for orphan in sorted(declared - wired):
                 _fail(
@@ -298,12 +334,18 @@ def check_scenarios(scenarios: Path, errors: list) -> None:
         rel = wf_yaml.relative_to(scenarios)
         missing = WAVEFORM_REQUIRED - set(doc)
         if missing:
-            _fail(errors, f"{rel}: missing top-level key(s) {sorted(missing)} -- a "
-                          f"mangled comment can swallow one; check the raw YAML")
+            _fail(
+                errors,
+                f"{rel}: missing top-level key(s) {sorted(missing)} -- a "
+                f"mangled comment can swallow one; check the raw YAML",
+            )
         stray = set(doc.get("globals", {})) - {"dd_version", "imports"}
         if stray:
-            _fail(errors, f"{rel}: unexpected keys inside globals: {sorted(stray)} -- "
-                          f"these have almost certainly fallen out of another block")
+            _fail(
+                errors,
+                f"{rel}: unexpected keys inside globals: {sorted(stray)} -- "
+                f"these have almost certainly fallen out of another block",
+            )
         if not missing and not stray:
             print(f"ok  {rel}: shape")
 

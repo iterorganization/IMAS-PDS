@@ -24,7 +24,7 @@ imports:
 - from imas_muscle3 import implementation olc_component
 - from lib.easybuild_programs import implementation loop
 - from lib.easybuild_programs import implementation waveform_editor
-- from lib.local_programs import implementation torax
+- from lib.easybuild_programs import implementation torax
 - from lib.easybuild_programs import implementation nice_inv
 - from lib.easybuild_programs import implementation load_balancer
 

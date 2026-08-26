@@ -202,8 +202,9 @@ def main() -> None:
 
         # A pruned `transport` hole leaves these S ports unconnected, and receiving on an
         # unconnected port blocks forever.
-        transport_connected = (
-            inst.is_connected("equilibrium_in_s") and inst.is_connected("core_profiles_in_s"))
+        transport_connected = inst.is_connected(
+            "equilibrium_in_s"
+        ) and inst.is_connected("core_profiles_in_s")
 
         for it in range(max_iter):
             # --- O_I: emit the full pulse (no receives yet) ---
@@ -220,7 +221,9 @@ def main() -> None:
             if not transport_connected:
                 # Nothing to iterate against: NICE has solved the prescribed boundary
                 # once, so keep `target`/`cp` and stop after this pass.
-                logger.info("no transport connected: single pass, emitting the design target")
+                logger.info(
+                    "no transport connected: single pass, emitting the design target"
+                )
                 break
 
             torax_eq = inst.receive("equilibrium_in_s").data
