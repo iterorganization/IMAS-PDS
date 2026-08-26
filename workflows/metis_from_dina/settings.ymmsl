@@ -1,0 +1,47 @@
+ymmsl_version: v0.2
+
+# Generic settings for metis_from_dina, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run-case.sbatch. ${SHOT} is filled in by pds-create-case.
+#
+# source_metis reads METIS's own input dataset, which this workflow's preprocess.sh builds
+# from this shot's raw DINA source into ${CASE_DIR}/preprocess/metis_in, once, at
+# bin/pds-create-case time (METIS's IMAS DD layout is workflow-specific, so nothing pre-bakes
+# it into pds-scenarios).
+#
+# Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
+# from DINA). A shot needing interpretative mode (DINA profiles/sources fed in as external
+# data) overrides the five metis_external_data_* settings via
+# cases/overrides/metis_from_dina_<shot>.ymmsl.
+
+resources:
+  metis_from_dina.source_metis: {threads: 1}
+  metis_from_dina.sink_metis: {threads: 1}
+  metis_from_dina.metis: {threads: 10}
+
+settings:
+  source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  sink_metis.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_metis.sink_mode: "w"
+
+  metis.metis_computation: 1
+  # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
+  # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script).
+  metis.metis_psioffset: 9.0
+
+  # METIS switches for reading external data from the received IDSs -- predictive defaults,
+  # all off. See cases/overrides/metis_from_dina_<shot>.ymmsl for an interpretative shot.
+  metis.metis_external_data_equilibrium: 0
+  metis.metis_external_data_current_diffusion: 0
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  metis.metis_external_data_LHCD: 0
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI: 0
+  metis.metis_external_data_PLINE: 0
+  metis.metis_external_data_runaway: 0
+
+  muscle_remote_log_level: 'INFO'

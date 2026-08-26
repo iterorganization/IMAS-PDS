@@ -39,7 +39,7 @@ input DBEntry, all templated from `${SHOT}`), and
 for MD_LAYOUT=combined shots, a calibrated `config_torax.py`, a narrower loop window --
 whatever a shot needs beyond the generic template) into numbered files under the case
 folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
-`run/out/<case>`. To run without SLURM, or without persisting a case folder, use
+`cases/runs/<case>`. To run without SLURM, or without persisting a case folder, use
 `bin/pds-run inverse_convergence 105084` instead.
 
 Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_literal` (same

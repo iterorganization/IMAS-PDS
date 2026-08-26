@@ -60,16 +60,5 @@ run_case_clean() {
 run_case_clean prescribed_transport 105099
 run_case_clean inverse_convergence 105073
 run_case_clean evolutive_controller 105073
-
-# TODO: metis workflows aren't migrated to bin/pds-create-case/bin/pds-run-case.sbatch yet
-# (still workflow.ymmsl.template + create_runnable_files.sh/run_simulation.sh); re-add a
-# metis case here once that migration happens.
-
-# run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
-# run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
-
-# TODO: metis_{interpretative,predictive}_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`,
-# which nothing writes. METIS's psioffset calibration constant for the NICE-coupled case
-# needs real physics input, so these stay out of CI until it exists.
-# run_workflow_clean metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
-# run_workflow_clean metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
+run_case_clean metis_from_dina 105099
+run_case_clean metis_nice_inverse_from_dina 105099

@@ -19,8 +19,36 @@
 #                             *.config, or *.waveforms setting), with its own placeholders
 #                             resolved too -- the case is a frozen snapshot, not a live
 #                             reference to workflows/lib or pds-scenarios
+#   case.env                  WF_NAME (provenance) / SHOT -- bin/pds-run-case.sbatch sources
+#                             this for SHOT, which postprocess.sh needs at run time, without
+#                             re-deriving it from the case-dir name (which may be custom, via $3)
+#   postprocess.sh             a local copy of workflows/<workflow>/postprocess.sh, if it
+#                             exists -- like everything else here, the case is a frozen
+#                             snapshot, so bin/pds-run-case.sbatch runs $CASE_DIR/postprocess.sh
+#                             rather than reaching back into workflows/
+#   env.sh                     a local copy of workflows/<workflow>/env.sh, if it exists --
+#                             bin/pds-run-case.sbatch sources it before starting
+#                             muscle_manager, for a run-wide env var an imported (not
+#                             lib.easybuild_programs-defined) implementation needs and can
+#                             only get by inheriting the manager's own environment (its `env:`
+#                             can't be added locally -- ymmsl overlays replace a same-named
+#                             implementation wholesale, not field-by-field), e.g.
+#                             IMAS_AL_DISABLE_VALIDATE for source_component/sink_component --
+#                             see workflows/metis_from_dina/env.sh
+#   preprocess/               if workflows/<workflow>/preprocess.sh exists, it's run here
+#                             (once, not on every bin/pds-run-case.sbatch) with PDS_REPO/
+#                             SCENARIOS_REPO/SHOT/CASE_DIR, and expected to write its output
+#                             under $CASE_DIR/preprocess/ -- e.g. a workflow-specific input
+#                             dataset that can't be pre-baked into pds-scenarios, see
+#                             workflows/metis_from_dina/preprocess.sh. Frozen into the case
+#                             like everything else here, so settings.ymmsl can reference
+#                             ${CASE_DIR}/preprocess/<name> directly.
+#   preprocess_settings.ymmsl if preprocess.sh writes one, bin/pds-run-case.sbatch stacks it
+#                             in after scenario_settings.ymmsl -- for a setting only
+#                             preprocessing itself can determine (e.g. metis_psioffset,
+#                             computed from this run's own DINA equilibrium).
 #
-# Prints <case-dir> on success. Does not run anything.
+# Prints <case-dir> on success.
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
@@ -37,7 +65,8 @@ export SHOT="$2"
 export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 OVERRIDE="$PDS_REPO/cases/overrides/${WF_NAME}_${SHOT}.ymmsl"
 CASE_DIR="${3:-$PDS_REPO/cases/${WF_NAME}_${SHOT}}"
-VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT}'
+export CASE_DIR
+VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR}'
 
 [[ -d "$WF" ]] || { echo "pds-create-case: no workflow dir $WF" >&2; exit 1; }
 
@@ -49,7 +78,7 @@ CONFIG_KEY_RE='^[[:space:]]*[A-Za-z0-9_.]+\.(xml_path|python_config_module|confi
 # Config-like keys $1 sets, space-separated -- used so an earlier-stacked file's setting
 # isn't localized (and left cluttering config/) when a later file overrides the same key.
 config_keys() {
-  grep -oE "$CONFIG_KEY_RE" "$1" 2>/dev/null | sed -E 's/^[[:space:]]*//; s/:$//' | tr '\n' ' '
+  { grep -oE "$CONFIG_KEY_RE" "$1" 2>/dev/null || true; } | sed -E 's/^[[:space:]]*//; s/:$//' | tr '\n' ' '
 }
 
 # Rewrite every *.xml_path/*.python_config_module/*.config/*.waveforms setting in $1 to
@@ -94,5 +123,29 @@ WS_KEYS=""; OVERRIDE_KEYS=""
 [[ -f "$WF/workflow.ymmsl" ]] && add "$WF/workflow.ymmsl" "workflow.ymmsl" "$WS_KEYS $OVERRIDE_KEYS"
 [[ -f "$WF/settings.ymmsl" ]] && add "$WF/settings.ymmsl" "workflow_settings.ymmsl" "$OVERRIDE_KEYS"
 [[ -f "$OVERRIDE" ]] && add "$OVERRIDE" "scenario_settings.ymmsl" ""
+
+printf 'WF_NAME=%s\nSHOT=%s\n' "$WF_NAME" "$SHOT" > "$CASE_DIR/case.env"
+
+[[ -f "$WF/postprocess.sh" ]] && cp "$WF/postprocess.sh" "$CASE_DIR/postprocess.sh" && chmod +x "$CASE_DIR/postprocess.sh"
+[[ -f "$WF/env.sh" ]] && cp "$WF/env.sh" "$CASE_DIR/env.sh"
+
+PREPROCESS="$WF/preprocess.sh"
+if [[ -x "$PREPROCESS" ]]; then
+  # Unlike the rest of this script, preprocess.sh needs real IMAS/MATLAB tooling
+  # (IMAS_VERSION, `imas`, ...) -- not just text substitution -- so it needs the PDS module
+  # actually loaded, which (unlike bin/pds-run-case.sbatch's caller) nothing guarantees yet
+  # at this point. Auto-load it the same way bin/pds-run-case.sbatch does for IMAS-MUSCLE3.
+  if [[ -z "${IMAS_VERSION:-}" ]]; then
+    : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    if [[ -f "$LMOD_INIT" ]]; then
+      source "$LMOD_INIT"
+      module use "$PDS_MODULEPATH" 2>/dev/null || true
+      module load PDS 2>/dev/null || true
+    fi
+  fi
+  : "${IMAS_VERSION:?pds-create-case: IMAS_VERSION not set and could not load PDS automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  "$PREPROCESS"
+fi
 
 echo "$CASE_DIR"

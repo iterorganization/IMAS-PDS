@@ -85,13 +85,13 @@ Running the workflow and opening the dashboard
 
     bash bin/run_case.sbatch 105084_prescribed
 
-``run_case.sbatch`` pins the run directory to ``run/out/<case>``, so the output lands
+``run_case.sbatch`` pins the run directory to ``cases/runs/<case>``, so the output lands
 somewhere predictable. Then, in a separate terminal with the dashboard's own virtual
 environment activated:
 
 .. code-block:: console
 
-    m3dash open run/out/
+    m3dash open cases/runs/
 
 Click the run, and a ``rec_nice`` tab appears once the recorder has written its
 first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk

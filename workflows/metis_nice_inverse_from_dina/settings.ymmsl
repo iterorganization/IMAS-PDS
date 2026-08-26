@@ -1,0 +1,57 @@
+ymmsl_version: v0.2
+
+# Generic settings for metis_nice_inverse_from_dina, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run-case.sbatch. ${SHOT} is filled in by pds-create-case.
+#
+# This workflow's preprocess.sh builds both source_metis's and source_nice's inputs, once, at
+# bin/pds-create-case time, from this shot's raw DINA source (pds-scenarios/${SHOT}/source.env)
+# -- METIS's own dataset into ${CASE_DIR}/preprocess/metis_in (its IMAS DD layout is
+# workflow-specific, so nothing pre-bakes it into pds-scenarios), and NICE's DINA-derived
+# machine description into ${CASE_DIR}/preprocess/dina_in.
+#
+# Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
+# from DINA). A shot needing interpretative mode overrides the five metis_external_data_*
+# settings via cases/overrides/metis_nice_inverse_from_dina_<shot>.ymmsl.
+
+resources:
+  metis_nice_inverse_from_dina.source_metis: {threads: 1}
+  metis_nice_inverse_from_dina.sink_metis: {threads: 1}
+  metis_nice_inverse_from_dina.metis: {threads: 10}
+  metis_nice_inverse_from_dina.source_nice: {threads: 1}
+  metis_nice_inverse_from_dina.sink_nice: {threads: 1}
+  metis_nice_inverse_from_dina.nice: {threads: 1}
+
+settings:
+  source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  sink_metis.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_metis.sink_mode: "w"
+
+  source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
+  sink_nice.sink_uri: "imas:hdf5?path=../../../nice_out"
+  sink_nice.sink_mode: "w"
+  nice.xml_path: ${PDS_REPO}/workflows/metis_nice_inverse_from_dina/config_nice_inverse.xml
+
+  metis.metis_computation: 1
+  # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
+  # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script). This is
+  # the variant where it actually matters: psi_LCFS is a constraint in the NICE inverse solve.
+  metis.metis_psioffset: 9.0
+
+  # METIS switches for reading external data from the received IDSs -- predictive defaults,
+  # all off. See cases/overrides/metis_nice_inverse_from_dina_<shot>.ymmsl for an
+  # interpretative shot.
+  metis.metis_external_data_equilibrium: 0
+  metis.metis_external_data_current_diffusion: 0
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  metis.metis_external_data_LHCD: 0
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI: 0
+  metis.metis_external_data_PLINE: 0
+  metis.metis_external_data_runaway: 0
+
+  muscle_remote_log_level: 'INFO'

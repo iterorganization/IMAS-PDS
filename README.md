@@ -67,8 +67,9 @@ muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 # Example cases
 
 A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
-is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). That pairing is
-a **case**, in `cases/`, and a case is the single file you hand to the manager:
+is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
+materializes that pairing as a **case** directory under `cases/`; `bin/pds-run-case.sbatch`
+submits it:
 
 ```bash
 # PDS_REPO before the module load: without it the PDS module only finds the
@@ -79,39 +80,43 @@ export SCENARIOS_REPO=/path/to/pds-scenarios
 module use /work/projects/pds/modules/all
 module load PDS
 
-muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
+bin/pds-create-case inverse_convergence 105073
+sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 ```
 
-To change something for one run, put it in a second file and stack it after the case; the
+A case directory is a frozen snapshot: `workflow.ymmsl`, `workflow_settings.ymmsl`, an optional
+`scenario_settings.ymmsl` (from `cases/overrides/<workflow>_<shot>.ymmsl`, for numeric tuning a
+shot needs beyond the generic template), and `config/`, local copies of every NICE/TORAX/recorder
+config file the settings above point at.
+
+To change something for one run without touching the case, stack an extra file after it; the
 last value for a key wins:
 
 ```bash
-muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl ./cold-start.ymmsl
+sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073 ./cold-start.ymmsl
 ```
 
-Each run directory gets `input/`, holding the yMMSL files exactly as you passed them, and
-`configuration.ymmsl`, the fully resolved configuration actually executed.
-Sink outputs land directly in the run directory, `<run_dir>/<name>`. Relative IMAS URIs
-resolve against the instance's own work directory, so the cases write to `../../../<name>`
-to climb back out to the run directory.
+Each run lands in `cases/runs/<workflow>_<shot>/`. Sink outputs go directly in that directory,
+`<run_dir>/<name>`; relative IMAS URIs resolve against the instance's own work directory, so
+the cases write to `../../../<name>` to climb back out to it.
 
-| Case | Workflow | Scenario |
-|---|---|---|
-| `105084_prescribed` | `prescribed_transport` | `105084` |
-| `105084_convergence` | `inverse_convergence` | `105084` |
-| `105084_metis_convergence` | `metis_convergence` | `105084` |
-
-Two unmerged upstream patches are required; `setup_files/apply_patches.sh` applies and
-verifies them. See `ci/patches/`.
+| Workflow | Shots |
+|---|---|
+| `prescribed_transport` | `105073`, `105099` |
+| `inverse_convergence` | `105073`, `105099` |
+| `evolutive_controller` | `105073`, `105099` |
+| `metis_from_dina` | `105084`, `105092` |
+| `metis_nice_inverse_from_dina` | `105073`, `105078`, `105084`, `105092`, `105099` |
 
 ## Legacy path
 
-The four `metis_*_from_dina` workflows have not been migrated and still run the old way:
+`metis_predictive_from_dina` and `metis_predictive_nice_inverse_from_dina` have not been
+migrated to the case system above and still run the old way:
 
 ```bash
 source completion.sh          # tab completion for workflows and scenarios
-bash run_workflow.sh metis_interpretative_from_dina 105084
+bash run_workflow.sh metis_predictive_from_dina 105084
 ```
 
-`run_workflow.sh` and the per-workflow `scenarios/` directories exist only for those four.
-They will go once METIS is migrated.
+`run_workflow.sh` and the per-workflow `scenarios/` directories exist only for those two.
+They will go once METIS is fully migrated.
