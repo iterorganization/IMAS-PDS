@@ -2,11 +2,10 @@ ymmsl_version: v0.2
 # Consolidated magnetic_control workflow structure; no scenario data.
 # Also needs settings from somewhere else.
 #
-# Programs are mostly lib.easybuild_programs (EasyBuild-module-based), except
-# torax/nice_evo_rd and the imas_muscle3 actors (source/sink/recorder/passthrough
-# _component), which come from lib.local_programs -- this repo's own venv builds --
-# instead. Resolve with YMMSL_PATH pointing at the workflows/ directory (bin/pds-run
-# does this).
+# Programs are lib.easybuild_programs (EasyBuild-module-based) or, for
+# source/sink/recorder/passthrough_component, the imas_muscle3 package directly --
+# no repo-local venv builds required. Resolve with YMMSL_PATH pointing at the
+# workflows/ directory (bin/pds-run does this).
 #
 # Settings come from workflows/evolutive_controller/settings.ymmsl
 
@@ -19,7 +18,7 @@ imports:
 - from lib.easybuild_programs import implementation torax
 - from lib.easybuild_programs import implementation nice_evo_rd
 - from lib.easybuild_programs import implementation magnetic_controller
-- from lib.local_programs import implementation temporal_coupler
+- from lib.easybuild_programs import implementation temporal_coupler
 
 models:
   evolutive_controller:

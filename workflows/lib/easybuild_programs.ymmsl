@@ -75,6 +75,12 @@ programs:
   magnetic_controller:
     script: |
       #!/bin/bash
+      # Captured before `module purge` below: the PDS module sets PDS_REPO via
+      # lmod's setenv(), which `module purge` unconditionally reverts -- even
+      # though the manager also plain-exports PDS_REPO into this shell, purge
+      # wipes it anyway (confirmed live), leaving a later "$PDS_REPO/controllers"
+      # silently evaluate to "/controllers".
+      controller_path="$PDS_REPO/controllers"
       module purge
       module load PCS/2026.08-pds NICE/3.0.0.dev258-intel-2025b-pds
       # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
@@ -95,7 +101,7 @@ programs:
       # SCDDS_COREPATH, but not PCS_PATH -- the old v0.1 workflow set all three
       # by hand, pointing at a per-user run/pcs checkout.
       export PCS_PATH="$EBROOTPCS"
-      export CONTROLLER_PATH="$PDS_REPO/controllers"
+      export CONTROLLER_PATH="$controller_path"
       # NICE's own runmatlab/muscle3/matlab_iter/ (added to the path by
       # initNice4matlab.m below) ships its own, much older,
       # different-port-signature muscle_controller_NICE_IMAS_iter_init.m, which
