@@ -1,12 +1,17 @@
 ymmsl_version: v0.2
 settings:
   waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_waveforms.yaml
-  source.t_min: 80.0
+  # t_min pinned to out_nice's native t=84.3176 slice, not the flattop's nominal t=80.0:
+  # the closest native slice to 80.0 is t=79.2176, and seeding nice_evo_rd's Newton solve
+  # from that state diverges within 3 iterations on the very first step, regardless of the
+  # configured dt (ruled out a source.dt/label-mismatch theory -- identical blowup either
+  # way). t=84.3176 steps cleanly through the full window; confirmed live.
+  source.t_min: 84.31759781205469
   source.t_max: 130.0
   source.dt: 1
   torax.python_config_module: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_config_torax.py
   torax.fixed_dt: 0.01
-  torax.t_final: 80.8
+  torax.t_final: 85.11
   nice_evo_rd.dt: 0.01
   nice_evo_rd.t_interval: 0.01
-  nice_evo_rd.t_end: 80.8
+  nice_evo_rd.t_end: 85.11

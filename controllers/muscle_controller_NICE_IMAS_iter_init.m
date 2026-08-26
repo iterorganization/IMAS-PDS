@@ -48,7 +48,14 @@ if ~exist('instance','var') == 1
     instance = py.libmuscle.Instance(ports);
 end
 
-while instance.reuse_instance()
+% This workflow's F_INIT ports (equilibrium_in_f/pf_active_in_f) are fed by
+% waveform_editor exactly once, so there is never a second cycle. A `while`
+% here calls reuse_instance() again after the one real cycle, trying to
+% start a new F_INIT round against peers (nice_evo_rd) that have already
+% exited -- it hangs retrying the dead connection for ~5 minutes, then
+% crashes with "OSError: Bad file descriptor" instead of exiting cleanly
+% (confirmed live). `if` runs the one cycle that exists and stops there.
+if instance.reuse_instance()
     %% Prepare IDS Python object
     % equilibrium_python=py.imas.equilibrium();
     equilibrium_python=ids_init('equilibrium');

@@ -36,8 +36,29 @@ if isequal(finished, true)
     return;
 end
 
-msg_eq = instance.receive("equilibrium_in_s");
-msg_pfa = instance.receive("pf_active_in_s");
+% nice_evo_rd closes its output port directly once it reaches its own
+% t_end, rather than sending one more message flagged next_timestamp=None
+% -- so the receive() for that (never-coming) message throws
+% "Port ... was closed while trying to receive on it" instead of the
+% t_next-is-None branch below ever running. Treat that the same way: stop
+% cleanly on the last accepted measurement (confirmed live).
+try
+    msg_eq = instance.receive("equilibrium_in_s");
+    msg_pfa = instance.receive("pf_active_in_s");
+catch ME
+    if contains(ME.message, 'was closed while trying to receive')
+        logger.warning('muscle_IDS_NICE_output: peer port closed without a next_timestamp=None sentinel, stopping cleanly');
+        coils_current = last_coils_current;
+        rgeo = last_rgeo;
+        zgeo = last_zgeo;
+        ip = last_ip;
+        t_out = last_t_out;
+        stop_signal = 1;
+        finished = true;
+        return;
+    end
+    rethrow(ME);
+end
 
 t_out = msg_eq.timestamp;
 t_next = msg_eq.next_timestamp;

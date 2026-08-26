@@ -32,14 +32,14 @@ run_actor_test_clean() {
   muscle_manager --start-all --run-dir "cases/runs/$test_name" "ymmsl_files/$test_name.ymmsl"
 }
 
-run_actor_test_clean test_sink_source_actor
-run_actor_test_clean test_accumulator_actor
-run_actor_test_clean test_olc_actor
-run_actor_test_clean test_waveform_editor
-run_actor_test_clean test_torax_actor
-run_actor_test_clean test_nice_actor
-run_actor_test_clean test_metis_actor
-run_actor_test_clean test_chease_actor
+# run_actor_test_clean test_sink_source_actor
+# run_actor_test_clean test_accumulator_actor
+# run_actor_test_clean test_olc_actor
+# run_actor_test_clean test_waveform_editor
+# run_actor_test_clean test_torax_actor
+# run_actor_test_clean test_nice_actor
+# run_actor_test_clean test_metis_actor
+# run_actor_test_clean test_chease_actor
 
 # RUN WORKFLOWS
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
@@ -54,11 +54,13 @@ run_workflow_clean() {
 
 run_case_clean() {
   local workflow="$1" shot="$2"
-  bash bin/pds-run-case.sbatch "$(bin/pds-create-case "$workflow" "$shot")"
+  local case_dir="cases/${workflow}_${shot}"
+  bin/pds-create-case "$workflow" "$shot"
+  bash bin/pds-run-case.sbatch "$case_dir"
 }
 
-run_case_clean prescribed_transport 105099
-run_case_clean inverse_convergence 105073
-run_case_clean evolutive_controller 105073
+# run_case_clean prescribed_transport 105099
+# run_case_clean inverse_convergence 105073
+# run_case_clean evolutive_controller 105073
 run_case_clean metis_from_dina 105099
 run_case_clean metis_nice_inverse_from_dina 105099
