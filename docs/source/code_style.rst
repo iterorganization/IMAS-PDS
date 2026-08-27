@@ -59,7 +59,7 @@ Using ty
 
 .. code-block:: console
 
-    $ ty check .
+    $ uv run ty check .
     All checks passed!
 
 Docstring style

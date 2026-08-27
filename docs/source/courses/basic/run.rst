@@ -43,7 +43,7 @@ The workflow can be run by running the ``run_workflow.sh`` shell script.
    ``run_workflow.sh`` and the per-scenario ``scenarios/<shot>/tmp/`` output layout are the
    legacy invocation, kept for the workflows that have not been migrated yet. The exercises
    below use the migrated form instead: a **case** file in ``cases/``, run through
-   ``bin/run_case.sbatch``. See :doc:`../../usage` for what a case is.
+   ``bin/pds-run-case.sbatch``. See :doc:`../../running_cases` for what a case is.
 
 The shell script:
 
