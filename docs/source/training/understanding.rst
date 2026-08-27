@@ -21,21 +21,24 @@ per shot. This repository is available on SDCC on ``/work/projects/pds/pds-scena
 The scenarios knows nothing about which codes will consume it, so the same scenario can be run 
 through several workflows.
 
-Case - The combination of a workflow and a scenario, these are available in ``cases/<shot>_<workflow>.ymmsl``. 
-It imports a workflow, points at a scenario, and adds the settings for this particular combination. A case
-is the single file you hand to ``muscle_manager``. You will directly interface with the case
-files in the next chapter.
+Case - The combination of a workflow and a scenario. You build one with
+``bin/pds-create-case <workflow> <shot>``, which materializes ``cases/<workflow>_<shot>/``: a
+frozen snapshot that takes the workflow's structure, fills in this scenario's paths, applies
+any per-shot override from ``cases/overrides/``, and copies in every config file those
+settings point at. ``bin/pds-run-case.sbatch`` is what you hand that folder to. You will
+directly interface with case folders in the next chapter.
 
-Run - The run is what you get when you execute a case: a run directory with the logs, the simulation
-output, and a record of the exact configuration that was used.
+Run - The run is what you get when you execute a case: a run directory,
+``cases/runs/<workflow>_<shot>/``, with the logs, the simulation output, and a record of the
+exact configuration that was used.
 
 Keeping them apart is what makes the pieces reusable.
 
 Finding what is available
 -------------------------
 
-.. TODO: repointed from the case gallery when this branch was rebased onto
-   feature/workflow-modularisation; revisit with the case-system doc update.
+.. TODO: these pointed at the case gallery (docs/source/cases/), which is not part of
+   this branch; restore those links if the gallery lands.
 
 The workflows the cases are built on are documented in :ref:`available_workflows`, and
 ``cases/overrides/`` shows which shots each of them has a case for. Building and running a
@@ -43,7 +46,7 @@ case is covered in :ref:`usage`.
 
 For a description of the physics each workflow covers, see :ref:`available_workflows`.
 
-The scenarios and your own runs are not in the gallery, so for those:
+For the scenarios and your own runs:
 
 .. code-block:: bash
 
@@ -53,26 +56,28 @@ The scenarios and your own runs are not in the gallery, so for those:
 Reading a case
 --------------
 
-A case is short and worth reading before you run it. It has three blocks:
+A case folder is short and worth reading before you run it. ``workflow.ymmsl`` holds the
+structure -- which components exist and how they are wired -- and
+``workflow_settings.ymmsl`` holds everything specific to this run:
 
 .. code-block:: yaml
 
-    imports:
-    - from prescribed_transport.workflow import implementation prescribed_transport
-
     resources:
-      prescribed_transport.workflow.prescribed_transport.solve.nice: {threads: 2}
+      prescribed_transport.equilibrium.nice: {threads: 2}
 
     settings:
-      waveform_editor.waveforms: $SCENARIOS_REPO/105092/waveforms_no_transport.yaml
-      source.source_uri: "imas:hdf5?path=$SCENARIOS_REPO/105092/data/in"
-      solve.nice.xml_path: $PDS_REPO/workflows/lib/config_nice_inverse.xml
+      waveform_editor.waveforms: /path/to/pds/cases/prescribed_transport_105092/config/waveforms_no_transport.yaml
+      source.source_uri: "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in"
+      equilibrium.nice.xml_path: /path/to/pds/cases/prescribed_transport_105092/config/config_nice_inverse.xml
       sink.sink_uri: "imas:hdf5?path=../../../out_nice"
 
-``imports`` says which workflow is being run, ``resources`` how many threads each component
-gets, and ``settings`` everything else: which scenario data to read, which configuration each
-solver uses, and where the output goes. Reading the ``settings`` block of a case tells you
-most of what that run will do.
+``resources`` says how many threads each component gets, and ``settings`` everything else:
+which scenario data to read, which configuration each solver uses, and where the output goes.
+Note that the config paths point into the case's own ``config/`` -- ``pds-create-case``
+copied them there and rewrote the settings, so the case does not depend on
+``workflows/`` or ``pds-scenarios`` still looking the same later. If the case has a
+``scenario_settings.ymmsl`` as well, it is stacked after this file and wins on any key it
+repeats. Reading these blocks tells you most of what that run will do.
 
 
 Exercise 1: find out what is available
@@ -94,19 +99,19 @@ Exercise 2: find out what a case will do
 
     .. md-tab-item:: Exercise
 
-        Without running anything, work out for ``cases/105092_convergence.ymmsl`` which
+        Without running anything, build the case with
+        ``bin/pds-create-case inverse_convergence 105092`` and work out from the folder which
         workflow it uses, which scenario data it reads, and where its output will be written.
 
     .. md-tab-item:: Solution
 
         Start from ``inverse_convergence`` in :ref:`available_workflows`, which describes
-        the coupling and what the case produces, take a look at the relevant yMMSL file.
+        the coupling and what the case produces, then read the case folder itself.
 
-
-        The ``imports`` block names the workflow, the ``source.source_uri`` and
-        ``waveform_editor.waveforms`` settings name the scenario data, and the
-        ``sink_nice.sink_uri`` and ``sink_torax.sink_uri`` settings name the output entries,
-        written into the run directory.
+        ``workflow.ymmsl`` names the components and how they are wired, the
+        ``source.source_uri`` and ``waveform_editor.waveforms`` settings name the scenario
+        data, and the ``sink_nice.sink_uri`` and ``sink_torax.sink_uri`` settings name the
+        output entries, written into ``cases/runs/inverse_convergence_105092/``.
 
 .. todo::
 

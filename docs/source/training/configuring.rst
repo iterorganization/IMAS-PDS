@@ -7,9 +7,12 @@ Now that you have run some existing cases (see :ref:`training/run_complex`), we 
 the knobs live, and how to change them for a single run without affecting anyone else using
 the same workflow or the same scenario.
 
-- The **case**, ``cases/<shot>_<workflow>.ymmsl``: everything specific to this run. Which
-  workflow to use, which scenario data to read, which waveform configuration to apply, the
-  solver settings, and where the output goes.
+- The **case**, ``cases/<workflow>_<shot>/``: everything specific to this run. Built by
+  ``bin/pds-create-case <workflow> <shot>``, it is a frozen snapshot of the pairing --
+  ``workflow.ymmsl`` (the structure), ``workflow_settings.ymmsl`` (the workflow's generic
+  settings, with the shot's paths filled in), an optional ``scenario_settings.ymmsl`` from
+  ``cases/overrides/<workflow>_<shot>.ymmsl``, and ``config/``, local copies of every
+  NICE/TORAX/recorder/waveform config file those settings point at.
 - The **scenario**, ``$SCENARIOS_REPO/<shot>/``: the input data (``data/``) and the
   `Waveform-Editor <https://waveform-editor.readthedocs.io/en/latest/yaml_format.html>`_
   configuration files that define the machine description and the targets sent to NICE
@@ -17,9 +20,11 @@ the same workflow or the same scenario.
 - The **workflow**, ``workflows/<name>/workflow.ymmsl`` plus the building blocks it imports
   from ``workflows/lib/``: the structure only, which actors exist and how they are wired.
   It holds no paths and no scenario data.
-- Actor configuration files shared by every case, such as
-  ``workflows/lib/config_nice_inverse.xml`` for NICE and ``workflows/lib/config_torax.py``
-  for TORAX.
+- Actor configuration files owned by the workflow and shared by every case built from it,
+  such as ``workflows/prescribed_transport/config_nice_inverse.xml`` for NICE and
+  ``workflows/inverse_convergence/config_torax.py`` for TORAX. ``pds-create-case`` copies
+  these into the case's ``config/``, so editing the original only affects cases you build
+  afterwards.
 
 .. note::
 
@@ -28,10 +33,7 @@ the same workflow or the same scenario.
 
     .. code-block:: bash
 
-        muscle_manager --start-all $PDS_REPO/cases/105092_prescribed.ymmsl my_override.ymmsl
-
-        # or, on a compute node
-        sbatch workflows/run_case.sbatch 105092_prescribed my_override.ymmsl
+        sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092 ./my_override.ymmsl
 
     That keeps the case reusable, and the run directory records exactly what you ran: your
     files in ``input/``, and the merged result in ``configuration.ymmsl``.
@@ -39,13 +41,13 @@ the same workflow or the same scenario.
 .. note::
 
     Settings keys are matched by walking instance prefixes, so the short instance name is
-    enough. In ``prescribed_transport`` the NICE solver is reached as ``solve.nice.xml_path``.
-    In ``inverse_convergence`` the same solver sits one level deeper, inside the ``run``
-    component, so there it is ``run.solve.nice.xml_path``. When in doubt, look at the
-    ``settings:`` block of the case, or at ``configuration.ymmsl`` of an earlier run.
+    enough. In both ``prescribed_transport`` and ``inverse_convergence`` the NICE solver sits
+    in the ``equilibrium`` submodel and is reached as ``equilibrium.nice.xml_path``. When in
+    doubt, look at ``workflow_settings.ymmsl`` in the case folder, or at
+    ``configuration.ymmsl`` of an earlier run.
 
 The exercises below all use the ``prescribed_transport`` workflow with the ``105092``
-scenario from :ref:`training/run_complex`, through ``cases/105092_prescribed.ymmsl``.
+scenario from :ref:`training/run_complex`, through ``cases/prescribed_transport_105092/``.
 
 Exercise 1: change the machine description
 --------------------------------------------
@@ -65,7 +67,7 @@ across the pulse. It is imported by the scenario's waveform configuration, under
 
         .. code-block:: bash
 
-            cp $SCENARIOS_REPO/105092/waveforms_no_transport.yaml my_waveforms.yaml
+            cp workflows/prescribed_transport/waveforms_no_transport.yaml my_waveforms.yaml
             # in the copy: change the machine description URI under globals: imports:
 
         Then point the case at your copy:
@@ -174,7 +176,7 @@ Exercise 5: increase the log level in the NICE config
 
         .. code-block:: bash
 
-            cp workflows/lib/config_nice_inverse.xml my_config_nice.xml
+            cp workflows/prescribed_transport/config_nice_inverse.xml my_config_nice.xml
             # in the copy: <verbose>1</verbose>
 
         In an override file:
@@ -183,28 +185,26 @@ Exercise 5: increase the log level in the NICE config
 
             ymmsl_version: v0.2
             settings:
-              solve.nice.xml_path: my_config_nice.xml
+              equilibrium.nice.xml_path: my_config_nice.xml
 
-        Rerun and check the ``solve.nice`` log in the
+        Rerun and check the ``equilibrium.nice`` log in the
         :ref:`muscle3-dashboard <training/muscle3_dashboard>`.
 
-        In ``inverse_convergence`` there are two NICE solves, so there you would set both
-        ``run.solve.nice.xml_path`` and ``run.final_solve.nice.xml_path``.
+        ``inverse_convergence`` names its solver the same way, so the same key works there.
 
 Exercise 6: run fewer time slices to make a run faster
 ------------------------------------------------------------------------
 
 ``inverse_convergence`` walks the pulse slice by slice and repeats that pass until the coil
 currents stop changing. Both the number of slices and the number of passes are settings on
-its outer loop: ``run.loop.max_slices`` (``0`` means every slice) and
-``run.loop.max_iterations``.
+its outer loop: ``loop.max_slices`` (``0`` means every slice) and ``loop.max_iterations``.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Lower the number of timeslices of ``cases/105092_convergence.ymmsl`` to make the run
-        faster.
+        Lower the number of timeslices of ``cases/inverse_convergence_105092/`` to make the
+        run faster.
 
     .. md-tab-item:: Solution
 
@@ -212,8 +212,8 @@ its outer loop: ``run.loop.max_slices`` (``0`` means every slice) and
 
             ymmsl_version: v0.2
             settings:
-              run.loop.max_slices: 11
-              run.loop.max_iterations: 1
+              loop.max_slices: 11
+              loop.max_iterations: 1
 
         Rerun -- it should finish noticeably faster, with the same overall behavior at a
         coarser time resolution.
@@ -243,8 +243,8 @@ of the pulse is simulated rather than how finely it is sampled.
               source.t_max: 140
 
         Rerun and check that the resulting plots now start and end at flattop conditions
-        instead of the ramp phases. In ``inverse_convergence`` the source sits inside the
-        ``run`` component, so there the keys are ``run.source.t_min`` and ``run.source.t_max``.
+        instead of the ramp phases. In ``inverse_convergence`` the window is set on the outer
+        loop, as ``loop.t_min`` and ``loop.t_max``.
 
 .. todo::
 

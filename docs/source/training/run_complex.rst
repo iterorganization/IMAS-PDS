@@ -3,8 +3,6 @@
 Running existing workflows
 ==========================
 
-.. todo:: run on compute node
-
 .. todo:: integrate case docs
 
 In this section we show how to run simulations in the PDS repository. As in the
@@ -46,17 +44,24 @@ coupled transport solver.
         TORAX transport solve, so NICE only needs to reproduce the prescribed equilibrium shape
         and coil currents.
 
-        .. tip:: There is an existing case file which you can run
+        .. tip:: ``bin/pds-create-case`` builds the case folder for you, and
+            ``bin/pds-run-case.sbatch`` submits it.
 
     .. md-tab-item:: Solution
 
         .. code-block:: bash
 
-            muscle_manager --start-all $PDS_REPO/cases/105092_prescribed.ymmsl
+            bin/pds-create-case prescribed_transport 105092
+            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092
+
+        ``pds-create-case`` materializes the case folder ``cases/prescribed_transport_105092/``
+        -- the workflow structure, its settings, and a local copy of every config file they
+        point at -- and ``pds-run-case.sbatch`` runs that folder under ``muscle_manager``.
 
         Check if the results look as expected using the recorder actor plots in muscle3-dashboard.
         The solved equilibrium and coil currents are written to ``out_nice`` in the run
-        directory, so you can also open them with the standard IMAS exploration tools.
+        directory, ``cases/runs/prescribed_transport_105092/``, so you can also open them with
+        the standard IMAS exploration tools.
 
         Since transport is not solved, there are no profile comparison plots here, unlike in
         the self-consistent transport workflow below.
@@ -81,20 +86,29 @@ calculated by NICE to a transport solve using TORAX.
         .. note::
             This run might take a while and will only show feedback through the recorder actor
             after NICE has returned its first output.
-            To run it faster, stack an override after the case that lowers the number of time
-            slices, for example ``run.loop.max_slices: 11``. For 7-11 timeslices the general
-            behavior is still very recognisable. 
+            To run it faster, stack an override after the case folder that lowers the number
+            of time slices, for example ``loop.max_slices: 11``. For 7-11 timeslices the general
+            behavior is still very recognisable.
 
 
     .. md-tab-item:: Solution
 
         .. code-block:: bash
 
-            muscle_manager --start-all $PDS_REPO/cases/105092_convergence.ymmsl
+            bin/pds-create-case inverse_convergence 105092
+            sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105092
+
+        To stack the override from the note above, put it in a file and pass it after the
+        case folder -- the last value given for a key wins:
+
+        .. code-block:: bash
+
+            sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105092 ./fewer_slices.ymmsl
 
         Check if results look as expected using the recorder actor plots in muscle3-dashboard.
         The solved equilibrium and coil currents are written to ``out_nice`` in the run
-        directory, and the converged pulse to ``out_torax``.
+        directory, ``cases/runs/inverse_convergence_105092/``, and the converged pulse to
+        ``out_torax``.
 
         .. image:: images/pds_coils_105092.png
         .. image:: images/pds_equilibrium_0D_105092.png
@@ -103,8 +117,8 @@ calculated by NICE to a transport solve using TORAX.
 Exercise 3
 ----------
 
-.. TODO: repointed from the case gallery when this branch was rebased onto
-   feature/workflow-modularisation; revisit with the case-system doc update.
+.. TODO: these pointed at the case gallery (docs/source/cases/), which is not part of
+   this branch; restore those links if the gallery lands.
 
 There are more cases available than the two used above. The workflows they are built on
 are documented in :ref:`available_workflows`.
@@ -124,7 +138,8 @@ are documented in :ref:`available_workflows`.
 
         .. code-block:: bash
 
-            muscle_manager --start-all $PDS_REPO/cases/105099_prescribed.ymmsl
+            bin/pds-create-case prescribed_transport 105099
+            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105099
 
         Check the recorder actor plots in muscle3-dashboard and the sink output in the run
         directory, as in the exercises above.

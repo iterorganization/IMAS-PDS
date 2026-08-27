@@ -82,14 +82,15 @@ Running the workflow and opening the dashboard
 
 .. code-block:: bash
 
-    bash run_workflow.sh prescribed_transport 105084
+    bin/pds-create-case prescribed_transport 105084
+    sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105084
 
 Then, in a separate terminal with the dashboard's own virtual environment
 activated (see :ref:`muscle3-dashboard <training/muscle3_dashboard>`):
 
 .. code-block:: bash
 
-    m3dash open workflows/
+    m3dash open cases/runs/
 
 Click the run, and a ``recorder_equilibrium`` tab appears once the recorder has written its
 first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk
