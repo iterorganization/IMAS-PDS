@@ -62,5 +62,6 @@ run_case_clean() {
 run_case_clean prescribed_transport 105099
 run_case_clean inverse_convergence 105073
 run_case_clean evolutive_controller 105073
-run_case_clean metis_from_dina 105099
-run_case_clean metis_nice_inverse_from_dina 105099
+run_case_clean metis_from_dina 105084
+run_case_clean metis_nice_inverse_from_dina 105084
+
