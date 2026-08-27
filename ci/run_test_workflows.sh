@@ -15,36 +15,46 @@ module purge
 
 bash setup_files/setup_test_files.sh
 
-module use "/home/ITER/blokhus/public/modules/all"
+# --ignore_cache: Lmod's module cache doesn't necessarily know about a path added via
+# `module use` at runtime (especially on a CI agent that has never seen this path), and
+# reports it as "unknown" otherwise.
+module use "/work/projects/pds/modules/all"
 module --ignore_cache load PDS
 
-# RUN TEST FILES
-muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_accumulator_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_olc_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_waveform_editor.ymmsl
-muscle_manager --start-all ymmsl_files/test_torax_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_nice_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_metis_actor.ymmsl
-muscle_manager --start-all ymmsl_files/test_chease_actor.ymmsl
-
-# RUN WORKFLOWS
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
-run_workflow_clean() {
-  local workflow="$1" scenario="$2"
-  shift 2
-  rm -rf "workflows/$workflow/scenarios/$scenario/tmp"
-  bash run_workflow.sh "$workflow" "$scenario" "$@"
+# Single-actor smoke tests: catch a broken actor environment in seconds. Without an
+# explicit --run-dir the manager creates run_<model>_<timestamp> in the CI workspace and
+# nothing ever prunes them, so these land in cases/runs/ same as the case runs below.
+run_actor_test_clean() {
+  local test_name="$1"
+  rm -rf "cases/runs/$test_name"
+  mkdir -p "cases/runs/$test_name"
+  muscle_manager --start-all --run-dir "cases/runs/$test_name" "ymmsl_files/$test_name.ymmsl"
 }
 
-run_workflow_clean prescribed_transport 105084
-run_workflow_clean inverse_convergence 105084
-run_workflow_clean evolutive_controller 105084
-run_workflow_clean metis_interpretative_from_dina 105084 N_TIMESLICES=10
-run_workflow_clean metis_predictive_from_dina 105084 N_TIMESLICES=10
+run_case_clean() {
+  local workflow="$1" shot="$2"
+  local case_dir="cases/${workflow}_${shot}"
+  bin/pds-create-case "$workflow" "$shot"
+  bash bin/pds-run-case.sbatch "$case_dir"
+}
 
-# TODO: metis_interpretative_nice_inverse_from_dina /
-# metis_predictive_nice_inverse_from_dina -- need `tmp/PSI_OFFSET`
-# run_workflow_clean metis_interpretative_nice_inverse_from_dina 105084 N_TIMESLICES=10
-# run_workflow_clean metis_predictive_nice_inverse_from_dina 105084 N_TIMESLICES=10
+# RUN TEST FILES
+
+run_actor_test_clean test_sink_source_actor
+run_actor_test_clean test_accumulator_actor
+run_actor_test_clean test_olc_actor
+run_actor_test_clean test_waveform_editor
+run_actor_test_clean test_torax_actor
+run_actor_test_clean test_nice_actor
+run_actor_test_clean test_metis_actor
+run_actor_test_clean test_chease_actor
+
+# RUN WORKFLOWS
+
+run_case_clean prescribed_transport 105099
+run_case_clean inverse_convergence 105073
+run_case_clean evolutive_controller 105073
+run_case_clean metis_from_dina 105084
+run_case_clean metis_nice_inverse_from_dina 105084

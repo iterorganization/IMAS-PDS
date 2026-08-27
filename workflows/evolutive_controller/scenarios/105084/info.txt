@@ -1,9 +1,0 @@
-Evolutive TORAX + NICE(evo_rd) + magnetic controller coupling, seeded from DINA shot 105084.
-Requires a completed inverse_convergence/105084 run to seed the starting equilibrium (see
-preprocess_data.sh). Restricted to the second half of flattop, starting mid-flattop
-(t_min=136, t_max=256; see settings.ymmsl).
-
-Last tested for versions:
-- Nice:     *git commit*
-- Torax:    *git commit*
-- PCS/PCSSP: *git commit* (ssh-gated, see setup_files/setup_pcs.sh)

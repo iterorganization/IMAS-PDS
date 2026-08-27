@@ -40,7 +40,7 @@ make -C docs html
 Each actor is an EasyBuild module. Each workflow actor loads its own module when MUSCLE3 spawns it.
 
 ```bash
-module use /home/ITER/blokhus/public/modules/all  # Or point to another directory containing the modules
+module use /work/projects/pds/modules/all  # Or point to another directory containing the modules
 module load PDS
 ```
 
@@ -58,28 +58,52 @@ These workflows can be used as a template for your own workflows.
 ```bash
 # generate runnable .ymmsl files from the .template sources
 bash setup_files/setup_test_files.sh
-module use /home/ITER/blokhus/public/modules/all
+module use /work/projects/pds/modules/all
 module load PDS
 # run test workflow of choice
 muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 ```
 
 # Example cases
-Example cases for actual ITER scenarios can be run for validation of the PDS workflows.
-The shell script currently assumes it is being run from the base directory of the PDS repository.
-The different workflows are contained in the ``workflows`` directory.
-The different scenarios for these workflows are contained in the ``workflows/<my_workflow>/scenarios`` directory.
-To run a preconfigured workflow, run the ``run_workflow.sh`` file with the desired workflow and scenario as arguments.
-Note that this way of running the PDS workflows will change in the future as more developments are being made.
+
+A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
+is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
+materializes that pairing as a **case** directory under `cases/`; `bin/pds-run-case.sbatch`
+submits it:
 
 ```bash
-# load the PDS module
-module use /home/ITER/blokhus/public/modules/all
+# PDS_REPO before the module load: without it the PDS module only finds the
+# checkout when it happens to be your current directory.
+export PDS_REPO=/path/to/pds
+export SCENARIOS_REPO=/path/to/pds-scenarios
+
+module use /work/projects/pds/modules/all
 module load PDS
-# to enable tab completion of the workflows and scenarios
-source completion.sh
-# run test workflow of choice, in this case:
-# workflow: inverse_convergence
-# scenario: 105084
-bash run_workflow.sh inverse_convergence 105084
+
+bin/pds-create-case inverse_convergence 105073
+sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 ```
+
+A case directory is a frozen snapshot: `workflow.ymmsl`, `workflow_settings.ymmsl`, an optional
+`scenario_settings.ymmsl` (from `cases/overrides/<workflow>_<shot>.ymmsl`, for numeric tuning a
+shot needs beyond the generic template), and `config/`, local copies of every NICE/TORAX/recorder
+config file the settings above point at.
+
+To change something for one run without touching the case, stack an extra file after it; the
+last value for a key wins:
+
+```bash
+sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073 ./cold-start.ymmsl
+```
+
+Each run lands in `cases/runs/<workflow>_<shot>/`. Sink outputs go directly in that directory,
+`<run_dir>/<name>`; relative IMAS URIs resolve against the instance's own work directory, so
+the cases write to `../../../<name>` to climb back out to it.
+
+| Workflow | Shots |
+|---|---|
+| `prescribed_transport` | `105073`, `105099` |
+| `inverse_convergence` | `105073`, `105099` |
+| `evolutive_controller` | `105073`, `105099` |
+| `metis_from_dina` | `105084`, `105092` |
+| `metis_nice_inverse_from_dina` | `105073`, `105078`, `105084`, `105092`, `105099` |

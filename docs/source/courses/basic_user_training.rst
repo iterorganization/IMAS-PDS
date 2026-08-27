@@ -19,4 +19,6 @@ For more information on the waveform-editor, see the `Waveform-Editor training <
 
     basic/setup
     basic/run
+    basic/configuring_scenarios
+    basic/visualization
     basic/build

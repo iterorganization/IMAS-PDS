@@ -1,13 +1,17 @@
-# Waveform-Editor configuration for the inverse_convergence loop
+# Waveform-Editor configuration for inverse_convergence. Full pulse design: equilibrium +
+# core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
+# pds-create-case. Scenarios using MD_LAYOUT=combined (no separate data/in_md) need a
+# variant with input_md pointing at data/in instead -- see
+# cases/overrides/inverse_convergence_105073_waveforms.yaml.
+
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_waveform_editor"
-    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
+    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
-# Static machine-description reference
 machine_description:
   wall/*:
     - {ref: input_md}
@@ -18,7 +22,6 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
-# Needed to kick-start NICE and TORAX
 state:
   equilibrium/time_slice/profiles_1d/psi:
     - {ref: eq}
@@ -41,7 +44,6 @@ state:
   core_profiles/profiles_1d/t_i_average:
     - {ref: cp}
 
-# Targets for workflow. Main values to tweak
 targets:
   equilibrium/vacuum_toroidal_field/r0:
     - {ref: input}
@@ -63,4 +65,3 @@ targets:
     - {value: ec}
   pf_active/coil(*)/current/data:
     - {ref: input}
-

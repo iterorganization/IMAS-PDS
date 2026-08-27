@@ -1,4 +1,0 @@
-ymmsl_version: v0.2
-settings:
-  loop.max_iterations: 5
-  loop.t_min: 5

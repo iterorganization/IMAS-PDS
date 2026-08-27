@@ -1,0 +1,72 @@
+globals:
+  dd_version: 4.0.0
+  imports:
+    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    eq: {port: equilibrium_in}
+
+# Static machine-description reference
+machine_description:
+  wall/*:
+    - {ref: input_md}
+  pf_passive/*:
+    - {ref: input_md}
+  iron_core/*:
+    - {ref: input_md}
+  pf_active/*:
+    - {ref: input_md}
+
+reconstruction:
+  equilibrium/*:
+    - {ref: eq}
+
+# Needed to kick-start NICE and TORAX
+state:
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  core_profiles/global_quantities/v_loop:
+    - {ref: input}
+  core_profiles/profiles_1d/time:
+    - {ref: input}
+  core_profiles/profiles_1d/grid/rho_tor_norm:
+    - {ref: input}
+  core_profiles/profiles_1d/grid/psi:
+    - {ref: input}
+  core_profiles/profiles_1d/electrons/temperature:
+    - {ref: input}
+  core_profiles/profiles_1d/electrons/density:
+    - {ref: input}
+  core_profiles/profiles_1d/t_i_average:
+    - {ref: input}
+  core_profiles/profiles_1d/conductivity_parallel:
+    - {ref: input}
+  core_profiles/profiles_1d/j_non_inductive:
+    - {ref: input}
+
+targets:
+  equilibrium/vacuum_toroidal_field/r0:
+    - {ref: input}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {ref: input}
+  core_profiles/global_quantities/ip:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/ip:
+    - {ref: input}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  core_sources/*:
+    - {ref: input}
+  core_sources/source(1)/identifier/name:
+    - {value: ec}
+  pf_active/coil(*)/current/data:
+    - {ref: input}
+  pf_active/coil(*)/voltage/data:
+    - {ref: input}

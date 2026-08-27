@@ -74,16 +74,26 @@ class State(BaseState):
         t_e0 = t_e[0]
         n_e0 = n_e[0]
 
-        # Ion profiles: average over ion species present (usually D, T, He...)
+        # Ion profiles: average over ion species present (usually D, T, He...).
+        # Both can be absent -- a core_profiles that only carries electron data reaches
+        # here from workflows that do not evolve the ions. np.sum([], axis=0) returns a
+        # 0-d scalar, so indexing it raises "invalid index to scalar variable"; fall back
+        # to zeros so the electron profiles still get recorded.
         t_i = np.asarray(p1d.t_i_average / 1e3)  # [keV]
+        if t_i.size != n_rho:
+            logger.warning("t_i_average missing at t=%.4f, recording zeros.", t)
+            t_i = np.zeros(n_rho)
         t_i0 = t_i[0]
         n_i_list = [
             np.asarray(ion.density)
             for ion in p1d.ion
             if np.asarray(ion.density).size == n_rho
         ]
-        # Mean ion temperature / density across species (simple average)
-        n_i = np.sum(n_i_list, axis=0)  # [m^-3]
+        if n_i_list:
+            n_i = np.sum(n_i_list, axis=0)  # [m^-3]
+        else:
+            logger.warning("no ion densities at t=%.4f, recording zeros.", t)
+            n_i = np.zeros(n_rho)
         n_i0 = n_i[0]
 
         ip = -1 * ids.global_quantities.ip[itime] / 1e6  # [MA]

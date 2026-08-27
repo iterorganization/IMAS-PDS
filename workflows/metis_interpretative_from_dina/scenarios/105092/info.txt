@@ -1,4 +1,0 @@
-Using DINA shot 105084.
-
-Last tested for versions:
--METIS:   *git commit*

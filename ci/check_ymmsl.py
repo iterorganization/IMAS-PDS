@@ -1,0 +1,377 @@
+#!/usr/bin/env python3
+"""Static resolve + flatten of every case against its workflow.
+
+Catches, without needing scenario data or a running MUSCLE3:
+
+  1. unfilled holes, missing imports, bad custom_implementations paths, wrong hole fills
+     (whatever check_consistent() covers)
+  2. setting keys that match no instance -- SILENT at runtime: get_setting walks
+     instance prefixes and falls through to the bare name, so a key at the wrong depth
+     is simply never seen
+  3. resources keys that are not exactly `<root model>.<instance>` -- also SILENT:
+     get_resources does an exact dict lookup (no prefix walk), logs at debug and returns
+     1 thread, so `run.transport: {threads: 8}` quietly runs single-threaded
+  4. model ports declared in workflows/lib/*.ymmsl but not wired inside the model --
+     flatten() then drops the caller's conduit with no error, and neither
+     Model.check_consistent nor _check_consistent_ports objects
+  5. scenario waveforms.yaml files whose top-level shape is wrong -- a mangled comment
+     can swallow the machine_description: key and silently move its contents into globals
+  6. undefined ${VAR} in settings -- expanded here exactly as the patched manager does,
+     so CI cannot pass a case that could not start
+  7. a self-contained case with no `resources:` -- an imported workflow's resources are
+     discarded, so every component would silently get 1 thread
+
+A case either imports its workflow (self-contained, one file on the command line) or
+declares it in a `# workflow: <name>` comment header (stacked, two files).
+
+Usage:  python ci/check_ymmsl.py [--scenarios <dir>]
+"""
+
+import argparse
+import os
+import re
+import sys
+from pathlib import Path
+
+import ymmsl
+from libmuscle.manager.hammer import flatten
+from ymmsl.v0_2 import Configuration, Reference
+from ymmsl.v0_2.resolver import resolve
+
+REPO = Path(__file__).resolve().parent.parent
+WORKFLOW_RE = re.compile(r"^#\s*workflow:\s*(\S+)", re.MULTILINE)
+# globals and machine_description are required; state/targets are not -- an
+# MD-only scenario (feeding a NICE branch with no design of its own) has neither.
+WAVEFORM_REQUIRED = {"globals", "machine_description"}
+ENV_VAR_RE = re.compile(r"\$(\w+|\{[^}]*\})")
+
+
+def _fail(errors, msg):
+    errors.append(msg)
+
+
+IMPORT_RE = re.compile(
+    r"^\s*-\s*from\s+(\S+)\s+import\s+implementation\s+(\S+)", re.MULTILINE
+)
+
+
+def check_case(case: Path, errors: list) -> None:
+    """Resolve a case and validate every prefixed key against the flattened instances.
+
+    A case is either *self-contained* -- it imports its workflow, and runs as the single
+    argument to muscle_manager -- or *stacked*, naming its workflow in a
+    `# workflow: <name>` header so we can load and merge it here the way the command line
+    would. Self-contained is the default; both are checked the same way afterwards.
+    """
+    text = case.read_text()
+    self_contained = bool(IMPORT_RE.search(text))
+
+    if self_contained:
+        cfg = ymmsl.load_as(Configuration, case)
+    else:
+        m = WORKFLOW_RE.search(text)
+        if not m:
+            _fail(
+                errors,
+                f"{case.name}: neither imports a workflow nor declares one in "
+                f"a '# workflow: <name>' header, so it cannot be paired",
+            )
+            return
+        wf = REPO / "workflows" / m.group(1) / "workflow.ymmsl"
+        if not wf.exists():
+            _fail(
+                errors,
+                f"{case.name}: names workflow '{m.group(1)}', but {wf} does not exist",
+            )
+            return
+        cfg = ymmsl.load_as(Configuration, wf)
+        cfg.update(ymmsl.load_as(Configuration, case))
+
+    # Expand ${VAR} exactly as the patched manager does before resolving, so this check
+    # sees the same values a run would. Undefined variables are reported rather than
+    # left literal -- otherwise CI would pass on a case that cannot start.
+    missing = set()
+    for name in list(cfg.settings):
+        value = cfg.settings[name]
+        if not isinstance(value, str):
+            continue
+        expanded = os.path.expandvars(value)
+        missing.update(m.group(0) for m in ENV_VAR_RE.finditer(expanded))
+        cfg.settings[name] = expanded
+    if missing:
+        _fail(
+            errors,
+            f"{case.name}: undefined environment variable(s) in settings: "
+            f"{', '.join(sorted(missing))}",
+        )
+        return
+
+    # Reference([]) is what muscle_manager passes. Do not use the filename: case names
+    # like "105084_prescribed" are not valid ymmsl Identifiers, so that would fail on
+    # files the manager accepts happily.
+    try:
+        resolve(Reference([]), cfg)
+    except RuntimeError as e:
+        _fail(errors, f"{case.name}: resolve failed:\n    {e}")
+        return
+
+    roots = [str(m.name) for m in cfg._root_models()]
+    if len(roots) != 1:
+        _fail(
+            errors,
+            f"{case.name}: expected exactly one root model, got {roots} -- "
+            f"muscle_manager would need -m/--model to disambiguate",
+        )
+        return
+    root = roots[0]
+
+    # `selected_model` only exists on ymmsl >= 0.17; on 0.16 check_consistent takes the
+    # sole root model, which is what we have here anyway (asserted just above).
+    try:
+        try:
+            cfg.check_consistent(selected_model=root)
+        except TypeError:
+            cfg.check_consistent()
+    except RuntimeError as e:
+        _fail(errors, f"{case.name}: check_consistent failed:\n    {e}")
+        return
+
+    flat = flatten(cfg, Reference(root))
+    instances = {str(c) for c in flat.root_model().components}
+
+    # The resolver copies only models and programs, dropping an imported workflow's own
+    # `resources`/`settings`, so a self-contained case must carry them. Silent when wrong:
+    # the component just gets 1 thread.
+    if self_contained and not cfg.resources:
+        _fail(
+            errors,
+            f"{case.name}: imports its workflow but declares no `resources:`. "
+            f"An imported file's resources are discarded, so every component "
+            f"will silently get 1 thread.",
+        )
+
+    def resolves(key: str) -> bool:
+        """True if some instance is a prefix of key -- mirrors get_setting's walk."""
+        parts = key.split(".")
+        return any(".".join(parts[:i]) in instances for i in range(1, len(parts)))
+
+    for key in (str(k) for k in cfg.settings):
+        if "." in key and not resolves(key):
+            _fail(
+                errors,
+                f"{case.name}: setting '{key}' matches no instance -- it will be "
+                f"silently ignored. Instances: {sorted(instances)}",
+            )
+
+    # Resources are looked up by exact dict key, with no prefix walk (unlike settings), so
+    # the key must be the root model name followed by the instance name. For a
+    # self-contained case that root name is the full dotted import path
+    # (`inverse_convergence.workflow.inverse_convergence`), which cannot be aliased shorter.
+    #
+    # Getting it wrong is invisible: get_resources logs at DEBUG and returns 1 thread, so a
+    # TORAX asking for 8 quietly runs on one core.
+    wanted = {f"{root}.{inst}": inst for inst in instances}
+    for key in (str(k) for k in cfg.resources):
+        if key not in wanted:
+            hint = ""
+            if key in instances:
+                hint = (
+                    f" Did you mean '{root}.{key}'? Resources keys are NOT "
+                    f"prefix-matched the way settings keys are."
+                )
+            _fail(
+                errors,
+                f"{case.name}: resources key '{key}' is not '{{root}}.{{instance}}' -- that "
+                f"component silently gets 1 thread.{hint}",
+            )
+
+    check_input_paths(cfg, case.name, errors)
+    check_waveform_ports(cfg, flat.root_model(), case.name, errors)
+
+    kind = "self-contained" if self_contained else "stacked"
+    print(
+        f"ok  {case.name} [{kind}] -> {root}: {len(instances)} instances, "
+        f"{len(flat.root_model().conduits)} conduits"
+    )
+
+
+# Settings naming an input that must already exist. Outputs (sink_uri) are excluded --
+# they are created by the run.
+INPUT_SUFFIXES = (
+    ".waveforms",
+    ".xml_path",
+    ".python_config_module",
+    ".config",
+    ".extra_rule_dirs",
+    ".source_uri",
+    ".md",
+)
+
+
+def check_input_paths(cfg, case_name, errors: list) -> None:
+    """Every input path a case names must exist.
+
+    A missing config or data entry is not caught by anything else here: the case resolves,
+    the model flattens, and the run dies minutes later inside whichever actor first tried
+    to open it.
+    """
+    for key in (str(k) for k in cfg.settings):
+        if not key.endswith(INPUT_SUFFIXES):
+            continue
+        value = cfg.settings[key]
+        if not isinstance(value, str):
+            continue
+        # A value may hold several whitespace-separated entries (rec_*.md does).
+        for token in value.split():
+            path = token.split("path=", 1)[1] if "path=" in token else token
+            # Stop at whichever URI separator comes first: `path=` is not necessarily the
+            # last parameter, so splitting on '?' alone leaves a trailing '&x=1' attached
+            # and turns a valid URI into a path that cannot exist.
+            path = re.split(r"[?&#]", path, maxsplit=1)[0]
+            if not path.startswith("/"):
+                continue  # relative: resolved at run time against the instance work dir
+            if not Path(path).exists():
+                _fail(
+                    errors,
+                    f"{case_name}: setting '{key}' names "
+                    f"'{path}', which does not exist",
+                )
+
+
+def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
+    """Every `<ids>_out` port of a waveform-editor instance must exist in its config.
+
+    The actor derives the IDS name by stripping `_out` from each connected O_F port and
+    fails the run with "Output port ... does not match any IDS in the waveform
+    configuration" if the config does not produce it. That needs no data to check: the
+    IDSs a config produces are the first path segment of each waveform it declares.
+    """
+    import yaml as _yaml
+
+    ports, in_ports = {}, {}
+    for comp in flat_model.components.values():
+        names = [str(p) for p in comp.ports.sending_port_names()]
+        if names:
+            ports[str(comp.name)] = names
+        in_ports[str(comp.name)] = {str(p) for p in comp.ports.receiving_port_names()}
+
+    for key in (str(k) for k in cfg.settings):
+        if not key.endswith(".waveforms"):
+            continue
+        instance = key[: -len(".waveforms")]
+        if instance not in ports:
+            continue
+        path = Path(str(cfg.settings[key]))
+        if not path.is_file():
+            continue  # data/scenario not checked out; the key check already ran
+        doc = _yaml.safe_load(path.read_text()) or {}
+        produced = {
+            str(w).split("/", 1)[0]
+            for group, content in doc.items()
+            if group != "globals" and isinstance(content, dict)
+            for w in content
+        }
+        for port in ports[instance]:
+            ids = port.removesuffix("_out")
+            if ids not in produced:
+                _fail(
+                    errors,
+                    f"{case_name}: '{instance}' declares output port "
+                    f"'{port}', but {path.name} produces no '{ids}' IDS "
+                    f"(it produces {sorted(produced)})",
+                )
+
+        # And the reverse: every port-import the config reads from must be an input port
+        # on this instance. The exporter builds every IDS the config mentions, so an
+        # unreachable port-import fails the run with "no IDS received on import port".
+        imports = (doc.get("globals") or {}).get("imports") or {}
+        needed = {
+            spec["port"]
+            for spec in imports.values()
+            if isinstance(spec, dict) and "port" in spec
+        }
+        missing_in = sorted(needed - in_ports.get(instance, set()))
+        if missing_in:
+            _fail(
+                errors,
+                f"{case_name}: {path.name} imports from port(s) "
+                f"{missing_in}, but '{instance}' has no such input port "
+                f"(it has {sorted(in_ports.get(instance, set()))}). The editor "
+                f"resolves every import in the config, so this fails at run "
+                f'time with "no IDS received on import port".',
+            )
+
+
+def check_lib_ports(errors: list) -> None:
+    """Every declared model port must be wired inside that model."""
+    for path in sorted((REPO / "workflows" / "lib").glob("*.ymmsl")):
+        cfg = ymmsl.load_as(Configuration, path)
+        for model in cfg.models.values():
+            wired = set()
+            for c in model.conduits:
+                if not c.sending_component():
+                    wired.add(str(c.sending_port()))
+                if not c.receiving_component():
+                    wired.add(str(c.receiving_port()))
+            declared = {
+                str(p)
+                for p in model.ports.receiving_port_names()
+                + model.ports.sending_port_names()
+            }
+            for orphan in sorted(declared - wired):
+                _fail(
+                    errors,
+                    f"{path.name}: model '{model.name}' declares port '{orphan}' but "
+                    f"never wires it internally -- flatten() will silently drop the "
+                    f"caller's conduit",
+                )
+        print(f"ok  {path.name}: model ports wired")
+
+
+def check_scenarios(scenarios: Path, errors: list) -> None:
+    import yaml
+
+    for wf_yaml in sorted(scenarios.glob("*/waveforms.yaml")):
+        doc = yaml.safe_load(wf_yaml.read_text())
+        rel = wf_yaml.relative_to(scenarios)
+        missing = WAVEFORM_REQUIRED - set(doc)
+        if missing:
+            _fail(
+                errors,
+                f"{rel}: missing top-level key(s) {sorted(missing)} -- a "
+                f"mangled comment can swallow one; check the raw YAML",
+            )
+        stray = set(doc.get("globals", {})) - {"dd_version", "imports"}
+        if stray:
+            _fail(
+                errors,
+                f"{rel}: unexpected keys inside globals: {sorted(stray)} -- "
+                f"these have almost certainly fallen out of another block",
+            )
+        if not missing and not stray:
+            print(f"ok  {rel}: shape")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--scenarios", type=Path, help="path to a pds-scenarios checkout")
+    args = ap.parse_args()
+
+    errors: list = []
+    check_lib_ports(errors)
+    for case in sorted((REPO / "cases").glob("*.ymmsl")):
+        check_case(case, errors)
+    if args.scenarios:
+        check_scenarios(args.scenarios, errors)
+
+    if errors:
+        print(f"\n{len(errors)} problem(s):", file=sys.stderr)
+        for e in errors:
+            print(f"  - {e}", file=sys.stderr)
+        return 1
+    print("\nall checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

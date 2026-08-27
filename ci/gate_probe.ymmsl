@@ -1,0 +1,57 @@
+ymmsl_version: v0.2
+# A two-level nest with one hole and one prunable component, standing in for a
+# workflow.ymmsl's root model wrapping one of its own submodels. Run
+# ci/gate_probe.py against this to discover, on whatever install you are on:
+#
+#   1. what flatten() names a nested instance  -> the prefix every case setting key needs
+#   2. which custom_implementations key form composes
+#   3. which resources key form actually takes effect
+#   4. that pruning and cross-boundary conduit gluing work
+#
+# Needs no scenario data, no actors and no IMAS.
+
+models:
+  inner_model:
+    description: submodel standing in for a workflow's nice_inverse/transport submodel
+    ports:
+      f_init: [x_in]
+      o_f: [y_out]
+    components:
+      inner:
+        description: the transport-style hole -- filled via custom_implementations
+        ports: {f_init: [x_in], o_f: [y_out]}
+      spare:
+        description: optional component, pruned to null by the variant
+        optional: true
+        ports: {f_init: [x_in]}
+    conduits:
+      x_in: inner.x_in
+      inner.y_out: y_out
+
+  probe:
+    description: root model standing in for a variant workflow
+    components:
+      run:
+        description: the wrapper component every variant workflow has
+        implementation: inner_model
+        ports: {f_init: [x_in], o_f: [y_out]}
+      driver:
+        description: program-implemented, at root depth
+        implementation: dummy
+        ports: {o_f: [x_out]}
+      collector:
+        description: program-implemented, at root depth
+        implementation: dummy
+        ports: {f_init: [y_in]}
+    conduits:
+      driver.x_out: run.x_in
+      run.y_out: collector.y_in
+
+programs:
+  dummy:
+    description: no-op stand-in, never executed by this probe
+    executable: /bin/true
+
+custom_implementations:
+  probe.run.inner: dummy
+  probe.run.spare: null

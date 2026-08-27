@@ -1,7 +1,0 @@
-ymmsl_version: v0.2
-settings:
-  source.t_min: 80.0
-  source.t_max: 130.0
-  # BgB transport calibrated onto this shot's DINA trace, same as
-  # inverse_convergence/scenarios/105073/config_torax.py -- see that file's docstring.
-  torax.python_config_module: ${SCEN}/config_torax.py

@@ -29,7 +29,7 @@ settings:
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_metis"
   sink.sink_mode: "w"
   metis.metis_computation: 1
-  metis.metis_filename: "/home/ITER/blokhus/public/software/METIS-IRFM/2026.08-pds/certification/metis/ITER_rampup_ECCD.mat"
+  metis.metis_filename: "/work/projects/pds/software/METIS-IRFM/2026.08-pds/certification/metis/ITER_rampup_ECCD.mat"
   metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
 programs:

@@ -26,10 +26,11 @@ modluafooter = """
 -- If neither holds we error out rather than guessing: every path below is
 -- relative to the checkout, and a wrong guess writes run output somewhere the
 -- user may not even be able to write to.
+local marker = "bin/pds-run"
 local pds_repo = os.getenv("PDS_REPO")
 if not pds_repo then
   local cwd = os.getenv("PWD")
-  if cwd and isFile(pathJoin(cwd, "bin/pds-run")) then
+  if cwd and isFile(pathJoin(cwd, marker)) then
     pds_repo = cwd
   end
 end
@@ -47,6 +48,14 @@ or point PDS_REPO at it explicitly:
     export PDS_REPO=/path/to/pds
     module load PDS
 ]])
+end
+
+-- Fail here rather than let a mistyped PDS_REPO through: everything downstream resolves
+-- against it, and the first symptom is otherwise a missing case file from a job that
+-- already waited in the queue.
+if not isFile(pathJoin(pds_repo, marker)) then
+  LmodError("PDS_REPO=" .. pds_repo .. " is not a PDS checkout (no " .. marker .. ").\\n" ..
+            "Export PDS_REPO or cd into a checkout before loading this module.")
 end
 
 -- So `pds-run` and `import pds` work immediately, with no `pip install -e .`.

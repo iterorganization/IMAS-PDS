@@ -1,0 +1,100 @@
+# Scenario 105084, LITERAL pulse design -- a complete alternative to waveforms.yaml.
+#
+# Same shot, same dataset. Where waveforms.yaml takes r0/b0/Ip/psi_boundary and the coil
+# currents from the input IDS ({ref: input}), this states them as explicit tendencies, so
+# the pulse design is readable in the file rather than implied by a trace.
+#
+# The boundary outline stays {ref: input}: it is a variable-length per-slice spatial array
+# and the tendency system produces one scalar per time step, so an import is the only way
+# to populate it. Same for core_sources.
+
+globals:
+  dd_version: 4.0.0
+  imports:
+    input: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in_md"
+    eq: {port: equilibrium_in}
+    cp: {port: core_profiles_in}
+
+# Static machine-description reference
+machine_description:
+  wall/*:
+    - {ref: input_md}
+  pf_passive/*:
+    - {ref: input_md}
+  iron_core/*:
+    - {ref: input_md}
+  pf_active/*:
+    - {ref: input_md}
+
+# Needed to kick-start NICE and TORAX
+state:
+  equilibrium/time_slice/profiles_1d/psi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/f_df_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  core_profiles/global_quantities/v_loop:
+    - {ref: cp}
+  core_profiles/profiles_1d/time:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/rho_tor_norm:
+    - {ref: cp}
+  core_profiles/profiles_1d/grid/psi:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/temperature:
+    - {ref: cp}
+  core_profiles/profiles_1d/electrons/density:
+    - {ref: cp}
+  core_profiles/profiles_1d/t_i_average:
+    - {ref: cp}
+
+# Targets for workflow. Main values to tweak
+targets:
+  equilibrium/vacuum_toroidal_field/r0:
+    - {value: 6.2}
+  equilibrium/vacuum_toroidal_field/b0:
+    - {value: -2.65}
+  equilibrium/time_slice/global_quantities/ip:
+    - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
+  core_profiles/global_quantities/ip:
+    - {time: [0, 2.42, 16.5, 256.4, 280.35], value: [0, -1.266e6, -3.5e6, -3.5e6, -1.04e6]}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {time: [2.42, 9.52, 16.5, 44.72, 72.9, 108.22, 143.5, 178.72, 214.0, 256.4, 266.2, 280.35], value: [-104.64, -94.14, -88.18, -78.97, -72.44, -64.89, -57.36, -49.92, -42.40, -33.40, -32.77, -38.36]}
+  equilibrium/time_slice/boundary/outline/r:
+    - {ref: input}
+  equilibrium/time_slice/boundary/outline/z:
+    - {ref: input}
+  core_sources/*:
+    - {ref: input}
+  core_sources/source(1)/identifier/name:
+    - {value: ec}
+  pf_active/coil(1)/current/data:   # Central Solenoid 3U (CS3U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35621, -40988, -32425, -27038, -20147, -16252, -22703]}
+  pf_active/coil(2)/current/data:   # Central Solenoid 2U (CS2U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35456, -23772, -23414, -19091, -13188, -8970, -8089]}
+  pf_active/coil(3)/current/data:   # Central Solenoid 1U (CS1U)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32894, -21170, -13679, -8023, -3125, -415, -10428]}
+  pf_active/coil(4)/current/data:   # Central Solenoid 1L (CS1L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32894, -21170, -13679, -8023, -3125, -415, -10428]}
+  pf_active/coil(5)/current/data:   # Central Solenoid 2L (CS2L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-34884, -28171, -23687, -19075, -14646, -12078, -17030]}
+  pf_active/coil(6)/current/data:   # Central Solenoid 3L (CS3L)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-32453, -36492, -36788, -31730, -23271, -18155, -4607]}
+  pf_active/coil(7)/current/data:   # Poloidal Field Coil 1 (PF1)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-21769, -23002, -14642, -10555, -8924, -7553, -15270]}
+  pf_active/coil(8)/current/data:   # Poloidal Field Coil 2 (PF2)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-5714, -1854, -9449, -6862, -3694, -2533, 4546]}
+  pf_active/coil(9)/current/data:   # Poloidal Field Coil 3 (PF3)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [651, 5082, 9812, 8950, 8390, 8010, 602]}
+  pf_active/coil(10)/current/data:  # Poloidal Field Coil 4 (PF4)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-1015, 3476, 5615, 7523, 8456, 9231, 716]}
+  pf_active/coil(11)/current/data:  # Poloidal Field Coil 5 (PF5)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [896, 7957, -104, -2234, -1748, -1643, 7266]}
+  pf_active/coil(12)/current/data:  # Poloidal Field Coil 6 (PF6)
+    - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-14528, -20569, -11322, -7633, -6560, -5751, -13988]}
+  pf_active/coil(13)/current/data:  # Upper Vertical Stabilization Coil (VSU) -- flat, see comment above
+    - {value: 0}
+  pf_active/coil(14)/current/data:  # Lower Vertical Stabilization Coil (VSL) -- flat, see comment above
+    - {value: 0}

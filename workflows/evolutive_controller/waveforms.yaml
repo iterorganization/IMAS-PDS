@@ -8,8 +8,8 @@
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_waveform_editor"
-    input_md: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
+    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
     eq: {port: equilibrium_in}
 
 # Static machine-description reference

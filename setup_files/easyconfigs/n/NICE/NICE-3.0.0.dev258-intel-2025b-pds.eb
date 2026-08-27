@@ -13,7 +13,7 @@ variants."""
 toolchain = {'name': 'intel', 'version': '2025b'}
 toolchainopts = {'openmp': True, 'pic': True}
 
-local_commit = '7ad1ea8f3da4fee25a61a7c2c01b1773db5f4906'
+local_commit = '8fa3b861d66debadc4b6c314c696cb20a3af16f8'
 
 sources = [{
     'git_config': {

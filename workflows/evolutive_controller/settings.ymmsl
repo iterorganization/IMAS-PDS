@@ -1,25 +1,44 @@
 ymmsl_version: v0.2
+
+# Generic settings for evolutive_controller, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. The pulse
+# window (t_min/t_max/t_final/t_end) is genuinely per-shot (the flattop window differs per
+# pulse) and has no sane generic default, so every shot needs
+# cases/overrides/evolutive_controller_<shot>.ymmsl for those; the time step (fixed_dt/dt/
+# t_interval) defaults below to the same value as everywhere else, and a shot only needs to
+# override it if it genuinely needs a different one (e.g. 105084's finer 0.005).
+
 settings:
+  # Scenario: `source` reads the NICE-reconstructed equilibrium from a completed
+  # inverse_convergence case run for the same shot (see bin/pds-create-case /
+  # bin/pds-run-case.sbatch's cases/runs/<case> convention); waveform_editor.waveforms
+  # assembles the rest (machine description, core_profiles, ECRH) from pds-scenarios.
+  source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
   source.t_min: 0.0
+  waveform_editor.waveforms: ${PDS_REPO}/workflows/evolutive_controller/waveforms.yaml
+
   torax.output_all_timeslices: True
-  torax.fixed_dt: 0.01
   torax.max_consecutive_invalid_input: 20
+  torax.fixed_dt: 0.01
   nice_evo_rd.t_interval: 0.01
   nice_evo_rd.dt: 0.01
   nice_evo_rd.xml_path: ${PDS_REPO}/workflows/evolutive_controller/config_nice.xml
   torax.python_config_module: ${PDS_REPO}/workflows/evolutive_controller/config_torax.py
-  source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
-  sink_nice.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice_evo_rd"
-  sink_torax.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_torax"
-  sink_controller.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_controller"
+
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  sink_nice.sink_uri: "imas:hdf5?path=../../../out_nice"
+  sink_torax.sink_uri: "imas:hdf5?path=../../../out_torax"
+  sink_controller.sink_uri: "imas:hdf5?path=../../../out_controller"
   sink_nice.sink_mode: "w"
   sink_torax.sink_mode: "w"
   sink_controller.sink_mode: "w"
+
   rec_nice.format: distill
   rec_nice.auto: False
   rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
-  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md"
+  rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
   rec_torax.format: distill
   rec_torax.auto: False
   rec_torax.config: ${PDS_REPO}/visualization/kinetic_profiles.py

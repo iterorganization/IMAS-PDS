@@ -1,0 +1,10 @@
+ymmsl_version: v0.2
+# LITERAL pulse design for 105084 -- same source data as the 105084 scenario, a different
+# waveform design. "105084_literal" is a case-naming convenience only; the underlying
+# pds-scenarios shot is still 105084, hence the hard-coded path below (no ${SHOT} here).
+settings:
+  waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/inverse_convergence_105084_literal_waveforms.yaml
+  source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in"
+  loop.max_iterations: 5
+  loop.t_min: 5
+  equilibrium.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/105084/data/in_md"

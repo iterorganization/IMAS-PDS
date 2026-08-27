@@ -1,0 +1,11 @@
+ymmsl_version: v0.2
+# Flattop for 105084 runs t=16.5-256.4 (Ip trace); start mid-flattop to skip
+# the rampup->flattop transient, run to just before the rampdown transient.
+settings:
+  source.t_min: 136.0
+  source.t_max: 256.0
+  torax.t_final: 136.6
+  torax.fixed_dt: 0.005
+  nice_evo_rd.t_end: 136.6
+  nice_evo_rd.dt: 0.005
+  nice_evo_rd.t_interval: 0.005

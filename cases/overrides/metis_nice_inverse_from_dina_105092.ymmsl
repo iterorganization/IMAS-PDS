@@ -1,0 +1,5 @@
+ymmsl_version: v0.2
+# DINA shot 105092, predictive METIS + NICE inverse -- matches the generic settings.ymmsl
+# defaults as-is. Converted from
+# workflows/metis_predictive_nice_inverse_from_dina/scenarios/105092/.
+settings: {}

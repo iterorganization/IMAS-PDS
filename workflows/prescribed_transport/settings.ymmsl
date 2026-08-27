@@ -1,15 +1,31 @@
 ymmsl_version: v0.2
-# Shared knobs for prescribed_transport, stacked onto the static workflow.ymmsl. The
-# scenario-local scenarios/<shot>/settings.ymmsl (if present) is stacked after this.
+
+# Generic settings for prescribed_transport, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. A shot
+# needing different values overrides them via
+# cases/overrides/prescribed_transport_<shot>.ymmsl.
+
+resources:
+  prescribed_transport.equilibrium.nice: {threads: 2}
+  prescribed_transport.equilibrium.rec_nice: {threads: 1}
+
 settings:
-  source.iterative: true
-  source.source_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in/"
-  waveform_editor.waveforms: ${SCEN}/waveforms.yaml
-  nice_inv.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice.xml
-  sink.sink_uri: "imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_out_nice"
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  waveform_editor.waveforms: ${PDS_REPO}/workflows/prescribed_transport/waveforms_no_transport.yaml
+  source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  source.iterative: false
+  equilibrium.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+
+  equilibrium.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice_inverse.xml
+
+  # Output. `../../../` climbs out of the instance's own work directory, so the entries
+  # land next to the run's logs in <run_dir>/ rather than under instances/.
+  sink.sink_uri: "imas:hdf5?path=../../../out_nice"
   sink.sink_mode: "w"
-  rec_nice.format: distill
-  rec_nice.auto: False
-  rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
-  rec_nice.md: "wall=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor pf_active=imas:hdf5?path=${SCEN}/tmp/data/${SHOT}_in_md_waveform_editor"
+
+  # Recording.
+  equilibrium.rec_nice.format: distill
+  equilibrium.rec_nice.auto: False
+  equilibrium.rec_nice.config: ${PDS_REPO}/visualization/nice_inv.py
+
   muscle_remote_log_level: 'INFO'
