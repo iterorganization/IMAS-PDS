@@ -31,9 +31,13 @@ imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 # IMAS-Python stack `module load PDS` already loaded -- purge and reload fresh for this step.
 # If PDS got loaded as an actual module (bin/pds-create-case's own auto-load, or the caller's
 # shell), Lmod adopted PDS_REPO via its setenv and purge unwinds that -- reassert it after.
+#
+# --ignore_cache: the CI user's Lmod spider cache can predate a recent METIS-IRFM/MATLAB
+# rebuild, in which case depends_on() can't find a MATLAB family member to resolve
+# METIS-IRFM's dependency on and the load hard-fails (set -e kills the script here).
 _PDS_REPO="$PDS_REPO"
 module purge
-module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"
