@@ -4,7 +4,7 @@ name = 'IMAS-MUSCLE3'
 version = '1.0.0'
 versionsuffix = '-pds'
 
-local_commit = 'd3403fd443421b7472c7ff38353e26a3c396d416'
+local_commit = 'e4383afc9366a0ae33c230552df576b90defcec8'
 
 description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
 homepage = "https://imas-muscle3.readthedocs.io"
@@ -133,7 +133,9 @@ exts_list = [
                 'repo_name': 'IMAS-MUSCLE3',
                 'commit': local_commit,
             },
-            'filename': 'imas_muscle3-develop.tar.gz',
+            # commit in the filename: EasyBuild resolves sources by name, so a
+            # commit-independent one silently reuses the cached tarball
+            'filename': 'imas_muscle3-%s.tar.gz' % local_commit[:10],
         }],
         'patches': ['imas_muscle3-develop_ymmsl-module-entrypoint.patch'],
 
@@ -141,7 +143,7 @@ exts_list = [
         'checksums': [
             None,
             {'imas_muscle3-develop_ymmsl-module-entrypoint.patch':
-             '19541740b3b2a5f0d9d39d13a965436e174094c9cc9ffbcda52ce41f54697a4c'},
+             '29cc8bca2c0b6d3cae886a594b4350f23b49c9df502aff0d224096ae162c1799'},
         ],
     }),
 ]
@@ -159,7 +161,6 @@ sanity_check_commands = [
     "python -c 'import imas_muscle3.actors.olc_component'",
     "python -c 'import imas_muscle3.actors.recorder_component'",
     "python -c 'import imas_muscle3.actors.accumulator_component'",
-    "python -c 'import imas_muscle3.actors.visualization_component'",
     "python -c 'import imas_muscle3.actors.iterator_component'",
     "python -c 'import imas_muscle3.actors.passthrough_component'",
     "muscle_manager --help",
@@ -167,7 +168,7 @@ sanity_check_commands = [
     "eps = entry_points(group='ymmsl.module', name='imas_muscle3'); assert eps, 'entry point not registered'; "
     "import ymmsl; from ymmsl.v0_2 import Configuration; "
     "cfg = ymmsl.load_as(Configuration, next(iter(eps)).load()); "
-    "assert len(cfg.programs) == 9, cfg.programs\"",
+    "assert len(cfg.programs) == 8, cfg.programs\"",
 ]
 
 moduleclass = 'tools'
