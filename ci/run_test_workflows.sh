@@ -50,19 +50,19 @@ run_case_clean() {
 
 # RUN TEST FILES
 
-# run_actor_test_clean test_sink_source_actor
-# run_actor_test_clean test_accumulator_actor
-# run_actor_test_clean test_olc_actor
-# run_actor_test_clean test_waveform_editor
-# run_actor_test_clean test_torax_actor
-# run_actor_test_clean test_nice_actor
-# run_actor_test_clean test_metis_actor
-# run_actor_test_clean test_chease_actor
+run_actor_test_clean test_sink_source_actor
+run_actor_test_clean test_accumulator_actor
+run_actor_test_clean test_olc_actor
+run_actor_test_clean test_waveform_editor
+run_actor_test_clean test_torax_actor
+run_actor_test_clean test_nice_actor
+run_actor_test_clean test_metis_actor
+run_actor_test_clean test_chease_actor
 
 # RUN WORKFLOWS
 
-# run_case_clean prescribed_transport 105099
-# run_case_clean inverse_convergence 105073
-# run_case_clean evolutive_controller 105073
+run_case_clean prescribed_transport 105099
+run_case_clean inverse_convergence 105073
+run_case_clean evolutive_controller 105073
 run_case_clean metis_from_dina 105084
 run_case_clean metis_nice_inverse_from_dina 105084
