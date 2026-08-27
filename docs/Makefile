@@ -3,17 +3,19 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
+# -W: a warning is an error. That is what catches a broken :ref:, a page missing
+# from a toctree, or a dead intersphinx inventory, so do not relax it.
 SPHINXOPTS    ?= -W --keep-going
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
-GENERATEDDIR  = $(SOURCEDIR)/generated
 BUILDDIR      = _build
-PROJECT_ROOT  = ..
 
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+# `Makefile` is listed phony so the catch-all below matches real targets
+# (html, clean, linkcheck, ...) instead of resolving them against this file.
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
@@ -21,21 +23,3 @@ help:
 %: Makefile
 	@echo Running '$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)'
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-
-clean: Makefile
-	@echo Running '$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)'
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	rm -rf $(GENERATEDDIR)
-
-# This recipe generates source files, so put result in source
-# Seems to overwrite autosummary documentation though! So not using this rn
-MODULE_EXCLUDE="../tests/**"
-apidocs: Makefile
-	sphinx-apidoc --implicit-namespaces -o "$(GENERATEDDIR)" "$(PROJECT_ROOT)/pds/" $(MODULE_EXCLUDE)
-
-# Sphinx will run this automatically
-autogen: Makefile
-	sphinx-autogen -o "$(GENERATEDDIR)" $(SOURCEDIR)/*.rst
-
-realclean: Makefile clean
-	rm -rf $(SOURCEDIR)/apidoc $(GENERATEDDIR) $(SOURCEDIR)/_build/

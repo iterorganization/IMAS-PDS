@@ -28,13 +28,6 @@ Manual
    available_workflows
    writing_actors
    adding_workflows
-   tips_and_tricks
-
-.. toctree::
-   :caption: API docs
-   :maxdepth: 1
-
-   api
 
 .. toctree::
    :caption: Development
@@ -62,5 +55,4 @@ Sitemap
 -------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

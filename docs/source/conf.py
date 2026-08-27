@@ -7,30 +7,21 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import datetime
-import sys
+import os
 from urllib.parse import urljoin
 
-# Sphinx extention to format xarray/pandas summaries
-import sphinx_autosummary_accessors
-from jinja2.defaults import DEFAULT_FILTERS
 from packaging.version import Version
 
 import pds
 
-print("python exec:", sys.executable)
-print("sys.path:", sys.path)
-
 # -- Project information -----------------------------------------------------
 # The documented project's name
-project = src_project = PROJECT = "pds"
-PACKAGE = "pds"
-src_group = GROUP = "IMEX"
+project = "pds"
 
 # A copyright statement in the style '2008, Author Name'.
 copyright = f"2020-{datetime.datetime.now(tz=datetime.UTC).year}, ITER Organization"
 # The author name(s) of the document
 author = "ITER Organization"
-src_host = "github.com"
 
 # Parse urls here for convenience, to be re-used
 
@@ -39,9 +30,16 @@ iter_github = "https://github.com/iterorganization/"
 
 # PDS
 repository_url = urljoin(iter_github, "IMAS-PDS/")
-blob_url = urljoin(repository_url, "blob/master/")
-issue_url = urljoin(repository_url, "issues/")
-mr_url = urljoin(repository_url, "pulls")
+
+# Which ref :src: links point at. Read the branch/tag from the build environment so
+# that docs built from a branch link to that branch's code, rather than always
+# resolving against master and showing a reader code that has since moved.
+git_ref = (
+    os.environ.get("READTHEDOCS_GIT_IDENTIFIER")
+    or os.environ.get("GITHUB_REF_NAME")
+    or "master"
+)
+blob_url = urljoin(repository_url, f"blob/{git_ref}/")
 
 
 # Configuration of sphinx.ext.extlinks
@@ -69,24 +67,12 @@ release = str(full_version)
 # ones.
 extensions = [
     "sphinx.ext.autodoc",  # To auto-generate docs from Python docstrings
-    "sphinx.ext.todo",  # Support for todo items
     "sphinx.ext.napoleon",  # Support for NumPy and Google style docstrings
     "sphinx.ext.intersphinx",  # Generate links to other documentation files
-    "sphinx.ext.autosummary",  # For summarizing autodoc-generated files
     "sphinx.ext.extlinks",  # For shortening internal links
-    "sphinx.ext.mathjax",  # Render math as images
+    "myst_parser",  # Lets .md files (the workflow READMEs) be included directly
     "sphinx_immaterial",  # Sphinx immaterial theme
 ]
-
-todo_include_todos = True
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
 
 # The master toctree document.
 master_doc = "index"
@@ -101,7 +87,10 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+# "generated" catches leftover autosummary output from before the API section was
+# removed: it is untracked, so a working tree can still have it, and an orphan page
+# fails the build under -W even though a clean CI checkout passes.
+exclude_patterns = ["_build", "generated", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -178,75 +167,14 @@ object_description_options = [
     (".*parameter", {"include_in_toc": False}),
 ]
 
-# Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = []
-
-# The name for this set of Sphinx documents.  If None, it defaults to
-# '<project> v<release> documentation'.
-# html_title = None
-
-# A shorter title for the navigation bar.  Default is the same as html_title.
-# html_short_title = None
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-# html_logo = "_static/imaspy_200x200.png"
-
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-# html_favicon = "_static/favicon.ico"
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ["_static"]
 
-# Add any extra paths that contain custom files (such as robots.txt or
-# .htaccess) here, relative to this directory. These files are copied
-# directly to the root of the documentation.
-# html_extra_path = []
-
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = today_fmt
-
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-# html_use_smartypants = True
-
-# Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
-
-# Additional templates that should be rendered to pages, maps page names to
-# template names.
-# html_additional_pages = {}
-
-# If false, no module index is generated.
-# html_domain_indices = True
-
-# If false, no index is generated.
-# html_use_index = True
-
-# If true, the index is split into individual pages for each letter.
-# html_split_index = False
-
-# If true, links to the reST sources are added to the pages.
-# html_show_sourcelink = True
-
-# If true, 'Created using Sphinx' is shown in the HTML footer. Default is True.
-# html_show_sphinx = True
-
-# If true, '(C) Copyright ...' is shown in the HTML footer. Default is True.
-# html_show_copyright = True
-
-# If true, an OpenSearch description file will be output, and all pages will
-# contain a <link> tag referring to it.  The value of this option must be the
-# base URL from which the finished HTML is served.
-# html_use_opensearch = ''
-
-# This is the file name suffix for HTML files (e.g. '.xhtml').
-# html_file_suffix = None
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "pds_doc"
@@ -256,11 +184,6 @@ htmlhelp_basename = "pds_doc"
 # Configuration of sphinx.ext.autodoc
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "signature"
-
-
-# Configuration of sphinx.ext.autosummary
-# https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
-autosummary_generate = True
 
 
 # Configuration of sphinx.ext.napoleon
@@ -274,24 +197,18 @@ napoleon_attr_annotations = True
 
 # Configuration of sphinx.ext.intersphinx
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
+# Only projects these docs actually refer to. Every entry costs an inventory
+# download on each build (and, under -W, is a way for a network blip to fail it).
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "packaging": ("https://packaging.pypa.io/en/stable/", None),
+    "muscle3": ("https://muscle3.readthedocs.io/en/latest/", None),
+    "imas": ("https://imas-python.readthedocs.io/en/latest/", None),
+    "ymmsl": ("https://ymmsl-python.readthedocs.io/en/latest/", None),
 }
 intersphinx_timeout = 60  # Downloads time out after 1 minute
 
 smartquotes = False
 
-# Configuration of sphinx.ext.mathjax
-# https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
-
-
-def escape_underscores(string):
-    return string.replace("_", r"\_")
-
 
 def setup(app):
-    DEFAULT_FILTERS["escape_underscores"] = escape_underscores
     app.add_css_file("pds.css")
