@@ -135,7 +135,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "pds_validation_tests/**" = ["F821"]
 "visualization/*.py" = ["BLE001"]
-"workflows/utils/plot_rlte.py" = ["BLE001"]
 "workflows/torax_nice_utils/plot_validation.py" = ["BLE001"]
 
 [[tool.ty.overrides]]

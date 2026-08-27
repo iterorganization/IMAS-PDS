@@ -8,7 +8,7 @@ programs:
     args: actor
 
   # No base_env: clean here (unlike most of this file) -- these actors need $PDS_REPO,
-  # which a purge would take with it (see the note by loop/load_balancer/metis_driver
+  # which a purge would take with it (see the note by loop/load_balancer
   # below), and args is expanded in the actor's own shell, after any purge, so a
   # module-only clean would leave args's $PDS_REPO empty even though virtual_env still
   # resolves (that one is expanded by the manager itself).
@@ -134,8 +134,3 @@ programs:
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
-
-  metis_driver:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: -u $PDS_REPO/workflows/lib/actors/metis_driver.py
