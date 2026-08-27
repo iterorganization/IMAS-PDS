@@ -1,13 +1,13 @@
-.. _`basic/visualization`:
+.. _`training/visualization`:
 
-Visualization
-=============
+Visualizing workflows
+=====================
 
 The **recorder actor** is a sink-only tap: wired onto conduits that already exist in
 a workflow, it does not change the coupling, it just also writes a distilled copy
-of the data flowing past to disk. Point the MUSCLE3 dashboard (``m3dash``, shipped with
-IMAS-MUSCLE3) at a run that includes one and it gets an extra tab, rendering that data
-live while the run is still going, or afterwards.
+of the data flowing past to disk. Point the :ref:`muscle3-dashboard <training/muscle3_dashboard>` at a run that
+includes one and it gets an extra tab, rendering that data live while the run is
+still going, or afterwards.
 
 We will use ``prescribed_transport`` for the exercises below: of the workflows in
 this repo it is the simplest chain (``source -> waveform_editor -> nice_inv ->
@@ -51,7 +51,7 @@ a file always has to exist:
 .. code-block:: yaml
 
     settings:
-      recorder_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
+      recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
 
 The config file defines the extraction logic in one of two ways: a plain
 ``def extract(ids) -> dict[str, xarray.Dataset]`` function if you only need to
@@ -65,8 +65,7 @@ was recorded -- the recorder only ever reads the ``State`` half.
 The ``State`` half of that can itself be automatic (exercise 1 below): if it
 doesn't implement its own ``extract``, and the recorder's
 ``automatic_extract`` setting is on, extraction falls back to
-``BaseState.automatic_extract`` -- the same discovery-and-extract logic the
-live visualization actor's own automatic mode uses.
+``BaseState.automatic_extract``.
 
 .. note::
 
@@ -81,17 +80,16 @@ live visualization actor's own automatic mode uses.
 Running the workflow and opening the dashboard
 -------------------------------------------------
 
-.. code-block:: console
+.. code-block:: bash
 
-    bash bin/run_case.sbatch 105084_prescribed
+    bash run_workflow.sh prescribed_transport 105084
 
-``run_case.sbatch`` pins the run directory to ``cases/runs/<case>``, so the output lands
-somewhere predictable. Then, in a separate terminal with the dashboard's own virtual
-environment activated:
+Then, in a separate terminal with the dashboard's own virtual environment
+activated (see :ref:`muscle3-dashboard <training/muscle3_dashboard>`):
 
-.. code-block:: console
+.. code-block:: bash
 
-    m3dash open cases/runs/
+    m3dash open workflows/
 
 Click the run, and a ``recorder_equilibrium`` tab appears once the recorder has written its
 first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk
@@ -112,7 +110,7 @@ Exercise 1: automatic mode
         Write a new config file with a bare ``State`` (no ``extract``
         override) and a ``Plotter`` that plots one named field, and point
         ``recorder_equilibrium.config`` at it in
-        ``cases/105084_prescribed.ymmsl``. Turn on
+        ``workflows/prescribed_transport/settings.ymmsl``. Turn on
         ``recorder_equilibrium.automatic_extract`` and restrict it to just that field with
         ``recorder_equilibrium.automatic_extract_fields``, re-run the workflow, and open
         the ``recorder_equilibrium`` tab.
@@ -128,11 +126,6 @@ Exercise 1: automatic mode
             bare ``State``'s automatic fallback flattens it to dots before
             recording -- ``automatic_extract_fields``, and the field your
             ``Plotter`` looks up, both have to match that same dotted form.
-
-            This also is not the same as the live visualization actor's
-            interactive variable-picker dropdown: that needs the raw IDS to
-            discover quantities from, and the dashboard here only ever sees
-            data that has already been distilled and written to a store.
 
     .. md-tab-item:: Solution
 
@@ -181,7 +174,7 @@ Exercise 1: automatic mode
         .. code-block:: yaml
 
             settings:
-              recorder_equilibrium.config: /work/projects/pds/pds/visualization/auto_explore.py
+              recorder_equilibrium.config: ${PDS_REPO}/visualization/auto_explore.py
               recorder_equilibrium.automatic_extract: true
               recorder_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
 
@@ -224,7 +217,7 @@ Exercise 2: an explicit extract method
         .. code-block:: yaml
 
             settings:
-              recorder_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
+              recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
 
         In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the
         existing ``ip_beta_tor`` dataset:
@@ -310,3 +303,13 @@ Exercise 2: an explicit extract method
         wrapper is for HoloViews elements. A plain ``@param.depends``-decorated
         method returning a Panel object (here, a ``Matplotlib`` pane) can be
         placed directly in the layout and Panel re-renders it the same way.
+
+.. todo::
+
+    To match the training schedule ("Visualization", 60'):
+
+    - Extend "development of custom visualizations" beyond extending an existing ``extract``
+      method: writing a plot configuration from scratch for a field the recorder does not
+      already carry.
+    - Note how to view the visualizations when the run itself is on a compute node while the
+      graphical session is on NoMachine.
