@@ -2,6 +2,8 @@ easyblock = 'Bundle'
 
 name = 'PCS'
 version = '2026.08'
+
+local_pcs_commit = '2a9e7f35eaec8dd05f9b0ab0dbfd1e8f06b4cbe9'
 versionsuffix = '-pds'
 
 homepage = 'https://git.iter.org/projects/PCS/repos/pcs'
@@ -23,9 +25,11 @@ components = [
             'git_config': {
                 'url': 'ssh://git@git.iter.org/pcs',
                 'repo_name': 'pcs',
-                'commit': 'master',
+                'commit': local_pcs_commit,
             },
-            'filename': 'pcs-%(version)s.tar.gz',
+            # commit in the filename: EasyBuild resolves sources by name, so a
+            # commit-independent one silently reuses the cached tarball
+            'filename': 'pcs-%s.tar.gz' % local_pcs_commit[:10],
         }],
         'checksums': [None],
         'start_dir': 'pcs',

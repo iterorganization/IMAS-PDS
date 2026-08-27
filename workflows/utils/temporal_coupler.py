@@ -328,6 +328,7 @@ def main() -> None:
             b = Peer(instance, b_in_ports, b_out_ports)
         else:
             # Resuming mid-loop: restore peer state instead of receiving.
+            assert state is not None
             a = Peer(instance, a_in_ports, a_out_ports, state["a"])
             b = Peer(instance, b_in_ports, b_out_ports, state["b"])
 
