@@ -115,13 +115,6 @@ programs:
       source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py "$@"
 
-  metis_driver:
-    script: |
-      #!/bin/bash
-      unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
-      exec python -u $PDS_REPO/workflows/lib/actors/metis_driver.py "$@"
-
   nice_inv:
     script: |
       #!/bin/bash
