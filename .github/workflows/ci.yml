@@ -60,5 +60,3 @@ jobs:
           name: html-docs
           path: docs/_build/html/
           retention-days: 1
-
-  # TODO: Trigger test workflows on Bamboo

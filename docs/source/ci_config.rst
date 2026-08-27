@@ -15,8 +15,9 @@ Linting
 Docs
     Builds the Sphinx documentation and uploads the rendered HTML as a build artifact.
     ``docs/Makefile`` defaults ``SPHINXOPTS`` to ``-W --keep-going``, so any warning
-    fails the build both here and locally. This job runs only once linting has passed.
+    fails the build.
 
 Test workflows
-    
-    # TODO: Still to be migrated to GitHub Actions
+    The tests currently run on SDCC CI nodes through Bamboo, which call the
+    ``ci/run_test_workflows.sh`` shell script. These tests need the SDCC module environment 
+    and the IMAS data and run a number of specific actor and workflow tests.
