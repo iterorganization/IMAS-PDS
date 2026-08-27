@@ -13,7 +13,7 @@ toolchain = SYSTEM
 
 dependencies = [
     ('Python', '3.11.5', '', ('GCCcore', '13.2.0')),
-    ('MATLAB', '2023b-r5'),
+    ('MATLAB', '2023b-r5', '', ('GCCcore', '13.2.0')),
 ]
 
 sources = [{
