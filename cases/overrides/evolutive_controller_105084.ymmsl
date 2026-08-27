@@ -4,8 +4,8 @@ ymmsl_version: v0.2
 settings:
   source.t_min: 136.0
   source.t_max: 256.0
-  torax.t_final: 136.8
+  torax.t_final: 136.6
   torax.fixed_dt: 0.005
-  nice_evo_rd.t_end: 136.8
+  nice_evo_rd.t_end: 136.6
   nice_evo_rd.dt: 0.005
   nice_evo_rd.t_interval: 0.005
