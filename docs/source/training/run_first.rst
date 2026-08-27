@@ -193,12 +193,37 @@ runs together:
     mkdir -p runs/my_first_run
     muscle_manager --start-all --run-dir runs/my_first_run ymmsl_files/test_sink_source_actor.ymmsl
 
+When the crash is not in the first actor
+----------------------------------------
+
+The crash above was the easy kind: the very first actor died, and the run was over before it
+started. More often a run gets going, and something further down the chain gives up. The
+dashboard is more useful then, because the graph shows you which crashed first while
+the others were still working.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Undo the change from the previous exercise, so the source URI is valid again. This
+        time break the other end: point ``sink_component.sink_uri`` at somewhere you are not
+        allowed to write, for example ``imas:hdf5?path=/test_output``.
+
+        Run it again and watch the graph. What happens?
+
+        .. code-block:: bash
+
+            muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
+
+    .. md-tab-item:: Solution
+
+        The source reads its data and sends it, so it completes. The sink is the one that
+        fails, when it tries to create the output DBEntry. In the graph the sink actor 
+        is highlighted in bright red, which tells you where to look.
+
+        Open the sink's ``stderr`` and you will find a permission error on the path you gave
+        it.
+
+
 Now that we have gotten our feet wet by running a simple example workflow, 
 let's take a look at more complex workflows in the next section!
-
-.. todo::
-
-    - Cover monitoring a run that was submitted to a compute node
-    - The debugging exercise uses a missing-URI crash. Consider a second failure mode that
-      does not fail instantly (e.g. an actor that dies mid-run) so the dashboard's live status
-      is what reveals it.

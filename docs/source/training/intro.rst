@@ -33,19 +33,23 @@ Training contents
 The sections are meant to be followed in order:
 
 :ref:`Setting up the PDS <training/setup>`
-    Getting the PDS ready on SDCC
+    Getting the PDS and the scenario data ready on SDCC
 
 :ref:`Understanding the PDS <training/understanding>`
-    Learn what scenarios, workflows and runs are, and how the PDS architecture works
+    Learn what workflows, scenarios, cases and runs are, why the PDS keeps them apart, and
+    how to find out what is available
 
 :ref:`Running your first PDS workflow <training/run_first>`
-    Run your first workflow and follow it live in the MUSCLE3 dashboard
+    Run a small workflow, follow it live in the MUSCLE3 dashboard, work out what went wrong
+    when one fails, and submit a run to a compute node
 
 :ref:`Running existing workflows <training/run_complex>`
-    Run some of the premade ITER scenario workflows
+    Run the premade ITER cases, watch them while they go, and read the results they leave
+    behind
 
 :ref:`Configuring existing workflows <training/configuring>`
-    Learn how to configure an existing scenario and analyze the results
+    Change the pulse design, the solver settings and the time window of an existing case
+    without editing anything shared
 
 :ref:`Visualizing workflows <training/visualization>`
     Learn how to visualize the data flowing between actors during a run

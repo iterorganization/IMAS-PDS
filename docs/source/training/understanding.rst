@@ -18,6 +18,9 @@ so the same workflow can be used for multiple different scenarios.
 Scenario - The scenario describes *what* is simulated. This includes the input data and the 
 designed targets for one pulse, in the separate ``pds-scenarios`` repository, one directory 
 per shot. This repository is available on SDCC on ``/work/projects/pds/pds-scenarios``.
+You will see that path written as ``${SCENARIOS_REPO}`` in the settings files -- the PDS
+scripts fill it in for you, and you only ever set it yourself if you keep your own copy of
+the scenarios somewhere else.
 The scenarios knows nothing about which codes will consume it, so the same scenario can be run 
 through several workflows.
 
@@ -50,8 +53,8 @@ For the scenarios and your own runs:
 
 .. code-block:: bash
 
-    ls $SCENARIOS_REPO              # the scenarios, one directory per shot
-    m3dash ls                       # the runs you have already produced
+    ls /work/projects/pds/pds-scenarios     # the scenarios, one directory per shot
+    m3dash ls                               # the runs you have already produced
 
 Reading a case
 --------------
@@ -113,8 +116,44 @@ Exercise 2: find out what a case will do
         data, and the ``sink_nice.sink_uri`` and ``sink_torax.sink_uri`` settings name the
         output entries, written into ``cases/runs/inverse_convergence_105092/``.
 
-.. todo::
 
-    - Say explicitly what a **run** is as a fourth concept next to workflow/scenario/case, and
-      where its output lives
-    - Add an exercise on previsualizing scenario input data before running it
+Looking at the input before you run
+-----------------------------------
+
+A case tells you *which* data it reads, but not what is in it. Since a full run can take a
+while, it pays to look at the input first -- an empty or unexpected IDS is much easier to
+recognise now than halfway through a simulation.
+
+Every scenario keeps its data in two DBEntries: ``data/in`` with the pulse itself, and
+``data/in_md`` with the machine description, the parts of the machine that do 
+not change during a pulse.
+
+Exercise 3: look at a scenario before running it
+------------------------------------------------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Take a look at the ``105092`` scenario, which lives in
+        ``/work/projects/pds/pds-scenarios/105092/``.
+
+        ``IDStools`` is a separate module with a set of ready-made IMAS plotting scripts. In
+        this case, you can use the
+        `plotscenario <https://imas-idstools.readthedocs.io/en/latest/plotscenario.html>`_
+        script, which shows the equilibrium together with the kinetic profiles.
+        Load it with ``module load IDStools`` and visualize the scenario.
+
+        Without a time it plots the middle of the pulse. Try roughly the ramp-up, the flattop
+        and the ramp-down. Over which time range does the pulse run, and does the plasma keep
+        the same shape throughout?
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: bash
+
+            module load IDStools
+
+            plotscenario --uri "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in" -t 80
+
+        Compare ``-t 5``, ``-t 80`` and ``-t 160``.
