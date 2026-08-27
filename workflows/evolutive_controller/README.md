@@ -69,8 +69,9 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
   `run/nice/src/main_imas_evo_rd_muscle3.cc`), and nothing else in this workflow feeds that
   port, so the controller is what keeps the coupled system running past the first step.
 - `torax.fixed_dt` / `nice_evo_rd.t_interval` / `nice_evo_rd.dt` / `config_nice.xml`'s `<dt>`
-  are all assumed to be a consistent 0.01s -- a starting point ported from `workflows/evolutive`'s
-  default, not a value tuned for this scenario or validated for solver stability.
+  are all assumed to be a consistent 0.01s -- a starting point ported from this workflow's
+  pre-rename `workflows/evolutive` default, not a value tuned for this scenario or validated
+  for solver stability.
 - `nice_evo_rd.t_end` (optional, matches `torax.t_final`) bounds `nice_evo_rd`'s own run: once the
   next coupling checkpoint would exceed it, the actor sends its final output with no
   `next_timestamp` and stops, instead of running indefinitely off upstream signaling alone (see

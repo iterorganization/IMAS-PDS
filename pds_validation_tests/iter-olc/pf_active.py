@@ -75,8 +75,8 @@ def validate_force_limits_cs(ids):
     Ftp = F_tp4K
     F_gap = [-Ftp]
     for i in reversed(range(6)):
-        # ty can't see that the `not all(...)` guard above already ensures every
-        # cs_force_dict value -- and hence every F_z entry -- is not None.
+        # ty can't see that the `any(val is None ...)` guard above already ensures
+        # every cs_force_dict value -- and hence every F_z entry -- is not None.
         F_gap = [F_gap[0] + F_z[i] - mg, *F_gap]  # ty: ignore[unsupported-operator]
 
     for F_gap_j in F_gap:
