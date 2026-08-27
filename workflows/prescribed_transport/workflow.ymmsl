@@ -2,10 +2,11 @@ ymmsl_version: v0.2
 
 # prescribed_transport -- a single inverse solve against a prescribed boundary.
 #
-# Structure only: no scenario data, no paths, no variables. Run it through a case that
-# imports this model:
+# Structure only: no scenario data, no paths, no variables. Run it by building a case
+# directory from this model and submitting that:
 #
-#   muscle_manager --start-all $PDS_REPO/cases/105084_prescribed.ymmsl
+#   bin/pds-create-case prescribed_transport 105084
+#   sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105084
 
 imports:
 - from imas_muscle3 import implementation source_component

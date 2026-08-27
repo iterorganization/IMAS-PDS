@@ -2,9 +2,10 @@ ymmsl_version: v0.2
 
 # inverse_convergence -- inverse pulse design converged against TORAX transport.
 #
-# Run it by stacking a case, or use a self-contained case that imports this model:
+# Run it by building a case directory from this model and submitting that:
 #
-#   muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
+#   bin/pds-create-case inverse_convergence 105084
+#   sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 #
 # Components:
 #
