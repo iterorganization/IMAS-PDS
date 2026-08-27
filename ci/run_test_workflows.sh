@@ -33,14 +33,6 @@ run_actor_test_clean() {
   muscle_manager --start-all --run-dir "cases/runs/$test_name" "ymmsl_files/$test_name.ymmsl"
 }
 
-# Clears the scenario's stale output first, so a rerun cannot fail on a leftover file.
-run_workflow_clean() {
-  local workflow="$1" scenario="$2"
-  shift 2
-  rm -rf "workflows/$workflow/scenarios/$scenario/tmp"
-  bash run_workflow.sh "$workflow" "$scenario" "$@"
-}
-
 run_case_clean() {
   local workflow="$1" shot="$2"
   local case_dir="cases/${workflow}_${shot}"

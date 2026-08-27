@@ -107,16 +107,3 @@ the cases write to `../../../<name>` to climb back out to it.
 | `evolutive_controller` | `105073`, `105099` |
 | `metis_from_dina` | `105084`, `105092` |
 | `metis_nice_inverse_from_dina` | `105073`, `105078`, `105084`, `105092`, `105099` |
-
-## Legacy path
-
-`metis_predictive_from_dina` and `metis_predictive_nice_inverse_from_dina` have not been
-migrated to the case system above and still run the old way:
-
-```bash
-source completion.sh          # tab completion for workflows and scenarios
-bash run_workflow.sh metis_predictive_from_dina 105084
-```
-
-`run_workflow.sh` and the per-workflow `scenarios/` directories exist only for those two.
-They will go once METIS is fully migrated.
