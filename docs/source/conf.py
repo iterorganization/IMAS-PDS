@@ -7,7 +7,6 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import datetime
-import functools
 import os
 from pathlib import Path
 from urllib.parse import urljoin
@@ -35,14 +34,27 @@ iter_github = "https://github.com/iterorganization/"
 # PDS
 repository_url = urljoin(iter_github, "IMAS-PDS/")
 
+
 # Which ref :src: links point at. Read the branch/tag from the build environment so
 # that docs built from a branch link to that branch's code, rather than always
 # resolving against master and showing a reader code that has since moved.
-git_ref = (
-    os.environ.get("READTHEDOCS_GIT_IDENTIFIER")
-    or os.environ.get("GITHUB_REF_NAME")
-    or "master"
-)
+#
+# On a pull_request event GITHUB_REF_NAME is "<number>/merge" and RTD's
+# READTHEDOCS_GIT_IDENTIFIER is the bare PR number -- neither resolves under blob/, so
+# prefer GITHUB_HEAD_REF (the source branch) and fall back to master over a ref that
+# would only produce 404s.
+def _git_ref() -> str:
+    for candidate in (
+        os.environ.get("GITHUB_HEAD_REF"),
+        os.environ.get("READTHEDOCS_GIT_IDENTIFIER"),
+        os.environ.get("GITHUB_REF_NAME"),
+    ):
+        if candidate and "/merge" not in candidate and not candidate.isdigit():
+            return candidate
+    return "master"
+
+
+git_ref = _git_ref()
 blob_url = urljoin(repository_url, f"blob/{git_ref}/")
 
 
@@ -264,7 +276,6 @@ def _drop_recorders(model):
     ]
 
 
-@functools.cache
 def _drop_unused_imports(configuration):
     """Drop import statements for implementations no component uses any more.
 
@@ -342,8 +353,14 @@ def render_coupling_diagram(path, model=None):
     # the library directly paints the layout boxes over the diagram.
     ymmsl2svg_settings.debug = False
 
-    # How the workflow files resolve each other's `imports:` statements.
-    os.environ.setdefault("YMMSL_PATH", str(REPO_ROOT / "workflows"))
+    # How the workflow files resolve each other's `imports:` statements. Prepend rather
+    # than setdefault: `module load PDS` exports YMMSL_PATH pointing at whichever checkout
+    # it resolved, which need not be the one being documented.
+    workflows = str(REPO_ROOT / "workflows")
+    inherited = os.environ.get("YMMSL_PATH")
+    os.environ["YMMSL_PATH"] = (
+        f"{workflows}{os.pathsep}{inherited}" if inherited else workflows
+    )
 
     configuration = ymmsl.load_as(Configuration, path)
 
