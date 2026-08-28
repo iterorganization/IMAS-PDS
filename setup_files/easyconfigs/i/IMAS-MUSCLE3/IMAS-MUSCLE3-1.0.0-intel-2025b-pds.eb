@@ -4,7 +4,7 @@ name = 'IMAS-MUSCLE3'
 version = '1.0.0'
 versionsuffix = '-pds'
 
-local_commit = 'dfcc24f8ab6fb0813f8701f43eca67755ae35c2f'
+local_commit = '3dee3689b7c624ae094d547e822781c827412850'
 local_dashboard_commit = 'e3a8e91c40b4451edb5060e9c8bba05608537c5a'
 
 description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
@@ -165,9 +165,7 @@ sanity_check_commands = [
     "eps = entry_points(group='ymmsl.module', name='imas_muscle3'); assert eps, 'entry point not registered'; "
     "import ymmsl; from ymmsl.v0_2 import Configuration; "
     "cfg = ymmsl.load_as(Configuration, next(iter(eps)).load()); "
-    # 9, not 8: upstream's ACTORS still lists visualization_component even though
-    # imas_muscle3/actors/visualization_component.py was removed in PR #63.
-    "assert len(cfg.programs) == 9, cfg.programs\"",
+    "assert len(cfg.programs) == 8, cfg.programs\"",
 ]
 
 moduleclass = 'tools'
