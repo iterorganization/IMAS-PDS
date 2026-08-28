@@ -26,7 +26,7 @@ trace read directly from this scenario's own DINA-preprocessed data
 (`<shot>_in_waveform_editor`), into one assembled F_INIT message for `torax`, `nice_evo_rd`,
 and `magnetic_controller`.
 
-A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/`) reads NICE's `equilibrium`
+A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/magnetic_controller/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.
 
 Structure lives in `workflow.ymmsl`; shared knobs in `settings.ymmsl`; per-scenario DINA source
