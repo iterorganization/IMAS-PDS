@@ -1,4 +1,4 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 set -euo pipefail # stop if anything doesn't work
 
 module purge

@@ -20,14 +20,13 @@ junit.xml
 
 ymmsl_files/output/
 
-run/*
-!run/*_base_env
-!run/input/
+local_installs/*
 ymmsl_files/*
 !ymmsl_files/.*
 
 cases/*/
 !cases/overrides/
+!cases/input/
 
 !*.template
 

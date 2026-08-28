@@ -9,7 +9,7 @@ ymmsl_version: v0.2
 # Workflows normally get the imas_muscle3-shipped actors (source_component,
 # sink_component, recorder_component, etc.) via `from imas_muscle3 import implementation
 # X`, which resolves straight from the installed imas_muscle3 package -- this repo's own
-# $PDS_REPO/run/IMAS-MUSCLE3/venv counts as an install. The definitions below are kept as
+# $PDS_REPO/local_installs/IMAS-MUSCLE3/venv counts as an install. The definitions below are kept as
 # a `from lib.local_programs import implementation X` fallback for pointing a workflow at
 # this repo's local venv explicitly, e.g. to pick up an editable-installed checkout ahead
 # of whatever imas_muscle3 install would otherwise resolve. See lib/easybuild_programs.ymmsl
@@ -36,56 +36,56 @@ programs:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.source_component "$@"
 
   sink_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.sink_component "$@"
 
   sink_source_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.sink_source_component "$@"
 
   olc_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.olc_component "$@"
 
   recorder_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.recorder_component "$@"
 
   iterator_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.iterator_component "$@"
 
   passthrough_component:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.passthrough_component "$@"
 
   waveform_editor:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/Waveform-Editor/venv/bin/activate
+      source $PDS_REPO/local_installs/Waveform-Editor/venv/bin/activate
       # Same as nice_inv/nice_evo_rd below: a multi-slice NICE-inverse equilibrium leaves
       # grids_ggd (not itself time-varying) at shape (1,) while the rest of the IDS has
       # one entry per slice, which IMAS's strict validator rejects as a coordinate
@@ -98,21 +98,21 @@ programs:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/utils/temporal_coupler.py "$@"
 
   loop:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py "$@"
 
   load_balancer:
     script: |
       #!/bin/bash
       unset PYTHONPATH
-      source $PDS_REPO/run/IMAS-MUSCLE3/venv/bin/activate
+      source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py "$@"
 
   nice_inv:
@@ -121,7 +121,7 @@ programs:
       source /etc/profile.d/modules.sh
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
-      exec $PDS_REPO/run/nice/run/nice_imas_inv_muscle3 "$@"
+      exec $PDS_REPO/local_installs/nice/run/nice_imas_inv_muscle3 "$@"
 
   nice_evo_rd:
     script: |
@@ -129,7 +129,7 @@ programs:
       source /usr/share/lmod/lmod/init/bash
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
-      exec $PDS_REPO/run/nice/run/nice_imas_evo_rd_muscle3 "$@"
+      exec $PDS_REPO/local_installs/nice/run/nice_imas_evo_rd_muscle3 "$@"
 
   torax:
     script: |
@@ -138,8 +138,8 @@ programs:
       # (prepends a Python-3.13 SciPy-bundle site-packages dir), which shadows this
       # venv's own numpy build with an ABI-incompatible one for our Python 3.11.
       unset PYTHONPATH
-      source $PDS_REPO/run/TORAX-MUSCLE3/venv/bin/activate
-      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/run/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+      source $PDS_REPO/local_installs/TORAX-MUSCLE3/venv/bin/activate
+      export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/local_installs/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
       exec python -u -m torax_muscle3.torax_actor "$@"
 
   # METIS is always driven through MATLAB's pyenv()/py.* bridge and a module-installed
@@ -165,7 +165,7 @@ programs:
   # Unlike every other actor above, this one used to be the declarative env/modules/
   # executable/args form -- but env: values are set directly by the manager (not run
   # through a shell), so its $PDS_REPO never expanded: MATLAB's own getenv('PCS_PATH')
-  # came back with the literal string "$PDS_REPO/run/pcs", addpath resolved that as a
+  # came back with the literal string "$PDS_REPO/local_installs/pcs", addpath resolved that as a
   # relative path under the instance's workdir, and pcssp_pcs_add_paths (which that
   # addpath was supposed to put on the path) came back "unrecognized function or
   # variable". `export` lines in a script:, like every actor above, are expanded in the
@@ -175,9 +175,9 @@ programs:
       #!/bin/bash
       module load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
       module load MATLAB/2025b-r1-GCCcore-13.2.0
-      export PCS_PATH=$PDS_REPO/run/pcs
+      export PCS_PATH=$PDS_REPO/local_installs/pcs
       export CONTROLLER_PATH=$PDS_REPO/controllers
-      export SCDDS_COREPATH=$PDS_REPO/run/pcs/pcssp/scdds
+      export SCDDS_COREPATH=$PDS_REPO/local_installs/pcs/pcssp/scdds
       # run() the controller by full path, not by name: NICE's own
       # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
       # below) ships its own, much older, different-port-signature
@@ -197,4 +197,4 @@ programs:
       # anywhere between `try` and `end` fails immediately with "This statement is
       # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
       # above, which parse fine across multiple lines.
-      exec matlab -batch "try; pyenv('Version','$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/run/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
+      exec matlab -batch "try; pyenv('Version','$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"

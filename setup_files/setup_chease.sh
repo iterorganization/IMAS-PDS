@@ -1,11 +1,11 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 set -euo pipefail # stop if anything doesn't work
 
 CHEASE_URL=${1:-"https://gitlab.epfl.ch/spc/chease.git"}
 BRANCH_CHEASE=${2:-"feature/muscle3"}
 
 export XML_USE_CHOICE="NO"
-# source imas_base_env
+# source ../cases/imas_base_env
 git clone "$CHEASE_URL"
 cd chease
 git checkout $BRANCH_CHEASE

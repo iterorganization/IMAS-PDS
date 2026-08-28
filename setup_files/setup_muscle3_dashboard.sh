@@ -1,4 +1,4 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 set -euo pipefail # stop if anything doesn't work
 
 MUSCLE3_DASHBOARD_URL=${1:-"https://github.com/multiscale/muscle3-dashboard.git"}

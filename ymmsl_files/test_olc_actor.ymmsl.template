@@ -18,7 +18,7 @@ models:
     conduits:
       source.pf_active_out: olc.pf_active_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/input/test_data_ids/"
   olc.extra_rule_dirs: "[PWD_PLACEHOLDER]/pds_validation_tests"
   olc.rulesets: "iter-olc"
   olc.apply_generic: False
