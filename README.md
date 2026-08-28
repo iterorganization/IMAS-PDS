@@ -68,8 +68,8 @@ muscle_manager --start-all ymmsl_files/test_sink_source_actor.ymmsl
 
 A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
 is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
-materializes that pairing as a **case** directory under `cases/`; `bin/pds-run-case.sbatch`
-submits it:
+materializes that pairing as a **case** directory under `cases/`; `bin/pds-run-case`
+submits it as a Slurm job:
 
 ```bash
 # PDS_REPO before the module load: without it the PDS module only finds the
@@ -81,7 +81,7 @@ module use /work/projects/pds/modules/all
 module load PDS
 
 bin/pds-create-case inverse_convergence 105073
-sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
+bin/pds-run-case cases/inverse_convergence_105073
 ```
 
 A case directory is a frozen snapshot: `workflow.ymmsl`, `workflow_settings.ymmsl`, an optional
@@ -93,7 +93,14 @@ To change something for one run without touching the case, stack an extra file a
 last value for a key wins:
 
 ```bash
-sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073 ./cold-start.ymmsl
+bin/pds-run-case cases/inverse_convergence_105073 ./cold-start.ymmsl
+```
+
+To override Slurm resources (time, cpus, ...) for one run, submit `bin/pds-run-case.sbatch`
+directly instead:
+
+```bash
+sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
 ```
 
 Each run lands in `cases/runs/<workflow>_<shot>/`. Sink outputs go directly in that directory,
