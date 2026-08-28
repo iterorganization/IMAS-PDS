@@ -74,10 +74,8 @@ fi
 PYTHON="$(command -v python3 2>/dev/null || command -v python)"
 export PYTHON
 
-RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
-# A leftover instances/ dir from a previous run of this case makes muscle_manager fail with
-# "Instance already has a directory", so start from a clean run dir each time.
-rm -rf "$RUN_DIR"
+# Timestamped so successive runs of the same case don't collide or overwrite each other.
+RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
 
