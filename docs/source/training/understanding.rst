@@ -40,14 +40,12 @@ Keeping them apart is what makes the pieces reusable.
 Finding what is available
 -------------------------
 
-.. TODO: these pointed at the case gallery (docs/source/cases/), which is not part of
-   this branch; restore those links if the gallery lands.
-
-The workflows the cases are built on are documented in :ref:`available_workflows`, and
-``cases/overrides/`` shows which shots each of them has a case for. Building and running a
-case is covered in :ref:`usage`.
-
-For a description of the physics each workflow covers, see :ref:`available_workflows`.
+The workflows the cases are built on each have a page under :ref:`workflows`, with a
+coupling diagram, what the workflow does and which shots it has cases for --
+:ref:`prescribed transport <case-prescribed-transport>` and
+:ref:`inverse convergence <case-inverse-convergence>` are the two the exercises use.
+``cases/overrides/`` shows the per-shot tuning. Building and running a case is covered in
+:ref:`running_cases`.
 
 For the scenarios and your own runs:
 
@@ -90,7 +88,7 @@ Exercise 1: find out what is available
 
     .. md-tab-item:: Exercise
 
-        Using :ref:`available_workflows` and ``cases/overrides/``, find out which workflows have cases, which
+        Using :ref:`workflows` and ``cases/overrides/``, find out which workflows have cases, which
         shots each of them covers, and which shots can be run both with prescribed transport
         and with a converged transport solve.
 
@@ -108,7 +106,7 @@ Exercise 2: find out what a case will do
 
     .. md-tab-item:: Solution
 
-        Start from ``inverse_convergence`` in :ref:`available_workflows`, which describes
+        Start from :ref:`case-inverse-convergence`, which describes
         the coupling and what the case produces, then read the case folder itself.
 
         ``workflow.ymmsl`` names the components and how they are wired, the

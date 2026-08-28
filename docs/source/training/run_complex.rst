@@ -271,11 +271,8 @@ it in evolutive mode.
 Exercise 5
 ----------
 
-.. TODO: these pointed at the case gallery (docs/source/cases/), which is not part of
-   this branch; restore those links if the gallery lands.
-
-There are more shots available than the ones used above. The workflows they are built on
-are documented in :ref:`available_workflows`.
+There are more shots available than the ones used above. Each workflow has a page under
+:ref:`workflows` with its coupling diagram and the shots it has cases for.
 
 .. md-tab-set::
 
