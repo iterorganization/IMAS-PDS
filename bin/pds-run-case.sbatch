@@ -91,7 +91,10 @@ done
 
 # Stable path to this case's most recent run, for consumers that need one fixed location
 # (e.g. evolutive_controller/settings.ymmsl reading inverse_convergence's output) instead of
-# having to know the timestamp.
+# having to know the timestamp. rm -rf first: ln -sfn only replaces an existing symlink --
+# if a pre-timestamp run left a real directory at this path, ln would silently nest the new
+# symlink inside it instead of replacing it.
+rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
 POSTPROCESS="$CASE_DIR/postprocess.sh"
