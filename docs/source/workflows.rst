@@ -11,6 +11,15 @@ This page is the chooser: what each workflow couples, which shots are exercised,
 and what input data it needs. Each one links on to its own page, where the
 coupling is drawn out component by component.
 
+.. toctree::
+   :hidden:
+
+   workflow_pages/prescribed_transport
+   workflow_pages/inverse_convergence
+   workflow_pages/metis_from_dina
+   workflow_pages/metis_nice_inverse
+   workflow_pages/evolutive_controller
+
 The workflows
 -------------
 
@@ -165,12 +174,3 @@ For any workflow that runs METIS:
   See the `METIS input documentation
   <https://github.com/IRFM/METIS/blob/main/doc/METIS_inputs_from_IMAS_IDSs.pdf>`_
   for what it expects.
-
-.. toctree::
-   :hidden:
-
-   workflow_pages/prescribed_transport
-   workflow_pages/inverse_convergence
-   workflow_pages/metis_from_dina
-   workflow_pages/metis_nice_inverse
-   workflow_pages/evolutive_controller
