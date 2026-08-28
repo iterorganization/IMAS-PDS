@@ -45,7 +45,7 @@ whole trace rather than a single step, while ``magnetic_controller`` reads NICE'
 ``equilibrium`` and ``pf_active`` each step and returns a corrected ``pf_active``. Three
 sinks and two recorders tap the outputs.
 
-.. coupling-diagram:: docs/source/cases/evolutive_controller.svg
+.. coupling-diagram:: docs/source/workflow_pages/evolutive_controller.svg
 
    ``source`` seeds the F_INIT state through the waveform editor; ``torax`` and
    ``nice_evo_rd`` then step forward against each other through ``temporal_coupler``, with
@@ -93,3 +93,11 @@ leaves empty.
    ``config_nice.xml``'s ``<dt>`` are all assumed to be a consistent 0.01s. That is a
    starting point carried over from the workflow's defaults, not a value tuned for this
    scenario or validated for solver stability.
+
+Workflow reference
+------------------
+
+``workflows/evolutive_controller/README.md``, included here so the two cannot drift apart.
+
+.. include:: ../../../workflows/evolutive_controller/README.md
+   :parser: myst_parser.sphinx_

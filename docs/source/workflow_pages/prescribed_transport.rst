@@ -49,3 +49,11 @@ balances the per-slice solves over N NICE workers:
    :model: nice_inverse
 
    The load balancer scatters slices to the workers and gathers the results back.
+
+Workflow reference
+------------------
+
+``workflows/prescribed_transport/README.md``, included here so the two cannot drift apart.
+
+.. include:: ../../../workflows/prescribed_transport/README.md
+   :parser: myst_parser.sphinx_

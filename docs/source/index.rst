@@ -46,7 +46,6 @@ up, :ref:`running_cases` what a case is and where its output goes, and
    installing
    running_cases
    workflows
-   cases/index
    troubleshooting
 
 .. toctree::

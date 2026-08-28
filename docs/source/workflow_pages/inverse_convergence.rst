@@ -52,3 +52,11 @@ workflow can swap what sits behind them without touching the coupling above.
    :model: nice_inverse
 
    The load balancer scatters slices to the workers and gathers the results back.
+
+Workflow reference
+------------------
+
+``workflows/inverse_convergence/README.md``, included here so the two cannot drift apart.
+
+.. include:: ../../../workflows/inverse_convergence/README.md
+   :parser: myst_parser.sphinx_

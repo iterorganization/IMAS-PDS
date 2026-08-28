@@ -8,8 +8,8 @@ what order, over which ports. It carries no shot data -- that comes from the
 scenario you pair it with when you create a case. See :ref:`running_cases`.
 
 This page is the chooser: what each workflow couples, which shots are exercised,
-and what input data it needs. For the couplings drawn out component by component,
-see the :ref:`case gallery <cases>`.
+and what input data it needs. Each one links on to its own page, where the
+coupling is drawn out component by component.
 
 Choosing a workflow
 -------------------
@@ -116,50 +116,56 @@ For any workflow that runs METIS:
   <https://github.com/IRFM/METIS/blob/main/doc/METIS_inputs_from_IMAS_IDSs.pdf>`_
   for what it expects.
 
-Per-workflow reference
-----------------------
+Per-workflow detail
+-------------------
 
-Each workflow's own ``README.md`` is the single source of truth for what it does,
-its assumptions, and what its output looks like. They are included below rather
-than paraphrased, so they cannot drift.
+Each coupling below is drawn from its own ``workflow.ymmsl`` at build time, so the
+diagrams cannot drift from the couplings they document.
 
-.. _`workflow-prescribed-transport`:
+.. grid:: 1 2 3 3
+   :gutter: 2
 
-prescribed_transport
-^^^^^^^^^^^^^^^^^^^^
+   .. grid-item-card:: Prescribed transport
+      :img-top: workflow_pages/diagrams/prescribed_transport.svg
+      :link: case-prescribed-transport
+      :link-type: ref
 
-.. include:: ../../workflows/prescribed_transport/README.md
-   :parser: myst_parser.sphinx_
+      A single NICE inverse solve against a boundary that is fixed up front. Transport is
+      not solved at all, and each time slice is independent, so there is no outer loop.
 
-.. _`workflow-inverse-convergence`:
+   .. grid-item-card:: Inverse convergence against TORAX
+      :img-top: workflow_pages/diagrams/inverse_convergence.svg
+      :link: case-inverse-convergence
+      :link-type: ref
 
-inverse_convergence
-^^^^^^^^^^^^^^^^^^^
+      An outer loop alternating NICE free-boundary inverse equilibrium and TORAX transport
+      until the coil currents stop moving, with an ``imas-validator`` pass over the
+      converged coil currents.
 
-.. include:: ../../workflows/inverse_convergence/README.md
-   :parser: myst_parser.sphinx_
+   .. grid-item-card:: METIS with a NICE inverse solve
+      :img-top: workflow_pages/diagrams/metis_nice_inverse.svg
+      :link: case-metis-nice-inverse
+      :link-type: ref
 
-.. _`workflow-evolutive-controller`:
+      METIS transport from DINA input, then a single NICE inverse pass fitting coil
+      currents to the equilibrium it produced. No outer loop.
 
-evolutive_controller
-^^^^^^^^^^^^^^^^^^^^
+   .. grid-item-card:: Evolutive co-simulation under magnetic control
+      :img-top: workflow_pages/diagrams/evolutive_controller.svg
+      :link: case-evolutive-controller
+      :link-type: ref
 
-.. include:: ../../workflows/evolutive_controller/README.md
-   :parser: myst_parser.sphinx_
+      Forward, not inverse: TORAX and NICE step together in lockstep while a PCSSP
+      controller closes the coil-current loop.
 
-.. _`workflow-metis`:
+``metis_from_dina`` has no page of its own yet: it is
+``metis_nice_inverse_from_dina`` without the NICE inverse pass. The header comment
+of :src:`workflows/metis_from_dina/workflow.ymmsl` describes it.
 
-The METIS workflows
-^^^^^^^^^^^^^^^^^^^
+.. toctree::
+   :hidden:
 
-``metis_from_dina`` and ``metis_nice_inverse_from_dina`` do not yet have
-READMEs. Until they do, the header comment at the top of each
-``workflow.ymmsl`` is the best description:
-
-- :src:`workflows/metis_from_dina/workflow.ymmsl`
-- :src:`workflows/metis_nice_inverse_from_dina/workflow.ymmsl`
-
-Both replaced earlier ``metis_interpretative_*`` and ``metis_predictive_*``
-workflows. Interpretative versus predictive is now a setting on one workflow
-rather than a separate directory: override the ``metis_external_data_*`` keys in
-the case to run interpretatively.
+   workflow_pages/prescribed_transport
+   workflow_pages/inverse_convergence
+   workflow_pages/metis_nice_inverse
+   workflow_pages/evolutive_controller

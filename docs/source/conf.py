@@ -219,9 +219,9 @@ smartquotes = False
 # cannot drift.
 REPO_ROOT = Path(__file__).parents[2]
 
-# The gallery cards in cases/index.rst take their thumbnail as an image path, so those
+# The gallery cards in workflows.rst take their thumbnail as an image path, so those
 # diagrams -- unlike the ones the coupling-diagram directive draws straight into a page
-# -- have to exist as files: (workflow file, model, cases/diagrams/<name>).
+# -- have to exist as files: (workflow file, model, workflow_pages/diagrams/<name>).
 GALLERY_THUMBNAILS = [
     ("workflows/prescribed_transport/workflow.ymmsl", None, "prescribed_transport.svg"),
     ("workflows/inverse_convergence/workflow.ymmsl", None, "inverse_convergence.svg"),
@@ -230,9 +230,13 @@ GALLERY_THUMBNAILS = [
         None,
         "metis_nice_inverse.svg",
     ),
-    ("docs/source/cases/evolutive_controller.svg", None, "evolutive_controller.svg"),
+    (
+        "docs/source/workflow_pages/evolutive_controller.svg",
+        None,
+        "evolutive_controller.svg",
+    ),
 ]
-THUMBNAIL_DIR = Path(__file__).parent / "cases" / "diagrams"
+THUMBNAIL_DIR = Path(__file__).parent / "workflow_pages" / "diagrams"
 
 
 def _drop_recorders(model):
