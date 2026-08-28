@@ -197,7 +197,7 @@
       return; // Nothing recovered: leave the diagram as a plain picture.
     }
 
-    function bind(element, matches, onEnter) {
+    function bind(element, matches, onEnter, onLeave) {
       element.addEventListener("mouseenter", function (event) {
         event.stopPropagation();
         clear(svg);
@@ -206,37 +206,66 @@
         }
         highlight(svg, conduits, matches);
       });
-      element.addEventListener("mouseleave", function () {
+      element.addEventListener("mouseleave", function (event) {
         clear(svg);
+        if (onLeave) {
+          onLeave(event);
+        }
+      });
+    }
+
+    function showComponent(group) {
+      var rect = group.querySelector("rect.component");
+      if (!rect) {
+        return;
+      }
+      var name = rect.id.replace(/^component-/, "");
+      clear(svg);
+      group.classList.add("cd-on");
+      highlight(svg, conduits, function (conduit) {
+        return conduit.ports.some(function (port) {
+          return port.component === name;
+        });
       });
     }
 
     Array.prototype.forEach.call(
       svg.querySelectorAll("g.ComponentBlock_group"),
       function (group) {
-        var rect = group.querySelector("rect.component");
-        if (!rect) {
+        if (!group.querySelector("rect.component")) {
           return;
         }
-        var name = rect.id.replace(/^component-/, "");
-        bind(
-          group,
-          function (conduit) {
-            return conduit.ports.some(function (port) {
-              return port.component === name;
-            });
-          },
-          function () {
-            group.classList.add("cd-on");
-          }
-        );
+        group.addEventListener("mouseenter", function (event) {
+          event.stopPropagation();
+          showComponent(group);
+        });
+        group.addEventListener("mouseleave", function () {
+          clear(svg);
+        });
       }
     );
 
     ports.forEach(function (port) {
-      bind(port.element, function (conduit) {
-        return conduit.ports.indexOf(port) !== -1;
-      });
+      bind(
+        port.element,
+        function (conduit) {
+          return conduit.ports.indexOf(port) !== -1;
+        },
+        null,
+        function (event) {
+          // Ports sit inside their component's group, so moving the pointer from a port
+          // glyph back onto the component body fires this mouseleave but no matching
+          // mouseenter on the group -- mouseenter does not bubble and the pointer never
+          // left the group. Restore the component highlight by hand.
+          if (
+            port.group &&
+            event.relatedTarget &&
+            port.group.contains(event.relatedTarget)
+          ) {
+            showComponent(port.group);
+          }
+        }
+      );
     });
   }
 
