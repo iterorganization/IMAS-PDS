@@ -9,7 +9,7 @@ build:
       # setuptools_scm derives the version from tags, and docs/source/conf.py
       # reads pds.__version__ -- a shallow clone has no tags, so the import fails.
       - git fetch --unshallow || true
-    
+
 python:
   install:
     - method: pip
@@ -17,13 +17,14 @@ python:
       extra_requirements:
         - docs
 
-# Read the Docs does not use docs/Makefile -- it invokes sphinx-build itself, so
-# the Makefile's `-W` never applies here. Set it explicitly, or RTD will publish a
-# build that GitHub CI would have rejected.
+# HTML only; no PDF or ePub builds.
 formats: []
 
 sphinx:
   builder: html
   configuration: docs/source/conf.py
+  # Read the Docs does not use docs/Makefile -- it invokes sphinx-build itself, so the
+  # Makefile's `-W` never applies here. Set it explicitly, or RTD will publish a build
+  # that GitHub CI would have rejected.
   fail_on_warning: true
 
