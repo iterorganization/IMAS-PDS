@@ -21,6 +21,7 @@ junit.xml
 ymmsl_files/output/
 
 local_installs/*
+!local_installs/.gitkeep
 ymmsl_files/*
 !ymmsl_files/.*
 

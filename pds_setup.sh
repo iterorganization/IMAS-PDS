@@ -57,7 +57,6 @@ CURR_INSTALL='START'
     echo "############## FINISHED PDS ##############"
   fi
 
-  mkdir -p local_installs
   cd local_installs/
 
   # SET UP IMAS-M3
