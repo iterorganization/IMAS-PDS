@@ -6,8 +6,8 @@ Contributing
 Development environment
 -----------------------
 
-You do not need the module stack to work on the Python, the docs or the CI
-scripts -- only to *run* a workflow. For everything else:
+The module stack is only needed to *run* a workflow. For the Python, the docs or the CI
+scripts:
 
 .. code-block:: bash
 
@@ -15,30 +15,30 @@ scripts -- only to *run* a workflow. For everything else:
   source .venv/bin/activate
   uv sync --all-extras
 
-If you do not have ``uv``, ``pip install uv`` first, or let
-``setup_files/ensure_uv.sh`` bootstrap one into ``.uv-bootstrap/``.
+Without ``uv``, either ``pip install uv`` or let ``setup_files/ensure_uv.sh`` bootstrap
+one into ``.uv-bootstrap/``.
 
 Before you push
 ---------------
 
-CI runs these four commands. Run them locally before pushing:
+CI runs these. Run them locally first:
 
 .. code-block:: bash
 
-  ruff format --check --diff .   # formatting
-  ruff check .                   # linting
-  uv run ty check .              # type checking
-  uv run make -C docs html       # documentation
+  ruff format --check --diff .        # formatting
+  ruff check .                        # linting
+  uv run ty check .                   # type checking
+  uv run python ci/check_ymmsl.py     # every case resolves and flattens
+  uv run make -C docs html            # documentation
 
-``ruff check --fix .`` and ``ruff format .`` apply the first two automatically.
-See :ref:`code style and linting` for what the rules are and why.
+``ruff format .`` and ``ruff check --fix .`` apply the first two automatically. See
+:ref:`code style and linting` for the rules.
 
 .. note::
 
-   CI runs Ruff through ``astral-sh/ruff-action``, not through ``uv``, so it uses
-   its own Ruff version. A locally pinned Ruff can disagree with CI over a rule
-   added or changed between the two versions. If CI complains about something
-   that passes locally, check the versions before anything else.
+   CI runs Ruff through ``astral-sh/ruff-action``, not ``uv``, so it uses its own Ruff
+   version and a locally pinned one can disagree over a rule added between the two. If
+   CI complains about something that passes locally, check the versions first.
 
 Building the documentation
 --------------------------
@@ -48,27 +48,23 @@ Building the documentation
   uv sync --extra docs
   uv run make -C docs clean html
 
-Warnings are errors (``-W --keep-going`` in ``docs/Makefile``). That is
-deliberate: it is what catches a broken ``:ref:``, a page missing from a
-toctree, or a dead intersphinx inventory. Do not relax it to get a build
-through.
+Warnings are errors (``-W --keep-going`` in ``docs/Makefile``) -- that is what catches
+a broken ``:ref:``, a page missing from a toctree, or a dead intersphinx inventory. Do
+not relax it to get a build through.
 
-Run ``clean`` first when you have added or removed a page. A stale ``_build``
-can hide an orphaned document that CI, building from scratch, will fail on.
-
-The built HTML lands in ``docs/_build/html``.
+Run ``clean`` after adding or removing a page: a stale ``_build`` can hide an orphaned
+document that CI, building from scratch, will fail on. The HTML lands in
+``docs/_build/html``.
 
 .. _`docs-freshness-check`:
 
 Keeping the docs true
 ---------------------
 
-A green docs build proves the *markup* is valid. It does not prove the prose is
-true -- it cannot tell that a page describes a script that was deleted, which is
-how the documentation drifted so far behind the code before.
-
-So when you change a path, a script name or a workflow name, grep the docs for
-it. This catches the retired vocabulary:
+A green docs build proves the *markup* is valid, not that the prose is true -- it
+cannot tell that a page describes a script that was deleted, which is how the
+documentation drifted so far behind the code before. So when you change a path, a script
+name or a workflow name, grep the docs for it. This catches retired vocabulary:
 
 .. code-block:: bash
 
@@ -101,21 +97,20 @@ Opening a pull request
 Running the integration tests
 -----------------------------
 
-The end-to-end tests are **not** on GitHub. They need the module stack, MATLAB
-and real IMAS data, so they run on the ITER cluster under Bamboo, which calls:
+The end-to-end tests are **not** on GitHub -- they need the module stack, MATLAB and
+real IMAS data, so they run on the ITER cluster under Bamboo, which calls:
 
 .. code-block:: bash
 
   bash ci/run_test_workflows.sh
 
-That builds the module environment, then runs eight single-actor smoke tests
-followed by five full cases end to end. It takes a long time and needs a
-scenarios checkout. If your change touches ``workflows/``, ``bin/`` or the
-easyconfigs, expect that suite -- not GitHub CI -- to be what actually catches a
-regression.
+That builds the module environment, then runs eight single-actor smoke tests followed
+by five full cases end to end. It is slow and needs a scenarios checkout. If your change
+touches ``workflows/``, ``bin/`` or the easyconfigs, that suite -- not GitHub CI -- is
+what will catch a regression.
 
-``ci/check_ymmsl.py`` is the cheap subset of that: it resolves and flattens every
-case statically, with no data and no MUSCLE3, and it does run in GitHub CI.
+``ci/check_ymmsl.py`` is the cheap subset: it resolves and flattens every case
+statically, with no data and no MUSCLE3, and does run in GitHub CI.
 
 Repository layout
 -----------------
@@ -141,8 +136,8 @@ Repository layout
    * - ``ci/``
      - The integration test driver and the static ymmsl checker.
    * - ``pds/``
-     - The Python package. Deliberately tiny -- the module puts the repo root on
-       ``PYTHONPATH`` so there is no install step.
+     - The Python package. Deliberately tiny; the module puts the repo root on
+       ``PYTHONPATH``, so there is no install step.
    * - ``controllers/``
      - MATLAB/Simulink sources for the PCSSP magnetic controller.
    * - ``visualization/``

@@ -3,64 +3,38 @@
 Writing PDS actors
 ==================
 
-Here we provide an explanation for how to write MUSCLE3 actors
-within the PDS ecosystem.
+This page assumes a working knowledge of MUSCLE3; if you do not have one, start with the
+`MUSCLE3 documentation <https://muscle3.readthedocs.io/en/latest/>`__.
 
-MUSCLE3
--------
+Optional ports
+--------------
 
-Since the PDS actors are based on the MUSCLE3 framework,  
-it is recommended to look at the
-`MUSCLE3 documentation <https://muscle3.readthedocs.io/en/latest/>`__
-to get a good understanding of the basics. The rest of this page is
-written with the assumption that the reader has a basic understanding
-of the MUSCLE3 framework.
-
-Inner/outer loop structure
---------------------------
-
-MUSCLE3 actors might work as a macro model, a micro model, or both
-at the same time. Make sure that the actor is connected on any port
-it might use within the PDS ecosystem.
-When a certain port is optional in your actor, you can simple add it to your
-muscle instance on its initialization so that the port is always available.
-However, make sure it only send or receive when the port is connected in
-the ymmsl workflow (check with ``instance.is_connected(port_name)``).
+An actor may be a macro model, a micro model, or both, so declare every port it might use
+on the instance at initialization -- that way the port is always available and the ymmsl
+workflow decides whether to wire it. Guard each send and receive with
+``instance.is_connected(port_name)``.
 
 Propagate t_next
 ----------------
 
-Some actors need to be able to see what the next timestamp will be.
-This information can be used to set up a timescale bridge between
-actors or for the stopping condition of a loop. Try to make sure
-that both the timestamp and next timestamp
-are added to any outgoing muscle message.
-If it is the last message, set next_timestamp to None/nil/null/etc.
-to signal that will be no more messages coming after it.
-A seperate next_timestamp might be tracked for
-the outer and inner loop of the actor.
+Put both the timestamp and the next timestamp on every outgoing message: downstream
+actors use ``next_timestamp`` to bridge timescales and to decide when a loop stops. On the
+last message set it to null, which signals that nothing follows. An actor with an inner
+and an outer loop tracks one for each.
 
-Conventions
+Port naming
 -----------
 
-Port names generally have a structure where they combine the ids_name
-with the muscle3 port on which it receives or sends messages
-("equilibrium_o_i", "core_profiles_f_init").
-Another common structure is ``<ids_name>_in`` and ``<ids_name>_out``
-if you only use 1 outgoing and/or 1 ingoing port.
-However these names might differ between actors so do check
-the documentation of the actor you are using.
+Port names usually combine the IDS name with the MUSCLE3 operator --
+``equilibrium_o_i``, ``core_profiles_f_init`` -- or, for an actor with a single port each
+way, ``<ids_name>_in`` and ``<ids_name>_out``. Conventions vary between actors, so check
+the one you are wiring against.
 
-PDS actor example
------------------
+Example
+-------
 
-To provide an example, underneath is the code for what a generic PDS
-muscle3 actor in python would look like for the fictional simulation code 'MyModel'.
-The actor can use the equilibrium IDS on all ports,
-but the O_I and S ports are optional 
-and the actor won't use them if they are not connected.
-It propagates the next timestamp so that any connected actor
-that needs it is able to use it.
+A generic Python actor for a fictional code ``MyModel``. It uses the ``equilibrium`` IDS
+on all four operators, treats O_I and S as optional, and propagates the next timestamp.
 
 .. code-block:: python
 

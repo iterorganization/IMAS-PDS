@@ -14,27 +14,25 @@ When you need this
 
 Building from source is worth the trouble in three situations:
 
-- You are changing one of the coupled codes and need your working copy in the
-  loop, not a released module.
+- You are changing one of the coupled codes and need your working copy in the loop,
+  not a released module.
 - You are bisecting an upstream bug and need arbitrary revisions.
-- You are working somewhere ``/work/projects/pds/modules/all`` is not published.
+- ``/work/projects/pds/modules/all`` is not published where you are.
 
-For the first two, consider :ref:`building a single EasyBuild module
-<local-install-own-module>` instead. It is usually less work than a full
-from-source build and it keeps the rest of the stack on the published modules.
+For the first two, :ref:`building a single EasyBuild module <local-install-own-module>`
+is usually less work and keeps the rest of the stack on the published modules.
 
 pds_setup.sh
 ------------
 
-``pds_setup.sh`` at the repository root is the entry point. Read it before you
-run it -- it says so itself:
+``pds_setup.sh`` at the repository root is the entry point. Read it before running it
+-- it says so itself:
 
   This is only a means to guide users in the right way, not a maintained
   install script.
 
-Every ``INSTALL_*`` flag at the top of the file ships set to ``"false"``, so
-running it as committed does nothing. Turn on the components you actually need
-and set the matching ``BRANCH_*`` variable:
+Every ``INSTALL_*`` flag at the top ships as ``"false"``, so running it as committed
+does nothing. Turn on what you need and set the matching ``BRANCH_*``:
 
 .. code-block:: bash
 
@@ -47,16 +45,15 @@ Then:
 
   bash pds_setup.sh
 
-It must be run, not sourced. Each step checks that the remote is reachable
-before it starts, so components you have no access to are skipped rather than
-failing the run.
+It must be run, not sourced. Each step checks its remote is reachable first, so
+components you have no access to are skipped rather than failing the run.
 
 The per-tool scripts
 --------------------
 
-``pds_setup.sh`` is a thin driver over the scripts in ``setup_files/``. You can
-run any of them directly, from inside ``run/``. Each clones its tool and builds
-it into ``run/<Tool>/``:
+``pds_setup.sh`` is a thin driver over the scripts in ``setup_files/``; any of them can
+be run directly from inside ``run/``. Each clones its tool and builds it into
+``run/<Tool>/``:
 
 .. list-table::
    :header-rows: 1
@@ -98,9 +95,9 @@ it into ``run/<Tool>/``:
 .. important::
 
    Order matters in one place: ``setup_muscle3.sh`` must run **before**
-   ``setup_nice.sh``. NICE's binaries link against the MUSCLE3 C++ library and
-   the build fails without it. ``pds_setup.sh`` already sequences this, which is
-   the main reason to use it rather than calling the scripts yourself.
+   ``setup_nice.sh``, because NICE's binaries link against the MUSCLE3 C++ library.
+   ``pds_setup.sh`` sequences this already, which is the main reason to use it rather
+   than calling the scripts yourself.
 
 METIS and PCS clone over ``ssh://git@git.iter.org``, so you need working SSH
 credentials for those two. The others are public.
@@ -108,19 +105,18 @@ credentials for those two. The others are public.
 Pointing a workflow at your build
 ---------------------------------
 
-Building the tools is only half of it -- a workflow still has to be told to use
-them. Program definitions live in two files:
+Building the tools is half of it; a workflow still has to be told to use them. Program
+definitions live in two files:
 
 ``workflows/lib/easybuild_programs.ymmsl``
   Each program is an EasyBuild module plus an executable. **All five workflows
   import from here.**
 
 ``workflows/lib/local_programs.ymmsl``
-  The same programs, defined as shell scripts that activate the corresponding
-  ``run/<Tool>/venv``. This is the from-source counterpart, and it currently has
-  no users in the tree.
+  The same programs as shell scripts activating the corresponding ``run/<Tool>/venv``.
+  The from-source counterpart; currently no users in the tree.
 
-So to run against your build, repoint the import in the workflow:
+To run against your build, repoint the import in the workflow:
 
 .. code-block:: yaml
 
@@ -133,19 +129,19 @@ Both files resolve because the PDS module puts ``$PDS_REPO/workflows`` on
 .. note::
 
    The local definitions use ``script:`` rather than the declarative
-   ``executable``/``args`` form. ``base_env: clean`` runs ``module purge``, which strips ``$PDS_REPO``; and
-   ``executable``/``args`` are expanded in the actor's own shell *after* that
-   purge, so they would silently resolve to ``/workflows/...`` with an empty
-   prefix. ``export`` lines inside a ``script:`` are expanded in the actor's
-   shell, where ``$PDS_REPO`` still exists.
+   ``executable``/``args`` form. ``base_env: clean`` runs ``module purge``, which strips
+   ``$PDS_REPO``, and ``executable``/``args`` are expanded *after* that purge -- so they
+   would silently resolve to ``/workflows/...`` with an empty prefix. ``export`` lines
+   inside a ``script:`` are expanded in the actor's shell, where ``$PDS_REPO`` still
+   exists.
 
 .. _`local-install-own-module`:
 
 Building your own EasyBuild module
 ----------------------------------
 
-Usually the better option: build the one tool you are changing as a module, and
-leave everything else on the published stack.
+Usually the better option: build the one tool you are changing as a module and leave
+the rest on the published stack.
 
 .. code-block:: bash
 
@@ -169,11 +165,3 @@ line to your new module, and import just that one implementation from your copy:
   imports:
   - from lib.easybuild_programs import implementation torax
   - from lib.local_programs_<you> import implementation nice_inv
-
-METIS patches
--------------
-
-``workflows/lib/metis_patches/`` holds MATLAB patches against METIS's
-``metis4muscle3`` interface. They are not applied by any script -- if you are
-building METIS from source and need them, apply them by hand against your
-``run/metis`` checkout.

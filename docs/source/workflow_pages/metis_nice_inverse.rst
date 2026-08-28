@@ -10,17 +10,12 @@ to the equilibrium METIS produced. Overrides exist for DINA shots 105073, 105078
 
 The coupling order is the reverse of the design cases. There, NICE solves first and a
 transport code fills a hole inside an outer loop; here METIS leads, runs the transport over
-the whole trace, and NICE is a single downstream pass over its equilibrium. There is no
-outer iteration and no convergence criterion -- METIS runs once, NICE runs once.
+the whole trace, and NICE is a single downstream pass over its equilibrium. METIS runs
+once, NICE runs once.
 
 :Workflow: ``metis_nice_inverse_from_dina`` -- :src:`workflows/metis_nice_inverse_from_dina/workflow.ymmsl`
 :Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099, in ``pds-scenarios``
-:Output: ``<run_dir>/out_metis`` and ``<run_dir>/out_nice``
-
-This is the case-based form of the old ``metis_interpretative_nice_inverse_from_dina`` and
-``metis_predictive_nice_inverse_from_dina`` templates. Their graphs were identical --
-interpretative versus predictive is a handful of ``metis_external_data_*`` settings, not a
-separate workflow -- so the two collapse into one workflow with the choice made in the case.
+:Output: ``<run_dir>/metis_out`` and ``<run_dir>/nice_out``
 
 Running it
 ----------
@@ -32,6 +27,11 @@ Running it
 
 Substitute another shot number for the others. :ref:`running_cases` describes what
 a case directory contains and where the output goes.
+
+.. note::
+
+   ``pds-create-case`` takes noticeably longer for this workflow than for the design
+   cases, because ``preprocess.sh`` runs a MATLAB conversion (see below).
 
 Coupling
 --------
@@ -46,29 +46,31 @@ Coupling
 Input data
 ----------
 
-Unlike the design cases, this one needs a scenario prepared two ways:
+Both inputs are built from the shot's raw DINA source by the workflow's ``preprocess.sh``,
+once, at ``pds-create-case`` time, and frozen into the case:
 
-``data/metis_in``
-   METIS does not take a plasma state the way TORAX does -- it builds its input from a
-   ``pulse_schedule`` IDS, which a plain ``data/in`` does not carry. Produced by the
-   separate ``tools/prepare 105073 --metis`` step, which needs MATLAB and the METIS module.
-   ``METIS_MODE`` (``interpretative``, the default, or ``predictive``) is baked into what it
-   writes, so switching mode means rebuilding the input as well as flipping the settings.
+``$CASE_DIR/preprocess/metis_in``
+   METIS's own dataset. METIS does not take a plasma state the way TORAX does -- it builds
+   its input from a ``pulse_schedule`` IDS, in a DD layout that is workflow-specific, so
+   nothing pre-bakes it into ``pds-scenarios``. Producing it needs MATLAB and the
+   ``METIS-IRFM`` module.
 
-``data/in`` with ``MD_LAYOUT=combined``
-   ``source_nice`` is a ``sink_source``: it re-emits all four machine-description lanes out
-   of a single entry, so that entry's ``pf_active`` has to keep DINA's coil currents. A
-   scenario prepared the default ``separate`` way splits the machine description off into
-   ``data/in_md`` and leaves ``data/in`` with geometry only.
+``$CASE_DIR/preprocess/dina_in``
+   NICE's DINA-derived machine description. ``source_nice`` is a ``sink_source``: it
+   re-emits all four machine-description lanes out of a single entry, so that entry's
+   ``pf_active`` has to keep DINA's coil currents.
 
-105073 is the case shot because it is the one scenario currently prepared ``combined``.
+Predictive is the default: the workflow's ``settings.ymmsl`` leaves all five
+``metis_external_data_*`` switches off, so METIS computes its own profiles and sources.
+Interpretative mode means enabling them in
+``cases/overrides/metis_nice_inverse_from_dina_<shot>.ymmsl``. This is why the old
+``metis_interpretative_...`` and ``metis_predictive_nice_inverse_from_dina`` templates
+collapse into one workflow -- their graphs were identical.
 
 .. note::
 
-   ``metis.metis_psioffset`` is a per-scenario calibration constant, applied when
-   ``psi_LCFS`` is a constraint in the inverse solve. The old workflow read it from a
-   ``tmp/PSI_OFFSET`` file that nothing in the repository ever wrote. The workflow's
-   ``preprocess.sh`` now computes it from the run's own DINA equilibrium and passes it
-   back through ``preprocess_settings.ymmsl``, and the workflow is exercised in CI. Where
-   that computation cannot run, the generic settings fall back to a fixed value, which
-   needs calibrating before the output means anything.
+   ``metis.metis_psioffset`` is a per-shot calibration constant, applied when ``psi_LCFS``
+   is a constraint in the inverse solve. ``preprocess.sh`` computes it from the shot's own
+   DINA equilibrium and passes it back through ``preprocess_settings.ymmsl``. Where that
+   MATLAB step cannot run, the generic settings fall back to a fixed ``9.0``, which needs
+   calibrating before the output means anything.

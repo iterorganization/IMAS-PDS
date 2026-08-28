@@ -3,10 +3,10 @@
 Adding a workflow
 =================
 
-A workflow describes structure only: which components exist, how they are wired,
-and which implementation runs each one. It carries no shot data and no absolute
-paths. Everything shot-specific arrives when ``bin/pds-create-case`` builds a
-case from it -- see :ref:`running_cases` for the user's side of that.
+A workflow describes structure only: which components exist, how they are wired, which
+implementation runs each one. No shot data, no absolute paths -- everything
+shot-specific arrives when ``bin/pds-create-case`` builds a case from it. See
+:ref:`running_cases` for the user's side.
 
 Anatomy of a workflow directory
 -------------------------------
@@ -16,7 +16,7 @@ Anatomy of a workflow directory
   workflows/<name>/
     workflow.ymmsl        required -- structure: components, conduits, imports
     settings.ymmsl        required -- generic settings and resources
-    README.md             required -- what it does and what it assumes
+    README.md             expected -- what it does and what it assumes
     config_*.xml          tool configs referenced by settings keys
     config_torax.py
     waveforms.yaml
@@ -25,29 +25,30 @@ Anatomy of a workflow directory
     env.sh                optional -- run-wide environment
 
 ``workflow.ymmsl``
-  Components, conduits and the ``imports:`` block naming each implementation. No
-  paths, no shot numbers, no tuning values. If you find yourself writing a number
-  here, it probably belongs in ``settings.ymmsl``.
+  Components, conduits and the ``imports:`` block naming each implementation. No paths,
+  no shot numbers, no tuning values -- a number written here probably belongs in
+  ``settings.ymmsl``.
 
 ``settings.ymmsl``
   The workflow's generic settings, plus ``resources:``. Shot-dependent paths are
   written against ``${SHOT}`` and resolved per case.
 
 ``README.md``
-  Required. It is included directly into that workflow's page under
-  :ref:`workflows`, so it is what users read.
+  Included directly into that workflow's page under :ref:`workflows`, so it is
+  what users read. Nothing enforces it, and ``metis_from_dina`` and
+  ``metis_nice_inverse_from_dina`` currently have none -- their pages stand on
+  their own instead. Write one for anything new.
 
 ``preprocess.sh``
-  Runs **once**, during ``pds-create-case``, not on every run. Use it when a
-  workflow needs an input dataset that cannot be pre-baked into ``pds-scenarios``
-  -- ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own IMAS layout
-  from raw DINA data this way. It receives ``PDS_REPO``, ``SCENARIOS_REPO``,
-  ``SHOT`` and ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.
+  Runs **once**, during ``pds-create-case``, not on every run. Use it for an input
+  dataset that cannot be pre-baked into ``pds-scenarios`` --
+  ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own IMAS layout from raw
+  DINA this way. It receives ``PDS_REPO``, ``SCENARIOS_REPO``, ``SHOT`` and
+  ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.
 
-  If it needs to hand a value back that only it can compute, write a
-  ``preprocess_settings.ymmsl`` into the case; ``pds-run-case.sbatch`` stacks it
-  in last. ``metis_psioffset``, derived from the run's own DINA equilibrium, is
-  the existing example.
+  To hand back a value only it can compute, write a ``preprocess_settings.ymmsl`` into
+  the case; ``pds-run-case.sbatch`` stacks it in last. ``metis_psioffset``, derived from
+  the shot's own DINA equilibrium, is the existing example.
 
 ``postprocess.sh``
   Runs after ``muscle_manager`` exits, with ``PDS_REPO``, ``SCENARIOS_REPO``,
@@ -57,13 +58,12 @@ Anatomy of a workflow directory
   ``PATH``.
 
 ``env.sh``
-  Sourced before the manager starts, for a run-wide variable that an *imported*
-  implementation needs and cannot set itself. This exists because a ymmsl
-  overlay replaces a same-named implementation wholesale rather than merging
-  field by field, so you cannot add an ``env:`` entry to an implementation you
-  imported from ``imas_muscle3``. ``workflows/metis_from_dina/env.sh`` sets
-  ``IMAS_AL_DISABLE_VALIDATE`` for the generic source and sink components this
-  way.
+  Sourced before the manager starts, for a run-wide variable an *imported*
+  implementation needs and cannot set itself. A ymmsl overlay replaces a same-named
+  implementation wholesale rather than merging field by field, so you cannot add an
+  ``env:`` entry to something imported from ``imas_muscle3``.
+  ``workflows/metis_from_dina/env.sh`` sets ``IMAS_AL_DISABLE_VALIDATE`` for the generic
+  source and sink this way.
 
 Templating
 ----------
@@ -75,11 +75,10 @@ a case:
 
 No other placeholders are expanded, and there is no wider templating scheme.
 
-Any setting key ending in ``.xml_path``, ``.python_config_module``, ``.config``
-or ``.waveforms`` gets special treatment: the file it names is copied into
-``<case>/config/``, its own placeholders resolved, and the setting repointed at
-the copy. That is what makes a case a frozen snapshot -- editing a workflow
-afterwards cannot change a case built earlier.
+Any setting key ending in ``.xml_path``, ``.python_config_module``, ``.config`` or
+``.waveforms`` is special: the file it names is copied into ``<case>/config/``, its own
+placeholders resolved, and the setting repointed at the copy. That is what makes a case
+a frozen snapshot.
 
 .. warning::
 
@@ -102,28 +101,24 @@ Implementations come from three places:
   - from lib.easybuild_programs import implementation nice_inv
   - from lib.easybuild_programs import implementation torax
 
-``lib.*`` resolves because ``YMMSL_PATH`` includes ``$PDS_REPO/workflows`` --
-set by the PDS module and again by ``bin/pds-run-case.sbatch``. If an import
-fails with *Failed to find a file lib/easybuild_programs.ymmsl*, that variable is
-what is missing.
+``lib.*`` resolves because ``YMMSL_PATH`` includes ``$PDS_REPO/workflows``, set by the
+PDS module and again by ``bin/pds-run-case.sbatch``. An import failing with *Failed to
+find a file lib/easybuild_programs.ymmsl* means that variable is missing.
 
-Adding a new coupled code means adding a program to
-``workflows/lib/easybuild_programs.ymmsl`` (and, if a from-source build should
-also work, to ``local_programs.ymmsl``). See :ref:`writing_actors` for the actor
-side.
+A new coupled code means a new program in ``workflows/lib/easybuild_programs.ymmsl``
+(and in ``local_programs.ymmsl`` if a from-source build should also work). See
+:ref:`writing_actors` for the actor side.
 
 Adding a shot
 -------------
 
-Try it first without an override -- if the workflow's generic settings already
-cover the shot, nothing more is needed. ``prescribed_transport`` runs in CI with
-no override at all.
+Try it without an override first: if the workflow's generic settings cover the shot,
+nothing more is needed. ``prescribed_transport`` runs in CI with no override at all.
 
-When a shot does need its own values, add
-``cases/overrides/<workflow>_<shot>.ymmsl`` with just those keys: a pulse window,
-a calibrated transport config, a different waveform set. Keep it to numbers that
-genuinely differ per shot. An override that starts restating the workflow is a
-sign the workflow's own settings need adjusting instead.
+Otherwise add ``cases/overrides/<workflow>_<shot>.ymmsl`` with just the keys that
+differ -- a pulse window, a calibrated transport config, a different waveform set. An
+override that starts restating the workflow means the workflow's own settings need
+adjusting instead.
 
 Validating it
 -------------
@@ -135,18 +130,15 @@ MUSCLE3, no cluster -- and runs in CI:
 
   uv run python ci/check_ymmsl.py
 
-It catches the failures that are otherwise silent at runtime: a settings key that
-matches no instance (``get_setting`` walks prefixes and falls through, so the key
-is simply never seen), a ``resources`` key that is not exactly
-``<root>.<instance>`` (the component quietly gets one thread), and a model port
-declared but not wired inside the model (``flatten()`` drops the caller's conduit
-without complaint).
+It catches what is otherwise silent at runtime: a settings key matching no instance
+(``get_setting`` walks prefixes and falls through, so the key is never seen), a
+``resources`` key that is not exactly ``<root>.<instance>`` (the component quietly gets
+one thread), and a model port declared but not wired inside the model (``flatten()``
+drops the caller's conduit without complaint).
 
-A workflow with no override is checked structurally against a placeholder shot,
-so a new workflow is covered from the moment it exists.
-
-Once it resolves, add it to the integration suite by putting a line in
-``ci/run_test_workflows.sh``:
+A workflow with no override is checked structurally against a placeholder shot, so a new
+one is covered from the moment it exists. Once it resolves, add it to the integration
+suite with a line in ``ci/run_test_workflows.sh``:
 
 .. code-block:: bash
 
@@ -158,7 +150,7 @@ Checklist
 - ``workflow.ymmsl`` has no absolute paths, shot numbers or tuning values.
 - ``settings.ymmsl`` declares ``resources:`` for every component that should get
   more than one thread.
-- ``README.md`` exists and describes assumptions, not just structure.
+- ``README.md`` describes assumptions, not just structure.
 - ``uv run python ci/check_ymmsl.py`` passes.
 - A ``run_case_clean`` line is in ``ci/run_test_workflows.sh``.
 - The workflow appears in the tables in :ref:`workflows`.

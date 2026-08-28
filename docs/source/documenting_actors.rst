@@ -3,58 +3,28 @@
 Documenting PDS actors
 ======================
 
-Here we provide the general outline for documentation of PDS actors.
-Some examples are provided `here <https://confluence.iter.org/display/IMP/PDS+Muscle3+Actors>`__.
+The outline every PDS actor's documentation should follow. Worked examples are on
+`Confluence <https://confluence.iter.org/display/IMP/PDS+Muscle3+Actors>`__.
 
-Actor Summary
--------------
+Summary
+   What the actor does and what it is for.
 
-Summary of what the actor does and what it can be used for.
+Operational modes
+   If it has more than one, introduce them here and show how each is selected. Omit
+   otherwise.
 
-Optional: available operational modes
--------------------------------------
+Settings
+   For each: name, data type, mandatory or optional, which modes it applies to, what it
+   does, and the default if optional. Usually split into mandatory and optional sections.
 
-If the actor has multiple operational modes, introduce them here and
-show how these different modes are implemented.
+Ports
+   For each: name, operator (``f_init``, ``o_i``, ``s``, ``o_f``), mandatory or optional,
+   which modes it applies to, what it carries, and the behaviour if it is left
+   unconnected. Split by mandatory/optional, or by operator.
 
-Available Settings
-------------------
+Required input and output fields per IDS
+   Which fields the actor reads and which it fills. This is what tells someone whether
+   two actors can be coupled at all, so it is the section not to skip.
 
-Show any settings that the actor uses. Often divided in a mandatory
-section and an optional section. 
-For each setting show:
-
-* Name
-* Data type
-* Mandatory/optional
-* Relevant for which operation modes
-* Explanation of effect
-* Default value if optional
-
-Available Ports
----------------
-
-Show all the available ports for your actor.
-Often divided in a mandatory section and an optional section.
-Can also be divided into subsections per operator.
-For each port show:
-
-* Name
-* Port (f_init, o_i, s, o_f)
-* Mandatory/optional
-* Relevant for which operational modes
-* Explanation
-* Default behavior if optional
-
-Required input/output fields per IDS
-------------------------------------
-
-Document which fields per IDS are required as input for this actor
-and which fields are available in the output.
-This is necessary to check the compatibility of different actors.
-
-General Info
-------------
-
-Any other information that might be useful.
-(For example, compatible Data Dictionary versions)
+General info
+   Anything else worth knowing -- compatible Data Dictionary versions, for instance.

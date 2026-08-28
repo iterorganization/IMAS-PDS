@@ -1,8 +1,9 @@
 .. _`index`:
 
 ..
-   Main "index". This will be converted to a landing index.html by sphinx. We
-   define TOC here, but it'll be put in the sidebar by the theme
+   Main "index". This will be converted to a landing index.html by sphinx. The
+   toctrees are hidden: the theme renders them in the sidebar, and repeating them
+   in the page body just duplicates the navigation.
 
 ===============
 IMAS PDS Manual
@@ -13,12 +14,6 @@ NICE for free-boundary equilibrium, TORAX and METIS for transport, the
 Waveform-Editor for targets, PCSSP for magnetic control -- into simulations that
 run as a single job, exchanging IMAS data through
 `MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
-
-PDS itself builds nothing. Each code is a separate EasyBuild module that MUSCLE3
-loads when it starts that actor, and this repository holds the couplings: which
-codes talk to each other, over which ports, in what order. Those couplings are
-*workflows*; pairing one with a shot's data gives you a *case*, which is what you
-run.
 
 Getting started
 ---------------
@@ -40,6 +35,7 @@ available.
 .. toctree::
    :caption: Getting Started
    :maxdepth: 2
+   :hidden:
 
    self
    installing
@@ -50,6 +46,7 @@ available.
 .. toctree::
    :caption: Developing PDS
    :maxdepth: 2
+   :hidden:
 
    contributing
    local_install
@@ -62,14 +59,9 @@ available.
 .. toctree::
    :caption: Training
    :maxdepth: 1
+   :hidden:
 
    courses/basic_user_training
-
-Sitemap
--------
-
-* :ref:`genindex`
-* :ref:`search`
 
 ----
 
