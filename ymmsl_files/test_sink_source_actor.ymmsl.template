@@ -18,8 +18,8 @@ models:
     conduits:
       source_component.equilibrium_out: sink_component.equilibrium_in
 settings:
-  source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_inv"
+  source_component.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/input/test_data_ids/"
+  sink_component.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/sink_inv"
   sink_component.sink_mode: "w"
 resources:
   source_component:

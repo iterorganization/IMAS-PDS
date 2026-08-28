@@ -66,7 +66,7 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
   tried to avoid.
 - The `magnetic_controller` is not optional decoration: `nice_imas_evo_rd_muscle3`
   unconditionally receives on `pf_active_s` every internal step (see
-  `run/nice/src/main_imas_evo_rd_muscle3.cc`), and nothing else in this workflow feeds that
+  `local_installs/nice/src/main_imas_evo_rd_muscle3.cc`), and nothing else in this workflow feeds that
   port, so the controller is what keeps the coupled system running past the first step.
 - `torax.fixed_dt` / `nice_evo_rd.t_interval` / `nice_evo_rd.dt` / `config_nice.xml`'s `<dt>`
   are all assumed to be a consistent 0.01s -- a starting point ported from this workflow's
@@ -75,7 +75,7 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
 - `nice_evo_rd.t_end` (optional, matches `torax.t_final`) bounds `nice_evo_rd`'s own run: once the
   next coupling checkpoint would exceed it, the actor sends its final output with no
   `next_timestamp` and stops, instead of running indefinitely off upstream signaling alone (see
-  `run/nice/src/main_imas_evo_rd_muscle3.cc`; same mechanism in `main_imas_evo_muscle3.cc` for the
+  `local_installs/nice/src/main_imas_evo_rd_muscle3.cc`; same mechanism in `main_imas_evo_muscle3.cc` for the
   non-RD evolutive actor). Left unset, it defaults to `+inf` (old behavior, unchanged). Without it,
   once `torax` finishes at `t_final` and `nice_evo_rd` has no stopping condition of its own, the
   coupled loop livelocks instead of terminating -- this is what `105084/settings.ymmsl` sets it
@@ -86,17 +86,17 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
   and nothing else (see the comment in `config_torax.py`). Re-check this for any other shot
   before trusting its self-consistent ohmic/radiation numbers.
 - `magnetic_controller`'s MATLAB script points `pyenv()` explicitly at
-  `$PDS_REPO/run/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
+  `$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
   (`which python`): PATH can resolve to an unrelated Python with its own muscle3 install,
   which breaks registration silently if that muscle3 is wire-incompatible with the 0.10.0
   manager every other actor here runs against.
 
 ## Input requirements
 
-- The ssh-gated `run/pcs` checkout (`setup_files/setup_pcs.sh`) and the
+- The ssh-gated `local_installs/pcs` checkout (`setup_files/setup_pcs.sh`) and the
   `nice_imas_evo_rd_muscle3` binary (not yet part of the NICE easybuild module as of this
   writing -- see the commented-out entries in `ci/run_test_workflows.sh` -- so it must be
-  source-built, see `run/nice`).
+  source-built, see `local_installs/nice`).
 - A completed `inverse_convergence` run's `_out_nice` output for the same shot, to seed
   `source`'s F_INIT equilibrium (see Assumptions).
 - DINA-preprocessed scenario data supplying the static machine description, `core_profiles`

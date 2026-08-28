@@ -1,10 +1,10 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 set -euo pipefail # stop if anything doesn't work
 
 WAVEFORM_EDITOR_URL=${1:-"https://github.com/iterorganization/Waveform-Editor.git"}
 BRANCH_WAVEFORM_EDITOR=${2:-"develop"}
 
-source imas_base_env
+source ../cases/imas_base_env
 module load Python
 
 source "$(dirname "${BASH_SOURCE[0]}")/ensure_uv.sh"

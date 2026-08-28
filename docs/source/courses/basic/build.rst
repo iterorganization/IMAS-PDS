@@ -5,7 +5,7 @@ Building your own workflows
 
 In this section we explore building our own muscle3 workflow step by step.
 If needed, make sure to refresh your knowledge on `MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
-It is recommended to do these exercises in the ``run`` directory or make your own directory.
+It is recommended to do these exercises in the ``cases`` directory or make your own directory.
 These exercises are mostly relevant for developers.
 
 .. code-block:: console
@@ -60,7 +60,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
     .. md-tab-item:: Exercise
 
-        Copy the file at ``ymmsl_files/training/source_sink.ymmsl`` to your running directory, most likely the ``run`` directory.
+        Copy the file at ``ymmsl_files/training/source_sink.ymmsl`` to your running directory, most likely the ``cases`` directory.
         This is a workflow connecting a data source actor to a data sink actor. 
         This will be your starting point for this section of the exercises. We will gradually expand it by adding new MUSCLE3 actors every exercise.
         Ensure the equilibrium IDS from the URI shown above will be sent.
@@ -90,7 +90,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
         .. code-block:: console
 
-            idsdiff --uri 'imas:hdf5?path=/<pds_root>/training_data/training_ids/' 'imas:hdf5?path=/<pds_root>/run/output/training/source_sink'
+            idsdiff --uri 'imas:hdf5?path=/<pds_root>/training_data/training_ids/' 'imas:hdf5?path=/<pds_root>/cases/output/training/source_sink'
 
 
 Exercise 2

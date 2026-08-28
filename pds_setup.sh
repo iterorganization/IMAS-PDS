@@ -57,7 +57,7 @@ CURR_INSTALL='START'
     echo "############## FINISHED PDS ##############"
   fi
 
-  cd run/
+  cd local_installs/
 
   # SET UP IMAS-M3
   CURR_INSTALL='IMAS-MUSCLE3'
@@ -173,7 +173,7 @@ CURR_INSTALL='START'
 # END MESSAGE
 echo 'YOU CAN TRY OUT THE TEST COUPLINGS IN THE PDS/YMMSL_FILES DIRECTORY BY RUNNING'
 echo ''
-echo 'cd run'
+echo 'cd cases'
 echo ''
 echo 'AND'
 echo ''

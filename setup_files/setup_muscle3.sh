@@ -1,4 +1,4 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 #
 # Bootstraps the muscle3 0.10.0 C++ library (libmuscle.so / libymmsl.so) that
 # the NICE muscle3 binaries link against at build time. Uses the site-wide
