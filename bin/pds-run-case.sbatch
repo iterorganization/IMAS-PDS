@@ -5,7 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=02:00:00
+#SBATCH --time=00:59:00
+#SBATCH --partition=sun_debug,vega_debug,sirius_debug
 set -euo pipefail
 
 # SLURM wrapper that runs a case folder created by bin/pds-create-case. Submit from the
@@ -73,10 +74,9 @@ fi
 PYTHON="$(command -v python3 2>/dev/null || command -v python)"
 export PYTHON
 
-RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
-# A leftover instances/ dir from a previous run of this case makes muscle_manager fail with
-# "Instance already has a directory", so start from a clean run dir each time.
-rm -rf "$RUN_DIR"
+# Timestamped so successive runs of the same case don't collide or overwrite each other --
+# cases/runs/<case> is kept as a symlink to the latest one, updated below.
+RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
 
@@ -88,6 +88,14 @@ done
 [[ -f "$CASE_DIR/env.sh" ]] && source "$CASE_DIR/env.sh"
 
 "$MANAGER" --start-all --run-dir "$RUN_DIR" "${stack[@]}" "${OVERLAYS[@]}"
+
+# Stable path to this case's most recent run, for consumers that need one fixed location
+# (e.g. evolutive_controller/settings.ymmsl reading inverse_convergence's output) instead of
+# having to know the timestamp. rm -rf first: ln -sfn only replaces an existing symlink --
+# if a pre-timestamp run left a real directory at this path, ln would silently nest the new
+# symlink inside it instead of replacing it.
+rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
+ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
 POSTPROCESS="$CASE_DIR/postprocess.sh"
 if [[ -x "$POSTPROCESS" ]]; then

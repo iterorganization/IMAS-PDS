@@ -40,10 +40,10 @@ models:
       accumulator.equilibrium_out: sink.equilibrium_in
       accumulator_optional_port.equilibrium_out: sink_optional_port.equilibrium_in
 settings:
-  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/input/test_data_ids/"
-  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_accumulator"
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/input/test_data_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/sink_accumulator"
   sink.sink_mode: "w"
-  sink_optional_port.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/run/output/sink_accumulator_optional_port"
+  sink_optional_port.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/sink_accumulator_optional_port"
   sink_optional_port.sink_mode: "w"
 resources:
   source:

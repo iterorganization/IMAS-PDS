@@ -27,7 +27,7 @@ A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scena
 is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
 materializes that pairing as a **case** directory under `cases/`.
 These premade cases are examples that can be built upon. The user is free to change anything in the
-case directory. `bin/pds-run-case.sbatch` is then used to run the case:
+case directory. `bin/pds-run-case.sbatch` is then used to run the case using a Slurm job:
 
 ```bash
 # PDS_REPO before the module load: without it the PDS module only finds the
@@ -39,7 +39,7 @@ module use /work/projects/pds/modules/all
 module load PDS
 
 bin/pds-create-case inverse_convergence 105073
-sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
+bin/pds-run-case cases/inverse_convergence_105073
 ```
 
 # Documentation

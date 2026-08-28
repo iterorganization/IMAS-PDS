@@ -15,20 +15,20 @@ ymmsl_version: v0.2
 
 resources:
   metis_nice_inverse_from_dina.source_metis: {threads: 1}
-  metis_nice_inverse_from_dina.sink_metis: {threads: 1}
+  metis_nice_inverse_from_dina.sink_transport: {threads: 1}
   metis_nice_inverse_from_dina.metis: {threads: 10}
   metis_nice_inverse_from_dina.source_nice: {threads: 1}
-  metis_nice_inverse_from_dina.sink_nice: {threads: 1}
+  metis_nice_inverse_from_dina.sink_equilibrium: {threads: 1}
   metis_nice_inverse_from_dina.nice: {threads: 1}
 
 settings:
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
-  sink_metis.sink_uri: "imas:hdf5?path=../../../metis_out"
-  sink_metis.sink_mode: "w"
+  sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_transport.sink_mode: "w"
 
   source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
-  sink_nice.sink_uri: "imas:hdf5?path=../../../nice_out"
-  sink_nice.sink_mode: "w"
+  sink_equilibrium.sink_uri: "imas:hdf5?path=../../../nice_out"
+  sink_equilibrium.sink_mode: "w"
   nice.xml_path: ${PDS_REPO}/workflows/metis_nice_inverse_from_dina/config_nice_inverse.xml
 
   metis.metis_computation: 1

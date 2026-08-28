@@ -1,4 +1,4 @@
-# this file expects to be run from the 'run' folder
+# this file expects to be run from the 'local_installs' folder
 set -euo pipefail # stop if anything doesn't work
 
 NICE_URL=${1:-"https://gitlab.inria.fr/blfauger/nice.git"}
@@ -12,7 +12,7 @@ if [[ ! -f "$MUSCLE3_ENV_FILE" ]]; then
   exit 1
 fi
 
-source imas_base_env
+source ../cases/imas_base_env
 NICE_MODULE="NICE/3.0.0-intel-2023b-DD-4.1.0"
 module load "$NICE_MODULE"
 

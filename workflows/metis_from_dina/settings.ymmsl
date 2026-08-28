@@ -15,13 +15,13 @@ ymmsl_version: v0.2
 
 resources:
   metis_from_dina.source_metis: {threads: 1}
-  metis_from_dina.sink_metis: {threads: 1}
+  metis_from_dina.sink_transport: {threads: 1}
   metis_from_dina.metis: {threads: 10}
 
 settings:
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
-  sink_metis.sink_uri: "imas:hdf5?path=../../../metis_out"
-  sink_metis.sink_mode: "w"
+  sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_transport.sink_mode: "w"
 
   metis.metis_computation: 1
   # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its

@@ -34,7 +34,7 @@ models:
           f_init: [pulse_schedule_f_init, pulse_schedule_in_f, core_profiles_in_f, core_sources_in_f]
           o_f: [equilibrium_out_f, pulse_schedule_out_f, plasma_profiles_out_f, plasma_sources_out_f, summary_out_f]
 
-      sink_metis:
+      sink_transport:
         description: sink -- METIS outputs
         implementation: sink_component
         ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
@@ -53,7 +53,7 @@ models:
           f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
           o_f: [equilibrium_out, pf_active_out]
 
-      sink_nice:
+      sink_equilibrium:
         description: sink -- NICE inverse outputs
         implementation: sink_component
         ports: {f_init: [equilibrium_in, pf_active_in]}
@@ -63,16 +63,16 @@ models:
       source_metis.core_profiles_out: metis.core_profiles_in_f
       source_metis.core_sources_out: metis.core_sources_in_f
 
-      metis.equilibrium_out_f: [sink_metis.equilibrium_in, nice.equilibrium_in, source_nice.equilibrium_in]
-      metis.pulse_schedule_out_f: sink_metis.pulse_schedule_in
-      metis.plasma_profiles_out_f: sink_metis.plasma_profiles_in
-      metis.plasma_sources_out_f: sink_metis.plasma_sources_in
-      metis.summary_out_f: sink_metis.summary_in
+      metis.equilibrium_out_f: [sink_transport.equilibrium_in, nice.equilibrium_in, source_nice.equilibrium_in]
+      metis.pulse_schedule_out_f: sink_transport.pulse_schedule_in
+      metis.plasma_profiles_out_f: sink_transport.plasma_profiles_in
+      metis.plasma_sources_out_f: sink_transport.plasma_sources_in
+      metis.summary_out_f: sink_transport.summary_in
 
       source_nice.wall_out: nice.wall_in
       source_nice.pf_active_out: nice.pf_active_in
       source_nice.pf_passive_out: nice.pf_passive_in
       source_nice.iron_core_out: nice.iron_core_in
 
-      nice.equilibrium_out: sink_nice.equilibrium_in
-      nice.pf_active_out: sink_nice.pf_active_in
+      nice.equilibrium_out: sink_equilibrium.equilibrium_in
+      nice.pf_active_out: sink_equilibrium.pf_active_in
