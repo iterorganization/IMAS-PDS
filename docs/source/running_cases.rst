@@ -146,7 +146,7 @@ IMAS URIs resolve against the instance's own work directory
 Settings keys and resources keys
 --------------------------------
 
-These are written differently, which is worth knowing before you edit a case.
+Settings keys and resources keys use different matching rules.
 Settings are matched by walking instance prefixes, so the short instance name is
 enough (``solve.nice.xml_path``). Resources are looked up by exact match, and the
 key must start with the root model name -- which for a case that imports its

@@ -6,13 +6,13 @@ METIS transport from DINA
 METIS run on its own from DINA input, with no equilibrium solve at all. Overrides
 exist for DINA shots 105084 and 105092, and CI exercises 105084.
 
-This is the simplest coupling in the repository: a source feeds METIS the pulse
-schedule and the profiles and sources it needs, METIS integrates the whole trace,
-and a sink writes what it produced. Nothing iterates and nothing feeds back.
+A source supplies METIS with the pulse schedule, profiles and sources; METIS
+integrates the trace; a sink writes the result. There is no iteration and no
+feedback path.
 
-It is ``metis_nice_inverse_from_dina`` without the NICE branch -- the two graphs
-are otherwise identical. Use this one when you want the transport solution and do
-not need coil currents fitted to it.
+The graph is ``metis_nice_inverse_from_dina`` without the NICE branch, and is
+otherwise identical to it. Use it where the transport solution is needed but coil
+currents fitted to that equilibrium are not.
 
 :Workflow: ``metis_from_dina`` -- :src:`workflows/metis_from_dina/workflow.ymmsl`
 :Scenario: DINA shots 105084 and 105092, in ``pds-scenarios``
@@ -21,14 +21,14 @@ not need coil currents fitted to it.
 Predictive or interpretative
 ----------------------------
 
-This one workflow covers both of the old ``metis_predictive_from_dina`` and
-``metis_interpretative_from_dina`` templates. Their graphs were identical; the
-difference is entirely in the ``metis.metis_external_data_*`` settings, which say
-which quantities METIS should take from the received IDSs rather than compute.
+The ``metis.metis_external_data_*`` settings control which quantities METIS takes
+from the received IDSs rather than computing itself. This single workflow replaces
+the former ``metis_predictive_from_dina`` and ``metis_interpretative_from_dina``,
+whose graphs were identical and differed only in those settings.
 
-The workflow's own ``settings.ymmsl`` sets all of them to ``0``, so **the default
-is predictive**: METIS computes its own profiles and sources. To run
-interpretatively, switch on the ones you want fed from DINA in that shot's
+The workflow's ``settings.ymmsl`` sets all of them to ``0``, making **predictive
+the default**: METIS computes its own profiles and sources. Interpretative mode
+means enabling the relevant settings in
 ``cases/overrides/metis_from_dina_<shot>.ymmsl``.
 
 Running it
@@ -39,8 +39,8 @@ Running it
    bin/pds-create-case metis_from_dina 105084
    sbatch bin/pds-run-case.sbatch cases/metis_from_dina_105084
 
-Substitute another shot number to run one of the others. See
-:ref:`running_cases` for what a case directory holds and where the output goes.
+Substitute another shot number for the others. :ref:`running_cases` describes what
+a case directory contains and where the output goes.
 
 .. note::
 

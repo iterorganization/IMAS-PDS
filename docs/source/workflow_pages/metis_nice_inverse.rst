@@ -30,8 +30,8 @@ Running it
    bin/pds-create-case metis_nice_inverse_from_dina 105084
    sbatch bin/pds-run-case.sbatch cases/metis_nice_inverse_from_dina_105084
 
-Substitute another shot number to run one of the others. See
-:ref:`running_cases` for what a case directory holds and where the output goes.
+Substitute another shot number for the others. :ref:`running_cases` describes what
+a case directory contains and where the output goes.
 
 Coupling
 --------

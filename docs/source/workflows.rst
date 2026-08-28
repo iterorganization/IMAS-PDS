@@ -7,9 +7,8 @@ A workflow describes *how* something is simulated: which codes are coupled, in
 what order, over which ports. It carries no shot data -- that comes from the
 scenario you pair it with when you create a case. See :ref:`running_cases`.
 
-This page is the chooser: what each workflow couples, which shots are exercised,
-and what input data it needs. Each one links on to its own page, where the
-coupling is drawn out component by component.
+Five workflows are available. Each has its own page describing the coupling
+component by component.
 
 .. toctree::
    :hidden:
@@ -22,9 +21,6 @@ coupling is drawn out component by component.
 
 The workflows
 -------------
-
-Each coupling below is drawn from its own ``workflow.ymmsl`` at build time, so the
-diagrams cannot drift from the couplings they document.
 
 .. grid:: 1 2 3 3
    :gutter: 2

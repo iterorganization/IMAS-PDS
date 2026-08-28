@@ -133,8 +133,7 @@ Both files resolve because the PDS module puts ``$PDS_REPO/workflows`` on
 .. note::
 
    The local definitions use ``script:`` rather than the declarative
-   ``executable``/``args`` form for a reason worth knowing before you edit them.
-   ``base_env: clean`` runs ``module purge``, which strips ``$PDS_REPO``; and
+   ``executable``/``args`` form. ``base_env: clean`` runs ``module purge``, which strips ``$PDS_REPO``; and
    ``executable``/``args`` are expanded in the actor's own shell *after* that
    purge, so they would silently resolve to ``/workflows/...`` with an empty
    prefix. ``export`` lines inside a ``script:`` are expanded in the actor's

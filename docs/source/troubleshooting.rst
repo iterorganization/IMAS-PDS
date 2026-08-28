@@ -3,9 +3,8 @@
 Troubleshooting
 ===============
 
-The failures below are the ones people actually hit first. Several of them are
-silent -- the run completes and the answer is wrong or slow -- so they are worth
-reading once before you need them.
+Several of the failures below are silent: the run completes, and the result is
+wrong or slow rather than absent.
 
 ``PDS: could not determine which PDS checkout to use``
 ------------------------------------------------------
@@ -19,8 +18,8 @@ reading once before you need them.
   # or
   cd /path/to/pds && module load PDS
 
-It errors rather than guessing on purpose: every path it sets is relative to the
-checkout, so a wrong guess would write run output somewhere unexpected.
+Every path the module sets is relative to the checkout, so it reports the error
+rather than guessing and writing run output somewhere unexpected.
 
 ``PDS_REPO=... is not a PDS checkout``
 --------------------------------------
@@ -92,7 +91,7 @@ configuration that was actually executed, after all the stacking, and it shows
 which value won. The ``input/`` directory next to it holds the ymmsl files
 exactly as they were passed.
 
-Remember the ordering: ``workflow.ymmsl``, then ``workflow_settings.ymmsl``, then
+The stacking order is ``workflow.ymmsl``, then ``workflow_settings.ymmsl``, then
 ``scenario_settings.ymmsl``, then ``preprocess_settings.ymmsl``, then any
 overlays you passed on the command line. The last value for a key wins.
 
@@ -118,6 +117,6 @@ case you already created. Recreate it:
 
   bin/pds-create-case <workflow> <shot>
 
-Note that this **deletes and rebuilds** the case directory, so anything you
-edited inside the case is lost. For a one-off change, stack an overlay file on
+This **deletes and rebuilds** the case directory; anything edited inside the case
+is lost. For a one-off change, stack an overlay file on
 the ``sbatch`` line instead.

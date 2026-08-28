@@ -3,9 +3,8 @@
 CI configuration
 ================
 
-PDS is tested in two places, and it is worth knowing which is which: the fast
-checks run on GitHub, and everything that actually executes a simulation runs on
-the ITER cluster.
+PDS is tested in two places. The fast checks run on GitHub; everything that
+executes a simulation runs on the ITER cluster.
 
 GitHub Actions
 --------------

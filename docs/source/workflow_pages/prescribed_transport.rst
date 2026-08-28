@@ -30,8 +30,8 @@ Running it
    bin/pds-create-case prescribed_transport 105099
    sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105099
 
-Substitute another shot number to run one of the others. See
-:ref:`running_cases` for what a case directory holds and where the output goes.
+Substitute another shot number for the others. :ref:`running_cases` describes what
+a case directory contains and where the output goes.
 
 Coupling
 --------
@@ -52,8 +52,6 @@ balances the per-slice solves over N NICE workers:
 
 Workflow reference
 ------------------
-
-``workflows/prescribed_transport/README.md``, included here so the two cannot drift apart.
 
 .. include:: ../../../workflows/prescribed_transport/README.md
    :parser: myst_parser.sphinx_

@@ -21,8 +21,7 @@ If you do not have ``uv``, ``pip install uv`` first, or let
 Before you push
 ---------------
 
-These four commands are what CI runs. Running them locally is the whole
-pre-push checklist:
+CI runs these four commands. Run them locally before pushing:
 
 .. code-block:: bash
 

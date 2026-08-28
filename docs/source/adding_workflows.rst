@@ -34,8 +34,8 @@ Anatomy of a workflow directory
   written against ``${SHOT}`` and resolved per case.
 
 ``README.md``
-  Treat this as required. It is included directly into :ref:`workflows`, so it is
-  what users read -- not a paraphrase that can drift.
+  Required. It is included directly into that workflow's page under
+  :ref:`workflows`, so it is what users read.
 
 ``preprocess.sh``
   Runs **once**, during ``pds-create-case``, not on every run. Use it when a
@@ -73,8 +73,7 @@ a case:
 
 ``${PDS_REPO}`` ``${SCENARIOS_REPO}`` ``${SHOT}`` ``${CASE_DIR}``
 
-That is the whole vocabulary. There is no placeholder scheme beyond it, and
-nothing else is expanded.
+No other placeholders are expanded, and there is no wider templating scheme.
 
 Any setting key ending in ``.xml_path``, ``.python_config_module``, ``.config``
 or ``.waveforms`` gets special treatment: the file it names is copied into

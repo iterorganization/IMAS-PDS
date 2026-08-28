@@ -6,9 +6,9 @@ Installing PDS
 PDS orchestrates existing simulation codes -- NICE, TORAX, METIS, the
 Waveform-Editor, PCS -- through MUSCLE3. It has no build of its own. Each code is
 a separate EasyBuild module that MUSCLE3 loads when it spawns that actor, and the
-``PDS`` meta-module wires your checkout into the environment. So "installing PDS"
-means cloning the repository and loading one module: there is nothing to compile
-and no ``pip install -e .`` step.
+``PDS`` meta-module wires a checkout into the environment. Installation is
+therefore a clone and one module load: nothing to compile, and no
+``pip install -e .`` step.
 
 .. note::
 
@@ -21,10 +21,9 @@ Requirements
 
 - An account on the ITER cluster, with read access to ``/work/projects/pds``.
 - A checkout of this repository.
-- The separate ``pds-scenarios`` repository, which holds the shot data. A copy
-  is published at ``/work/projects/pds/pds-scenarios``, and that is the default
-  if you do not set ``SCENARIOS_REPO`` -- so on the cluster you usually do not
-  need your own checkout.
+- The separate ``pds-scenarios`` repository, which holds the shot data. A copy is
+  published at ``/work/projects/pds/pds-scenarios``, which is the default when
+  ``SCENARIOS_REPO`` is unset. A private checkout is only needed to override it.
 
 Loading the module
 ------------------
@@ -36,17 +35,16 @@ Loading the module
   module use /work/projects/pds/modules/all
   module load PDS
 
-There is nothing to export. The module has to know which checkout to wire in, and
-it works that out in two steps: an already-exported ``PDS_REPO`` wins, and
-otherwise it falls back to your current directory if that looks like a PDS
-checkout. Loading it from inside the checkout is the second case.
+The module resolves the checkout in two steps: an exported ``PDS_REPO`` takes
+precedence, and otherwise the current directory is used if it is a PDS checkout.
+Loading the module from inside the checkout satisfies the second case, so no
+variables need setting.
 
-If neither holds -- you loaded the module from somewhere else -- it fails with
-``PDS: could not determine which PDS checkout to use`` rather than guessing.
-Every path it sets is relative to the checkout, and a wrong guess would write run
-output somewhere you may not be able to write to. See :ref:`troubleshooting`.
+If neither applies, the load fails with ``PDS: could not determine which PDS
+checkout to use``. Every path the module sets is relative to the checkout, so it
+reports the error rather than guessing. See :ref:`troubleshooting`.
 
-Set the variables explicitly when the defaults do not fit:
+Set the variables explicitly where the defaults do not apply:
 
 .. code-block:: bash
 

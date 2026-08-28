@@ -32,8 +32,8 @@ Running it
    bin/pds-create-case evolutive_controller 105073
    sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105073
 
-Substitute another shot number to run one of the others. See
-:ref:`running_cases` for what a case directory holds and where the output goes.
+Substitute another shot number for the others. :ref:`running_cases` describes what
+a case directory contains and where the output goes.
 
 Coupling
 --------
@@ -96,8 +96,6 @@ leaves empty.
 
 Workflow reference
 ------------------
-
-``workflows/evolutive_controller/README.md``, included here so the two cannot drift apart.
 
 .. include:: ../../../workflows/evolutive_controller/README.md
    :parser: myst_parser.sphinx_
