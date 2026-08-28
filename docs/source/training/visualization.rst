@@ -3,6 +3,8 @@
 Visualizing workflows
 =====================
 
+.. TODO: reformat and clean up
+
 The **recorder actor** is a sink-only tap: wired onto conduits that already exist in
 a workflow, it does not change the coupling, it just also writes a distilled copy
 of the data flowing past to disk. Point the :ref:`muscle3-dashboard <training/muscle3_dashboard>` at a run that
@@ -305,12 +307,95 @@ Exercise 2: an explicit extract method
         method returning a Panel object (here, a ``Matplotlib`` pane) can be
         placed directly in the layout and Panel re-renders it the same way.
 
-.. todo::
+Exercise 3: record something nobody is recording yet
+-----------------------------------------------------
 
-    To match the training schedule ("Visualization", 60'):
+The two exercises above both plotted data that a recorder was already receiving. Sooner or
+later you will want to look at something no recorder is wired to, and then there are two
+halves to the job: tap the data, and describe how to plot it.
 
-    - Extend "development of custom visualizations" beyond extending an existing ``extract``
-      method: writing a plot configuration from scratch for a field the recorder does not
-      already carry.
-    - Note how to view the visualizations when the run itself is on a compute node while the
-      graphical session is on NoMachine.
+The tap is a recorder component with an ``S`` port, listed as an extra receiver on a conduit
+that already exists. Adding one means editing ``workflow.ymmsl`` -- but you do not have to
+edit the shared one. Remember from :ref:`training/understanding` that a case folder is a
+frozen copy: the ``workflow.ymmsl`` inside ``cases/<case>/`` is yours alone, so you can add a
+component there and nobody else's runs change.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        In ``prescribed_transport``, the waveform editor's output goes to NICE and nothing
+        else looks at it. Put a recorder on it, so you can see what NICE is actually being
+        asked for, next to what it produced.
+
+        You will need three things:
+
+        1. a component with an ``S`` port for the IDS you want, in the case's
+           ``workflow.ymmsl``;
+        2. that component added as a second receiver on the existing conduit;
+        3. a config file for it, and a setting pointing at it.
+
+    .. md-tab-item:: Hint
+
+        Copy the shape of ``rec_nice`` from the top of this page for the wiring, and the
+        shape of ``visualization/nice_inv.py`` for the config -- a ``State`` with an
+        ``extract`` that returns one ``xarray.Dataset``, and a ``Plotter`` with a single
+        curve, is enough. Start from the smallest thing that renders, then add fields.
+
+        A conduit takes a list of receivers, so adding yours means turning one target into
+        two, not replacing it.
+
+    .. md-tab-item:: Solution
+
+        Sketch, in the case's own ``workflow.ymmsl``:
+
+        .. code-block:: yaml
+
+            components:
+              rec_target: {implementation: recorder, ports: {s: [equilibrium_in]}}
+
+            conduits:
+              waveform_editor.equilibrium_out: [equilibrium.equilibrium_in, rec_target.equilibrium_in]
+
+        and in an override file stacked after the case:
+
+        .. code-block:: yaml
+
+            ymmsl_version: v0.2
+            settings:
+              rec_target.config: my_target_config.py
+
+        Now the dashboard grows a ``rec_target`` tab next to ``rec_nice``, and you can watch
+        the requested boundary and the solved one side by side while the run goes.
+
+        Two things are worth taking away from this. A recorder never changes the coupling: the
+        component that was already receiving still receives exactly what it did before, so
+        adding one cannot change the physics. And because the recorder finds its data by its
+        on-disk layout, the dashboard picks the new tab up on its own -- there is nothing to
+        register anywhere.
+
+Watching a run you are not sitting on
+--------------------------------------
+
+One practical note for SDCC, since the real cases from :ref:`training/run_complex` do not run
+where you are looking at them.
+
+The dashboard is a web application, so it has to open a browser somewhere with a screen --
+which on SDCC means inside your NoMachine session, not over a plain SSH connection. The
+simulation, meanwhile, is on a compute node with no screen at all.
+
+That works out because they never talk to each other directly. The job writes its run
+directory to the shared filesystem, and the dashboard reads it from there:
+
+.. code-block:: bash
+
+    # in a NoMachine terminal, on the login node
+    m3dash open cases/runs/
+
+    # in another terminal, submitting to a compute node
+    sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092
+
+Start the dashboard first and leave it running -- it picks up new runs as they appear, and
+the recorder plots fill in live while the job is on the compute node. If a tab stays empty,
+the usual reason is simply that the recorder has not written its first store yet, which for
+these workflows means the first solve is still going.
