@@ -1,101 +1,156 @@
 .. _`adding_workflows`:
 
-Adding new workflows
-====================
+Adding a workflow
+=================
 
-This section explains how to add new workflows to the PDS.
-Note that this process will change in the future as more developments are being made.
+A workflow describes structure only: which components exist, how they are wired, which
+implementation runs each one. No shot data, no absolute paths -- everything
+shot-specific arrives when ``bin/pds-create-case`` builds a case from it. See
+:ref:`running_cases` for the user's side.
 
-General
--------
-
-Runnable scenarios are found in the ``workflows`` directory in the PDS repository.
-A runnable scenario for a given workflow is contained in a named directory like
-``workflows/metis_interpretative_from_dina/scenarios/105092``.
-It is executed by running the ``run_workflow.sh`` script with the workflow name as first argument
-and the scenario as second argument like:
-
-.. code-block:: bash
-
-  # run test workflow of choice, in this case:
-  # workflow: inverse_convergence
-  # scenario: 105084
-  muscle_manager --start-all $PDS_REPO/cases/105084_convergence.ymmsl
-
-In the workflow directories are the default configuration and workflow files that are reused between scenarios.
-If a scenario needs its own config or workflow files, they should be added to the scenario subdirectory.
-Many of the scenarios use the same tools for data preprocessing or result analysis,
-which can be found in a separate directory like ``torax_nice_utils``.
-A schematic of the directory structure is shown below:
+Anatomy of a workflow directory
+-------------------------------
 
 .. code-block:: text
-  :caption: Example directory structure for rule sets
 
-  └── workflows/
-     └── <workflow_name>/
-         ├── .workflow.ymmsl
-         ├── preprocess_data.sh
-         ├── create_runnable_files.sh
-         ├── run_simulation.sh
-         ├── postprocess_data.sh
-         └── scenarios/
-             └── <scenario_id>/
-                 ├── scenario_config.env
-                 ├── info.txt
-                 └── .<custom_overrides>  # Optional
+  workflows/<name>/
+    workflow.ymmsl        required -- structure: components, conduits, imports
+    settings.ymmsl        required -- generic settings and resources
+    README.md             expected -- what it does and what it assumes
+    config_*.xml          tool configs referenced by settings keys
+    config_torax.py
+    waveforms.yaml
+    preprocess.sh         optional -- runs once, at case creation
+    postprocess.sh        optional -- runs after the manager exits
+    env.sh                optional -- run-wide environment
 
-A scenario run consists of 4 steps, all of which should be integrated in the workflow:
+``workflow.ymmsl``
+  Components, conduits and the ``imports:`` block naming each implementation. No paths,
+  no shot numbers, no tuning values -- a number written here probably belongs in
+  ``settings.ymmsl``.
 
-- Data Preprocessing (preprocess_data.sh)
-- File Prepping (create_runnable_files.sh)
-- Running the Simulation (run_simulation.sh)
-- Result Processing (postprocess_data.sh)
+``settings.ymmsl``
+  The workflow's generic settings, plus ``resources:``. Shot-dependent paths are
+  written against ``${SHOT}`` and resolved per case.
 
-Data Preprocessing
-------------------
+``README.md``
+  Included directly into that workflow's page under :ref:`workflows`, so it is
+  what users read. Nothing enforces it, and ``metis_from_dina`` and
+  ``metis_nice_inverse_from_dina`` currently have none -- their pages stand on
+  their own instead. Write one for anything new.
 
-The input data for the simulation needs to be complete for the actors that will be using it.
-Check the documentation of the actors to see which IDSs are needed and which IDS fields are mandatory.
-Make sure that the IMAS DD version is compatible with the used actors.
-If the used input data is already compatible, this step can be skipped.
+``preprocess.sh``
+  Runs **once**, during ``pds-create-case``, not on every run. Use it for an input
+  dataset that cannot be pre-baked into ``pds-scenarios`` --
+  ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own IMAS layout from raw
+  DINA this way. It receives ``PDS_REPO``, ``SCENARIOS_REPO``, ``SHOT`` and
+  ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.
 
-File Prepping
+  To hand back a value only it can compute, write a ``preprocess_settings.ymmsl`` into
+  the case; ``pds-run-case.sbatch`` stacks it in last. ``metis_psioffset``, derived from
+  the shot's own DINA equilibrium, is the existing example.
+
+``postprocess.sh``
+  Runs after ``muscle_manager`` exits, with ``PDS_REPO``, ``SCENARIOS_REPO``,
+  ``SHOT``, ``CASE_DIR``, ``RUN_DIR`` and ``PYTHON`` set. Write output into
+  ``$RUN_DIR``. Use ``"$PYTHON"``, not ``python`` -- it is the same interpreter
+  the manager resolved to, and the module environment may not put that first on
+  ``PATH``.
+
+``env.sh``
+  Sourced before the manager starts, for a run-wide variable an *imported*
+  implementation needs and cannot set itself. A ymmsl overlay replaces a same-named
+  implementation wholesale rather than merging field by field, so you cannot add an
+  ``env:`` entry to something imported from ``imas_muscle3``.
+  ``workflows/metis_from_dina/env.sh`` sets ``IMAS_AL_DISABLE_VALIDATE`` for the generic
+  source and sink this way.
+
+Templating
+----------
+
+``pds-create-case`` substitutes exactly four variables when it copies files into
+a case:
+
+``${PDS_REPO}`` ``${SCENARIOS_REPO}`` ``${SHOT}`` ``${CASE_DIR}``
+
+No other placeholders are expanded, and there is no wider templating scheme.
+
+Any setting key ending in ``.xml_path``, ``.python_config_module``, ``.config`` or
+``.waveforms`` is special: the file it names is copied into ``<case>/config/``, its own
+placeholders resolved, and the setting repointed at the copy. That is what makes a case
+a frozen snapshot.
+
+.. warning::
+
+   Config localisation keys the destination on the file's basename, so two
+   settings pointing at different files with the same name will collide in
+   ``config/``. Give tool configs distinct names within a workflow.
+
+Declaring implementations
+-------------------------
+
+Implementations come from three places:
+
+.. code-block:: yaml
+
+  imports:
+  # generic actors, straight from the installed package
+  - from imas_muscle3 import implementation source_component
+  - from imas_muscle3 import implementation sink_component
+  # the coupled codes, as EasyBuild modules
+  - from lib.easybuild_programs import implementation nice_inv
+  - from lib.easybuild_programs import implementation torax
+
+``lib.*`` resolves because ``YMMSL_PATH`` includes ``$PDS_REPO/workflows``, set by the
+PDS module and again by ``bin/pds-run-case.sbatch``. An import failing with *Failed to
+find a file lib/easybuild_programs.ymmsl* means that variable is missing.
+
+A new coupled code means a new program in ``workflows/lib/easybuild_programs.ymmsl``
+(and in ``local_programs.ymmsl`` if a from-source build should also work). See
+:ref:`writing_actors` for the actor side.
+
+Adding a shot
 -------------
 
-A workflow needs to have configuration files for all the used actors,
-as well as a ymmsl workflow file for MUSCLE3.
-These files are appended with '.template' (i.e. ``workflow.ymmsl.template``)
-and serve as the default configuration for the given workflow.
-If a scenario has its own specific files that have priority over the default ones, 
-those should be added to the scenario subdirectory.
-Since the pds installation cannot always handle relative paths well, the files should have
-placeholders for the paths to files, since those are user specific.
-The template files should then be copied and rewritten to actually runnable files in the scenario subdirectories 
-where the placeholders are filled in. For example:
+Try it without an override first: if the workflow's generic settings cover the shot,
+nothing more is needed. ``prescribed_transport`` runs in CI with no override at all.
+
+Otherwise add ``cases/overrides/<workflow>_<shot>.ymmsl`` with just the keys that
+differ -- a pulse window, a calibrated transport config, a different waveform set. An
+override that starts restating the workflow means the workflow's own settings need
+adjusting instead.
+
+Validating it
+-------------
+
+``ci/check_ymmsl.py`` resolves and flattens every case statically -- no data, no
+MUSCLE3, no cluster -- and runs in CI:
 
 .. code-block:: bash
 
-  # part of the .workflow.ymmsl template file in the workflow directory
-  settings:
-    sink.sink_uri: "imas:hdf5?path=[BASEDIR_PLACEHOLDER]/workflows/metis_interpretative_from_dina/scenarios/[SHOT_NR_PLACEHOLDER]/tmp/data/[SHOT_NR_PLACEHOLDER]_out/"
+  uv run python ci/check_ymmsl.py
+
+It catches what is otherwise silent at runtime: a settings key matching no instance
+(``get_setting`` walks prefixes and falls through, so the key is never seen), a
+``resources`` key that is not exactly ``<root>.<instance>`` (the component quietly gets
+one thread), and a model port declared but not wired inside the model (``flatten()``
+drops the caller's conduit without complaint).
+
+A workflow with no override is checked structurally against a placeholder shot, so a new
+one is covered from the moment it exists. Once it resolves, add it to the integration
+suite with a line in ``ci/run_test_workflows.sh``:
 
 .. code-block:: bash
 
-  # part of the resulting workflow.ymmsl runnable file in the scenario directory
-  settings:
-    sink.sink_uri: "imas:hdf5?path=/home/ITER/sanderm/gitrepos/pds/workflows/metis_interpretative_from_dina/scenarios/105092/tmp/data/105092_out/"
+  run_case_clean <workflow> <shot>
 
-Running the Simulation
-----------------------
+Checklist
+---------
 
-The workflow should be run using 
-
-.. code-block:: bash
-
-  muscle_manager --start-all "path/to/my/workflow.ymmsl" --run_dir "tmp/my_run_dir"
-
-Result Processing
------------------
-
-After the simulation is done, the results should be processed and plots and analyses should be made.
-The relevant quantities and plots depend on the workflow.
+- ``workflow.ymmsl`` has no absolute paths, shot numbers or tuning values.
+- ``settings.ymmsl`` declares ``resources:`` for every component that should get
+  more than one thread.
+- ``README.md`` describes assumptions, not just structure.
+- ``uv run python ci/check_ymmsl.py`` passes.
+- A ``run_case_clean`` line is in ``ci/run_test_workflows.sh``.
+- The workflow appears in the tables in :ref:`workflows`.

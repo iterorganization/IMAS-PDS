@@ -50,9 +50,7 @@ sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105084
 `pds-create-case` stacks `workflow.ymmsl`, `settings.ymmsl` (resources, shared knobs), and
 `cases/overrides/evolutive_controller_<shot>.ymmsl` if it exists into numbered files under
 the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
-`cases/runs/<case>`. To run without SLURM, or without persisting a case folder, use
-`bin/pds-run evolutive_controller 105084` instead (this is what `run_job.sbatch` already
-did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
+`cases/runs/<case>`.
 
 ## Assumptions
 

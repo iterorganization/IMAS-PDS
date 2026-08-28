@@ -37,8 +37,7 @@ solver config, this workflow's own `waveforms_no_transport.yaml` pulse-design te
 the input DBEntry, all templated from `${SHOT}`), and
 `cases/overrides/prescribed_transport_<shot>.ymmsl` if it exists into numbered files under
 the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
-`cases/runs/<case>`. To run without SLURM, or without persisting a case folder, use
-`bin/pds-run prescribed_transport 105084` instead.
+`cases/runs/<case>`.
 
 Scenarios available: 105078, 105084, 105092, 105099.
 

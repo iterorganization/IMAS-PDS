@@ -57,10 +57,16 @@ all = [
     "pds[docs,test,linting,visualization]"
 ]
 docs = [
-    "sphinx>=6.0.0,<7.0.0",
-    "sphinx-autosummary-accessors>=0.1.2",
-    "sphinx_immaterial>=0.11.0,<0.12",
-    "recommonmark>=0.6",
+    "sphinx>=7.0.0,<9.0.0",
+    "sphinx_immaterial>=0.13.0,<0.14",
+    # Lets the workflow READMEs be included into the docs as-is, so they cannot
+    # drift from a hand-written paraphrase.
+    "myst-parser>=2.0",
+    # Grid and card directives, used by the case gallery.
+    "sphinx-design>=0.5",
+    # conf.py's coupling-diagram directive renders the workflow ymmsl files as SVG,
+    # so the diagrams cannot drift from the couplings they document.
+    "ymmsl2svg @ git+https://github.com/multiscale/ymmsl2svg.git@efba05b798889dbe863c3e4e201b2fe3a5196b70",
 ]
 test = [
     "pytest>=5.4.1",

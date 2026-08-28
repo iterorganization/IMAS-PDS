@@ -1,2 +1,3 @@
 _build
-source/generated
+# Coupling-diagram thumbnails, regenerated from the workflow files on every build.
+source/workflow_pages/diagrams

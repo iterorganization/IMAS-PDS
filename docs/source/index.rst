@@ -1,66 +1,69 @@
 .. _`index`:
 
-.. 
-   Main "index". This will be converted to a landing index.html by sphinx. We
-   define TOC here, but it'll be put in the sidebar by the theme
+..
+   Main "index". This will be converted to a landing index.html by sphinx. The
+   toctrees are hidden: the theme renders them in the sidebar, and repeating them
+   in the page body just duplicates the navigation.
 
-=========================
+===============
 IMAS PDS Manual
-=========================
+===============
 
-IMAS PDS is an integrated modeling tool for IMAS simulations.
+The **Pulse Design Simulator** couples the codes used to design an ITER pulse --
+NICE for free-boundary equilibrium, TORAX and METIS for transport, the
+Waveform-Editor for targets, PCSSP for magnetic control -- into simulations that
+run as a single job, exchanging IMAS data through
+`MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
 
-README
-------
+Getting started
+---------------
 
-The README is best read on the `git page <https://github.com/iterorganization/IMAS-PDS>`_.
+.. code-block:: bash
 
-Manual
-------
+  cd /path/to/pds
+
+  module use /work/projects/pds/modules/all
+  module load PDS
+
+  bin/pds-create-case inverse_convergence 105073
+  sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
+
+:ref:`installing` describes what the module sets up, :ref:`running_cases` what a
+case contains and where its output goes, and :ref:`workflows` which couplings are
+available.
 
 .. toctree::
    :caption: Getting Started
    :maxdepth: 2
+   :hidden:
 
    self
    installing
-   usage
-   available_workflows
-   writing_actors
+   running_cases
+   workflows
+   troubleshooting
+
+.. toctree::
+   :caption: Developing PDS
+   :maxdepth: 2
+   :hidden:
+
+   contributing
+   local_install
    adding_workflows
-   tips_and_tricks
-
-.. toctree::
-   :caption: API docs
-   :maxdepth: 1
-
-   api
-
-.. toctree::
-   :caption: Development
-   :maxdepth: 1
-
+   writing_actors
+   documenting_actors
    code_style
    ci_config
-
 
 .. toctree::
    :caption: Training
    :maxdepth: 1
+   :hidden:
 
    courses/basic_user_training
 
+----
 
-LICENSE
--------
-
-.. literalinclude:: ../../LICENSE.md
-   :language: text
-
-
-Sitemap
--------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+IMAS PDS is licensed under LGPL-3.0-or-later. The source is on
+`GitHub <https://github.com/iterorganization/IMAS-PDS>`_.

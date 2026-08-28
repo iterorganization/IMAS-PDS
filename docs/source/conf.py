@@ -7,30 +7,24 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import datetime
-import sys
+import os
+from pathlib import Path
 from urllib.parse import urljoin
 
-# Sphinx extention to format xarray/pandas summaries
-import sphinx_autosummary_accessors
-from jinja2.defaults import DEFAULT_FILTERS
+from docutils import nodes
+from docutils.parsers.rst import Directive, directives
 from packaging.version import Version
 
 import pds
 
-print("python exec:", sys.executable)
-print("sys.path:", sys.path)
-
 # -- Project information -----------------------------------------------------
 # The documented project's name
-project = src_project = PROJECT = "pds"
-PACKAGE = "pds"
-src_group = GROUP = "IMEX"
+project = "pds"
 
 # A copyright statement in the style '2008, Author Name'.
 copyright = f"2020-{datetime.datetime.now(tz=datetime.UTC).year}, ITER Organization"
 # The author name(s) of the document
 author = "ITER Organization"
-src_host = "github.com"
 
 # Parse urls here for convenience, to be re-used
 
@@ -39,9 +33,29 @@ iter_github = "https://github.com/iterorganization/"
 
 # PDS
 repository_url = urljoin(iter_github, "IMAS-PDS/")
-blob_url = urljoin(repository_url, "blob/master/")
-issue_url = urljoin(repository_url, "issues/")
-mr_url = urljoin(repository_url, "pulls")
+
+
+# Which ref :src: links point at. Read the branch/tag from the build environment so
+# that docs built from a branch link to that branch's code, rather than always
+# resolving against master and showing a reader code that has since moved.
+#
+# On a pull_request event GITHUB_REF_NAME is "<number>/merge" and RTD's
+# READTHEDOCS_GIT_IDENTIFIER is the bare PR number -- neither resolves under blob/, so
+# prefer GITHUB_HEAD_REF (the source branch) and fall back to master over a ref that
+# would only produce 404s.
+def _git_ref() -> str:
+    for candidate in (
+        os.environ.get("GITHUB_HEAD_REF"),
+        os.environ.get("READTHEDOCS_GIT_IDENTIFIER"),
+        os.environ.get("GITHUB_REF_NAME"),
+    ):
+        if candidate and "/merge" not in candidate and not candidate.isdigit():
+            return candidate
+    return "master"
+
+
+git_ref = _git_ref()
+blob_url = urljoin(repository_url, f"blob/{git_ref}/")
 
 
 # Configuration of sphinx.ext.extlinks
@@ -69,24 +83,13 @@ release = str(full_version)
 # ones.
 extensions = [
     "sphinx.ext.autodoc",  # To auto-generate docs from Python docstrings
-    "sphinx.ext.todo",  # Support for todo items
     "sphinx.ext.napoleon",  # Support for NumPy and Google style docstrings
     "sphinx.ext.intersphinx",  # Generate links to other documentation files
-    "sphinx.ext.autosummary",  # For summarizing autodoc-generated files
     "sphinx.ext.extlinks",  # For shortening internal links
-    "sphinx.ext.mathjax",  # Render math as images
+    "myst_parser",  # Lets .md files (the workflow READMEs) be included directly
+    "sphinx_design",  # Grid and card directives, used by the case gallery
     "sphinx_immaterial",  # Sphinx immaterial theme
 ]
-
-todo_include_todos = True
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
 
 # The master toctree document.
 master_doc = "index"
@@ -101,7 +104,10 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+# "generated" catches leftover autosummary output from before the API section was
+# removed: it is untracked, so a working tree can still have it, and an orphan page
+# fails the build under -W even though a clean CI checkout passes.
+exclude_patterns = ["_build", "generated", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -178,75 +184,14 @@ object_description_options = [
     (".*parameter", {"include_in_toc": False}),
 ]
 
-# Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = []
-
-# The name for this set of Sphinx documents.  If None, it defaults to
-# '<project> v<release> documentation'.
-# html_title = None
-
-# A shorter title for the navigation bar.  Default is the same as html_title.
-# html_short_title = None
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-# html_logo = "_static/imaspy_200x200.png"
-
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-# html_favicon = "_static/favicon.ico"
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ["_static"]
 
-# Add any extra paths that contain custom files (such as robots.txt or
-# .htaccess) here, relative to this directory. These files are copied
-# directly to the root of the documentation.
-# html_extra_path = []
-
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = today_fmt
-
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-# html_use_smartypants = True
-
-# Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
-
-# Additional templates that should be rendered to pages, maps page names to
-# template names.
-# html_additional_pages = {}
-
-# If false, no module index is generated.
-# html_domain_indices = True
-
-# If false, no index is generated.
-# html_use_index = True
-
-# If true, the index is split into individual pages for each letter.
-# html_split_index = False
-
-# If true, links to the reST sources are added to the pages.
-# html_show_sourcelink = True
-
-# If true, 'Created using Sphinx' is shown in the HTML footer. Default is True.
-# html_show_sphinx = True
-
-# If true, '(C) Copyright ...' is shown in the HTML footer. Default is True.
-# html_show_copyright = True
-
-# If true, an OpenSearch description file will be output, and all pages will
-# contain a <link> tag referring to it.  The value of this option must be the
-# base URL from which the finished HTML is served.
-# html_use_opensearch = ''
-
-# This is the file name suffix for HTML files (e.g. '.xhtml').
-# html_file_suffix = None
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "pds_doc"
@@ -256,11 +201,6 @@ htmlhelp_basename = "pds_doc"
 # Configuration of sphinx.ext.autodoc
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "signature"
-
-
-# Configuration of sphinx.ext.autosummary
-# https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
-autosummary_generate = True
 
 
 # Configuration of sphinx.ext.napoleon
@@ -274,24 +214,259 @@ napoleon_attr_annotations = True
 
 # Configuration of sphinx.ext.intersphinx
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
+# Only projects these docs actually refer to. Every entry costs an inventory
+# download on each build (and, under -W, is a way for a network blip to fail it).
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "packaging": ("https://packaging.pypa.io/en/stable/", None),
+    "muscle3": ("https://muscle3.readthedocs.io/en/latest/", None),
+    "imas": ("https://imas-python.readthedocs.io/en/latest/", None),
+    "ymmsl": ("https://ymmsl-python.readthedocs.io/en/latest/", None),
 }
 intersphinx_timeout = 60  # Downloads time out after 1 minute
 
 smartquotes = False
 
-# Configuration of sphinx.ext.mathjax
-# https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
+
+# Coupling diagrams for the case pages, drawn from the workflow files themselves so they
+# cannot drift.
+REPO_ROOT = Path(__file__).parents[2]
+
+# The gallery cards in workflows.rst take their thumbnail as an image path, so those
+# diagrams -- unlike the ones the coupling-diagram directive draws straight into a page
+# -- have to exist as files: (workflow file, model, workflow_pages/diagrams/<name>).
+GALLERY_THUMBNAILS = [
+    ("workflows/prescribed_transport/workflow.ymmsl", None, "prescribed_transport.svg"),
+    ("workflows/inverse_convergence/workflow.ymmsl", None, "inverse_convergence.svg"),
+    (
+        "workflows/metis_nice_inverse_from_dina/workflow.ymmsl",
+        None,
+        "metis_nice_inverse.svg",
+    ),
+    ("workflows/metis_from_dina/workflow.ymmsl", None, "metis_from_dina.svg"),
+    (
+        "docs/source/workflow_pages/evolutive_controller.svg",
+        None,
+        "evolutive_controller.svg",
+    ),
+]
+THUMBNAIL_DIR = Path(__file__).parent / "workflow_pages" / "diagrams"
 
 
-def escape_underscores(string):
-    return string.replace("_", r"\_")
+def _drop_recorders(model):
+    """Remove recorder components, and every conduit touching them, from a model.
+
+    Recorders are passive taps: they hang off existing conduits to record traffic
+    without taking part in the coupling, so they are noise on a coupling diagram.
+    Dropping them also sidesteps ymmsl's timeline checker, which reads their S ports
+    (their only supported operator) as the receiving half of a call/release pair and
+    rejects every conduit feeding them.
+    """
+    taps = {
+        name
+        for name, component in model.components.items()
+        if str(component.implementation).rsplit(".", 1)[-1] == "recorder_component"
+    }
+    for name in taps:
+        del model.components[name]
+    model.conduits = [
+        conduit
+        for conduit in model.conduits
+        if str(conduit.sending_component()) not in taps
+        and str(conduit.receiving_component()) not in taps
+    ]
+
+
+def _drop_unused_imports(configuration):
+    """Drop import statements for implementations no component uses any more.
+
+    Only meaningful after _drop_recorders: an import whose implementation nothing
+    references is dead weight, but resolve() still tries to look it up, and fails the
+    whole diagram if the installed package does not expose it.
+    """
+    used = {
+        str(component.implementation)
+        for model in configuration.models.values()
+        for component in model.components.values()
+    }
+    configuration.imports = [
+        statement for statement in configuration.imports if str(statement.name) in used
+    ]
+
+
+def _stub_package_imports(configuration):
+    """Replace imports resolved from an installed package with placeholder programs.
+
+    A workflow imports its generic actors with `from imas_muscle3 import implementation
+    X`, which ymmsl resolves through that package's `ymmsl.module` entry point. Building
+    the docs would then need imas_muscle3 installed, at a revision that both publishes
+    the entry point and lists every actor the workflows use -- a git dependency the docs
+    build has no other reason to carry, and one that would pin the version the
+    visualization scripts get too.
+
+    A coupling diagram only shows components and how they are wired, never how an
+    implementation is launched, so a placeholder program per imported name draws exactly
+    the same picture. Imports of `lib.*` are left alone: those resolve from this
+    repository through YMMSL_PATH and cost nothing.
+    """
+    from ymmsl.v0_2 import Program, Reference
+
+    stubbed = [
+        statement
+        for statement in configuration.imports
+        if not str(statement.module).startswith("lib.")
+    ]
+    for statement in stubbed:
+        name = str(statement.name)
+        if Reference(name) not in configuration.programs:
+            configuration.programs[Reference(name)] = Program(
+                name=name, executable=Path("/bin/true")
+            )
+    configuration.imports = [
+        statement for statement in configuration.imports if statement not in stubbed
+    ]
+
+
+def render_coupling_diagram(path, model=None):
+    """Render one model of a workflow file as an SVG coupling diagram.
+
+    ``model`` names which of the file's models to draw, defaulting to its root model --
+    the one no component uses as an implementation.
+
+    Passing an ``.svg`` file instead of a workflow file returns it as it is. That is for
+    ``evolutive_controller``, the one coupling here that cannot be drawn from its own
+    workflow file yet: ``temporal_coupler`` has only S and O_I ports and no F_INIT
+    conduit, so ymmsl's timeline resolver cannot place it and reads every conduit feeding
+    it as a mismatched call/release pair. Drawing it needs O_I/S timeline annotations,
+    which arrive in ymmsl 0.18 -- until then the diagram is generated out of tree and
+    committed, and unlike the others it can go stale.
+    """
+    if path.suffix == ".svg":
+        return path.read_text()
+
+    import svg
+    import ymmsl
+    from ymmsl.v0_2 import Configuration, Reference, resolve
+    from ymmsl2svg.main import configuration2svg
+    from ymmsl2svg.settings import settings as ymmsl2svg_settings
+
+    # Settings.debug defaults to True; only ymmsl2svg's own CLI turns it off, so calling
+    # the library directly paints the layout boxes over the diagram.
+    ymmsl2svg_settings.debug = False
+
+    # How the workflow files resolve each other's `imports:` statements. Prepend rather
+    # than setdefault: `module load PDS` exports YMMSL_PATH pointing at whichever checkout
+    # it resolved, which need not be the one being documented.
+    workflows = str(REPO_ROOT / "workflows")
+    inherited = os.environ.get("YMMSL_PATH")
+    os.environ["YMMSL_PATH"] = (
+        f"{workflows}{os.pathsep}{inherited}" if inherited else workflows
+    )
+
+    configuration = ymmsl.load_as(Configuration, path)
+
+    # Drop the recorders before resolving, not after: they are noise on a diagram either
+    # way (see _drop_recorders), and resolving them would need an implementation that
+    # need not exist.
+    for candidate in configuration.models.values():
+        _drop_recorders(candidate)
+    _drop_unused_imports(configuration)
+    _stub_package_imports(configuration)
+
+    resolve(Reference([]), configuration)
+    if model:
+        try:
+            selected = configuration.models[Reference(model)]
+        except KeyError:
+            known = ", ".join(sorted(str(name) for name in configuration.models))
+            raise RuntimeError(
+                f"{path} has no model named {model!r}; it defines: {known}."
+            ) from None
+    else:
+        selected = configuration.root_model()
+
+    # configuration2svg draws a configuration's root model, so a sub-model has to be
+    # lifted into a configuration of its own to become the root there. The programs come
+    # along: they are what the components' implementations resolve against.
+    image = configuration2svg(
+        Configuration(models=[selected], programs=configuration.programs)
+    )
+    # ymmsl2svg sets width and height but no viewBox, and an SVG without one does not
+    # scale its contents -- the card thumbnails would be cropped, not resized.
+    width, height = image.width, image.height
+    assert isinstance(width, int | float), (
+        f"ymmsl2svg gave a non-numeric width {width!r}"
+    )
+    assert isinstance(height, int | float), (
+        f"ymmsl2svg gave a non-numeric height {height!r}"
+    )
+    image.viewBox = svg.ViewBoxSpec(0, 0, width, height)
+    return str(image)
+
+
+def generate_gallery_thumbnails(app):
+    """Write the diagram files the case gallery's cards point at."""
+    THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
+    for source, model, name in GALLERY_THUMBNAILS:
+        (THUMBNAIL_DIR / name).write_text(
+            render_coupling_diagram(REPO_ROOT / source, model) + "\n"
+        )
+
+
+class CouplingDiagram(Directive):
+    """Draw one model of a workflow file, inline, with an optional caption.
+
+    Usage::
+
+        .. coupling-diagram:: workflows/inverse_convergence/workflow.ymmsl
+           :model: nice_inverse
+
+           What the diagram shows.
+
+    The argument is a workflow file, relative to the repository root -- or, for a coupling
+    that cannot be drawn from one yet, a committed ``.svg`` to inline as it is.
+    ``:model:`` picks which of the file's models to draw and defaults to the root model --
+    the one no component uses as an implementation. Naming a sub-model is how a coupling
+    inside one gets its own diagram: ``inverse_convergence``'s ``equilibrium`` component
+    draws as a single box, and ``:model: nice_inverse`` opens it up.
+
+    The SVG is written into the page rather than referenced with an ``<img>``, so that
+    ``coupling-diagram.js`` can reach its elements: an SVG loaded through ``<img>`` is a
+    sealed document that the page can neither style nor script.
+    """
+
+    required_arguments = 1
+    final_argument_whitespace = False
+    has_content = True
+    # RUF012 wants a ClassVar annotation here; ty rejects one, because docutils
+    # declares Directive.option_spec as an instance variable and a ClassVar
+    # override violates LSP. ty wins -- it is the stricter of the two.
+    option_spec = {"model": directives.unchanged_required}  # noqa: RUF012
+
+    def run(self):
+        source = REPO_ROOT / self.arguments[0]
+        if not source.is_file():
+            raise self.error(
+                f"No workflow file at {self.arguments[0]!r}; the coupling-diagram"
+                f" argument is a path relative to the repository root ({REPO_ROOT})."
+            )
+        self.state.document.settings.env.note_dependency(str(source))
+
+        try:
+            diagram = render_coupling_diagram(source, self.options.get("model"))
+        except RuntimeError as exc:
+            raise self.error(str(exc)) from None
+
+        figure = nodes.figure(classes=["coupling-diagram"])
+        figure += nodes.raw("", diagram, format="html")
+        if self.content:
+            caption = nodes.Element()
+            self.state.nested_parse(self.content, self.content_offset, caption)
+            figure += nodes.caption("", "", *caption[0].children)
+        return [figure]
 
 
 def setup(app):
-    DEFAULT_FILTERS["escape_underscores"] = escape_underscores
     app.add_css_file("pds.css")
+    app.add_js_file("coupling-diagram.js")
+    app.connect("builder-inited", generate_gallery_thumbnails)
+    app.add_directive("coupling-diagram", CouplingDiagram)
