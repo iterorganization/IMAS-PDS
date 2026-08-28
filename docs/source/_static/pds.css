@@ -4,3 +4,55 @@
 .tabbed-content {
     padding: 0 0.5rem;
 }
+
+/* Coupling diagrams. ymmsl2svg draws in black on no background, which disappears
+   against the dark palette, so both the gallery thumbnails and the full-size figures
+   get their own light ground. `contain` rather than `cover`: these are wide diagrams,
+   and cropping one to fill a card leaves an unreadable smear. */
+.sd-card-img-top {
+    height: 150px;
+    object-fit: contain;
+    padding: 0.5rem;
+    background: #fff;
+}
+figure img[src$=".svg"] {
+    padding: 0.5rem;
+    background: #fff;
+}
+
+/* Inline coupling diagrams, so that coupling-diagram.js can reach into the SVG. An
+   <img>-loaded SVG is a sealed document: no hover, no styling from this page. */
+.coupling-diagram svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    padding: 0.5rem;
+    background: #fff;
+}
+.coupling-diagram g.ComponentBlock_group,
+.coupling-diagram use[href^="#port-"] {
+    cursor: pointer;
+}
+/* Hovering a component or port fades the diagram back and lifts out what it touches. */
+.coupling-diagram svg.cd-active .ComponentBlock_group,
+.coupling-diagram svg.cd-active .conduit {
+    opacity: 0.25;
+    transition: opacity 0.1s ease-in-out;
+}
+.coupling-diagram svg.cd-active .ComponentBlock_group.cd-on,
+.coupling-diagram svg.cd-active .ComponentBlock_group.cd-near,
+.coupling-diagram svg.cd-active .conduit.cd-on {
+    opacity: 1;
+}
+.coupling-diagram svg .conduit.cd-on {
+    stroke: #d81b60;
+    stroke-width: 3;
+}
+.coupling-diagram svg use.cd-on {
+    stroke: #d81b60;
+}
+.coupling-diagram svg .ComponentBlock_group.cd-on rect.component {
+    stroke: #d81b60;
+    stroke-width: 3;
+}

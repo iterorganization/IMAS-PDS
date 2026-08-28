@@ -1,1 +1,3 @@
 _build
+# Coupling-diagram thumbnails, regenerated from the workflow files on every build.
+source/cases/diagrams

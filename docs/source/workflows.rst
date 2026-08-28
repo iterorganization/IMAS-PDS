@@ -7,6 +7,10 @@ A workflow describes *how* something is simulated: which codes are coupled, in
 what order, over which ports. It carries no shot data -- that comes from the
 scenario you pair it with when you create a case. See :ref:`running_cases`.
 
+This page is the chooser: what each workflow couples, which shots are exercised,
+and what input data it needs. For the couplings drawn out component by component,
+see the :ref:`case gallery <cases>`.
+
 Choosing a workflow
 -------------------
 
