@@ -25,8 +25,7 @@ Getting started
 
 .. code-block:: bash
 
-  export PDS_REPO=/path/to/pds
-  export SCENARIOS_REPO=/path/to/pds-scenarios
+  cd /path/to/pds
 
   module use /work/projects/pds/modules/all
   module load PDS
@@ -34,8 +33,9 @@ Getting started
   bin/pds-create-case inverse_convergence 105073
   sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 
-That is the whole user path. :ref:`installing` explains what the module sets up,
-:ref:`running_cases` what a case is and where its output goes, and
+That is the whole user path -- no environment to set up, as long as you load the
+module from inside the checkout. :ref:`installing` explains what the module sets
+up, :ref:`running_cases` what a case is and where its output goes, and
 :ref:`workflows` which couplings are available.
 
 .. toctree::

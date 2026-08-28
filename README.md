@@ -19,8 +19,7 @@ Licensed under LGPL-3.0-or-later; see [LICENSE.md](LICENSE.md),
 Requires access to the ITER cluster, where the module stack is published.
 
 ```bash
-export PDS_REPO=/path/to/pds
-export SCENARIOS_REPO=/path/to/pds-scenarios
+cd /path/to/pds
 
 module use /work/projects/pds/modules/all
 module load PDS
@@ -31,8 +30,10 @@ sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 
 Output lands in `cases/runs/inverse_convergence_105073/`.
 
-Export `PDS_REPO` before the module load — it is how the module knows which
-checkout to wire in. Without it, it falls back to your current directory.
+Nothing to export: loading the module from inside the checkout is how it knows
+which one to wire in, and the shot data defaults to the copy published at
+`/work/projects/pds/pds-scenarios`. Set `PDS_REPO` or `SCENARIOS_REPO` only if
+you need to override either.
 
 ## Documentation
 

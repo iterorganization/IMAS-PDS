@@ -31,25 +31,34 @@ Loading the module
 
 .. code-block:: bash
 
-  export PDS_REPO=/path/to/pds
-  export SCENARIOS_REPO=/path/to/pds-scenarios
+  cd /path/to/pds
 
   module use /work/projects/pds/modules/all
   module load PDS
 
-Export ``PDS_REPO`` *before* the load. The module needs to know which checkout to
-wire in, and it resolves that in two steps: an already-exported ``PDS_REPO`` wins,
-and otherwise it falls back to your current directory if that looks like a PDS
-checkout. So this works too:
+There is nothing to export. The module has to know which checkout to wire in, and
+it works that out in two steps: an already-exported ``PDS_REPO`` wins, and
+otherwise it falls back to your current directory if that looks like a PDS
+checkout. Loading it from inside the checkout is the second case.
+
+If neither holds -- you loaded the module from somewhere else -- it fails with
+``PDS: could not determine which PDS checkout to use`` rather than guessing.
+Every path it sets is relative to the checkout, and a wrong guess would write run
+output somewhere you may not be able to write to. See :ref:`troubleshooting`.
+
+Set the variables explicitly when the defaults do not fit:
 
 .. code-block:: bash
 
-  cd /path/to/pds && module load PDS
+  # load the module without being in the checkout
+  export PDS_REPO=/path/to/pds
 
-If neither holds, the load fails with ``PDS: could not determine which PDS
-checkout to use`` rather than guessing -- every path it sets is relative to the
-checkout, and a wrong guess would write run output somewhere you may not be able
-to write to. See :ref:`troubleshooting` if you hit that.
+  # use your own scenarios checkout rather than the published copy
+  export SCENARIOS_REPO=/path/to/pds-scenarios
+
+``PDS_REPO`` must be exported *before* the module load, since that is when it is
+read. ``SCENARIOS_REPO`` is read later, by ``pds-create-case`` and
+``pds-run-case.sbatch``, so it can be set at any point before you create a case.
 
 What the module does
 --------------------
