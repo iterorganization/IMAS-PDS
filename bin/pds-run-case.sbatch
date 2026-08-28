@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=02:00:00
-#SBATCH --partition=sun,vega,sirius
+#SBATCH --time=00:59:00
+#SBATCH --partition=sun_debug,vega_debug,sirius_debug
 set -euo pipefail
 
 # SLURM wrapper that runs a case folder created by bin/pds-create-case. Submit from the
