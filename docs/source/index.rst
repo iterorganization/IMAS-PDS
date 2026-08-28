@@ -12,7 +12,7 @@ The **Pulse Design Simulator** couples the codes used to design an ITER pulse --
 NICE for free-boundary equilibrium, TORAX and METIS for transport, the
 Waveform-Editor for targets, PCSSP for magnetic control -- into simulations that
 run as a single job, exchanging IMAS data through
-`MUSCLE3 <https://muscle3.readthedocs.io/>`_.
+`MUSCLE3 <https://muscle3.readthedocs.io/en/latest/>`_.
 
 PDS itself builds nothing. Each code is a separate EasyBuild module that MUSCLE3
 loads when it starts that actor, and this repository holds the couplings: which

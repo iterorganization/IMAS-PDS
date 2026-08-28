@@ -109,7 +109,7 @@ For any workflow that runs METIS:
   ``plasma_profiles``) and ``core_sources`` (or ``plasma_sources``) IDSs.
 - ``pulse_schedule`` filled. Preprocessing creates it from DINA data if needed.
   See the `METIS input documentation
-  <https://github.com/IRFM/METIS/tree/main/doc/METIS_inputs_from_IMAS_IDSs.pdf>`_
+  <https://github.com/IRFM/METIS/blob/main/doc/METIS_inputs_from_IMAS_IDSs.pdf>`_
   for what it expects.
 
 Per-workflow reference
