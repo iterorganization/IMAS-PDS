@@ -5,4 +5,4 @@ settings:
   loop.t_min: 10
   loop.t_max: 205
   transport.torax.python_config_module: ${PDS_REPO}/cases/overrides/inverse_convergence_105073_config_torax.py
-  equilibrium.rec_nice.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
