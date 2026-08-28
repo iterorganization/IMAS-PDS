@@ -14,8 +14,7 @@ request, as two jobs in sequence:
 
 Linting
     ``ruff check``, ``ruff format --check`` and the ``ty`` type checker over the whole
-    repository, then ``ci/check_ymmsl.py``, which resolves and flattens every case
-    statically. See :ref:`code style and linting`.
+    repository. See :ref:`code style and linting`.
 
 Docs
     Builds the Sphinx documentation and uploads the HTML as an artifact.

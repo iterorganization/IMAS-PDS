@@ -110,7 +110,8 @@ touches ``workflows/``, ``bin/`` or the easyconfigs, that suite -- not GitHub CI
 what will catch a regression.
 
 ``ci/check_ymmsl.py`` is the cheap subset: it resolves and flattens every case
-statically, with no data and no MUSCLE3, and does run in GitHub CI.
+statically, with no data and no MUSCLE3. It is not wired into CI, so run it
+yourself after changing a workflow or a case override.
 
 Repository layout
 -----------------
