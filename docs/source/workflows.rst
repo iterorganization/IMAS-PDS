@@ -11,8 +11,54 @@ This page is the chooser: what each workflow couples, which shots are exercised,
 and what input data it needs. Each one links on to its own page, where the
 coupling is drawn out component by component.
 
-Choosing a workflow
--------------------
+The workflows
+-------------
+
+Each coupling below is drawn from its own ``workflow.ymmsl`` at build time, so the
+diagrams cannot drift from the couplings they document.
+
+.. grid:: 1 2 3 3
+   :gutter: 2
+
+   .. grid-item-card:: Prescribed transport
+      :img-top: workflow_pages/diagrams/prescribed_transport.svg
+      :link: case-prescribed-transport
+      :link-type: ref
+
+      A single NICE inverse solve against a boundary that is fixed up front. Transport is
+      not solved at all, and each time slice is independent, so there is no outer loop.
+
+   .. grid-item-card:: Inverse convergence against TORAX
+      :img-top: workflow_pages/diagrams/inverse_convergence.svg
+      :link: case-inverse-convergence
+      :link-type: ref
+
+      An outer loop alternating NICE free-boundary inverse equilibrium and TORAX transport
+      until the coil currents stop moving, with an ``imas-validator`` pass over the
+      converged coil currents.
+
+   .. grid-item-card:: METIS with a NICE inverse solve
+      :img-top: workflow_pages/diagrams/metis_nice_inverse.svg
+      :link: case-metis-nice-inverse
+      :link-type: ref
+
+      METIS transport from DINA input, then a single NICE inverse pass fitting coil
+      currents to the equilibrium it produced. No outer loop.
+
+   .. grid-item-card:: Evolutive co-simulation under magnetic control
+      :img-top: workflow_pages/diagrams/evolutive_controller.svg
+      :link: case-evolutive-controller
+      :link-type: ref
+
+      Forward, not inverse: TORAX and NICE step together in lockstep while a PCSSP
+      controller closes the coil-current loop.
+
+``metis_from_dina`` has no page of its own yet: it is
+``metis_nice_inverse_from_dina`` without the NICE inverse pass. The header comment
+of :src:`workflows/metis_from_dina/workflow.ymmsl` describes it.
+
+Side by side
+------------
 
 .. list-table::
    :header-rows: 1
@@ -115,52 +161,6 @@ For any workflow that runs METIS:
   See the `METIS input documentation
   <https://github.com/IRFM/METIS/blob/main/doc/METIS_inputs_from_IMAS_IDSs.pdf>`_
   for what it expects.
-
-Per-workflow detail
--------------------
-
-Each coupling below is drawn from its own ``workflow.ymmsl`` at build time, so the
-diagrams cannot drift from the couplings they document.
-
-.. grid:: 1 2 3 3
-   :gutter: 2
-
-   .. grid-item-card:: Prescribed transport
-      :img-top: workflow_pages/diagrams/prescribed_transport.svg
-      :link: case-prescribed-transport
-      :link-type: ref
-
-      A single NICE inverse solve against a boundary that is fixed up front. Transport is
-      not solved at all, and each time slice is independent, so there is no outer loop.
-
-   .. grid-item-card:: Inverse convergence against TORAX
-      :img-top: workflow_pages/diagrams/inverse_convergence.svg
-      :link: case-inverse-convergence
-      :link-type: ref
-
-      An outer loop alternating NICE free-boundary inverse equilibrium and TORAX transport
-      until the coil currents stop moving, with an ``imas-validator`` pass over the
-      converged coil currents.
-
-   .. grid-item-card:: METIS with a NICE inverse solve
-      :img-top: workflow_pages/diagrams/metis_nice_inverse.svg
-      :link: case-metis-nice-inverse
-      :link-type: ref
-
-      METIS transport from DINA input, then a single NICE inverse pass fitting coil
-      currents to the equilibrium it produced. No outer loop.
-
-   .. grid-item-card:: Evolutive co-simulation under magnetic control
-      :img-top: workflow_pages/diagrams/evolutive_controller.svg
-      :link: case-evolutive-controller
-      :link-type: ref
-
-      Forward, not inverse: TORAX and NICE step together in lockstep while a PCSSP
-      controller closes the coil-current loop.
-
-``metis_from_dina`` has no page of its own yet: it is
-``metis_nice_inverse_from_dina`` without the NICE inverse pass. The header comment
-of :src:`workflows/metis_from_dina/workflow.ymmsl` describes it.
 
 .. toctree::
    :hidden:
