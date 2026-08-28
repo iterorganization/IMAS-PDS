@@ -1,13 +1,15 @@
-.. _`basic/visualization`:
+.. _`training/visualization`:
 
-Visualization
-=============
+Visualizing workflows
+=====================
+
+.. TODO: reformat and clean up
 
 The **recorder actor** is a sink-only tap: wired onto conduits that already exist in
 a workflow, it does not change the coupling, it just also writes a distilled copy
-of the data flowing past to disk. Point the MUSCLE3 dashboard (``m3dash``, shipped with
-IMAS-MUSCLE3) at a run that includes one and it gets an extra tab, rendering that data
-live while the run is still going, or afterwards.
+of the data flowing past to disk. Point the :ref:`muscle3-dashboard <training/muscle3_dashboard>` at a run that
+includes one and it gets an extra tab, rendering that data live while the run is
+still going, or afterwards.
 
 We will use ``prescribed_transport`` for the exercises below: of the workflows in
 this repo it is the simplest chain (``source -> waveform_editor -> nice_inv ->
@@ -51,7 +53,7 @@ a file always has to exist:
 .. code-block:: yaml
 
     settings:
-      recorder_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
+      recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
 
 The config file defines the extraction logic in one of two ways: a plain
 ``def extract(ids) -> dict[str, xarray.Dataset]`` function if you only need to
@@ -65,8 +67,7 @@ was recorded -- the recorder only ever reads the ``State`` half.
 The ``State`` half of that can itself be automatic (exercise 1 below): if it
 doesn't implement its own ``extract``, and the recorder's
 ``automatic_extract`` setting is on, extraction falls back to
-``BaseState.automatic_extract`` -- the same discovery-and-extract logic the
-live visualization actor's own automatic mode uses.
+``BaseState.automatic_extract``.
 
 .. note::
 
@@ -81,15 +82,15 @@ live visualization actor's own automatic mode uses.
 Running the workflow and opening the dashboard
 -------------------------------------------------
 
-.. code-block:: console
+.. code-block:: bash
 
-    bash bin/run_case.sbatch 105084_prescribed
+    bin/pds-create-case prescribed_transport 105084
+    bin/pds-run-case cases/prescribed_transport_105084
 
-``run_case.sbatch`` pins the run directory to ``cases/runs/<case>``, so the output lands
-somewhere predictable. Then, in a separate terminal with the dashboard's own virtual
-environment activated:
+Then, in a separate terminal with the dashboard's own virtual environment
+activated (see :ref:`muscle3-dashboard <training/muscle3_dashboard>`):
 
-.. code-block:: console
+.. code-block:: bash
 
     m3dash open cases/runs/
 
@@ -112,7 +113,7 @@ Exercise 1: automatic mode
         Write a new config file with a bare ``State`` (no ``extract``
         override) and a ``Plotter`` that plots one named field, and point
         ``recorder_equilibrium.config`` at it in
-        ``cases/105084_prescribed.ymmsl``. Turn on
+        ``workflows/prescribed_transport/settings.ymmsl``. Turn on
         ``recorder_equilibrium.automatic_extract`` and restrict it to just that field with
         ``recorder_equilibrium.automatic_extract_fields``, re-run the workflow, and open
         the ``recorder_equilibrium`` tab.
@@ -128,11 +129,6 @@ Exercise 1: automatic mode
             bare ``State``'s automatic fallback flattens it to dots before
             recording -- ``automatic_extract_fields``, and the field your
             ``Plotter`` looks up, both have to match that same dotted form.
-
-            This also is not the same as the live visualization actor's
-            interactive variable-picker dropdown: that needs the raw IDS to
-            discover quantities from, and the dashboard here only ever sees
-            data that has already been distilled and written to a store.
 
     .. md-tab-item:: Solution
 
@@ -181,7 +177,7 @@ Exercise 1: automatic mode
         .. code-block:: yaml
 
             settings:
-              recorder_equilibrium.config: /work/projects/pds/pds/visualization/auto_explore.py
+              recorder_equilibrium.config: ${PDS_REPO}/visualization/auto_explore.py
               recorder_equilibrium.automatic_extract: true
               recorder_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
 
@@ -224,7 +220,7 @@ Exercise 2: an explicit extract method
         .. code-block:: yaml
 
             settings:
-              recorder_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
+              recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
 
         In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the
         existing ``ip_beta_tor`` dataset:
@@ -310,3 +306,96 @@ Exercise 2: an explicit extract method
         wrapper is for HoloViews elements. A plain ``@param.depends``-decorated
         method returning a Panel object (here, a ``Matplotlib`` pane) can be
         placed directly in the layout and Panel re-renders it the same way.
+
+Exercise 3: record something nobody is recording yet
+-----------------------------------------------------
+
+The two exercises above both plotted data that a recorder was already receiving. Sooner or
+later you will want to look at something no recorder is wired to, and then there are two
+halves to the job: tap the data, and describe how to plot it.
+
+The tap is a recorder component with an ``S`` port, listed as an extra receiver on a conduit
+that already exists. Adding one means editing ``workflow.ymmsl`` -- but you do not have to
+edit the shared one. Remember from :ref:`training/understanding` that a case folder is a
+frozen copy: the ``workflow.ymmsl`` inside ``cases/<case>/`` is yours alone, so you can add a
+component there and nobody else's runs change.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        In ``prescribed_transport``, the waveform editor's output goes to NICE and nothing
+        else looks at it. Put a recorder on it, so you can see what NICE is actually being
+        asked for, next to what it produced.
+
+        You will need three things:
+
+        1. a component with an ``S`` port for the IDS you want, in the case's
+           ``workflow.ymmsl``;
+        2. that component added as a second receiver on the existing conduit;
+        3. a config file for it, and a setting pointing at it.
+
+    .. md-tab-item:: Hint
+
+        Copy the shape of ``recorder_equilibrium`` from the top of this page for the wiring, and the
+        shape of ``visualization/nice_inv.py`` for the config -- a ``State`` with an
+        ``extract`` that returns one ``xarray.Dataset``, and a ``Plotter`` with a single
+        curve, is enough. Start from the smallest thing that renders, then add fields.
+
+        A conduit takes a list of receivers, so adding yours means turning one target into
+        two, not replacing it.
+
+    .. md-tab-item:: Solution
+
+        Sketch, in the case's own ``workflow.ymmsl``:
+
+        .. code-block:: yaml
+
+            components:
+              recorder_target: {implementation: recorder, ports: {s: [equilibrium_in]}}
+
+            conduits:
+              waveform_editor.equilibrium_out: [equilibrium.equilibrium_in, recorder_target.equilibrium_in]
+
+        and in an override file stacked after the case:
+
+        .. code-block:: yaml
+
+            ymmsl_version: v0.2
+            settings:
+              recorder_target.config: my_target_config.py
+
+        Now the dashboard grows a ``recorder_target`` tab next to ``recorder_equilibrium``, and you can watch
+        the requested boundary and the solved one side by side while the run goes.
+
+        Two things are worth taking away from this. A recorder never changes the coupling: the
+        component that was already receiving still receives exactly what it did before, so
+        adding one cannot change the physics. And because the recorder finds its data by its
+        on-disk layout, the dashboard picks the new tab up on its own -- there is nothing to
+        register anywhere.
+
+Watching a run you are not sitting on
+--------------------------------------
+
+One practical note for SDCC, since the real cases from :ref:`training/run_complex` do not run
+where you are looking at them.
+
+The dashboard is a web application, so it has to open a browser somewhere with a screen --
+which on SDCC means inside your NoMachine session, not over a plain SSH connection. The
+simulation, meanwhile, is on a compute node with no screen at all.
+
+That works out because they never talk to each other directly. The job writes its run
+directory to the shared filesystem, and the dashboard reads it from there:
+
+.. code-block:: bash
+
+    # in a NoMachine terminal, on the login node
+    m3dash open cases/runs/
+
+    # in another terminal, submitting to a compute node
+    bin/pds-run-case cases/prescribed_transport_105092
+
+Start the dashboard first and leave it running -- it picks up new runs as they appear, and
+the recorder plots fill in live while the job is on the compute node. If a tab stays empty,
+the usual reason is simply that the recorder has not written its first store yet, which for
+these workflows means the first solve is still going.

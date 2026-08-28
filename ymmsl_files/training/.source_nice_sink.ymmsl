@@ -48,7 +48,7 @@ implementations:
     args: "-u -m imas_muscle3.actors.sink_component"
   nice_inv:
     base_env: clean
-    modules: NICE/3.0.0-intel-2025b-pds
+    modules: NICE/3.0.0.dev258-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"

@@ -61,7 +61,7 @@ available.
    :maxdepth: 1
    :hidden:
 
-   courses/basic_user_training
+   training/intro
 
 ----
 
