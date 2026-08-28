@@ -4,7 +4,8 @@ name = 'IMAS-MUSCLE3'
 version = '1.0.0'
 versionsuffix = '-pds'
 
-local_commit = 'e4383afc9366a0ae33c230552df576b90defcec8'
+local_commit = 'dfcc24f8ab6fb0813f8701f43eca67755ae35c2f'
+local_dashboard_commit = 'e3a8e91c40b4451edb5060e9c8bba05608537c5a'
 
 description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
 homepage = "https://imas-muscle3.readthedocs.io"
@@ -112,15 +113,17 @@ exts_list = [
     ('zarr', '3.3.0', {
         'checksums': ['cd0c8cf738b4bb4807815bc1255acad5bdf1a7b7264b606c5a1bc0d0392a306b'],
     }),
-    ('muscle3-dashboard', '2026.08.17', {
+    ('muscle3-dashboard', '2026.08.28', {
         'modulename': 'muscle3_dashboard',
         'sources': [{
             'git_config': {
                 'url': 'https://github.com/multiscale',
                 'repo_name': 'muscle3-dashboard',
-                'commit': '0b7d9b52dfeeea087ac248f3883747ea8f6c90ed',
+                'commit': local_dashboard_commit,
             },
-            'filename': 'muscle3-dashboard-2026.08.17.tar.gz',
+            # commit in the filename, not the date: EasyBuild resolves sources by name, so
+            # two commits landing on the same day would reuse each other's cached tarball
+            'filename': 'muscle3-dashboard-%s.tar.gz' % local_dashboard_commit[:10],
         }],
         'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
         'checksums': [None],
@@ -137,14 +140,8 @@ exts_list = [
             # commit-independent one silently reuses the cached tarball
             'filename': 'imas_muscle3-%s.tar.gz' % local_commit[:10],
         }],
-        'patches': ['imas_muscle3-develop_ymmsl-module-entrypoint.patch'],
-
         'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
-        'checksums': [
-            None,
-            {'imas_muscle3-develop_ymmsl-module-entrypoint.patch':
-             '29cc8bca2c0b6d3cae886a594b4350f23b49c9df502aff0d224096ae162c1799'},
-        ],
+        'checksums': [None],
     }),
 ]
 
@@ -168,7 +165,9 @@ sanity_check_commands = [
     "eps = entry_points(group='ymmsl.module', name='imas_muscle3'); assert eps, 'entry point not registered'; "
     "import ymmsl; from ymmsl.v0_2 import Configuration; "
     "cfg = ymmsl.load_as(Configuration, next(iter(eps)).load()); "
-    "assert len(cfg.programs) == 8, cfg.programs\"",
+    # 9, not 8: upstream's ACTORS still lists visualization_component even though
+    # imas_muscle3/actors/visualization_component.py was removed in PR #63.
+    "assert len(cfg.programs) == 9, cfg.programs\"",
 ]
 
 moduleclass = 'tools'
