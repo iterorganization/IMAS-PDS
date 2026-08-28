@@ -230,6 +230,7 @@ GALLERY_THUMBNAILS = [
         None,
         "metis_nice_inverse.svg",
     ),
+    ("workflows/metis_from_dina/workflow.ymmsl", None, "metis_from_dina.svg"),
     (
         "docs/source/workflow_pages/evolutive_controller.svg",
         None,

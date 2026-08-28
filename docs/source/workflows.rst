@@ -45,6 +45,14 @@ diagrams cannot drift from the couplings they document.
       METIS transport from DINA input, then a single NICE inverse pass fitting coil
       currents to the equilibrium it produced. No outer loop.
 
+   .. grid-item-card:: METIS transport from DINA
+      :img-top: workflow_pages/diagrams/metis_from_dina.svg
+      :link: case-metis-from-dina
+      :link-type: ref
+
+      METIS alone, integrating the trace from DINA input with no equilibrium solve.
+      The simplest coupling here: source, solver, sink, nothing feeding back.
+
    .. grid-item-card:: Evolutive co-simulation under magnetic control
       :img-top: workflow_pages/diagrams/evolutive_controller.svg
       :link: case-evolutive-controller
@@ -52,10 +60,6 @@ diagrams cannot drift from the couplings they document.
 
       Forward, not inverse: TORAX and NICE step together in lockstep while a PCSSP
       controller closes the coil-current loop.
-
-``metis_from_dina`` has no page of its own yet: it is
-``metis_nice_inverse_from_dina`` without the NICE inverse pass. The header comment
-of :src:`workflows/metis_from_dina/workflow.ymmsl` describes it.
 
 Side by side
 ------------
@@ -167,5 +171,6 @@ For any workflow that runs METIS:
 
    workflow_pages/prescribed_transport
    workflow_pages/inverse_convergence
+   workflow_pages/metis_from_dina
    workflow_pages/metis_nice_inverse
    workflow_pages/evolutive_controller

@@ -5,21 +5,22 @@ METIS with a NICE inverse solve
 ===============================
 
 METIS transport from DINA input, followed by a NICE inverse solve that fits coil currents
-to the equilibrium METIS produced. Available for DINA shot 105073.
+to the equilibrium METIS produced. Overrides exist for DINA shots 105073, 105078,
+105084, 105092 and 105099, and CI exercises 105084.
 
 The coupling order is the reverse of the design cases. There, NICE solves first and a
 transport code fills a hole inside an outer loop; here METIS leads, runs the transport over
 the whole trace, and NICE is a single downstream pass over its equilibrium. There is no
 outer iteration and no convergence criterion -- METIS runs once, NICE runs once.
 
-:Workflow: ``metis_nice_inverse_from_dina`` -- :src:`workflows/metis_nice_inverse_from_dina/README.md`
-:Scenario: DINA shot 105073, in ``pds-scenarios``
+:Workflow: ``metis_nice_inverse_from_dina`` -- :src:`workflows/metis_nice_inverse_from_dina/workflow.ymmsl`
+:Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099, in ``pds-scenarios``
 :Output: ``<run_dir>/out_metis`` and ``<run_dir>/out_nice``
 
 This is the case-based form of the old ``metis_interpretative_nice_inverse_from_dina`` and
 ``metis_predictive_nice_inverse_from_dina`` templates. Their graphs were identical --
-interpretative versus predictive is five ``metis_external_data_*`` settings, not a separate
-workflow -- so the two collapse into one workflow with the choice made in the case.
+interpretative versus predictive is a handful of ``metis_external_data_*`` settings, not a
+separate workflow -- so the two collapse into one workflow with the choice made in the case.
 
 Running it
 ----------
