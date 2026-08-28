@@ -76,7 +76,7 @@ programs:
       # SCDDS_COREPATH, but not PCS_PATH -- the old v0.1 workflow set all three
       # by hand, pointing at a per-user run/pcs checkout.
       export PCS_PATH="$EBROOTPCS"
-      export CONTROLLER_PATH="$PDS_REPO/controllers/magnetic_controller"
+      export CONTROLLER_PATH="$PDS_REPO/controllers/KCURR_RZIp"
       exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));muscle_controller_NICE_IMAS_iter_init;"
 
   torax:

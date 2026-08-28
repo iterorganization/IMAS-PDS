@@ -64,7 +64,7 @@ programs:
   magnetic_controller:
     env:
       PCS_PATH: $PDS_REPO/run/pcs
-      CONTROLLER_PATH: $PDS_REPO/controllers/magnetic_controller
+      CONTROLLER_PATH: $PDS_REPO/controllers/KCURR_RZIp
       SCDDS_COREPATH: $PDS_REPO/run/pcs/pcssp/scdds
     modules: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0 MATLAB/2025b-r1-GCCcore-13.2.0
     executable: matlab
