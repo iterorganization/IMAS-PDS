@@ -9,15 +9,15 @@ ymmsl_version: v0.2
 resources:
   inverse_convergence.equilibrium.nice: {threads: 2}
   inverse_convergence.transport.torax: {threads: 8}
-  inverse_convergence.equilibrium.rec_equilibrium: {threads: 1}
-  inverse_convergence.rec_transport: {threads: 1}
+  inverse_convergence.equilibrium.recorder_equilibrium: {threads: 1}
+  inverse_convergence.recorder_transport: {threads: 1}
 
 settings:
   # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
   waveform_editor.waveforms: ${PDS_REPO}/workflows/inverse_convergence/waveforms.yaml
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: False
-  equilibrium.rec_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
   # Convergence defaults; a scenario may override any of these.
   loop.cold_start: False
@@ -40,12 +40,12 @@ settings:
   sink_transport.sink_mode: "w"
 
   # Recording.
-  equilibrium.rec_equilibrium.format: distill
-  equilibrium.rec_equilibrium.auto: False
-  equilibrium.rec_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
-  rec_transport.format: distill
-  rec_transport.auto: False
-  rec_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+  equilibrium.recorder_equilibrium.format: distill
+  equilibrium.recorder_equilibrium.auto: False
+  equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+  recorder_transport.format: distill
+  recorder_transport.auto: False
+  recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
 
   # Validation.
   validator.halt_on_error: False

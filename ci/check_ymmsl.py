@@ -221,7 +221,7 @@ def check_input_paths(cfg, case_name, errors: list) -> None:
         value = cfg.settings[key]
         if not isinstance(value, str):
             continue
-        # A value may hold several whitespace-separated entries (rec_*.md does).
+        # A value may hold several whitespace-separated entries (recorder_*.md does).
         for token in value.split():
             path = token.split("path=", 1)[1] if "path=" in token else token
             # Stop at whichever URI separator comes first: `path=` is not necessarily the

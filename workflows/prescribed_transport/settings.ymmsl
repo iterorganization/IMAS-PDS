@@ -7,14 +7,14 @@ ymmsl_version: v0.2
 
 resources:
   prescribed_transport.equilibrium.nice: {threads: 2}
-  prescribed_transport.equilibrium.rec_equilibrium: {threads: 1}
+  prescribed_transport.equilibrium.recorder_equilibrium: {threads: 1}
 
 settings:
   # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
   waveform_editor.waveforms: ${PDS_REPO}/workflows/prescribed_transport/waveforms_no_transport.yaml
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: false
-  equilibrium.rec_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
   equilibrium.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice_inverse.xml
 
@@ -24,8 +24,8 @@ settings:
   sink.sink_mode: "w"
 
   # Recording.
-  equilibrium.rec_equilibrium.format: distill
-  equilibrium.rec_equilibrium.auto: False
-  equilibrium.rec_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+  equilibrium.recorder_equilibrium.format: distill
+  equilibrium.recorder_equilibrium.auto: False
+  equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
 
   muscle_remote_log_level: 'INFO'

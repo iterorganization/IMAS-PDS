@@ -109,6 +109,6 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
 
 `sink_equilibrium`, `sink_transport`, and `sink_control` are wired to write NICE's evolutive
 equilibrium/pf_active, TORAX's evolved profiles, and the controller's corrected pf_active,
-respectively (see `settings.ymmsl`), with `rec_equilibrium`/`rec_transport` distilling the NICE and TORAX
+respectively (see `settings.ymmsl`), with `recorder_equilibrium`/`recorder_transport` distilling the NICE and TORAX
 output for the muscle3-dashboard. In practice the workflow has not yet run to completion --
 see Status below for the current known limitation.
