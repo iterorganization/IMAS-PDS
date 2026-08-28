@@ -5,8 +5,9 @@
 #   e.g. pds-run-case cases/inverse_convergence_105073
 #
 # Thin `sbatch` wrapper around bin/pds-run-case.sbatch -- see that script's header for what
-# actually happens once the job starts. To override Slurm resources (time, cpus, ...), submit
-# bin/pds-run-case.sbatch directly instead:
+# actually happens once the job starts. If sbatch isn't on PATH (no Slurm on this machine),
+# runs bin/pds-run-case.sbatch directly under bash instead. To override Slurm resources
+# (time, cpus, ...), submit bin/pds-run-case.sbatch directly instead:
 #
 #   sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
 set -euo pipefail
@@ -14,4 +15,8 @@ set -euo pipefail
 [[ $# -ge 1 ]] || { echo "usage: $0 <case-dir> [overlay.ymmsl ...]" >&2; exit 1; }
 
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec sbatch "$BIN_DIR/pds-run-case.sbatch" "$@"
+if command -v sbatch >/dev/null 2>&1; then
+  exec sbatch "$BIN_DIR/pds-run-case.sbatch" "$@"
+else
+  exec bash "$BIN_DIR/pds-run-case.sbatch" "$@"
+fi
