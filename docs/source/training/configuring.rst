@@ -112,7 +112,7 @@ Exercise 1: change the plasma current value in the waveform file
 
         .. code-block:: bash
 
-            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092 $PWD/my_ip.ymmsl
+            bin/pds-run-case cases/prescribed_transport_105092 $PWD/my_ip.ymmsl
 
         You can look at the recorder actor to see if the plasma current corresponds to your
         set waveform.

@@ -131,7 +131,7 @@ The MUSCLE3 Dashboard is very useful for debugging failing runs. This will be co
         Open the ``ymmsl_files/test_sink_source_actor.ymmsl`` file that you ran in the previous exercise.
 
         Change the ``path`` of the ``source_component.source_uri`` to point to a non-existing URI, 
-        for example: ``<your PDS directory>/run/input/test_data_ids_DOES_NOT_EXIST``
+        for example: ``<your PDS directory>/cases/input/test_data_ids_DOES_NOT_EXIST``
 
         What do you think will happen when you run this workflow?
 

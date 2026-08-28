@@ -25,8 +25,6 @@ Everything so far ran on the login node. That is fine for the small test workflo
 for the real cases in the next section: they require more resources than a login node
 should be asked for.
 
-
-
 Before you can submit anything, you need a case to submit. That is what
 ``bin/pds-create-case`` is for: it pairs a workflow with a scenario and writes the result to
 ``cases/<workflow>_<shot>/``.
@@ -45,11 +43,13 @@ as often as you like, which is the second step:
 
 .. code-block:: bash
 
-    sbatch bin/pds-run-case.sbatch cases/<workflow>_<shot>
+    bin/pds-run-case cases/<workflow>_<shot>
 
+``pds-run-case`` hands the case to SLURM with ``sbatch`` and returns straight away with a job
+number.
+job script directly instead, so the same command works either way.)
 
-``sbatch`` hands the job to the queue and returns immediately with a job number. 
-Some useful commands when you're working with SLURM:
+Some useful commands while the job is in the queue:
 
 .. code-block:: bash
 
@@ -61,6 +61,13 @@ The MUSCLE3 dashboard from the previous section works exactly the same way when
 you submit to a compute node. The run directory lands in ``cases/runs/`` on the shared filesystem, 
 so a dashboard you started on the login node picks the run up and follows it live, 
 while the simulation itself runs on a compute node.
+
+If you need more time or more cores than the defaults give you, submit the job script itself
+rather than the wrapper, and pass the ``sbatch`` options you want:
+
+.. code-block:: bash
+
+    sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/<workflow>_<shot>
 
 
 Exercise 1
@@ -94,7 +101,7 @@ coupled transport solver.
         .. code-block:: bash
 
             bin/pds-create-case prescribed_transport 105092
-            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092
+            bin/pds-run-case cases/prescribed_transport_105092
 
         Check if the results look as expected using the recorder actor plots in muscle3-dashboard.
         You can disable the ``Live View`` checkbox to scroll through the time line of the results.
@@ -151,7 +158,7 @@ calculated by NICE to a transport solve using TORAX.
         .. code-block:: bash
 
             bin/pds-create-case inverse_convergence 105092
-            sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105092
+            bin/pds-run-case cases/inverse_convergence_105092
 
 
         Check if results look as expected using the recorder actor plots in muscle3-dashboard.
@@ -215,7 +222,7 @@ outer loop.
         .. code-block:: bash
 
             bin/pds-create-case metis_from_dina 105084
-            sbatch bin/pds-run-case.sbatch cases/metis_from_dina_105084
+            bin/pds-run-case cases/metis_from_dina_105084
 
         The output DBEntry is ``metis_out`` rather than ``out_nice``, and the validation plots
         in ``plots/`` compare METIS against DINA.
@@ -250,11 +257,11 @@ it in evolutive mode.
 
             # first, if you have not already run it for this shot
             bin/pds-create-case inverse_convergence 105073
-            sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
+            bin/pds-run-case cases/inverse_convergence_105073
 
             # then, once that has finished
             bin/pds-create-case evolutive_controller 105073
-            sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105073
+            bin/pds-run-case cases/evolutive_controller_105073
 
         The forward solve needs flux-surface quantities that only a real equilibrium solve
         computes, and the raw DINA equilibrium in the scenario does not carry them. The
@@ -287,7 +294,7 @@ are documented in :ref:`available_workflows`.
         .. code-block:: bash
 
             bin/pds-create-case prescribed_transport 105099
-            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105099
+            bin/pds-run-case cases/prescribed_transport_105099
 
         Check the recorder actor plots in muscle3-dashboard and the sink output in the run
         directory, as in the exercises above.

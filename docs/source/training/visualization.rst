@@ -85,7 +85,7 @@ Running the workflow and opening the dashboard
 .. code-block:: bash
 
     bin/pds-create-case prescribed_transport 105084
-    sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105084
+    bin/pds-run-case cases/prescribed_transport_105084
 
 Then, in a separate terminal with the dashboard's own virtual environment
 activated (see :ref:`muscle3-dashboard <training/muscle3_dashboard>`):
@@ -337,7 +337,7 @@ component there and nobody else's runs change.
 
     .. md-tab-item:: Hint
 
-        Copy the shape of ``rec_nice`` from the top of this page for the wiring, and the
+        Copy the shape of ``recorder_equilibrium`` from the top of this page for the wiring, and the
         shape of ``visualization/nice_inv.py`` for the config -- a ``State`` with an
         ``extract`` that returns one ``xarray.Dataset``, and a ``Plotter`` with a single
         curve, is enough. Start from the smallest thing that renders, then add fields.
@@ -352,10 +352,10 @@ component there and nobody else's runs change.
         .. code-block:: yaml
 
             components:
-              rec_target: {implementation: recorder, ports: {s: [equilibrium_in]}}
+              recorder_target: {implementation: recorder, ports: {s: [equilibrium_in]}}
 
             conduits:
-              waveform_editor.equilibrium_out: [equilibrium.equilibrium_in, rec_target.equilibrium_in]
+              waveform_editor.equilibrium_out: [equilibrium.equilibrium_in, recorder_target.equilibrium_in]
 
         and in an override file stacked after the case:
 
@@ -363,9 +363,9 @@ component there and nobody else's runs change.
 
             ymmsl_version: v0.2
             settings:
-              rec_target.config: my_target_config.py
+              recorder_target.config: my_target_config.py
 
-        Now the dashboard grows a ``rec_target`` tab next to ``rec_nice``, and you can watch
+        Now the dashboard grows a ``recorder_target`` tab next to ``recorder_equilibrium``, and you can watch
         the requested boundary and the solved one side by side while the run goes.
 
         Two things are worth taking away from this. A recorder never changes the coupling: the
@@ -393,7 +393,7 @@ directory to the shared filesystem, and the dashboard reads it from there:
     m3dash open cases/runs/
 
     # in another terminal, submitting to a compute node
-    sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092
+    bin/pds-run-case cases/prescribed_transport_105092
 
 Start the dashboard first and leave it running -- it picks up new runs as they appear, and
 the recorder plots fill in live while the job is on the compute node. If a tab stays empty,

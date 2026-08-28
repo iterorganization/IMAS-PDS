@@ -28,7 +28,7 @@ Case - The combination of a workflow and a scenario. You build one with
 ``bin/pds-create-case <workflow> <shot>``, which materializes ``cases/<workflow>_<shot>/``: a
 frozen snapshot that takes the workflow's structure, fills in this scenario's paths, applies
 any per-shot override from ``cases/overrides/``, and copies in every config file those
-settings point at. ``bin/pds-run-case.sbatch`` is what you hand that folder to. You will
+settings point at. ``bin/pds-run-case`` is what you hand that folder to. You will
 directly interface with case folders in the next chapter.
 
 Run - The run is what you get when you execute a case: a run directory,
@@ -113,7 +113,7 @@ Exercise 2: find out what a case will do
 
         ``workflow.ymmsl`` names the components and how they are wired, the
         ``source.source_uri`` and ``waveform_editor.waveforms`` settings name the scenario
-        data, and the ``sink_nice.sink_uri`` and ``sink_torax.sink_uri`` settings name the
+        data, and the ``sink_equilibrium.sink_uri`` and ``sink_transport.sink_uri`` settings name the
         output entries, written into ``cases/runs/inverse_convergence_105092/``.
 
 

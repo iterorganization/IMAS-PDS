@@ -56,7 +56,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
     An actor implementation can point at either an EasyBuild module, as above, or at a local
     installation -- the virtual environment ``pds_setup.sh`` builds under
-    ``$PDS_REPO/run/``. The local form is not simply ``virtual_env:`` in place of
+    ``$PDS_REPO/local_installs/``. The local form is not simply ``virtual_env:`` in place of
     ``base_env``/``modules``: it needs ``$PDS_REPO``, which ``base_env: clean`` would purge
     away, so ``workflows/lib/local_programs.ymmsl`` uses a ``script:`` block that activates
     the venv itself. If you need a local build, copy one of those definitions rather than
@@ -554,7 +554,7 @@ setting a *path*, and let the actor read the file. You have already seen all thr
 
     equilibrium.nice.xml_path: .../config_nice_inverse.xml       # NICE, an XML file
     transport.torax.python_config_module: .../config_torax.py    # TORAX, a Python module
-    equilibrium.rec_nice.config: .../nice_inv.py                 # the recorder, a Python module
+    equilibrium.recorder_equilibrium.config: .../nice_inv.py                 # the recorder, a Python module
 
 If you write an actor that needs its own configuration file, follow the same pattern. There
 is a practical reason beyond consistency: ``bin/pds-create-case`` recognises settings whose
