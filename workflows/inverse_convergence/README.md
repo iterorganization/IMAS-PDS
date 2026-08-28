@@ -79,8 +79,8 @@ Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
 
 The sinks write into the run directory itself:
 
-- `sink_nice` writes the converged per-time-slice `equilibrium` and `pf_active` to
-  `<run_dir>/out_nice`; `sink_torax` writes TORAX's evolved `equilibrium` and
+- `sink_equilibrium` writes the converged per-time-slice `equilibrium` and `pf_active` to
+  `<run_dir>/out_nice`; `sink_transport` writes TORAX's evolved `equilibrium` and
   `core_profiles` to `<run_dir>/out_torax`.
-- `rec_nice`/`rec_torax` write distilled copies of the NICE and TORAX output for the
+- `rec_equilibrium`/`rec_transport` write distilled copies of the NICE and TORAX output for the
   muscle3-dashboard (`visualization/nice_inv.py` / `visualization/kinetic_profiles.py`).

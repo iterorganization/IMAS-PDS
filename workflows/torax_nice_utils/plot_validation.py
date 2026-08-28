@@ -227,7 +227,7 @@ def equilibrium_plots_nice_torax(args, dbs):
 def core_profiles_plots_dina_torax(args, dbs):
     """Plot Te/Ti from core_profiles: DINA input vs the final TORAX-evolved output.
 
-    The evolved core_profiles only reach sink_torax since the loop grew a
+    The evolved core_profiles only reach sink_transport since the loop grew a
     core_profiles_out_f lane (same change as this plot); for older data dirs the
     torax entry has no core_profiles, and the panels fall back to DINA-only.
     """

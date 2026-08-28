@@ -51,7 +51,7 @@ models:
         ports:
           f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
           o_f: [equilibrium_out, pf_active_out]
-      rec_nice:
+      rec_equilibrium:
         description: distill recorder (NICE inverse outputs)
         implementation: recorder_component
         ports: {s: [equilibrium_in, pf_active_in]}
@@ -68,7 +68,7 @@ models:
       load_balancer.pf_active_scatter: nice.pf_active_in
       load_balancer.pf_passive_scatter: nice.pf_passive_in
       load_balancer.iron_core_scatter: nice.iron_core_in
-      # gather from the workers. rec_nice cannot be wired to nice.equilibrium_out
+      # gather from the workers. rec_equilibrium cannot be wired to nice.equilibrium_out
       # directly: nice has multiplicity: [1], making it an instance set, and the
       # generic recorder actor's receive_message() has no slot-addressing support --
       # it can only connect to a genuine single-instance peer, which load_balancer is
@@ -78,10 +78,10 @@ models:
       nice.equilibrium_out: load_balancer.equilibrium_gather
       nice.pf_active_out: load_balancer.pf_active_gather
       # load balancer -> model output ports, and record the same gathered stream --
-      # rec_nice is inside this model, so this is a plain internal conduit rather than
+      # rec_equilibrium is inside this model, so this is a plain internal conduit rather than
       # a port exposed across the model boundary.
-      load_balancer.equilibrium_out_f: [equilibrium_out, rec_nice.equilibrium_in]
-      load_balancer.pf_active_out_f: [pf_active_out, rec_nice.pf_active_in]
+      load_balancer.equilibrium_out_f: [equilibrium_out, rec_equilibrium.equilibrium_in]
+      load_balancer.pf_active_out_f: [pf_active_out, rec_equilibrium.pf_active_in]
 
   transport:
     description: transport co-simulation (TORAX only, for now)
@@ -145,18 +145,18 @@ models:
           o_i: [equilibrium_out_i, core_profiles_out_i]
           o_f: [equilibrium_out_f, core_profiles_out_f]
 
-      sink_nice:
+      sink_equilibrium:
         description: sink -- NICE inverse outputs
         implementation: sink_component
         ports: {f_init: [equilibrium_in, pf_active_in]}
 
-      sink_torax:
+      sink_transport:
         description: sink -- converged pulse
         implementation: sink_component
         optional: true
         ports: {f_init: [equilibrium_in, pf_active_in, core_profiles_in]}
 
-      rec_torax:
+      rec_transport:
         description: distill recorder (TORAX per-step outputs)
         implementation: recorder_component
         optional: true
@@ -183,14 +183,14 @@ models:
       waveform_editor.core_sources_out: transport.core_sources_in_f
       waveform_editor.core_profiles_out: transport.core_profiles_in_f
 
-      equilibrium.equilibrium_out: [transport.equilibrium_in_f, sink_nice.equilibrium_in]
-      equilibrium.pf_active_out: [loop.pf_active_in_s, sink_nice.pf_active_in]
+      equilibrium.equilibrium_out: [transport.equilibrium_in_f, sink_equilibrium.equilibrium_in]
+      equilibrium.pf_active_out: [loop.pf_active_in_s, sink_equilibrium.pf_active_in]
 
-      transport.equilibrium_out_i: rec_torax.equilibrium_in
-      transport.core_profiles_out_i: rec_torax.core_profiles_in
+      transport.equilibrium_out_i: rec_transport.equilibrium_in
+      transport.core_profiles_out_i: rec_transport.core_profiles_in
       transport.equilibrium_out_f: loop.equilibrium_in_s
       transport.core_profiles_out_f: loop.core_profiles_in_s
 
-      loop.equilibrium_out_f: sink_torax.equilibrium_in
-      loop.core_profiles_out_f: sink_torax.core_profiles_in
-      loop.pf_active_out_f: [sink_torax.pf_active_in, validator.pf_active_in]
+      loop.equilibrium_out_f: sink_transport.equilibrium_in
+      loop.core_profiles_out_f: sink_transport.core_profiles_in
+      loop.pf_active_out_f: [sink_transport.pf_active_in, validator.pf_active_in]

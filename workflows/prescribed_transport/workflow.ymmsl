@@ -38,7 +38,7 @@ models:
         ports:
           f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
           o_f: [equilibrium_out, pf_active_out]
-      rec_nice:
+      rec_equilibrium:
         description: distill recorder (NICE inverse outputs)
         implementation: recorder_component
         ports: {s: [equilibrium_in, pf_active_in]}
@@ -55,7 +55,7 @@ models:
       load_balancer.pf_active_scatter: nice.pf_active_in
       load_balancer.pf_passive_scatter: nice.pf_passive_in
       load_balancer.iron_core_scatter: nice.iron_core_in
-      # gather from the workers. rec_nice cannot be wired to nice.equilibrium_out
+      # gather from the workers. rec_equilibrium cannot be wired to nice.equilibrium_out
       # directly: nice has multiplicity: [1], making it an instance set, and the
       # generic recorder actor's receive_message() has no slot-addressing support --
       # it can only connect to a genuine single-instance peer, which load_balancer is
@@ -65,10 +65,10 @@ models:
       nice.equilibrium_out: load_balancer.equilibrium_gather
       nice.pf_active_out: load_balancer.pf_active_gather
       # load balancer -> model output ports, and record the same gathered stream --
-      # rec_nice is inside this model, so this is a plain internal conduit rather than
+      # rec_equilibrium is inside this model, so this is a plain internal conduit rather than
       # a port exposed across the model boundary.
-      load_balancer.equilibrium_out_f: [equilibrium_out_f, rec_nice.equilibrium_in]
-      load_balancer.pf_active_out_f: [pf_active_out_f, rec_nice.pf_active_in]
+      load_balancer.equilibrium_out_f: [equilibrium_out_f, rec_equilibrium.equilibrium_in]
+      load_balancer.pf_active_out_f: [pf_active_out_f, rec_equilibrium.pf_active_in]
 
   prescribed_transport:
     description: Single-pass inverse solve against a prescribed boundary.

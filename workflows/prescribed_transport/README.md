@@ -3,19 +3,19 @@
 ## What it does
 
 A minimal MUSCLE3 chain -- `source -> waveform_editor -> equilibrium -> sink` (+
-`equilibrium.rec_nice`) -- that produces a "prescribed" (fixed, not self-consistently
+`equilibrium.rec_equilibrium`) -- that produces a "prescribed" (fixed, not self-consistently
 coupled to transport) NICE free-boundary equilibrium dataset for one scenario. The
 waveform editor overlays the designed Ip(t)/B0 boundary target onto the source's raw
 equilibrium and supplies the static machine description (wall, pf_passive, iron_core) plus
 the coil-current seed (pf_active), all imported from the scenario's waveform config rather
 than carried through `source`. NICE-inverse solves the free-boundary equilibrium per time
-slice; `sink` stores the resulting equilibrium and coil currents; `rec_nice` distills the
+slice; `sink` stores the resulting equilibrium and coil currents; `rec_equilibrium` distills the
 same data (config: `visualization/nice_inv.py`) for the muscle3-dashboard.
 
 `equilibrium` is the `nice_inverse` submodel (defined in `workflow.ymmsl`): a load balancer
-in front of N NICE workers, plus `rec_nice` recording the load balancer's gathered output.
+in front of N NICE workers, plus `rec_equilibrium` recording the load balancer's gathered output.
 The load balancer slices the trace, scatters per-slice calls over the workers, re-gauges
-psi, and gathers the results back in the original order. `rec_nice` records that gathered
+psi, and gathers the results back in the original order. `rec_equilibrium` records that gathered
 output rather than the raw workers' output directly: the workers (`nice`) have
 `multiplicity: [1]`, making them an instance set, and the generic recorder actor has no
 slot-addressing support, so it can only record from a genuine single-instance peer --
@@ -81,5 +81,5 @@ The sink writes into the run directory itself:
 
 - `sink` writes an IMAS HDF5 dataset at `<run_dir>/out_nice`, containing the
   per-time-slice free-boundary `equilibrium` and the solved `pf_active` coil currents.
-- `rec_nice` writes a distilled copy of the same data for the muscle3-dashboard (see
+- `rec_equilibrium` writes a distilled copy of the same data for the muscle3-dashboard (see
   `visualization/nice_inv.py`).

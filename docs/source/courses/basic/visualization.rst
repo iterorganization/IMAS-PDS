@@ -25,17 +25,17 @@ The recorder actor
 
 A recorder is wired as an extra receiver on conduits that already feed another
 component, for example ``sink``. Every connected ``S`` port is its own timeline,
-named after the IDS it carries. This is ``rec_nice`` from
+named after the IDS it carries. This is ``rec_equilibrium`` from
 ``workflows/prescribed_transport/workflow.ymmsl``:
 
 .. code-block:: yaml
 
     components:
-      rec_nice: {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
+      rec_equilibrium: {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
 
     conduits:
-      nice_inv.equilibrium_out: [sink.equilibrium_in, rec_nice.equilibrium_in]
-      nice_inv.pf_active_out: [sink.pf_active_in, rec_nice.pf_active_in]
+      nice_inv.equilibrium_out: [sink.equilibrium_in, rec_equilibrium.equilibrium_in]
+      nice_inv.pf_active_out: [sink.pf_active_in, rec_equilibrium.pf_active_in]
 
     implementations:
       recorder:
@@ -51,7 +51,7 @@ a file always has to exist:
 .. code-block:: yaml
 
     settings:
-      rec_nice.config: /work/projects/pds/pds/visualization/nice_inv.py
+      rec_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
 
 The config file defines the extraction logic in one of two ways: a plain
 ``def extract(ids) -> dict[str, xarray.Dataset]`` function if you only need to
@@ -93,7 +93,7 @@ environment activated:
 
     m3dash open cases/runs/
 
-Click the run, and a ``rec_nice`` tab appears once the recorder has written its
+Click the run, and a ``rec_equilibrium`` tab appears once the recorder has written its
 first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk
 layout.
 
@@ -111,11 +111,11 @@ Exercise 1: automatic mode
 
         Write a new config file with a bare ``State`` (no ``extract``
         override) and a ``Plotter`` that plots one named field, and point
-        ``rec_nice.config`` at it in
+        ``rec_equilibrium.config`` at it in
         ``cases/105084_prescribed.ymmsl``. Turn on
-        ``rec_nice.automatic_extract`` and restrict it to just that field with
-        ``rec_nice.automatic_extract_fields``, re-run the workflow, and open
-        the ``rec_nice`` tab.
+        ``rec_equilibrium.automatic_extract`` and restrict it to just that field with
+        ``rec_equilibrium.automatic_extract_fields``, re-run the workflow, and open
+        the ``rec_equilibrium`` tab.
 
         .. note::
 
@@ -181,9 +181,9 @@ Exercise 1: automatic mode
         .. code-block:: yaml
 
             settings:
-              rec_nice.config: /work/projects/pds/pds/visualization/auto_explore.py
-              rec_nice.automatic_extract: true
-              rec_nice.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
+              rec_equilibrium.config: /work/projects/pds/pds/visualization/auto_explore.py
+              rec_equilibrium.automatic_extract: true
+              rec_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
 
         ``State`` has no ``extract`` override, so with ``automatic_extract:
         true`` set, the recorder fills it in via ``BaseState.automatic_extract``
@@ -194,7 +194,7 @@ Exercise 1: automatic mode
         be recorded, and ``Plotter`` would still only ever plot the one field
         it names.
 
-        The ``rec_nice`` tab now shows a matplotlib/HoloViews pair for
+        The ``rec_equilibrium`` tab now shows a matplotlib/HoloViews pair for
         ``energy_mhd``, without a single line of extraction code.
 
 Exercise 2: an explicit extract method
@@ -204,8 +204,8 @@ Exercise 2: an explicit extract method
 
     .. md-tab-item:: Exercise
 
-        Point ``rec_nice.config`` back at the shipped default,
-        ``visualization/nice_inv.py``, re-run, and compare its ``rec_nice`` tab
+        Point ``rec_equilibrium.config`` back at the shipped default,
+        ``visualization/nice_inv.py``, re-run, and compare its ``rec_equilibrium`` tab
         to exercise 1's: a poloidal-flux contour with separatrix and X/O-points,
         the coil geometry and per-coil current curves, ff'/p' profiles, and
         Ip/beta_tor waveforms -- all purpose-built, at the cost of ``nice_inv.py``
@@ -224,7 +224,7 @@ Exercise 2: an explicit extract method
         .. code-block:: yaml
 
             settings:
-              rec_nice.config: /work/projects/pds/pds/visualization/nice_inv.py
+              rec_equilibrium.config: /work/projects/pds/pds/visualization/nice_inv.py
 
         In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the
         existing ``ip_beta_tor`` dataset:
