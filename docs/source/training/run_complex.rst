@@ -164,28 +164,6 @@ calculated by NICE to a transport solve using TORAX.
         .. image:: images/pds_equilibrium_1D_105092.png
 
 
-.. tip::
-    The run from the previous exercise might take a while and will only show feedback through the recorder actor
-    after NICE has returned its first output.
-    To run it faster, you can add an override that lowers the number of time slice,
-    for example ``loop.max_slices: 11``. For 7-11 timeslices the general
-    behavior is still very recognisable.
-
-    To do that, put the setting in a small yMMSL file of your own, say
-    ``fewer_slices.ymmsl``:
-
-    .. code-block:: yaml
-
-        ymmsl_version: v0.2
-        settings:
-          loop.max_slices: 11
-
-    and pass it after the case folder on the ``sbatch`` line. e.g.
-
-    .. code-block:: bash
-
-        sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105092 ./fewer_slices.ymmsl
-
 Looking at the results afterwards
 ---------------------------------
 

@@ -3,181 +3,192 @@
 Configuring existing workflows
 ==============================
 
-Now that you have run some existing cases (see :ref:`training/run_complex`), we look at where
-the knobs live, and how to change them for a single run without affecting anyone else using
-the same workflow or the same scenario.
+What can be changed, and where it lives
+---------------------------------------
 
-- The **case**, ``cases/<workflow>_<shot>/``: everything specific to this run. Built by
-  ``bin/pds-create-case <workflow> <shot>``, it is a frozen snapshot of the pairing --
-  ``workflow.ymmsl`` (the structure), ``workflow_settings.ymmsl`` (the workflow's generic
-  settings, with the shot's paths filled in), an optional ``scenario_settings.ymmsl`` from
-  ``cases/overrides/<workflow>_<shot>.ymmsl``, and ``config/``, local copies of every
-  NICE/TORAX/recorder/waveform config file those settings point at.
-- The **scenario**, ``$SCENARIOS_REPO/<shot>/``: the input data (``data/``) and the
+Now that you have run some existing cases, we look at where the knobs live, 
+and how to change them.
+Almost everything you might want to change is a **setting**, and settings are grouped by
+what they control:
+
+- **The pulse design**: The waveforms and references from disk live in a
   `Waveform-Editor <https://waveform-editor.readthedocs.io/en/latest/yaml_format.html>`_
-  configuration files that define the machine description and the targets sent to NICE
-  (and TORAX, where used).
-- The **workflow**, ``workflows/<name>/workflow.ymmsl`` plus the building blocks it imports
-  from ``workflows/lib/``: the structure only, which actors exist and how they are wired.
-  It holds no paths and no scenario data.
-- Actor configuration files owned by the workflow and shared by every case built from it,
-  such as ``workflows/prescribed_transport/config_nice_inverse.xml`` for NICE and
-  ``workflows/inverse_convergence/config_torax.py`` for TORAX. ``pds-create-case`` copies
-  these into the case's ``config/``, so editing the original only affects cases you build
-  afterwards.
+  configuration, ``waveforms.yaml`` or ``waveforms_no_transport.yaml`` in the workflow's own
+  directory.
+- **The solver configurations** are files of each code's own format:
+  ``config_nice_inverse.xml`` for NICE, ``config_torax.py`` for TORAX. They live beside the
+  workflow that uses them.
+- **The workflow's own knobs** are plain yMMSL settings: how many timeslices to run, how many
+  outer iterations, which part of the pulse to simulate, how much each actor logs.
 
-.. note::
+Those settings reach a run from four places, and they are read in this order:
 
-    Do not edit a case or a shared configuration file in place. Put your change in a small
-    override file and stack it after the case: the last value given for a key wins.
+#. ``workflow.ymmsl`` -- the structure, and any defaults that belong to it
+#. ``workflow_settings.ymmsl`` -- the workflow's generic settings, with this shot's paths filled in
+#. ``scenario_settings.ymmsl`` -- the per-shot override from ``cases/overrides/``, if there is one
+#. anything extra you pass on the command line
 
-    .. code-block:: bash
-
-        sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092 ./my_override.ymmsl
-
-    That keeps the case reusable, and the run directory records exactly what you ran: your
-    files in ``input/``, and the merged result in ``configuration.ymmsl``.
-
-.. note::
-
-    Settings keys are matched by walking instance prefixes, so the short instance name is
-    enough. In both ``prescribed_transport`` and ``inverse_convergence`` the NICE solver sits
-    in the ``equilibrium`` submodel and is reached as ``equilibrium.nice.xml_path``. When in
-    doubt, look at ``workflow_settings.ymmsl`` in the case folder, or at
-    ``configuration.ymmsl`` of an earlier run.
+Keys are named after the component they belong to, so ``loop.max_slices`` is the
+``max_slices`` setting of the ``loop`` component and ``equilibrium.nice.xml_path`` is the
+NICE solver's config file inside the ``equilibrium`` submodel. If you are not sure what a key
+is called, read ``workflow_settings.ymmsl`` in the case folder, or ``configuration.ymmsl``
+in a run directory.
 
 The exercises below all use the ``prescribed_transport`` workflow with the ``105092``
-scenario from :ref:`training/run_complex`, through ``cases/prescribed_transport_105092/``.
+scenario, through the ``cases/prescribed_transport_105092/`` that you built in the previous section.
 
-Exercise 1: change the machine description
---------------------------------------------
+Exercise 1: change the plasma current value in the waveform file
+----------------------------------------------------------------
 
-The machine description (``wall``, ``pf_active``, ``pf_passive``, ``iron_core``) is static
-across the pulse. It is imported by the scenario's waveform configuration, under
-``globals: imports:``, and handed to NICE by the waveform editor.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Point the ``105092`` case at a different occurrence of one of the machine description
-        IDSs (e.g. the wall) and check whether the corresponding geometry changed in the plots.
 
-    .. md-tab-item:: Solution
+        Take a look at the waveform YAML file for this specific case, under 
+        ``cases/prescribed_transport_105092/config/waveforms_no_transport.yaml``.
+        By YAML file shows that the ``ip`` target will just follow the reference input data:
+
+        .. code-block:: yaml
+
+            targets:
+              equilibrium/time_slice/global_quantities/ip:
+                - {ref: input}
+
+        To set it yourself, we can replace it with an explicit
+        `piecewise-linear tendency <https://waveform-editor.readthedocs.io/en/latest/tendencies.html#piecewise-linear-tendency>`_.
+
+        Let's copy the waveform file and place it in the root of the PDS repository:
 
         .. code-block:: bash
 
-            cp workflows/prescribed_transport/waveforms_no_transport.yaml my_waveforms.yaml
-            # in the copy: change the machine description URI under globals: imports:
+            cp cases/prescribed_transport_105092/config/waveforms_no_transport.yaml my_waveforms.yaml
 
-        Then point the case at your copy:
+        In that copy, find the ``ip`` target and define it as a trapezoid instead: ramp up
+        from ``t=0`` to ``t=9``, flattop to ``t=147``, ramp down to zero by ``t=170``. Set the
+        flattop value to -3.2 MA.
+
+        Now the case has to be told to use your copy instead of its own. It already sets that
+        key -- have a look for yourself with
+
+        .. code-block:: bash
+
+            grep waveforms cases/prescribed_transport_105092/workflow_settings.ymmsl
+
+        Instead of touching the original case file, we will write a second yMMSL file that sets the
+        same key to a different value, and hand both to the manager. The manager reads the
+        case's files first and yours last, and the last value for a key will take precedence.
+        This means that only needs the one key you are changing, and everything you leave out keeps the case's
+        value.
+
+        So, three steps:
+
+        #. Write ``my_ip.ymmsl`` with a ``settings:`` block setting
+           ``waveform_editor.waveforms`` to your copy, using an absolute path.
+        #. Submit the case with that file passed after the case folder.
+        #. Check the new flattop current on the equilibrium plot. Does it correspond with your
+           waveform?
+
+
+    .. md-tab-item:: Solution
+
+        In ``my_waveforms.yaml``, replace the ``ip`` target:
+
+        .. code-block:: yaml
+
+              equilibrium/time_slice/global_quantities/ip:
+                - {time: [0, 9, 147, 170], value: [0, -3.2e6, -3.2e6, 0]}
+
+        ``my_ip.ymmsl``:
 
         .. code-block:: yaml
 
             ymmsl_version: v0.2
             settings:
-              waveform_editor.waveforms: my_waveforms.yaml
+              waveform_editor.waveforms: /path/to/your/pds/my_waveforms.yaml
 
-        Rerun with the override stacked after the case and compare the coil/equilibrium plot
-        to the previous run.
+        Then pass it after the case folder:
 
-        .. note::
+        .. code-block:: bash
 
-            The recorder draws the wall and coil outlines from its own ``rec_nice.md``
-            setting, so change that one along with the waveform configuration -- otherwise the
-            solve uses your new geometry while the plot still shows the old one.
+            sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105092 $PWD/my_ip.ymmsl
 
-Exercise 2: change the I_p value in the waveform file
---------------------------------------------------------
+        You can look at the recorder actor to see if the plasma current corresponds to your
+        set waveform.
 
-By default the ``ip`` target just follows the input data:
 
-.. code-block:: yaml
-
-    targets:
-      equilibrium/time_slice/global_quantities/ip:
-        - {ref: input}
-
-To set it yourself, replace it with an explicit
-`piecewise-linear tendency <https://waveform-editor.readthedocs.io/en/latest/tendencies.html#piecewise-linear-tendency>`_.
-
-.. md-tab-set::
-
-    .. md-tab-item:: Exercise
-
-        In your own copy of the waveform configuration, define ``ip`` as a trapezoid: ramp up
-        from ``t=0`` to ``t=9``, flattop to ``t=147``, ramp down to zero by ``t=170`` (matching
-        the phases of this scenario, see :ref:`training/run_complex`). Then change the flattop
-        value from 3 to 3.5 MA and rerun.
-
-    .. md-tab-item:: Solution
-
-        .. code-block:: yaml
-
-            targets:
-              equilibrium/time_slice/global_quantities/ip:
-                - {time: [0, 9, 147, 170], value: [0, -3.5e6, -3.5e6, 0]}
-
-        (sign follows this repo's COCOS convention). Point ``waveform_editor.waveforms`` at
-        the copy as in Exercise 1, rerun, and check the new flattop current on the
-        equilibrium plot.
-
-        .. note::
-
-            The boundary shape and coil-current seed still come from the original input
-            data, so pushing ``I_p`` far from it can keep NICE-inverse from converging
-            cleanly on some timeslices.
-
-Exercise 3: change the ramp duration in the waveform file
--------------------------------------------------------------
-
-.. md-tab-set::
-
-    .. md-tab-item:: Exercise
-
-        Stretch the ramp-up from 9 to 20 seconds.
-
-    .. md-tab-item:: Solution
-
-        .. code-block:: yaml
-
-            targets:
-              equilibrium/time_slice/global_quantities/ip:
-                - {time: [0, 20, 147, 170], value: [0, -3.5e6, -3.5e6, 0]}
-
-Exercise 4: change the flattop duration in the waveform file
-------------------------------------------------------------------
-
-.. md-tab-set::
-
-    .. md-tab-item:: Exercise
-
-        Shorten the flattop so it ends at ``t=100`` instead of ``t=147``, keeping the
-        23-second ramp-down.
-
-    .. md-tab-item:: Solution
-
-        .. code-block:: yaml
-
-            targets:
-              equilibrium/time_slice/global_quantities/ip:
-                - {time: [0, 20, 100, 123], value: [0, -3.5e6, -3.5e6, 0]}
-
-Exercise 5: increase the log level in the NICE config
+Exercise 2: Change the ramp duration in the waveform file
 ---------------------------------------------------------
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Raise NICE's own logging verbosity for this run only.
+        Continuing from the previous exercise, update your waveform YAML and stretch the 
+        ramp-up from 9 to 20 seconds.
+
+        Run the case again, and look at the plasma current. Does the plasma current correspond with your waveform?
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: yaml
+
+            targets:
+              equilibrium/time_slice/global_quantities/ip:
+                - {time: [0, 20, 147, 170], value: [0, -3.2e6, -3.2e6, 0]}
+
+Exercise 3: Play around with the waveforms
+------------------------------------------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        The waveform format can be used to change any of the time dependent 0D quantities,
+        like the plasma current.Besides the piecewise tendency, the waveform format supports many more different
+        tendencies, such as linear, smooth, or periodic curves. Have a look at the 
+        `available tendencies <https://waveform-editor.readthedocs.io/en/latest/tendencies.html#available-tendencies>`_,
+        and try to create your own waveform for the plasma current.
+
+        If you want to delve deeper into how to design your own waveforms using the Waveform
+        Editor, you can have a look at the 
+        `Training page of the Waveform Editor <https://waveform-editor.readthedocs.io/en/latest/training/training.html>`_.
+
+        .. warning::
+
+            The boundary shape and coil-current still come from the original input
+            data, so pushing the plasma current far from it can keep NICE-inverse from converging
+            cleanly on some timeslices.
+
+Exercise 4: increase the log level in the NICE config
+---------------------------------------------------------
+
+The exercises so far changed the pulse design. This one changes a solver, and it works
+slightly differently, because NICE is not configured through yMMSL settings: it reads its own
+XML file, ``config_nice_inverse.xml``, which lives beside the workflow that uses it.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        We will change the configuration of NICE in this exercise, namely we will raise 
+        NICE's own logging verbosity, by updating the verbosity of NICE from 0 to 1:
+        ``<verbose>1</verbose>``.
+
+        Unlike the waveform configuration in Exercise 1, this file has no placeholders in it,
+        so you can copy it straight out of ``workflows/`` rather than out of the case. 
+        Then, make an override file to point to the new NICE config.
+
+        Run the case and have a look at the logs of the NICE actor from the MUSCLE3 dashboard.
+        Compare these to the ones from previous runs, do you see a difference?
 
     .. md-tab-item:: Solution
 
         .. code-block:: bash
 
             cp workflows/prescribed_transport/config_nice_inverse.xml my_config_nice.xml
-            # in the copy: <verbose>1</verbose>
+            # in the copy, replace the verbosity setting: <verbose>1</verbose>
 
         In an override file:
 
@@ -185,28 +196,34 @@ Exercise 5: increase the log level in the NICE config
 
             ymmsl_version: v0.2
             settings:
-              equilibrium.nice.xml_path: my_config_nice.xml
+              equilibrium.nice.xml_path: /path/to/pds/my_config_nice.xml
 
         Rerun and check the ``equilibrium.nice`` log in the
-        :ref:`muscle3-dashboard <training/muscle3_dashboard>`.
+        :ref:`muscle3-dashboard <training/muscle3_dashboard>`. You should see that the
+        verbosity is higher than in the previous runs.
 
-        ``inverse_convergence`` names its solver the same way, so the same key works there.
+Exercise 5: run fewer time slices to make a run faster
+------------------------------------------------------
 
-Exercise 6: run fewer time slices to make a run faster
-------------------------------------------------------------------------
-
-``inverse_convergence`` walks the pulse slice by slice and repeats that pass until the coil
-currents stop changing. Both the number of slices and the number of passes are settings on
-its outer loop: ``loop.max_slices`` (``0`` means every slice) and ``loop.max_iterations``.
+``inverse_convergence`` walks the pulse one timeslice at a time, then starts over with the
+coil currents it just found, until they stop changing. A full run is a bit slow, so while you are
+trying settings out it is worth to reduce the number of timeslices.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Lower the number of timeslices of ``cases/inverse_convergence_105092/`` to make the
-        run faster.
+        Take a look at the workflow settings of the ``cases/inverse_convergence_105092/`` case. 
+        Which settings do you think you can change to make the workflow finish faster? 
 
     .. md-tab-item:: Solution
+
+        Two settings on its outer loop control that:
+
+        - ``loop.max_slices``: how many timeslices one pass covers (``0`` means all time slices)
+        - ``loop.max_iterations``: how many passes it makes before stopping regardless
+
+        Lower both, and note that a run stopped early has not converged, for example:
 
         .. code-block:: yaml
 
@@ -215,16 +232,15 @@ its outer loop: ``loop.max_slices`` (``0`` means every slice) and ``loop.max_ite
               loop.max_slices: 11
               loop.max_iterations: 1
 
-        Rerun -- it should finish noticeably faster, with the same overall behavior at a
+        Rerun the case, it should finish noticeably faster now, with the same overall behavior at a
         coarser time resolution.
 
-Exercise 7: change the start and end time of the simulation
------------------------------------------------------------------------------
+Exercise 6: change the start and end time of the simulation
+-----------------------------------------------------------
 
-The ``source`` component reads the scenario's input data (spanning t=0 to t=170, see
-:ref:`training/run_complex`) and accepts ``t_min``/``t_max`` settings to restrict which of
-those timeslices get streamed into the workflow. Unlike Exercise 6, this changes *which* part
-of the pulse is simulated rather than how finely it is sampled.
+Exercise 5 made the run coarser over the whole pulse. This one keeps the detail and
+simulates less of the pulse. The pulse spans t=0 to t=170, with the flattop between roughly
+t=9 and t=147 (see :ref:`training/run_complex`).
 
 .. md-tab-set::
 
@@ -232,6 +248,9 @@ of the pulse is simulated rather than how finely it is sampled.
 
         Restrict the run to the flattop phase only, from ``t=20`` to ``t=140``, skipping the
         ramp-up and ramp-down.
+
+        The ``source`` component streams the scenario data in slice by slice, so
+        ``source.t_min`` and ``source.t_max`` are what decide which slices enter the workflow.
 
     .. md-tab-item:: Solution
 
@@ -246,11 +265,42 @@ of the pulse is simulated rather than how finely it is sampled.
         instead of the ramp phases. In ``inverse_convergence`` the window is set on the outer
         loop, as ``loop.t_min`` and ``loop.t_max``.
 
-.. todo::
+Exercise 7: switch METIS between predictive and interpretative
+--------------------------------------------------------------
 
-    - Add a TORAX exercise: how to activate density transport and heat transport, through the
-      case's ``config_torax.py`` override.
-    - Add a METIS settings exercise, to sit alongside the NICE one (Exercise 5).
-    - Add an exercise on implementation overriding: pointing an actor at a different build
-      (EasyBuild module versus local installation) from a case or override file.
-    - Add a section on taking a different DINA scenario and getting it into the PDS?
+METIS can either work out the profiles itself, or be handed them from the scenario data and
+work around them. Which one you choose is a set of settings on the same ``metis_from_dina`` case.
+
+The switches all look like ``metis.metis_external_data_<quantity>``, and there is one per
+quantity METIS could take from outside: ``0`` means "compute it", ``1`` means "read it from
+the input data". ``workflows/metis_from_dina/settings.ymmsl`` sets all of them to ``0``,
+which is the predictive mode you ran in :ref:`training/run_complex`.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Run ``metis_from_dina`` for shot ``105084`` in interpretative mode instead, feeding
+        it the electron and ion temperatures, the electron density, the effective charge and
+        the ECRH from the DINA data.
+
+        .. tip::
+            You do not need to rebuild the case for this.
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: yaml
+
+            ymmsl_version: v0.2
+            settings:
+              metis.metis_external_data_electron_temperature: 1
+              metis.metis_external_data_electron_density: 1
+              metis.metis_external_data_ion_temperature: 1
+              metis.metis_external_data_charge_effective: 1
+              metis.metis_external_data_ECRH: 1
+
+        produced the input dataset, and that does not change. Stack the override after the
+        existing case folder and run it again.
+
+        Because the profiles are now prescribed rather than predicted, they should follow the
+        DINA traces closely in the validation plots. 
