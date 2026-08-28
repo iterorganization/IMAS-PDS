@@ -26,7 +26,7 @@ trace read directly from this scenario's own DINA-preprocessed data
 (`<shot>_in_waveform_editor`), into one assembled F_INIT message for `torax`, `nice_evo_rd`,
 and `magnetic_controller`.
 
-A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/`) reads NICE's `equilibrium`
+A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/KCURR_RZIp/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.
 
 Structure lives in `workflow.ymmsl`; shared knobs (including a default `waveforms.yaml`
@@ -107,8 +107,8 @@ did before `pds-create-case`/`pds-run-case.sbatch` existed, and still does).
 
 ## Output
 
-`sink_nice`, `sink_torax`, and `sink_controller` are wired to write NICE's evolutive
+`sink_equilibrium`, `sink_transport`, and `sink_control` are wired to write NICE's evolutive
 equilibrium/pf_active, TORAX's evolved profiles, and the controller's corrected pf_active,
-respectively (see `settings.ymmsl`), with `rec_nice`/`rec_torax` distilling the NICE and TORAX
+respectively (see `settings.ymmsl`), with `recorder_equilibrium`/`recorder_transport` distilling the NICE and TORAX
 output for the muscle3-dashboard. In practice the workflow has not yet run to completion --
 see Status below for the current known limitation.

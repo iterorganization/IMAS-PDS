@@ -78,9 +78,9 @@ programs:
       # Captured before `module purge` below: the PDS module sets PDS_REPO via
       # lmod's setenv(), which `module purge` unconditionally reverts -- even
       # though the manager also plain-exports PDS_REPO into this shell, purge
-      # wipes it anyway (confirmed live), leaving a later "$PDS_REPO/controllers"
-      # silently evaluate to "/controllers".
-      controller_path="$PDS_REPO/controllers"
+      # wipes it anyway (confirmed live), leaving a later "$PDS_REPO/controllers/KCURR_RZIp"
+      # silently evaluate to "/controllers/KCURR_RZIp".
+      controller_path="$PDS_REPO/controllers/KCURR_RZIp"
       module purge
       module load PCS/2026.08-pds NICE/3.0.0.dev258-intel-2025b-pds
       # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
