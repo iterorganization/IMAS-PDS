@@ -48,8 +48,7 @@ The sections are meant to be followed in order:
     behind
 
 :ref:`Configuring existing workflows <training/configuring>`
-    Change the pulse design, the solver settings and the time window of an existing case
-    without editing anything shared
+    Change the pulse design, the solver settings and the time window of a case
 
 :ref:`Visualizing workflows <training/visualization>`
     Learn how to visualize the data flowing between actors during a run
