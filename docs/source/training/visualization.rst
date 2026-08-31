@@ -5,130 +5,107 @@ Visualizing workflows
 
 .. TODO: reformat and clean up
 
-The **recorder actor** is a sink-only tap: wired onto conduits that already exist in
-a workflow, it does not change the coupling, it just also writes a distilled copy
-of the data flowing past to disk. Point the :ref:`muscle3-dashboard <training/muscle3_dashboard>` at a run that
-includes one and it gets an extra tab, rendering that data live while the run is
-still going, or afterwards.
+You have already used the recorder plots: in :ref:`training/run_complex` the dashboard grew
+a ``recorder_equilibrium`` tab while the run was going, and you watched the equilibrium fill
+in slice by slice.
 
-We will use ``prescribed_transport`` for the exercises below: of the workflows in
-this repo it is the simplest chain (``source -> waveform_editor -> nice_inv ->
-sink``, plus a recorder), with no outer Picard loop, so re-running it after
-changing a setting is fast. Both exercises below plot the same field, the
-plasma's stored MHD energy -- with no extraction code in exercise 1 (an empty
-``State``, filled in automatically), by hand in exercise 2 (extending a real
-``extract`` method) -- and each renders it two ways: as a static
-``matplotlib`` figure and as an interactive HoloViews plot, since a
-``Plotter`` is free to mix both (both are just Panel objects as far as the
-dashboard is concerned).
+Those plots are not built into the dashboard. Each one comes from a small Python file that
+ships with the workflow, and you can change it, or write your own. That is what this chapter
+is about: getting the dashboard to show *you* what you want to see, rather than what someone
+else decided to plot.
 
-The recorder actor
---------------------
+How a recorder plot gets made
+-----------------------------
 
-A recorder is wired as an extra receiver on conduits that already feed another
-component, for example ``sink``. Every connected ``S`` port is its own timeline,
-named after the IDS it carries. This is ``recorder_equilibrium`` from
-``workflows/prescribed_transport/workflow.ymmsl``:
+A **recorder** is an extra listener on data that is already moving between two actors. It
+does not sit in the way of anything: the component that was receiving the data still
+receives exactly the same thing, and the recorder quietly writes a copy for the dashboard to
+draw.
+
+What the recorder does with that copy is decided by a single **config file**, named in the
+settings like any other configuration you met in :ref:`training/configuring`:
 
 .. code-block:: yaml
 
-    components:
-      recorder_equilibrium: {description: distill recorder (NICE inverse outputs), implementation: recorder, ports: {s: [equilibrium_in, pf_active_in]}}
+    equilibrium.recorder_equilibrium.config: .../visualization/nice_inv.py
 
-    conduits:
-      nice_inv.equilibrium_out: [sink.equilibrium_in, recorder_equilibrium.equilibrium_in]
-      nice_inv.pf_active_out: [sink.pf_active_in, recorder_equilibrium.pf_active_in]
+Note the full name. In ``prescribed_transport`` the recorder sits inside the ``equilibrium``
+submodel, so its settings are written ``equilibrium.recorder_equilibrium.<setting>``. Shorten
+it and the setting is simply never found, with no error to tell you so. Copy the form already
+in your case's ``workflow_settings.ymmsl`` and you cannot get this wrong.
 
-    implementations:
-      recorder:
-        executable: python
-        args: -u -m imas_muscle3.actors.recorder_component
+The available visualization scripts can be found in the ``visualization`` directory in the PDS repository. As a start, take a look at the ``nice_inv.py`` file, take a look at the different classes.
 
-Each received IDS is reduced to plot-ready ``xarray`` datasets by a ``config``
-file, and appended to a Zarr store -- one per outer-loop iteration, at
-``<store_path>/<port>/<iteration_number>.zarr``. ``config`` is mandatory --
-in particular, the dashboard's ``Plotter`` always has to be hand-written, so
-a file always has to exist:
+A visualization file has two halves, and it is worth keeping them apart in your head:
 
-.. code-block:: yaml
+- a ``State`` class, which says **what to record** - which numbers to pull out of each
+  IDS that goes past;
+- a ``Plotter`` class, which says **how to draw it** - the curves, images and layout that
+  become the tab you see.
 
-    settings:
-      recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+The recorder itself only ever reads the ``State`` half. The dashboard reads the ``Plotter``
+half.
 
-The config file defines the extraction logic in one of two ways: a plain
-``def extract(ids) -> dict[str, xarray.Dataset]`` function if you only need to
-record data, or a ``State`` class (subclassing
-``imas_muscle3.visualization.base_state.BaseState``) implementing
-``extract(self, ids)``. Add a ``Plotter`` class alongside it (subclassing
-``imas_muscle3.visualization.base_plotter.BasePlotter``, implementing
-``get_dashboard()``) and the same file also tells the dashboard how to plot what
-was recorded -- the recorder only ever reads the ``State`` half.
+Plots can be written with either `matplotlib <https://matplotlib.org/>`_, which you
+might already know, or `HoloViews <https://holoviews.org/>`_, which gives you additional interactive abilities.
 
-The ``State`` half of that can itself be automatic (exercise 1 below): if it
-doesn't implement its own ``extract``, and the recorder's
-``automatic_extract`` setting is on, extraction falls back to
-``BaseState.automatic_extract``.
+Setting up
+----------
 
-.. note::
-
-    A fresh ``State`` instance is built for every message the recorder receives,
-    so ``extract`` only accumulates *within* one call. Both message
-    granularities still end up fully recorded: a live one-slice-per-message
-    stream gets appended instant by instant by the recorder's own store; a
-    whole-trace-per-message stream (e.g. one message per Picard iteration,
-    looping over ``ids.time_slice`` inside ``extract``) gets appended
-    trace by trace instead.
-
-Running the workflow and opening the dashboard
--------------------------------------------------
+We will use ``prescribed_transport`` throughout. It is the shortest workflow in the repo and
+has no outer loop, so a re-run after every change costs you a minute rather than a coffee
+break:
 
 .. code-block:: bash
 
     bin/pds-create-case prescribed_transport 105084
     bin/pds-run-case cases/prescribed_transport_105084
 
-Then, in a separate terminal with the dashboard's own virtual environment
-activated (see :ref:`muscle3-dashboard <training/muscle3_dashboard>`):
+and in the terminal where you keep the dashboard:
 
 .. code-block:: bash
 
     m3dash open cases/runs/
 
-Click the run, and a ``recorder_equilibrium`` tab appears once the recorder has written its
-first store -- no ymmsl parsing needed, the dashboard finds it by its on-disk
-layout.
+Click the run, and the ``recorder_equilibrium`` tab appears as soon as the recorder has
+written something.
 
-Exercise 1: automatic mode
-----------------------------
+Exercise 1: plot a field without writing any extraction code
+------------------------------------------------------------
+
+The recorder can work out for itself which quantities an IDS carries,
+so for a first plot you do not have to write any extraction code at all. You only have to
+name the field you want and say how to draw it.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Plot the equilibrium's MHD energy without writing any extraction
-        code. A ``Plotter`` still has to be hand-written -- there's no way
-        around that -- but its ``State`` doesn't: leave it empty and let
-        ``automatic_extract`` fill it in.
+        Plot the plasma's stored MHD energy over time.
 
-        Write a new config file with a bare ``State`` (no ``extract``
-        override) and a ``Plotter`` that plots one named field, and point
-        ``recorder_equilibrium.config`` at it in
-        ``workflows/prescribed_transport/settings.ymmsl``. Turn on
-        ``recorder_equilibrium.automatic_extract`` and restrict it to just that field with
-        ``recorder_equilibrium.automatic_extract_fields``, re-run the workflow, and open
-        the ``recorder_equilibrium`` tab.
+        Write a config file with an empty ``State`` (no ``extract`` method) and a
+        ``Plotter`` that draws that one field. Then point the recorder at your file and turn
+        automatic extraction on, with these three settings:
 
-        .. note::
+        .. code-block:: yaml
 
-            Note the field's dotted form,
-            ``equilibrium.time_slice[0].global_quantities.energy_mhd``, not
-            the slashed form you'll see elsewhere,
-            ``equilibrium/time_slice[0]/global_quantities/energy_mhd``:
-            ``BaseState.automatic_extract`` discovers quantities using the
-            slashed form, but Zarr rejects ``/`` in a variable name, so a
-            bare ``State``'s automatic fallback flattens it to dots before
-            recording -- ``automatic_extract_fields``, and the field your
-            ``Plotter`` looks up, both have to match that same dotted form.
+            equilibrium.recorder_equilibrium.config: /path/to/your/config.py
+            equilibrium.recorder_equilibrium.automatic_extract: true
+            equilibrium.recorder_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
+
+        Add them to ``workflow_settings.ymmsl`` in your case folder, the way you changed
+        settings in :ref:`training/configuring`. Re-run and open the tab.
+
+    .. md-tab-item:: Hint
+
+        Write the field name with **dots**, not slashes:
+        ``equilibrium.time_slice[0].global_quantities.energy_mhd``. You will see the slashed
+        form elsewhere in IMAS, but the recorder stores it with dots, and the name your
+        ``Plotter`` looks up has to match the name it was stored under.
+
+        ``automatic_extract_fields`` is a filter. Leave it out and everything the recorder
+        found gets written; your plot would still show only the field it names, but the run
+        would write a lot more than you need.
 
     .. md-tab-item:: Solution
 
@@ -174,56 +151,62 @@ Exercise 1: automatic mode
                     )
                     return pn.Row(static_pane, interactive_pane)
 
+        and in the case's ``workflow_settings.ymmsl``:
+
         .. code-block:: yaml
 
             settings:
-              recorder_equilibrium.config: ${PDS_REPO}/visualization/auto_explore.py
-              recorder_equilibrium.automatic_extract: true
-              recorder_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
+              equilibrium.recorder_equilibrium.config: /path/to/pds/visualization/auto_explore.py
+              equilibrium.recorder_equilibrium.automatic_extract: true
+              equilibrium.recorder_equilibrium.automatic_extract_fields: equilibrium.time_slice[0].global_quantities.energy_mhd
 
-        ``State`` has no ``extract`` override, so with ``automatic_extract:
-        true`` set, the recorder fills it in via ``BaseState.automatic_extract``
-        -- discovering and extracting every time-dependent quantity of each
-        received IDS, no IDS-specific code required.
-        ``automatic_extract_fields`` then drops everything but ``energy_mhd``
-        before writing to disk; without it, every discovered quantity would
-        be recorded, and ``Plotter`` would still only ever plot the one field
-        it names.
+        The tab now shows ``energy_mhd`` twice, once through matplotlib and once through
+        HoloViews, and you did not write a line of code that knows anything about the
+        equilibrium IDS.
 
-        The ``recorder_equilibrium`` tab now shows a matplotlib/HoloViews pair for
-        ``energy_mhd``, without a single line of extraction code.
+Exercise 2: add a field to a real config
+----------------------------------------
 
-Exercise 2: an explicit extract method
------------------------------------------
+Automatic extraction is convenient, but it is generic: it can only give you plain curves of
+whatever numbers it happened to find. A purpose-built config knows what the data *means*,
+and ``visualization/nice_inv.py``, the one ``prescribed_transport`` ships with, is a good
+example. Its tab gives you a poloidal flux contour with the separatrix and the X- and
+O-points, the coil geometry with a current curve per coil, and the ff'/p' profiles.
+
+The cost is that it has to be told exactly where to look. This exercise is about paying that
+cost once: adding one field by hand, to both halves of the file.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Point ``recorder_equilibrium.config`` back at the shipped default,
-        ``visualization/nice_inv.py``, re-run, and compare its ``recorder_equilibrium`` tab
-        to exercise 1's: a poloidal-flux contour with separatrix and X/O-points,
-        the coil geometry and per-coil current curves, ff'/p' profiles, and
-        Ip/beta_tor waveforms -- all purpose-built, at the cost of ``nice_inv.py``
-        having to know exactly which IDS paths to reach for, and all of it
-        interactive HoloViews plots (backed by bokeh): pan, zoom and hover over
-        the contour and profile plots to see this for yourself.
-
-        Now add exercise 1's field, ``energy_mhd``, here too, but by hand this
-        time: extract ``equilibrium/time_slice[*]/global_quantities/energy_mhd``
-        in ``State._extract_equilibrium_slice``, plot it as an interactive
-        HoloViews curve next to ``ip``/``beta_tor``, and also fold it into a
-        small static matplotlib summary panel alongside the other two.
-
-    .. md-tab-item:: Solution
+        Point the recorder back at the shipped config:
 
         .. code-block:: yaml
 
-            settings:
-              recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+            equilibrium.recorder_equilibrium.config: /path/to/pds/visualization/nice_inv.py
 
-        In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the
-        existing ``ip_beta_tor`` dataset:
+        Re-run and compare this tab with the one from Exercise 1: pan, zoom and hover over
+        the contour and the profiles.
+
+        Then add ``energy_mhd`` here too, by hand: record it alongside ``ip`` and
+        ``beta_tor``, draw it as a curve next to them, and add a small matplotlib panel
+        showing all three together.
+
+    .. md-tab-item:: Hint
+
+        Two halves, so two edits. The recording happens in ``State``, where the other global
+        quantities are already gathered into one dataset. Add yours to it. The drawing
+        happens in ``Plotter``, where each plot is its own small method that gets listed in
+        the layout at the end.
+
+        The IDS path you need is
+        ``equilibrium/time_slice[*]/global_quantities/energy_mhd``.
+
+    .. md-tab-item:: Solution
+
+        In ``State._extract_equilibrium_slice``, add ``energy_mhd`` to the dataset that
+        already carries ``ip`` and ``beta_tor``:
 
         .. code-block:: python
 
@@ -238,8 +221,7 @@ Exercise 2: an explicit extract method
                 },
             )
 
-        In ``Plotter``, add the interactive HoloViews curve, next to
-        ``plot_beta_tor``:
+        In ``Plotter``, add an interactive curve next to ``plot_beta_tor``:
 
         .. code-block:: python
 
@@ -263,9 +245,7 @@ Exercise 2: an explicit extract method
                     framewise=True, height=200, width=600, title=title
                 )
 
-        Add ``import matplotlib.pyplot as plt`` at the top of the file (it is
-        already imported for the contour calculation), then add a static
-        matplotlib summary of all three global quantities together:
+        Then a static matplotlib panel with all three together:
 
         .. code-block:: python
 
@@ -293,7 +273,7 @@ Exercise 2: an explicit extract method
                 plt.close(fig)
                 return pane
 
-        Add both to the dashboard layout in ``get_dashboard``:
+        and list both in the layout in ``get_dashboard``:
 
         .. code-block:: python
 
@@ -302,10 +282,8 @@ Exercise 2: an explicit extract method
             pn.Row(ip, beta_tor, energy_mhd),
             self.plot_summary_static,
 
-        ``plot_summary_static`` is not wrapped in ``hv.DynamicMap`` -- that
-        wrapper is for HoloViews elements. A plain ``@param.depends``-decorated
-        method returning a Panel object (here, a ``Matplotlib`` pane) can be
-        placed directly in the layout and Panel re-renders it the same way.
+        Only the HoloViews plot is wrapped in ``hv.DynamicMap``. The matplotlib one can go
+        into the layout as it is.
 
 Exercise 3: record something nobody is recording yet
 -----------------------------------------------------
@@ -315,10 +293,10 @@ later you will want to look at something no recorder is wired to, and then there
 halves to the job: tap the data, and describe how to plot it.
 
 The tap is a recorder component with an ``S`` port, listed as an extra receiver on a conduit
-that already exists. Adding one means editing ``workflow.ymmsl`` -- but you do not have to
-edit the shared one. Remember from :ref:`training/understanding` that a case folder is a
-frozen copy: the ``workflow.ymmsl`` inside ``cases/<case>/`` is yours alone, so you can add a
-component there and nobody else's runs change.
+that already exists. Adding one means editing ``workflow.ymmsl``, but not the workflow's
+own. As in :ref:`training/configuring`, the copy inside ``cases/<case>/`` is the one to
+change: the component appears in this run and nowhere else, and the template you built the
+case from is untouched.
 
 .. md-tab-set::
 
@@ -338,7 +316,7 @@ component there and nobody else's runs change.
     .. md-tab-item:: Hint
 
         Copy the shape of ``recorder_equilibrium`` from the top of this page for the wiring, and the
-        shape of ``visualization/nice_inv.py`` for the config -- a ``State`` with an
+        shape of ``visualization/nice_inv.py`` for the config: a ``State`` with an
         ``extract`` that returns one ``xarray.Dataset``, and a ``Plotter`` with a single
         curve, is enough. Start from the smallest thing that renders, then add fields.
 
@@ -357,13 +335,12 @@ component there and nobody else's runs change.
             conduits:
               waveform_editor.equilibrium_out: [equilibrium.equilibrium_in, recorder_target.equilibrium_in]
 
-        and in an override file stacked after the case:
+        and in the case's ``workflow_settings.ymmsl``:
 
         .. code-block:: yaml
 
-            ymmsl_version: v0.2
             settings:
-              recorder_target.config: my_target_config.py
+              recorder_target.config: /path/to/pds/my_target_config.py
 
         Now the dashboard grows a ``recorder_target`` tab next to ``recorder_equilibrium``, and you can watch
         the requested boundary and the solved one side by side while the run goes.
@@ -371,8 +348,8 @@ component there and nobody else's runs change.
         Two things are worth taking away from this. A recorder never changes the coupling: the
         component that was already receiving still receives exactly what it did before, so
         adding one cannot change the physics. And because the recorder finds its data by its
-        on-disk layout, the dashboard picks the new tab up on its own -- there is nothing to
-        register anywhere.
+        on-disk layout, the dashboard picks the new tab up on its own, so there is nothing
+        to register anywhere.
 
 Watching a run you are not sitting on
 --------------------------------------
@@ -380,7 +357,7 @@ Watching a run you are not sitting on
 One practical note for SDCC, since the real cases from :ref:`training/run_complex` do not run
 where you are looking at them.
 
-The dashboard is a web application, so it has to open a browser somewhere with a screen --
+The dashboard is a web application, so it has to open a browser somewhere with a screen,
 which on SDCC means inside your NoMachine session, not over a plain SSH connection. The
 simulation, meanwhile, is on a compute node with no screen at all.
 
@@ -395,7 +372,7 @@ directory to the shared filesystem, and the dashboard reads it from there:
     # in another terminal, submitting to a compute node
     bin/pds-run-case cases/prescribed_transport_105092
 
-Start the dashboard first and leave it running -- it picks up new runs as they appear, and
+Start the dashboard first and leave it running: it picks up new runs as they appear, and
 the recorder plots fill in live while the job is on the compute node. If a tab stays empty,
 the usual reason is simply that the recorder has not written its first store yet, which for
 these workflows means the first solve is still going.
