@@ -148,4 +148,5 @@ if [[ -x "$PREPROCESS" ]]; then
   "$PREPROCESS"
 fi
 
+echo "A new case has been created in the following directory:"
 echo "$CASE_DIR"
