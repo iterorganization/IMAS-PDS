@@ -48,7 +48,7 @@ settings:
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
 
   # Validation.
-  validator.halt_on_error: False
+  validator.halt_on_error: True
   validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
   validator.rulesets: iter-olc
   validator.apply_generic: False
