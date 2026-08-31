@@ -350,29 +350,3 @@ case from is untouched.
         adding one cannot change the physics. And because the recorder finds its data by its
         on-disk layout, the dashboard picks the new tab up on its own, so there is nothing
         to register anywhere.
-
-Watching a run you are not sitting on
---------------------------------------
-
-One practical note for SDCC, since the real cases from :ref:`training/run_complex` do not run
-where you are looking at them.
-
-The dashboard is a web application, so it has to open a browser somewhere with a screen,
-which on SDCC means inside your NoMachine session, not over a plain SSH connection. The
-simulation, meanwhile, is on a compute node with no screen at all.
-
-That works out because they never talk to each other directly. The job writes its run
-directory to the shared filesystem, and the dashboard reads it from there:
-
-.. code-block:: bash
-
-    # in a NoMachine terminal, on the login node
-    m3dash open cases/runs/
-
-    # in another terminal, submitting to a compute node
-    bin/pds-run-case cases/prescribed_transport_105092
-
-Start the dashboard first and leave it running: it picks up new runs as they appear, and
-the recorder plots fill in live while the job is on the compute node. If a tab stays empty,
-the usual reason is simply that the recorder has not written its first store yet, which for
-these workflows means the first solve is still going.
