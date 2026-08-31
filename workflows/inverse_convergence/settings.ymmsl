@@ -40,11 +40,7 @@ settings:
   sink_transport.sink_mode: "w"
 
   # Recording.
-  equilibrium.recorder_equilibrium.format: distill
-  equilibrium.recorder_equilibrium.auto: False
   equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
-  recorder_transport.format: distill
-  recorder_transport.auto: False
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
 
   # Validation.

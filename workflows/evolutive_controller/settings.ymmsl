@@ -35,11 +35,7 @@ settings:
   sink_transport.sink_mode: "w"
   sink_control.sink_mode: "w"
 
-  recorder_equilibrium.format: distill
-  recorder_equilibrium.auto: False
   recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
   recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
-  recorder_transport.format: distill
-  recorder_transport.auto: False
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
   muscle_remote_log_level: 'INFO'
