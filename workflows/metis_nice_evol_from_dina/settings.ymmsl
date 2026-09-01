@@ -1,0 +1,78 @@
+ymmsl_version: v0.2
+
+# Generic settings for metis_nice_evol_from_dina, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run-case.sbatch. ${SHOT} is filled in by pds-create-case.
+#
+# This workflow's preprocess.sh builds both source_metis's and source_nice's inputs, once, at
+# bin/pds-create-case time, from this shot's raw DINA source (same dual build as
+# metis_nice_inverse_from_dina's preprocess.sh: METIS's own dataset into
+# ${CASE_DIR}/preprocess/metis_in, NICE's DINA-derived machine description into
+# ${CASE_DIR}/preprocess/dina_in).
+#
+# Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
+# from DINA). A shot needing interpretative mode overrides the five metis_external_data_*
+# settings via cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl.
+#
+# source_nice.t_min has no sane generic default (which DINA slice to bootstrap NICE/METIS/the
+# controller from is genuinely per-shot); every shot needs
+# cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for it, same as evolutive_controller's
+# source.t_min.
+
+resources:
+  metis_nice_evol_from_dina.source_nice: {threads: 1}
+  metis_nice_evol_from_dina.source_metis: {threads: 1}
+  metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
+  metis_nice_evol_from_dina.metis: {threads: 10}
+  metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
+  metis_nice_evol_from_dina.magnetic_controller: {threads: 1}
+  metis_nice_evol_from_dina.sink_transport: {threads: 1}
+  metis_nice_evol_from_dina.sink_equilibrium: {threads: 1}
+  metis_nice_evol_from_dina.sink_control: {threads: 1}
+
+settings:
+  source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
+  source_nice.iterative: false
+  source_nice.t_min: 0.0
+
+  source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  source_metis.iterative: false
+  source_metis.t_min: 0.0
+
+  synchro_nice_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+
+  sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_transport.sink_mode: "w"
+  sink_equilibrium.sink_uri: "imas:hdf5?path=../../../nice_out"
+  sink_equilibrium.sink_mode: "w"
+  sink_control.sink_uri: "imas:hdf5?path=../../../controller_out"
+  sink_control.sink_mode: "w"
+
+  metis.metis_computation: 1
+  # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
+  # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script). Matters
+  # here because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
+  metis.metis_psioffset: 9.0
+  metis.metis_alwaysreadinitport: 0
+
+  nice_evo_rd.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
+  nice_evo_rd.t_interval: 0.002
+  nice_evo_rd.dt: 0.002
+
+  # METIS switches for reading external data from the received IDSs -- predictive defaults,
+  # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
+  # shot.
+  metis.metis_external_data_equilibrium: 0
+  metis.metis_external_data_current_diffusion: 0
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  metis.metis_external_data_LHCD: 0
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI: 0
+  metis.metis_external_data_PLINE: 0
+  metis.metis_external_data_runaway: 0
+
+  muscle_remote_log_level: 'INFO'
