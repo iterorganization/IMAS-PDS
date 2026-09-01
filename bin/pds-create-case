@@ -1,9 +1,12 @@
 #!/bin/bash
 # pds-create-case -- materialize a case folder for one workflow + scenario (shot).
 #
-#   pds-create-case <workflow> <shot> [case-dir]
+#   pds-create-case [-f|--force] <workflow> <shot> [case-dir]
 #   e.g. pds-create-case inverse_convergence 105084
 #        pds-create-case inverse_convergence 105084 /tmp/my-case
+#
+# Rebuilding a case deletes the existing folder, edits included. If it is already there you
+# are asked to confirm; -f skips the question, and so does a non-interactive shell (CI).
 #
 # Writes, under <case-dir> (default cases/<workflow>_<shot>), substituting
 # ${PDS_REPO}/${SCENARIOS_REPO}/${SHOT} in each file:
@@ -51,8 +54,14 @@
 # Prints <case-dir> on success.
 set -euo pipefail
 
+FORCE=0
+if [[ "${1:-}" == "-f" || "${1:-}" == "--force" ]]; then
+  FORCE=1
+  shift
+fi
+
 if [[ $# -lt 2 ]]; then
-  echo "usage: pds-create-case <workflow> <shot> [case-dir]" >&2
+  echo "usage: pds-create-case [-f|--force] <workflow> <shot> [case-dir]" >&2
   exit 1
 fi
 
@@ -69,6 +78,20 @@ export CASE_DIR
 VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR}'
 
 [[ -d "$WF" ]] || { echo "pds-create-case: no workflow dir $WF" >&2; exit 1; }
+
+if [[ -d "$CASE_DIR" && "$FORCE" -eq 0 ]]; then
+  if [[ -t 0 ]]; then
+    echo "pds-create-case: ${CASE_DIR#"$PDS_REPO"/} already exists." >&2
+    echo "Rebuilding replaces it, discarding any changes you made in that folder." >&2
+    read -r -p "Continue? [y/N] " reply
+    [[ "$reply" == [Yy] || "$reply" == [Yy][Ee][Ss] ]] || {
+      echo "pds-create-case: aborted" >&2
+      exit 1
+    }
+  else
+    echo "pds-create-case: ${CASE_DIR#"$PDS_REPO"/} exists, rebuilding it" >&2
+  fi
+fi
 
 rm -rf "$CASE_DIR"
 mkdir -p "$CASE_DIR"
@@ -148,4 +171,5 @@ if [[ -x "$PREPROCESS" ]]; then
   "$PREPROCESS"
 fi
 
+echo "A new case has been created in the following directory:"
 echo "$CASE_DIR"

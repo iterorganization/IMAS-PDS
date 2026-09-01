@@ -196,7 +196,129 @@ usually answers it in a few seconds.
 ``postprocess.sh``, which the job runs once the manager is done. This is commonly used
 to generate output plots, so this is a good place to look for results.
 
-Exercise 3
+Checking the design against the operational limits
+---------------------------------------------------
+
+A converged pulse design is not automatically a *usable* one: the coil currents NICE asks
+for still have to fit inside what the ITER magnets can take. ``inverse_convergence`` checks
+that for you. The last actor in the workflow, ``validator``, is the OLC (Operational Limit
+Checking) actor from IMAS-MUSCLE3. When the outer loop converges, it hands the final
+``pf_active`` to that actor, which runs
+`IMAS-Validator <https://imas-validator.readthedocs.io/en/latest/usage.html>`_ over it.
+
+What gets checked is a **ruleset**: a directory of ordinary Python files, in which each rule
+is a function decorated with ``@validator("<ids name>")`` that asserts something about that
+IDS. The case points the actor at the one PDS ships:
+
+.. code-block:: yaml
+
+    validator.rulesets: iter-olc
+    validator.extra_rule_dirs: <your PDS install>/pds_validation_tests
+    validator.apply_generic: False
+    validator.halt_on_error: True
+
+A ruleset is named after its *directory*, so ``iter-olc`` is
+``pds_validation_tests/iter-olc/``. ``apply_generic: False`` means only those rules run, and
+not IMAS-Validator's generic IDS checks. ``halt_on_error: True`` decides what a violation
+does, which is the subject of Exercise 3c.
+
+Exercise 3a
+-----------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Look at what the ``iter-olc`` ruleset actually enforces, in
+        ``pds_validation_tests/iter-olc/pf_active.py``.
+
+        You can also list the rules without reading the file by using the CLI:
+
+        .. code-block:: bash
+
+            imas_validator explore -e pds_validation_tests -r iter-olc
+
+        Which IDS do these rules apply to? What do these rules enforce?
+
+    .. md-tab-item:: Solution
+
+        .. code-block:: text
+
+            Explore Tool
+            └── pds_validation_tests
+                └── iter-olc
+                    └── pf_active.py
+                        ├── validate_force_limits_cs
+                        ├── validate_force_limits_pf
+                        ├── validate_current_limits_pf
+                        ├── validate_current_limits_cs
+                        └── validate_imbalance_current_limits
+
+        All five apply to the ``pf_active`` IDS, which is what carries the coil currents,
+        the field each coil sees and the vertical forces on it. Between them they cover
+        three kinds of limit:
+
+        - **Current limits** (``validate_current_limits_pf`` / ``_cs``). The
+          coil's current limit depends on the magnetic field, so the rule
+          stores two ``(current, field)`` setpoints per coil at 4.3 K and interpolates
+          between them. The limit is then evaluated per time step against
+          ``coil.b_field_max_timed``, and compared with ``coil.current``.
+        - **Force limits** (``validate_force_limits_pf`` / ``_cs``): a maximum upward and
+          downward vertical force per PF coil, and the gap forces.
+        - **A current imbalance limit** (``validate_imbalance_current_limits``):
+          ``|I_PF2 + I_PF3 - I_PF4 - I_PF5|`` must stay under 22.5 kA.
+
+Exercise 3b
+-----------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Go back to the run you did in Exercise 2 and work out what the validator concluded
+        about it. Where would you look?
+
+        .. hint::
+            The validator is an actor in the MUSCLE3 workflow.
+
+    .. md-tab-item:: Solution
+
+        As a first step, you can have a look at the logs of the validator actor from the
+        MUSCLE3 dashboard. After the run is finished, you should be able to see
+        ``root - INFO - Check passed`` in the stderr logs of the validator actor.
+
+Exercise 3c
+-----------
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        Now let's find out what a violation looks like. First, let's keep the run 
+        exactly as it is and tighten the OLC limits instead.
+
+        #. Lower the PF current limits in ``pds_validation_tests/iter-olc/pf_active.py``
+           by a factor of ten.
+        #. Rerun the case
+
+        Keep an eye on the MUSCLE3 dashboard and the validator actor. 
+        What do you expect to happen to the run when the check fails? 
+
+    .. md-tab-item:: Solution
+
+        You should see that the validator actor raises an error as soon as the 
+        validation fails. Looking at the stderr log, it tells you that IMAS-validator
+        reports have been generated on disk. 
+
+        Take a look at the .txt file it generated, this will say that the following
+        rule has failed: ``iter-olc/pf_active.py:validate_current_limits_pf``, 
+        indicating that the PF coil currents were above the maximum allowed values in
+        the ruleset.
+
+        Before starting the next exercise, remove the changes you made to the iter-olc
+        validation rules so that these do not accidentally trigger in future runs.
+
+Exercise 4
 ----------
 
 So far both cases solved an equilibrium with NICE. ``metis_from_dina`` is a different kind of
@@ -227,7 +349,7 @@ outer loop.
         The output DBEntry is ``metis_out`` rather than ``out_nice``, and the validation plots
         in ``plots/`` compare METIS against DINA.
 
-Exercise 4
+Exercise 5
 ----------
 
 The last of the premade workflows is ``evolutive_controller``. Where ``inverse_convergence``
@@ -268,7 +390,7 @@ it in evolutive mode.
         ``inverse_convergence`` output does, so that run's ``out_nice`` is what this workflow
         starts from.
 
-Exercise 5
+Exercise 6
 ----------
 
 There are more shots available than the ones used above. Each workflow has a page under
@@ -296,7 +418,7 @@ There are more shots available than the ones used above. Each workflow has a pag
         Check the recorder actor plots in muscle3-dashboard and the sink output in the run
         directory, as in the exercises above.
 
-Exercise 6
+Exercise 7
 ----------
 
 This exercise is mostly relevant for developers.
