@@ -1,0 +1,146 @@
+ymmsl_version: v0.2
+
+# metis_nice_evol_from_dina -- METIS transport running in lockstep with NICE's evolutive
+# free-boundary + resistive-diffusion solve, with a PCSSP magnetic controller closing the
+# coil-current feedback loop.
+#
+# Ported from itergit/feature/metis_nice_evol's
+# workflows/metis_predictive_nice_evol_from_dina/workflow.ymmsl.template ("first version of
+# the workflow with METIS + NICE evol + Controller" and its follow-up port/conduit fixes).
+# That branch also has a workflow_alternative.ymmsl.template (two METIS instances -- a
+# one-shot "metis_init" bootstrap plus the in-loop "metis") which was not ported: the
+# single-metis arrangement below is the branch's own latest committed direction.
+#
+# Structurally this is metis_nice_inverse_from_dina's METIS half spliced onto
+# evolutive_controller's NICE-evo/magnetic_controller loop (see those two workflows'
+# workflow.ymmsl for the individually-validated pieces): magnetic_controller and nice_evo_rd
+# keep evolutive_controller's port names (the real controller/NICE binaries, not the
+# branch's older names for the same ports); source_metis/source_nice/sink_transport/
+# sink_equilibrium keep metis_nice_inverse_from_dina's names.
+#
+# synchro_nice_metis uses f_init/o_f rather than the branch's own latest (s/o_i) commit --
+# see README.md for why: imas_muscle3.actors.sink_source_component only implements
+# F_INIT/O_F, and f_init/o_f is also the correct MMSF macro-micro pairing here (nice_evo_rd's
+# O_I drives synchro_nice_metis's F_INIT once per internal step; its O_F then feeds metis's S
+# ports, which just need one message per METIS step -- MUSCLE3 does not require the operator
+# label to match across a conduit, only the message cadence, and that's already pinned by
+# nice_evo_rd.dt == metis's own internal dt).
+
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation sink_source_component
+- from lib.easybuild_programs import implementation metis
+- from lib.easybuild_programs import implementation nice_evo_rd
+- from lib.easybuild_programs import implementation magnetic_controller
+
+models:
+  metis_nice_evol_from_dina:
+    description: METIS transport in lockstep with NICE evolutive + magnetic controller.
+    components:
+      source_nice:
+        description: NICE machine description (DINA-derived), read once
+        implementation: source_component
+        ports: {o_i: [pf_active_out, pf_passive_out, wall_out, iron_core_out, equilibrium_out]}
+
+      source_metis:
+        description: source -- pulse schedule, profiles and sources for METIS's bootstrap
+        implementation: source_component
+        ports: {o_i: [pulse_schedule_out, core_profiles_out, core_sources_out]}
+
+      synchro_nice_metis:
+        description: re-slices METIS's input trace at NICE's current equilibrium timestamp
+        implementation: sink_source_component
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]
+
+      metis:
+        description: METIS transport (coupling mode 2), stepping in lockstep with nice_evo_rd
+        implementation: metis
+        ports:
+          f_init: [pulse_schedule_f_init, core_profiles_f_init, core_sources_f_init]
+          s: [equilibrium_in_s, pulse_schedule_in_s, core_profiles_in_s, core_sources_in_s]
+          o_i: [equilibrium_out_i, pulse_schedule_out_i, core_profiles_out_i, plasma_profiles_out_i, plasma_sources_out_i, summary_out_i]
+
+      nice_evo_rd:
+        description: nice evolutive free-boundary + resistive-diffusion solve
+        implementation: nice_evo_rd
+        ports:
+          f_init: [equilibrium_f_init, wall_f_init, pf_active_f_init, pf_passive_f_init, iron_core_f_init, core_profiles_f_init]
+          s: [equilibrium_s, pf_active_s, core_profiles_s]
+          o_i: [equilibrium_o_i, pf_active_o_i]
+
+      magnetic_controller:
+        description: PCSSP magnetic (SCDDS) controller
+        implementation: magnetic_controller
+        ports:
+          f_init: [equilibrium_in_f, pf_active_in_f]
+          s: [equilibrium_in_s, pf_active_in_s]
+          o_i: [pf_active_out_i]
+
+      sink_transport:
+        description: sink -- METIS outputs
+        implementation: sink_component
+        ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
+
+      sink_equilibrium:
+        description: sink -- NICE evolutive outputs
+        implementation: sink_component
+        ports: {f_init: [equilibrium_in, pf_active_in]}
+
+      sink_control:
+        description: sink -- controller outputs
+        implementation: sink_component
+        ports: {f_init: [pf_active_in]}
+
+    conduits:
+      # METIS bootstrap from source
+      source_metis.pulse_schedule_out: metis.pulse_schedule_f_init
+      source_metis.core_profiles_out: metis.core_profiles_f_init
+      source_metis.core_sources_out: metis.core_sources_f_init
+
+      # METIS in-loop inputs from the NICE-equilibrium-driven resync
+      synchro_nice_metis.pulse_schedule_out: metis.pulse_schedule_in_s
+      synchro_nice_metis.core_profiles_out: metis.core_profiles_in_s
+      synchro_nice_metis.core_sources_out: metis.core_sources_in_s
+
+      # METIS outputs to sink
+      metis.pulse_schedule_out_i: sink_transport.pulse_schedule_in
+      metis.plasma_profiles_out_i: sink_transport.plasma_profiles_in
+      metis.plasma_sources_out_i: sink_transport.plasma_sources_in
+      metis.summary_out_i: sink_transport.summary_in
+
+      # NICE bootstrap from machine description
+      source_nice.pf_active_out: nice_evo_rd.pf_active_f_init
+      source_nice.pf_passive_out: nice_evo_rd.pf_passive_f_init
+      source_nice.iron_core_out: nice_evo_rd.iron_core_f_init
+      source_nice.wall_out: nice_evo_rd.wall_f_init
+
+      # NICE bootstrap from METIS
+      metis.equilibrium_out_i: nice_evo_rd.equilibrium_f_init
+      metis.core_profiles_out_i: nice_evo_rd.core_profiles_f_init
+      # NICE in-loop input from METIS
+      metis.equilibrium_out_i: nice_evo_rd.equilibrium_s
+      metis.core_profiles_out_i: nice_evo_rd.core_profiles_s
+      # NICE in-loop input from the controller
+      magnetic_controller.pf_active_out_i: nice_evo_rd.pf_active_s
+
+      # NICE outputs to METIS (closes the loop) and to the resync actor
+      nice_evo_rd.equilibrium_o_i: metis.equilibrium_in_s
+      nice_evo_rd.equilibrium_o_i: synchro_nice_metis.equilibrium_in
+
+      # NICE outputs to the controller
+      nice_evo_rd.equilibrium_o_i: magnetic_controller.equilibrium_in_s
+      nice_evo_rd.pf_active_o_i: magnetic_controller.pf_active_in_s
+
+      # NICE outputs to sink
+      nice_evo_rd.equilibrium_o_i: sink_equilibrium.equilibrium_in
+      nice_evo_rd.pf_active_o_i: sink_equilibrium.pf_active_in
+
+      # Controller bootstrap from machine description
+      source_nice.equilibrium_out: magnetic_controller.equilibrium_in_f
+      source_nice.pf_active_out: magnetic_controller.pf_active_in_f
+
+      # Controller output to sink
+      magnetic_controller.pf_active_out_i: sink_control.pf_active_in
