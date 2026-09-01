@@ -4,7 +4,7 @@
 Evolutive co-simulation under magnetic control
 ==============================================
 
-TORAX and NICE stepping forward together in lockstep, with a PCSSP magnetic controller
+TORAX and NICE running in lockstep, with a PCSSP magnetic controller
 closing the coil-current feedback loop. Available for DINA shot 105073.
 
 .. warning::
@@ -13,8 +13,8 @@ closing the coil-current feedback loop. Available for DINA shot 105073.
    -- timestep stability, controller response, dt matching -- has been observed. The
    case below is wired correctly and resolves.
 
-The other cases are inverse designs, asking what coil currents produce a wanted
-boundary. This one is forward. On each internal step TORAX evolves current and
+The other workflows are inverse designs, asking what coil currents produce a wanted
+boundary. This workflow is forward. On each internal step TORAX evolves current and
 temperature and hands ``equilibrium`` + ``core_profiles`` to ``nice_evo_rd`` -- NICE's
 resistive-diffusion evolutive free-boundary solver -- which returns the updated
 equilibrium for TORAX's next geometry. No outer loop and no convergence criterion: the
@@ -78,10 +78,9 @@ that run's directory: ``source.source_uri`` points at
 ``$PDS_REPO/cases/runs/inverse_convergence_${SHOT}/out_nice``. Run that case first, and do
 not clear its run directory before running this one.
 
-The waveform editor passes that equilibrium through whole -- an
-``equilibrium/*: {ref: eq}`` wildcard, so every field survives rather than a hand-picked
-few -- and overlays the static machine description, ``core_profiles`` and the ECRH trace
-from the scenario's own data.
+The waveform editor passes that equilibrium through an``equilibrium/*: {ref: eq}`` wildcard, 
+so every field survives rather than a hand-pickedfew, and overlays the static machine 
+description, ``core_profiles`` and the ECRH trace from the scenario's own data.
 
 Two fields in that overlay are load-bearing, both because NICE indexes them without a
 size check and segfaults on an empty one:
