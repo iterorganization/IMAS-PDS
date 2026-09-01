@@ -35,37 +35,6 @@ The URI of the prepared training data is as follows (note: you will need to upda
 
 For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <https://imas-muscle3.readthedocs.io/en/latest/usage.html>`_.
 
-.. note::
-    MUSCLE3 uses the locally set environment variables by default.
-    ``base_env: clean`` discards them and gives the actor a purged environment instead, into
-    which MUSCLE3 loads exactly the modules listed under ``modules:`` -- so that list is the
-    actor's complete environment. Name the module with its full version, as below; a bare name
-    could resolve to a different build of the same code.
-    An example for the source actor from the IMAS-MUSCLE3 code is shown below.
-
-    .. code-block:: yaml
-
-        programs:
-        source:
-            base_env: clean
-            modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-            executable: python
-            args: "-u -m imas_muscle3.actors.source_component"
-
-    An actor implementation can point at either an EasyBuild module, as above, or at a local
-    installation -- the virtual environment ``pds_setup.sh`` builds under
-    ``$PDS_REPO/local_installs/``. The local form is not simply ``virtual_env:`` in place of
-    ``base_env``/``modules``: it needs ``$PDS_REPO``, which ``base_env: clean`` would purge
-    away, so ``workflows/lib/local_programs.ymmsl`` uses a ``script:`` block that activates
-    the venv itself. If you need a local build, copy one of those definitions rather than
-    writing it from scratch -- the header comment in that file explains what goes wrong
-    otherwise.
-
-    The premade workflows already set this correctly per actor (see
-    ``workflows/lib/easybuild_programs.ymmsl`` and ``workflows/lib/local_programs.ymmsl``);
-    you'll only need to write it out by hand like this when defining a new implementation
-    for your own workflow.
-
 .. tip::
    The solution yMMSL files for all exercises, containing the correct relative paths
    have been made available in the
