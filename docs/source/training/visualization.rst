@@ -17,10 +17,8 @@ else decided to plot.
 How a recorder plot gets made
 -----------------------------
 
-A **recorder** is an extra listener on data that is already moving between two actors. It
-does not sit in the way of anything: the component that was receiving the data still
-receives exactly the same thing, and the recorder quietly writes a copy for the dashboard to
-draw.
+A **recorder** is an extra listener.
+The recorder quietly writes a copy for the dashboard to draw.
 
 What the recorder does with that copy is decided by a single **config file**, named in the
 settings like any other configuration you met in :ref:`training/configuring`:
@@ -66,7 +64,58 @@ and in the terminal where you keep the dashboard:
 Click the run, and the ``recorder_equilibrium`` tab appears as soon as the recorder has
 written something.
 
-Exercise 1: plot a field without writing any extraction code
+Exercise 1: run an existing plot and read it
+---------------------------------------------
+
+Before writing anything of your own, get an existing visualization on screen and take it
+apart. ``visualization/simple.py`` plots the plasma current over time and is short enough to
+read in one sitting.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Exercise
+
+        In ``cases/prescribed_transport_105084/workflow_settings.ymmsl``, point
+        ``equilibrium.recorder_equilibrium.config`` at ``visualization/simple.py`` instead of
+        whatever it currently names. Re-run the case and open the ``recorder_equilibrium``
+        tab.
+
+        Once you have seen the plot come in, open ``visualization/simple.py`` itself and go
+        through the ``State`` and ``Plotter`` classes until you could explain, to someone who
+        has not seen it, what each part is doing and why.
+
+    .. md-tab-item:: Hint
+
+        Questions worth having answers to before you move on:
+
+        - Why does ``extract`` check ``ids.metadata.name`` before doing anything? What else
+          is this recorder receiving? (Look at the ``.md`` setting next to ``.config`` in the
+          same file.)
+        - ``self.data`` is a plain dict keyed by IDS name. Why does ``_extract_equilibrium``
+          concatenate onto the existing dataset instead of just overwriting it each time?
+        - What does ``self.time`` refer to in ``plot_ip_vs_time``, and where does its value
+          come from? Why is the method decorated with ``@param.depends("time")``?
+
+    .. md-tab-item:: Solution
+
+        ``State.extract`` runs once for every message the recorder sees, and this recorder is
+        wired to both ``equilibrium`` and ``pf_active`` (the two sources named in the ``.md``
+        setting), so the ``if ids.metadata.name == "equilibrium"`` check is what keeps the
+        ``pf_active`` messages from being treated as equilibria.
+
+        Each call to ``_extract_equilibrium`` only carries the time slices in *that* message,
+        not the whole run so far, so the new points have to be concatenated onto
+        ``self.data["equilibrium"]``. ``drop_duplicates("time", keep="last")`` handles the
+        case where a later message re-sends a time point already seen, keeping the newest
+        value.
+
+        ``self.time`` is a parameter defined on ``BasePlotter`` itself (not something
+        ``simple.py`` declares), driven by the dashboard's time slider; while "Live View" is
+        on it tracks the latest time point automatically. ``@param.depends("time")`` tells
+        HoloViews to re-run ``plot_ip_vs_time`` whenever that parameter changes, which is what
+        makes the curve grow as the run progresses instead of only being drawn once.
+
+Exercise 2: plot a field without writing any extraction code
 ------------------------------------------------------------
 
 The recorder can work out for itself which quantities an IDS carries,
@@ -101,7 +150,7 @@ name the field you want and say how to draw it.
 
         ``automatic_extract_fields`` is a filter. Leave it out and everything the recorder
         found gets written; your plot would still show only the field it names, but the run
-        would write a lot more than you need.
+        would write a lot more than you need, which might lead to decreased performance.
 
     .. md-tab-item:: Solution
 
@@ -160,15 +209,14 @@ name the field you want and say how to draw it.
         HoloViews, and you did not write a line of code that knows anything about the
         equilibrium IDS.
 
-Exercise 2: the same plot, extracted explicitly
+Exercise 3: the same plot, extracted explicitly
 ------------------------------------------------
 
-Automatic extraction is convenient, but it is generic: it can only give you plain curves of
-whatever numbers it happened to find. A purpose-built config knows what the data *means*,
-because it says so itself, in a ``State.extract`` method you write by hand instead of
+Automatic extraction is convenient for 1 or 2 fields but can be tiresome when you need more.
+You can have more contral by writing a ``State.extract`` method by hand instead of
 turning ``automatic_extract`` on.
 
-This exercise plots the same field as Exercise 1, the same way, so the only thing that
+This exercise plots the same field as Exercise 2, the same way, so the only thing that
 changes is where the data comes from.
 
 .. md-tab-set::
@@ -178,7 +226,7 @@ changes is where the data comes from.
         Plot the plasma's stored MHD energy over time again, but this time give ``State`` an
         explicit ``extract`` method that reads ``energy_mhd`` off the incoming equilibrium
         IDS itself, instead of turning on ``automatic_extract``. Keep the same ``Plotter``
-        from Exercise 1.
+        from Exercise 2.
 
     .. md-tab-item:: Hint
 
@@ -250,6 +298,6 @@ changes is where the data comes from.
             settings:
               equilibrium.recorder_equilibrium.config: /path/to/pds/visualization/explicit_extract.py
 
-        The tab looks exactly like the one from Exercise 1. What changed is not the plot but
-        who decided what to record: in Exercise 1 the recorder discovered it for you, here
+        The tab looks exactly like the one from Exercise 2. What changed is not the plot but
+        who decided what to record: in Exercise 2 the recorder discovered it for you, here
         ``State.extract`` says so directly.
