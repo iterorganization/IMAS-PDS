@@ -172,7 +172,7 @@ actor reads from.
 
         .. code-block:: bash
 
-            m3dash open run/
+            m3dash open path/to/cases/directory
 
     .. md-tab-item:: Solution
 
