@@ -15,10 +15,9 @@ covered in the later sections.
     available as modules. Moreover, you will need access to a graphical environment to visualize
     the simulation results. It is recommended to follow this training through the NoMachine client.
 
-The final two sections, :ref:`training/advanced` and :ref:`training/build_own_actor`, are aimed at
-developers: they show how to build your own workflow out of existing support and simulation
-actors, and how to write a new actor of your own. The rest of the training is relevant to
-any PDS user.
+After this, the separate :ref:`training/advanced` track is aimed at developers: it shows how
+to build your own workflow out of existing support and simulation actors, and how to write a
+new actor of your own. The rest of this training is relevant to any PDS user.
 
 We assume you have some basic knowledge of `IMAS <https://imas-data-dictionary.readthedocs.io/en/latest/>`_.
 You will also need some basic familiarity with Python.
@@ -48,15 +47,14 @@ The sections are meant to be followed in order:
     behind
 
 :ref:`Configuring existing workflows <training/configuring>`
-    Change the pulse design, the solver settings and the time window of an existing case
-    without editing anything shared
+    Change the pulse design, the solver settings and the time window of a case
 
 :ref:`Visualizing workflows <training/visualization>`
     Learn how to visualize the data flowing between actors during a run
 
-:ref:`Advanced: building your own workflows <training/advanced>`
-    Advanced training for developers: learn how to assemble a workflow out of existing 
-    actors step by step, and create a new actor of your own.
+See :ref:`training/advanced` for a separate, follow-on training aimed at developers: it shows
+how to assemble a workflow out of existing actors step by step, create a new actor of your
+own, and bring a new scenario into the PDS.
 
 .. toctree::
     :hidden:
@@ -68,4 +66,3 @@ The sections are meant to be followed in order:
     run_complex
     configuring
     visualization
-    advanced

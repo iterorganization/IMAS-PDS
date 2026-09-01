@@ -62,6 +62,7 @@ available.
    :hidden:
 
    training/intro
+   training/advanced/intro
 
 ----
 
