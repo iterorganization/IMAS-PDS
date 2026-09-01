@@ -10,7 +10,8 @@ from imas_muscle3.visualization.base_state import BaseState
 
 
 class State(BaseState):
-    def extract(self, ids):
+    def extract(self, message):
+        ids = message
         if ids.metadata.name == "equilibrium":
             self._extract_equilibrium(ids)
 
