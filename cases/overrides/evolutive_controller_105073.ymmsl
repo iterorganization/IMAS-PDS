@@ -11,7 +11,7 @@ settings:
   source.dt: 1
   torax.python_config_module: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_config_torax.py
   torax.fixed_dt: 0.01
-  torax.t_final: 84.9
+  torax.t_final: 84.7
   nice_evo_rd.dt: 0.01
   nice_evo_rd.t_interval: 0.01
-  nice_evo_rd.t_end: 84.9
+  nice_evo_rd.t_end: 84.7

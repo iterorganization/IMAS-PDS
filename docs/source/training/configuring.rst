@@ -212,7 +212,7 @@ t=9 and t=147 (see :ref:`training/run_complex`).
 
     .. md-tab-item:: Exercise
 
-        Restrict the run to the flattop phase only, from ``t=20`` to ``t=140``, skipping the
+        In the prescribed_transport workflow, restrict the run to the flattop phase only, from ``t=20.0`` to ``t=140.0``, skipping the
         ramp-up and ramp-down.
 
         The ``source`` component streams the scenario data in slice by slice, so
@@ -225,8 +225,8 @@ t=9 and t=147 (see :ref:`training/run_complex`).
         .. code-block:: yaml
 
             settings:
-              source.t_min: 20
-              source.t_max: 140
+              source.t_min: 20.0
+              source.t_max: 140.0
 
         Rerun and check that the resulting plots now start and end at flattop conditions
         instead of the ramp phases. In ``inverse_convergence`` the window is set on the outer
