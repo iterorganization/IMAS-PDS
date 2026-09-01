@@ -1,48 +1,59 @@
-ymmsl_version: v0.1
-model:
-  name: source_waveform_nice_rec_sink
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
-    waveform_editor:
-      implementation: waveform_editor
-      ports:
-        f_init: [equilibrium_in]
-        o_f: [equilibrium_out]
-    nice:
-      implementation: nice_inv
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-        o_f: [equilibrium_out, pf_active_out]
-    rec:
-      implementation: recorder
-      ports:
-        s: [equilibrium_in, pf_active_in]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
-  conduits:
-    source.equilibrium_out: waveform_editor.equilibrium_in
-    source.pf_active_out: nice.pf_active_in
-    source.pf_passive_out:
-    - nice.pf_passive_in
-    - sink.pf_passive_in
-    source.wall_out:
-    - nice.wall_in
-    - sink.wall_in
-    source.iron_core_out:
-    - nice.iron_core_in
-    - sink.iron_core_in
-    waveform_editor.equilibrium_out: nice.equilibrium_in
-    nice.equilibrium_out:
-    - sink.equilibrium_in
-    - rec.equilibrium_in
-    nice.pf_active_out:
-    - sink.pf_active_in
-    - rec.pf_active_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from imas_muscle3 import implementation recorder_component
+- from lib.easybuild_programs import implementation waveform_editor
+- from lib.easybuild_programs import implementation nice_inv
+models:
+  source_waveform_nice_rec_sink:
+    components:
+      source:
+        description: source -- reads the equilibrium IDS from the training data
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+      waveform_editor:
+        description: waveform editor -- designed Ip/B0 target
+        implementation: waveform_editor
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [equilibrium_out]
+      nice:
+        description: NICE inverse solve -- computes the coil currents for the target shape
+        implementation: nice_inv
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      rec:
+        description: distill recorder -- writes a live-plottable copy of the NICE output
+        implementation: recorder_component
+        ports:
+          s: [equilibrium_in, pf_active_in]
+      sink:
+        description: sink -- writes the solved equilibrium and coil currents
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+    conduits:
+      source.equilibrium_out: waveform_editor.equilibrium_in
+      source.pf_active_out: nice.pf_active_in
+      source.pf_passive_out:
+      - nice.pf_passive_in
+      - sink.pf_passive_in
+      source.wall_out:
+      - nice.wall_in
+      - sink.wall_in
+      source.iron_core_out:
+      - nice.iron_core_in
+      - sink.iron_core_in
+      waveform_editor.equilibrium_out: nice.equilibrium_in
+      nice.equilibrium_out:
+      - sink.equilibrium_in
+      - rec.equilibrium_in
+      nice.pf_active_out:
+      - sink.pf_active_in
+      - rec.pf_active_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/source_waveform_nice_rec_sink"
@@ -52,34 +63,6 @@ settings:
   rec.config: [PWD_PLACEHOLDER]/visualization/nice_inv.py
   rec.md: "wall=imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/ pf_active=imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   waveform_editor.waveforms: [PWD_PLACEHOLDER]/ymmsl_files/training/waveform_config.yaml
-implementations:
-  source:
-    base_env: clean
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  waveform_editor:
-    base_env: clean
-    modules: Waveform-Editor/0.3.1-intel-2025b
-    executable: waveform-editor
-    args: actor
-  sink:
-    base_env: clean
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
-  nice_inv:
-    base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
-    env:
-      IMAS_AL_DISABLE_VALIDATE: 1
-      IMAS_VERSION: "4.0.0"
-    executable: $EBROOTNICE/run/nice_imas_inv_muscle3
-  recorder:
-    base_env: clean
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: -u -m imas_muscle3.actors.recorder_component
 resources:
   source:
     threads: 1

@@ -1,32 +1,26 @@
-ymmsl_version: v0.1
-model:
-  name: source_sink
-  components:
-    source:
-      implementation: source
-      ports:
-        o_i: [equilibrium_out]
-    sink:
-      implementation: sink
-      ports:
-        f_init: [equilibrium_in]
-  conduits:
-    source.equilibrium_out: sink.equilibrium_in
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+models:
+  source_sink:
+    components:
+      source:
+        description: source -- reads the equilibrium IDS from the training data
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out]
+      sink:
+        description: sink -- writes the received equilibrium IDS to disk
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in]
+    conduits:
+      source.equilibrium_out: sink.equilibrium_in
 settings:
   source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/source_sink"
   sink.sink_mode: "x"
-implementations:
-  source:
-    base_env: clean
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: "-u -m imas_muscle3.actors.source_component"
-  sink:
-    base_env: clean
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-    executable: python
-    args: "-u -m imas_muscle3.actors.sink_component"
 resources:
   source:
     threads: 1

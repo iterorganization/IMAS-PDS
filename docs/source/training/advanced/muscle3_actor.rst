@@ -50,7 +50,7 @@ The workflow is the same ``source`` / ``sink`` pair from
 
         - Add ``core_profiles_out`` to ``source``'s ``o_i`` port list.
         - Add a component for your actor, with ``equilibrium_in`` and ``core_profiles_in`` on
-          ``f_init`` and ``core_sources_out`` on ``o_f``, and an ``implementations`` entry
+          ``f_init`` and ``core_sources_out`` on ``o_f``, and a ``programs`` entry
           pointing ``executable: python`` / ``args`` at your script.
         - Wire ``source.equilibrium_out`` and ``source.core_profiles_out`` to your actor's two
           input ports, and your actor's ``core_sources_out`` to a renamed
@@ -132,32 +132,35 @@ The workflow is the same ``source`` / ``sink`` pair from
 
         .. code-block:: yaml
 
-            ymmsl_version: v0.1
-            model:
-              name: my_actor
-              components:
-                source:
-                  implementation: source
-                  ports:
-                    o_i: [equilibrium_out, core_profiles_out]
-                my_actor:
-                  implementation: my_actor
-                  ports:
-                    f_init: [equilibrium_in, core_profiles_in]
-                    o_f: [core_sources_out]
-                sink:
-                  implementation: sink
-                  ports:
-                    f_init: [core_sources_in]
-              conduits:
-                source.equilibrium_out: my_actor.equilibrium_in
-                source.core_profiles_out: my_actor.core_profiles_in
-                my_actor.core_sources_out: sink.core_sources_in
+            ymmsl_version: v0.2
+            models:
+              source_my_actor_sink:
+                components:
+                  source:
+                    description: source -- reads the equilibrium and core_profiles IDSs
+                    implementation: source
+                    ports:
+                      o_i: [equilibrium_out, core_profiles_out]
+                  my_actor:
+                    description: my_actor -- computes a core_sources heating profile
+                    implementation: my_actor
+                    ports:
+                      f_init: [equilibrium_in, core_profiles_in]
+                      o_f: [core_sources_out]
+                  sink:
+                    description: sink -- writes the received core_sources IDS to disk
+                    implementation: sink
+                    ports:
+                      f_init: [core_sources_in]
+                conduits:
+                  source.equilibrium_out: my_actor.equilibrium_in
+                  source.core_profiles_out: my_actor.core_profiles_in
+                  my_actor.core_sources_out: sink.core_sources_in
             settings:
               source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
               sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/my_actor"
               sink.sink_mode: "x"
-            implementations:
+            programs:
               source:
                 base_env: clean
                 modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds

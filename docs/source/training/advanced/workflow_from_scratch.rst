@@ -45,7 +45,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
 
     .. code-block:: yaml
 
-        implementations:
+        programs:
         source:
             base_env: clean
             modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
