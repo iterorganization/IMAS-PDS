@@ -100,7 +100,7 @@ For more information on the sink and source actors read the `IMAS-MUSCLE3 docs <
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_sink.ymmsl.template
            :language: yaml
 
         To check the whether the input and output are the same:
@@ -136,7 +136,7 @@ A NICE config file has been defined at ``<pds root>/training_data/nice_param.xml
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_nice_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_nice_sink.ymmsl.template
            :language: yaml
 
 Exercise 3
@@ -181,7 +181,7 @@ actor reads from.
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_nice_rec_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_nice_rec_sink.ymmsl.template
            :language: yaml
 
 
@@ -226,7 +226,7 @@ Exercise 4b
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_waveform_nice_rec_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_waveform_nice_rec_sink.ymmsl.template
            :language: yaml
 
 Exercise 5a
@@ -257,7 +257,7 @@ the previous exercise, by using the Waveform Editor actor.
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_waveform_val_nice_rec_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_waveform_val_nice_rec_sink.ymmsl.template
            :language: yaml
 
 
@@ -327,5 +327,5 @@ For more information on the accumulator actor read the `IMAS-MUSCLE3 docs <https
         To execute the workflow, use the corresponding ready-to-run file from the
         ``pds/ymmsl_files/training`` directory.
 
-        .. literalinclude:: ../../../../ymmsl_files/training/.source_waveform_val_nice_torax_rec_sink.ymmsl
+        .. literalinclude:: ../../../../ymmsl_files/training/source_waveform_val_nice_torax_rec_sink.ymmsl.template
            :language: yaml
