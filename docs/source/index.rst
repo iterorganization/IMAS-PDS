@@ -28,7 +28,7 @@ Getting started
   bin/pds-create-case inverse_convergence 105073
   sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 
-:ref:`installing` describes what the module sets up, :ref:`running_cases` what a
+:ref:`installing` describes what the module sets up, :ref:`running_cases`, what a
 case contains and where its output goes, and :ref:`workflows` which couplings are
 available.
 
