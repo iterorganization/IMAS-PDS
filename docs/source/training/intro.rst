@@ -49,12 +49,10 @@ The sections are meant to be followed in order:
 :ref:`Configuring existing workflows <training/configuring>`
     Change the pulse design, the solver settings and the time window of a case
 
-:ref:`Visualizing workflows <training/visualization>`
-    Learn how to visualize the data flowing between actors during a run
-
 See :ref:`training/advanced` for a separate, follow-on training aimed at developers: it shows
-how to assemble a workflow out of existing actors step by step, create a new actor of your
-own, and bring a new scenario into the PDS.
+how to assemble a workflow out of existing actors step by step, profile a run, create a new
+actor of your own, bring a new scenario into the PDS, and visualize the data flowing between
+actors while a workflow runs.
 
 .. toctree::
     :hidden:
@@ -65,4 +63,3 @@ own, and bring a new scenario into the PDS.
     run_first
     run_complex
     configuring
-    visualization

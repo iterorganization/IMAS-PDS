@@ -5,8 +5,9 @@ Advanced PDS training
 
 This is the advanced counterpart to the :ref:`PDS training <training/intro>`, aimed at
 developers rather than end users of PDS workflows: it shows how to build your own workflow
-out of existing support and simulation actors, how to write a new actor of your own, and how
-to point an existing workflow at data of your own.
+out of existing support and simulation actors, how to write a new actor of your own, how to
+point an existing workflow at data of your own, and how to get more out of a run itself. Namely,
+profiling a PDS run, and creating custom visualizations.
 
 .. important::
     This training assumes you have access to ITER's SDCC, as all dependencies will be
@@ -28,6 +29,9 @@ Training contents
 :ref:`Adding a new scenario <training/new_scenario>`
     Point an existing workflow's case at data of your own, without onboarding a new shot.
 
+:ref:`Visualizing workflows <training/visualization>`
+    Learn how to visualize the data flowing between actors during a run
+
 .. toctree::
     :hidden:
     :maxdepth: 1
@@ -36,3 +40,4 @@ Training contents
     profiling
     muscle3_actor
     new_scenario
+    visualization
