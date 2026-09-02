@@ -107,12 +107,15 @@ Exercise 2: find out what a case will do
     .. md-tab-item:: Solution
 
         Start from :ref:`case-inverse-convergence`, which describes
-        the coupling and what the case produces, then read the case folder itself.
+        the coupling and what the case produces, then read the case folder itself,
+        written into ``cases/runs/inverse_convergence_105092/``.
 
-        ``workflow.ymmsl`` names the components and how they are wired, the
-        ``source.source_uri`` and ``waveform_editor.waveforms`` settings name the scenario
-        data, and the ``sink_equilibrium.sink_uri`` and ``sink_transport.sink_uri`` settings name the
-        output entries, written into ``cases/runs/inverse_convergence_105092/``.
+        ``workflow.ymmsl`` names the components and how they are wired. Additionally,
+        ``workflow_settings.ymmsl`` contains the specific settings for each of the 
+        components, for example the
+        ``source.source_uri`` and ``waveform_editor.waveforms`` settings tell you where the 
+        the scenario data comes from, and the ``sink_equilibrium.sink_uri`` and 
+        ``sink_transport.sink_uri`` settings tell you where the output is stored.
 
 
 Looking at the input before you run
