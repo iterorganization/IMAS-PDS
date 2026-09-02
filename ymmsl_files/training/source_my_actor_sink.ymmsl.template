@@ -1,0 +1,46 @@
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+models:
+  source_my_actor_sink:
+    components:
+      source:
+        description: source -- reads the equilibrium and core_profiles IDSs from the training data
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out, core_profiles_out]
+      my_actor:
+        description: my_actor -- computes a core_sources heating profile (exercise actor)
+        implementation: my_actor
+        ports:
+          f_init: [equilibrium_in, core_profiles_in]
+          o_f: [core_sources_out]
+      sink:
+        description: sink -- writes the received core_sources IDS to disk
+        implementation: sink_component
+        ports:
+          f_init: [core_sources_in]
+    conduits:
+      source.equilibrium_out: my_actor.equilibrium_in
+      source.core_profiles_out: my_actor.core_profiles_in
+      my_actor.core_sources_out: sink.core_sources_in
+settings:
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/my_actor"
+  sink.sink_mode: "x"
+  my_actor.density_rate: 0.02
+resources:
+  source:
+    threads: 1
+  my_actor:
+    threads: 1
+  sink:
+    threads: 1
+programs:
+  my_actor:
+    executable: python
+    # $PDS_REPO (set by `module load PDS`) is always absolute, unlike $CASE_DIR when
+    # bin/pds-run-case is given a relative path -- each actor runs from its own per-instance
+    # workdir, so a relative script path resolves against the wrong directory there.
+    args: "-u $PDS_REPO/cases/my_actor/my_actor.py"
