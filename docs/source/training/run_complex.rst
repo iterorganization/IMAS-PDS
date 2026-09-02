@@ -47,7 +47,6 @@ as often as you like, which is the second step:
 
 ``pds-run-case`` hands the case to SLURM with ``sbatch`` and returns straight away with a job
 number.
-job script directly instead, so the same command works either way.)
 
 Some useful commands while the job is in the queue:
 
