@@ -19,6 +19,9 @@ Training contents
     Assemble a MUSCLE3 workflow out of existing actors step by step, from a simple
     source/sink pipeline up to a full NICE/TORAX coupling.
 
+:ref:`Profiling a workflow <training/profiling>`
+    Read the timing data a run leaves behind, and see where its wall clock went.
+
 :ref:`Setting up a MUSCLE3 actor for the PDS <training/build_own_actor>`
     Write a new actor of your own, and learn how it is configured and pointed at a build.
 
@@ -30,5 +33,6 @@ Training contents
     :maxdepth: 1
 
     workflow_from_scratch
+    profiling
     muscle3_actor
     new_scenario
