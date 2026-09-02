@@ -23,7 +23,8 @@ Loading the module
 
 .. code-block:: bash
 
-  cd /path/to/pds
+  git clone https://github.com/iterorganization/IMAS-PDS.git
+  cd IMAS-PDS
 
   module use /work/projects/pds/modules/all
   module load PDS
