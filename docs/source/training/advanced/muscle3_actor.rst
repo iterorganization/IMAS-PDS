@@ -38,34 +38,66 @@ an actor, not what it computes.
 The workflow is the same ``source`` / ``sink`` pair from
 :ref:`training/workflow_from_scratch`, with your actor wired in between: ``source`` ->
 ``my_actor`` -> ``sink``. The training dataset already has everything you need --
-``training_data/training_ids`` contains ``equilibrium.h5`` and ``core_profiles.h5`` -- so
-``source`` only needs a second output port wired up alongside ``equilibrium_out``, and
-``sink`` needs to consume ``core_sources_in`` instead of ``equilibrium_in``.
+``training_data/training_ids`` contains ``equilibrium.h5`` and ``core_profiles.h5``.
+
+Unlike the previous section, you will not be hand-editing yMMSL wiring here. A ready-to-run
+``workflow.ymmsl`` for this exercise is provided at
+``ymmsl_files/training/source_my_actor_sink.ymmsl`` -- ``source`` already has a second output
+port alongside ``equilibrium_out``, and ``sink`` already consumes ``core_sources_in``. Set up
+a case directory for it and the only thing left to build is the actor.
 
 .. md-tab-set::
 
     .. md-tab-item:: Exercise
 
-        Copy ``ymmsl_files/training/source_sink.ymmsl`` to your working directory and edit it:
+        Set up the case directory:
 
-        - Add ``core_profiles_out`` to ``source``'s ``o_i`` port list.
-        - Add a component for your actor, with ``equilibrium_in`` and ``core_profiles_in`` on
-          ``f_init`` and ``core_sources_out`` on ``o_f``, and a ``programs`` entry
-          pointing ``executable: python`` / ``args`` at your script.
-        - Wire ``source.equilibrium_out`` and ``source.core_profiles_out`` to your actor's two
-          input ports, and your actor's ``core_sources_out`` to a renamed
-          ``sink.core_sources_in`` (``sink`` keeps its ``f_init`` port, just pointed at the new
-          IDS name).
+        .. code-block:: bash
 
-        Then write the actor itself: receive an ``equilibrium`` and a ``core_profiles`` IDS,
-        and send out a ``core_sources`` IDS built from them. Fill the source with a flat
-        electron heating profile of ``1e5`` W/m³ (100 kW/m³) at every point of the
-        ``rho_tor_norm`` grid taken from the incoming ``core_profiles``. You do not need the
-        equilibrium for that calculation -- receiving it is only there to practice a
+            mkdir -p cases/my_actor
+            cp ymmsl_files/training/source_my_actor_sink.ymmsl cases/my_actor/workflow.ymmsl
+
+        Open ``cases/my_actor/workflow.ymmsl`` and look at how ``my_actor`` is wired in --
+        ``equilibrium_in`` and ``core_profiles_in`` on ``f_init``, ``core_sources_out`` on
+        ``o_f``, fed from ``source`` and consumed by ``sink``. Its ``programs`` entry already
+        points ``executable: python`` / ``args`` at ``$PDS_REPO/cases/my_actor/my_actor.py`` --
+        that is the file you are about to write.
+
+        Write ``cases/my_actor/my_actor.py``: receive an ``equilibrium`` and a
+        ``core_profiles`` IDS, and send out a ``core_sources`` IDS built from them. Fill the
+        source with a flat electron heating profile of ``1e5`` W/m³ (100 kW/m³) at every point
+        of the ``rho_tor_norm`` grid taken from the incoming ``core_profiles``. You do not need
+        the equilibrium for that calculation -- receiving it is only there to practice a
         two-port ``F_INIT``.
 
         Follow the port naming from :ref:`writing_actors`: ``equilibrium_in`` and
         ``core_profiles_in`` on ``F_INIT``, ``core_sources_out`` on ``O_F``.
+
+        Run it with ``bin/pds-run-case``, not ``muscle_manager`` directly:
+
+        .. code-block:: bash
+
+            bin/pds-run-case cases/my_actor
+
+        This submits a Slurm job (``squeue --me`` to watch it) and writes its own
+        ``slurm-<jobid>.out`` at the repo root; the run itself lands under
+        ``cases/runs/my_actor_<timestamp>/`` (``cases/runs/my_actor`` symlinks to the latest
+        one). If no ``sbatch`` is on your ``PATH``, ``bin/pds-run-case`` falls back to running
+        the same script directly instead, no Slurm needed.
+
+        ``sink.sink_mode`` is ``"x"`` (exclusive create), so a second attempt fails unless you
+        remove the previous output first: ``rm -rf cases/output/training/my_actor``.
+
+        Then check the output makes sense, e.g.:
+
+        .. code-block:: python
+
+            import imas
+            with imas.DBEntry(
+                "imas:hdf5?path=cases/output/training/my_actor", "r"
+            ) as db:
+                cs = db.get("core_sources")
+            print(cs.source[0].identifier.name, cs.source[0].profiles_1d[0].electrons.energy)
 
     .. md-tab-item:: Hint
 
@@ -73,10 +105,18 @@ The workflow is the same ``source`` / ``sink`` pair from
         loop on ``instance.reuse_instance()``. Inside the loop you receive, deserialize, do
         your work, serialize, and send.
 
-        Two details are easy to forget and annoying to debug. IDSs travel as bytes, so every
-        received message needs ``deserialize`` and every sent one needs ``serialize``. And
-        pass ``next_timestamp`` on, so whatever comes after you knows whether more messages
-        are coming.
+        A few details are easy to forget and annoying to debug:
+
+        - IDSs travel as bytes, so every received message needs ``deserialize`` and every sent
+          one needs ``serialize``.
+        - Pass ``next_timestamp`` on, so whatever comes after you knows whether more messages
+          are coming.
+        - ``resize(n)`` on an array of structures (e.g. ``sources.source``) mutates it in place
+          and returns ``None`` -- it does not hand you back the new elements. Call it, then
+          index the array separately: ``sources.source.resize(1); source = sources.source[0]``.
+        - A freshly created IDS needs ``ids_properties.homogeneous_time`` (and a ``time``
+          array) set before you can ``serialize()`` it, or you get
+          ``ValueError: IDS is found to be EMPTY (homogeneous_time undefined)``.
 
     .. md-tab-item:: Solution
 
@@ -109,9 +149,13 @@ The workflow is the same ``source`` / ``sink`` pair from
                     rho = cp.profiles_1d[0].grid.rho_tor_norm
 
                     sources = factory.new("core_sources")
-                    source = sources.source.resize(1)[0]
+                    sources.ids_properties.homogeneous_time = 1
+                    sources.time = np.array([eq_msg.timestamp])
+                    sources.source.resize(1)
+                    source = sources.source[0]
                     source.identifier.name = "ec"
-                    p1d = source.profiles_1d.resize(1)[0]
+                    source.profiles_1d.resize(1)
+                    p1d = source.profiles_1d[0]
                     p1d.grid.rho_tor_norm = rho
                     p1d.electrons.energy = np.full_like(rho, 1e5)  # flat 100 kW/m^3
 
@@ -128,65 +172,23 @@ The workflow is the same ``source`` / ``sink`` pair from
             if __name__ == "__main__":
                 main()
 
-        ``source_sink.ymmsl``, edited as above, becomes:
+        For reference, this is what ``cases/my_actor/workflow.ymmsl`` looks like -- the version
+        you copied from ``ymmsl_files/training/source_my_actor_sink.ymmsl`` already has the
+        paths below resolved (that file is generated from the ``.template`` below by
+        ``setup_files/setup_test_files.sh``, see :ref:`training/setup`; the
+        ``[PWD_PLACEHOLDER]`` markers here will not run as-is):
 
-        .. code-block:: yaml
-
-            ymmsl_version: v0.2
-            models:
-              source_my_actor_sink:
-                components:
-                  source:
-                    description: source -- reads the equilibrium and core_profiles IDSs
-                    implementation: source
-                    ports:
-                      o_i: [equilibrium_out, core_profiles_out]
-                  my_actor:
-                    description: my_actor -- computes a core_sources heating profile
-                    implementation: my_actor
-                    ports:
-                      f_init: [equilibrium_in, core_profiles_in]
-                      o_f: [core_sources_out]
-                  sink:
-                    description: sink -- writes the received core_sources IDS to disk
-                    implementation: sink
-                    ports:
-                      f_init: [core_sources_in]
-                conduits:
-                  source.equilibrium_out: my_actor.equilibrium_in
-                  source.core_profiles_out: my_actor.core_profiles_in
-                  my_actor.core_sources_out: sink.core_sources_in
-            settings:
-              source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
-              sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/my_actor"
-              sink.sink_mode: "x"
-            programs:
-              source:
-                base_env: clean
-                modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-                executable: python
-                args: "-u -m imas_muscle3.actors.source_component"
-              sink:
-                base_env: clean
-                modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
-                executable: python
-                args: "-u -m imas_muscle3.actors.sink_component"
-              my_actor:
-                executable: python
-                args: "-u [PWD_PLACEHOLDER]/my_actor.py"
+        .. literalinclude:: ../../../../ymmsl_files/training/source_my_actor_sink.ymmsl.template
+           :language: yaml
 
         ``my_actor`` has no ``base_env``/``modules``, so it inherits the environment you
         already loaded (``module load PDS`` gives it ``imas`` and ``libmuscle``) instead of a
-        purged one -- appropriate for a plain script, not an EasyBuild-installed actor.
-
-        Run it with the muscle-manager, the same as in :ref:`training/workflow_from_scratch`:
-
-        .. code-block:: bash
-
-            muscle_manager --start-all ./my_actor.ymmsl
-
-        Then check the output makes sense, e.g. with ``imas.util.idsdiff()`` or ``idsdiff``
-        against ``training_data/training_ids`` for the fields you did not touch.
+        purged one -- appropriate for a plain script, not an EasyBuild-installed actor. Its
+        ``args`` uses ``$PDS_REPO`` rather than ``$CASE_DIR``: ``$PDS_REPO`` (set by
+        ``module load PDS``) is always an absolute path, while ``$CASE_DIR`` stays whatever
+        (possibly relative) path you gave ``bin/pds-run-case`` -- and each actor runs from its
+        own per-instance working directory, so a relative script path resolves against the
+        wrong place there.
 
 Exercise 2: a density source
 -----------------------------
@@ -198,15 +200,28 @@ interesting.
 
     .. md-tab-item:: Exercise
 
+        Same case directory as Exercise 1 -- keep editing ``cases/my_actor/my_actor.py`` in
+        place. ``cases/my_actor/workflow.ymmsl`` already has a ``my_actor.density_rate: 0.02``
+        setting waiting for you (unused until now), so there is nothing to change there either.
+
         Add a density source alongside the heating source from Exercise 1:
         multiply the electron density taken from the incoming ``core_profiles``
         by a *fraction per second* rate, and put the result in ``electrons.particles`` of a
         second entry in ``core_sources.source``, so it raises the density by that fraction
         each second while the heating source keeps flowing unchanged.
 
-        Make the rate a setting called ``density_rate`` rather than a number in the code, so
-        it can be changed from a case. On the last message, where ``next_timestamp`` is
+        Read the rate from the ``density_rate`` setting rather than hard-coding a number, so
+        it can be changed from the case. On the last message, where ``next_timestamp`` is
         ``None``, send an all-zero particle source instead of computing a rate.
+
+        ``sink.sink_mode`` is ``"x"`` (exclusive create), so the sink refuses to write into
+        the output directory Exercise 1 already created. Clear it, then rerun the same way as
+        before:
+
+        .. code-block:: bash
+
+            rm -rf cases/output/training/my_actor
+            bin/pds-run-case cases/my_actor
 
     .. md-tab-item:: Hint
 
@@ -222,7 +237,8 @@ interesting.
         ``sources.source.resize(2)`` gives you two entries in the array instead of one --
         keep the first for the Exercise 1 heating source and use the second for the new
         particle source. Each entry gets its own ``identifier`` and its own
-        ``profiles_1d``.
+        ``profiles_1d``. As in Exercise 1, ``resize()`` returns ``None``: call it, then index
+        ``sources.source[0]`` and ``sources.source[1]`` separately.
 
     .. md-tab-item:: Solution
 
@@ -262,15 +278,20 @@ interesting.
                         added = n_e * rate
 
                     sources = factory.new("core_sources")
-                    heating, gas_puff = sources.source.resize(2)
+                    sources.ids_properties.homogeneous_time = 1
+                    sources.time = np.array([eq_msg.timestamp])
+                    sources.source.resize(2)
+                    heating, gas_puff = sources.source[0], sources.source[1]
 
                     heating.identifier.name = "ec"
-                    heating_p1d = heating.profiles_1d.resize(1)[0]
+                    heating.profiles_1d.resize(1)
+                    heating_p1d = heating.profiles_1d[0]
                     heating_p1d.grid.rho_tor_norm = rho
                     heating_p1d.electrons.energy = np.full_like(rho, 1e5)  # flat 100 kW/m^3
 
                     gas_puff.identifier.name = "gas_puff"
-                    gas_puff_p1d = gas_puff.profiles_1d.resize(1)[0]
+                    gas_puff.profiles_1d.resize(1)
+                    gas_puff_p1d = gas_puff.profiles_1d[0]
                     gas_puff_p1d.grid.rho_tor_norm = rho
                     gas_puff_p1d.electrons.particles = added
 
@@ -287,12 +308,14 @@ interesting.
             if __name__ == "__main__":
                 main()
 
-        and in a case or override file:
+        The setting itself is already in ``cases/my_actor/workflow.ymmsl`` from the start (see
+        the ``workflow.ymmsl`` listing in Exercise 1's Solution tab above):
 
         .. code-block:: yaml
 
             settings:
-              my_density_source.density_rate: 0.02
+              my_actor.density_rate: 0.02
 
         Making the rate a setting rather than a constant is what turns a script into an
-        actor other people can reuse.
+        actor other people can reuse -- someone can tune it from their own case without
+        touching your code.
