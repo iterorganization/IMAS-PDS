@@ -207,6 +207,34 @@ class Plotter(BasePlotter):
 
     levels = param.Integer(default=20, bounds=(1, 100), doc="Number of contour levels")
 
+    def __init__(self, state):
+        super().__init__(state)
+        self._contour_cache: dict = {}
+        self._contour_cache_times: tuple[float, ...] = ()
+
+    @param.depends("_state.data", watch=True)
+    def _clear_contour_cache(self) -> None:
+        """Drop cached contours only when an *existing* timeslice's data
+        could have changed -- a switch to another recorded occurrence, or
+        the rare schema-mismatch rebuild in the recorder (see
+        ``zarr_recorder._combine``) -- not on ordinary live growth, where
+        new timeslices are simply appended and every already-cached
+        ``(time, levels)`` contour is still valid. Without this
+        distinction, a live run's constant appends would wipe the cache on
+        every tick and it would never pay off.
+
+        Detected cheaply, without touching psi itself: if the new time
+        array still starts with the previously-seen one, nothing existing
+        changed, only grew.
+        """
+        equilibrium = self._state.data.get("equilibrium")
+        times = (
+            tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()
+        )
+        if times[: len(self._contour_cache_times)] != self._contour_cache_times:
+            self._contour_cache.clear()
+        self._contour_cache_times = times
+
     def get_dashboard(self):
         # Create poloidal flux plot
         flux_map_elements = [
@@ -302,6 +330,10 @@ class Plotter(BasePlotter):
     def _plot_contours(self):
         """Generates contour plot for poloidal flux.
 
+        The underlying Delaunay triangulation (:meth:`_calc_contours`) is
+        expensive, so its result is cached per ``(time, levels)`` (see
+        :meth:`_clear_contour_cache` for invalidation).
+
         Returns:
             Contour plot of psi.
         """
@@ -309,8 +341,12 @@ class Plotter(BasePlotter):
         if state is None:
             contours = hv.Contours(([0], [0], 0), vdims="psi")
         else:
-            selected_data = state.sel(time=self.time)
-            contours = self._calc_contours(selected_data, self.levels)
+            cache_key = (self.time, self.levels)
+            contours = self._contour_cache.get(cache_key)
+            if contours is None:
+                selected_data = state.sel(time=self.time)
+                contours = self._calc_contours(selected_data, self.levels)
+                self._contour_cache[cache_key] = contours
         return contours.opts(self.CONTOUR_OPTS)
 
     def _calc_contours(self, equilibrium_data, levels):
