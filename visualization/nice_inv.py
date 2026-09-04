@@ -207,6 +207,18 @@ class Plotter(BasePlotter):
 
     levels = param.Integer(default=20, bounds=(1, 100), doc="Number of contour levels")
 
+    def __init__(self, state):
+        super().__init__(state)
+        self._contour_cache: dict = {}
+
+    @param.depends("_state.data", watch=True)
+    def _clear_contour_cache(self) -> None:
+        """Drop cached contours whenever new/different data arrives (a live
+        append, or a switch to another recorded occurrence) so a stale
+        contour never gets reused for a `(time, levels)` pair that now means
+        something else."""
+        self._contour_cache.clear()
+
     def get_dashboard(self):
         # Create poloidal flux plot
         flux_map_elements = [
@@ -302,6 +314,10 @@ class Plotter(BasePlotter):
     def _plot_contours(self):
         """Generates contour plot for poloidal flux.
 
+        The underlying Delaunay triangulation (:meth:`_calc_contours`) is
+        expensive, so its result is cached per ``(time, levels)`` (see
+        :meth:`_clear_contour_cache` for invalidation).
+
         Returns:
             Contour plot of psi.
         """
@@ -309,8 +325,12 @@ class Plotter(BasePlotter):
         if state is None:
             contours = hv.Contours(([0], [0], 0), vdims="psi")
         else:
-            selected_data = state.sel(time=self.time)
-            contours = self._calc_contours(selected_data, self.levels)
+            cache_key = (self.time, self.levels)
+            contours = self._contour_cache.get(cache_key)
+            if contours is None:
+                selected_data = state.sel(time=self.time)
+                contours = self._calc_contours(selected_data, self.levels)
+                self._contour_cache[cache_key] = contours
         return contours.opts(self.CONTOUR_OPTS)
 
     def _calc_contours(self, equilibrium_data, levels):
