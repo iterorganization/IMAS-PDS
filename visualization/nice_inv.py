@@ -228,7 +228,9 @@ class Plotter(BasePlotter):
         changed, only grew.
         """
         equilibrium = self._state.data.get("equilibrium")
-        times = tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()
+        times = (
+            tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()
+        )
         if times[: len(self._contour_cache_times)] != self._contour_cache_times:
             self._contour_cache.clear()
         self._contour_cache_times = times
