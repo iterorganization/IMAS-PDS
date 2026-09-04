@@ -210,14 +210,28 @@ class Plotter(BasePlotter):
     def __init__(self, state):
         super().__init__(state)
         self._contour_cache: dict = {}
+        self._contour_cache_times: tuple[float, ...] = ()
 
     @param.depends("_state.data", watch=True)
     def _clear_contour_cache(self) -> None:
-        """Drop cached contours whenever new/different data arrives (a live
-        append, or a switch to another recorded occurrence) so a stale
-        contour never gets reused for a `(time, levels)` pair that now means
-        something else."""
-        self._contour_cache.clear()
+        """Drop cached contours only when an *existing* timeslice's data
+        could have changed -- a switch to another recorded occurrence, or
+        the rare schema-mismatch rebuild in the recorder (see
+        ``zarr_recorder._combine``) -- not on ordinary live growth, where
+        new timeslices are simply appended and every already-cached
+        ``(time, levels)`` contour is still valid. Without this
+        distinction, a live run's constant appends would wipe the cache on
+        every tick and it would never pay off.
+
+        Detected cheaply, without touching psi itself: if the new time
+        array still starts with the previously-seen one, nothing existing
+        changed, only grew.
+        """
+        equilibrium = self._state.data.get("equilibrium")
+        times = tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()
+        if times[: len(self._contour_cache_times)] != self._contour_cache_times:
+            self._contour_cache.clear()
+        self._contour_cache_times = times
 
     def get_dashboard(self):
         # Create poloidal flux plot
