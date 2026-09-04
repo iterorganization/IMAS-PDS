@@ -85,6 +85,11 @@ for f in workflow.ymmsl workflow_settings.ymmsl scenario_settings.ymmsl preproce
   [[ -f "$CASE_DIR/$f" ]] && stack+=("$CASE_DIR/$f")
 done
 
+# sbatch forwards the submitter's environment. A NoMachine desktop session preloads
+# VirtualGL (LD_PRELOAD=libdlfaker.so:libvglfaker.so) into every process; on the compute
+# node that leaves MATLAB's Simulink engine start hung until the 10 min peer timeout.
+unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
+
 [[ -f "$CASE_DIR/env.sh" ]] && source "$CASE_DIR/env.sh"
 
 "$MANAGER" --start-all --run-dir "$RUN_DIR" "${stack[@]}" "${OVERLAYS[@]}"
