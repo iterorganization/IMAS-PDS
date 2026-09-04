@@ -7,9 +7,11 @@ ymmsl_version: v0.2
 # Ported from itergit/feature/metis_nice_evol's
 # workflows/metis_predictive_nice_evol_from_dina/workflow.ymmsl.template ("first version of
 # the workflow with METIS + NICE evol + Controller" and its follow-up port/conduit fixes).
-# That branch also has a workflow_alternative.ymmsl.template (two METIS instances -- a
-# one-shot "metis_init" bootstrap plus the in-loop "metis") which was not ported: the
-# single-metis arrangement below is the branch's own latest committed direction.
+# The single-metis arrangement below is used, with metis_to_nice (initial_state_splitter)
+# routing METIS's initial O_I state to nice_evo_rd's F_INIT and its later states to
+# nice_evo_rd's S -- because METIS's actor emits N+1 O_I messages (its initial state first,
+# with next_timestamp None) while nice_evo_rd's evolutive actor expects N messages on S and
+# stops its time loop on the first one without a next_timestamp.
 #
 # Structurally this is metis_nice_inverse_from_dina's METIS half spliced onto
 # evolutive_controller's NICE-evo/magnetic_controller loop (see those two workflows'
@@ -33,6 +35,7 @@ imports:
 - from lib.local_programs import implementation metis
 - from lib.easybuild_programs import implementation nice_evo_rd
 - from lib.easybuild_programs import implementation magnetic_controller
+- from lib.easybuild_programs import implementation initial_state_splitter
 
 models:
   metis_nice_evol_from_dina:
@@ -66,12 +69,12 @@ models:
           s: [equilibrium_in_s, pulse_schedule_in_s, core_profiles_in_s, core_sources_in_s]
           o_i: [equilibrium_out_i, pulse_schedule_out_i, core_profiles_out_i, plasma_profiles_out_i, plasma_sources_out_i, summary_out_i]
 
-      metis_init:
-        description: METIS transport (coupling mode 2), stepping in lockstep with nice_evo_rd
-        implementation: metis
+      metis_to_nice:
+        description: splits METIS's O_I stream -- its initial state to nice_evo_rd's F_INIT, its per-step states to nice_evo_rd's S ports
+        implementation: initial_state_splitter
         ports:
-          f_init: [pulse_schedule_f_init, core_profiles_f_init, core_sources_f_init]
-          o_f: [equilibrium_out_f, pulse_schedule_out_f, core_profiles_out_f, plasma_profiles_out_f, plasma_sources_out_f, summary_out_f]
+          s: [equilibrium_in, core_profiles_in]
+          o_i: [equilibrium_init_out, equilibrium_out, core_profiles_init_out, core_profiles_out]
 
       nice_evo_rd:
         description: nice evolutive free-boundary + resistive-diffusion solve
@@ -94,11 +97,6 @@ models:
         implementation: sink_component
         ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
 
-      sink_metis_init:
-        description: sink -- METIS init outputs
-        implementation: sink_component
-        ports: {f_init: [equilibrium_in, pulse_schedule_in, plasma_profiles_in, plasma_sources_in, summary_in]}
-
       sink_equilibrium:
         description: sink -- NICE evolutive outputs
         implementation: sink_component
@@ -115,11 +113,6 @@ models:
       source_metis.core_profiles_out: metis.core_profiles_f_init
       source_metis.core_sources_out: metis.core_sources_f_init
 
-      # METIS init bootstrap from source
-      source_metis.pulse_schedule_out: metis_init.pulse_schedule_f_init
-      source_metis.core_profiles_out: metis_init.core_profiles_f_init
-      source_metis.core_sources_out: metis_init.core_sources_f_init
-
       # METIS in-loop inputs from the NICE-equilibrium-driven resync
       synchro_nice_metis.pulse_schedule_out: metis.pulse_schedule_in_s
       synchro_nice_metis.core_profiles_out: metis.core_profiles_in_s
@@ -132,13 +125,6 @@ models:
       metis.summary_out_i: sink_transport.summary_in
       metis.equilibrium_out_i: sink_transport.equilibrium_in
 
-     # METIS init outputs to sink
-      metis_init.pulse_schedule_out_f: sink_metis_init.pulse_schedule_in
-      metis_init.plasma_profiles_out_f: sink_metis_init.plasma_profiles_in
-      metis_init.plasma_sources_out_f: sink_metis_init.plasma_sources_in
-      metis_init.summary_out_f: sink_metis_init.summary_in
-      metis_init.equilibrium_out_f: sink_metis_init.equilibrium_in
-     
       # synchronisation between METIS source and NICE one
       source_nice.pf_active_out: source_metis.pf_active_in
 
@@ -147,12 +133,18 @@ models:
       source_nice.pf_passive_out: nice_evo_rd.pf_passive_f_init
       source_nice.iron_core_out: nice_evo_rd.iron_core_f_init
       source_nice.wall_out: nice_evo_rd.wall_f_init
-      metis_init.equilibrium_out_f: nice_evo_rd.equilibrium_f_init
-      metis_init.core_profiles_out_f: nice_evo_rd.core_profiles_f_init
 
-      # NICE in-loop input from METIS
-      metis.equilibrium_out_i: nice_evo_rd.equilibrium_s
-      metis.core_profiles_out_i: nice_evo_rd.core_profiles_s
+      # METIS -> NICE through the initial-state splitter: METIS's actor emits its initial
+      # state on its O_I ports right after F_INIT (next_timestamp None), then one state per
+      # step; NICE's evolutive actor wants the former on F_INIT and only the latter on S
+      # (it stops its time loop on the first S message without a next_timestamp).
+      metis.equilibrium_out_i: metis_to_nice.equilibrium_in
+      metis.core_profiles_out_i: metis_to_nice.core_profiles_in
+      metis_to_nice.equilibrium_init_out: nice_evo_rd.equilibrium_f_init
+      metis_to_nice.core_profiles_init_out: nice_evo_rd.core_profiles_f_init
+      metis_to_nice.equilibrium_out: nice_evo_rd.equilibrium_s
+      metis_to_nice.core_profiles_out: nice_evo_rd.core_profiles_s
+
       # NICE in-loop input from the controller
       magnetic_controller.pf_active_out_i: nice_evo_rd.pf_active_s
 

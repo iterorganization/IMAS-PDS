@@ -23,6 +23,7 @@ resources:
   metis_nice_evol_from_dina.source_metis: {threads: 1}
   metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
   metis_nice_evol_from_dina.metis: {threads: 10}
+  metis_nice_evol_from_dina.metis_to_nice: {threads: 1}
   metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
   metis_nice_evol_from_dina.magnetic_controller: {threads: 1}
   metis_nice_evol_from_dina.sink_transport: {threads: 1}
@@ -42,8 +43,6 @@ settings:
 
   sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
   sink_transport.sink_mode: "w"
-  sink_metis_init.sink_uri: "imas:hdf5?path=../../../metis_init_out"
-  sink_metis_init.sink_mode: "w"
   sink_equilibrium.sink_uri: "imas:hdf5?path=../../../nice_out"
   sink_equilibrium.sink_mode: "w"
   sink_control.sink_uri: "imas:hdf5?path=../../../controller_out"
@@ -56,16 +55,13 @@ settings:
   metis.metis_psioffset: 9.0
   metis.metis_alwaysreadinitport: 0
 
-  metis_init.metis_computation: 1
-  # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
-  # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script). Matters
-  # here because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
-  metis_init.metis_psioffset: 9.0
-  metis_init.metis_alwaysreadinitport: 0
-
   nice_evo_rd.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
   nice_evo_rd.t_interval: 0.002
   nice_evo_rd.dt: 0.002
+  # Optional end of NICE's own time loop. Without it nothing ends the run: NICE's
+  # next_timestamp chain is circular (nice_evo_rd -> synchro_nice_metis -> metis ->
+  # metis_to_nice -> nice_evo_rd), so the run only stops at the SLURM time limit.
+  # nice_evo_rd.t_end: 2.5
 
   # METIS switches for reading external data from the received IDSs -- predictive defaults,
   # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative

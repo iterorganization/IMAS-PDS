@@ -61,6 +61,4 @@ if [[ -f "$OUT/PSI_OFFSET" ]]; then
   source "$OUT/PSI_OFFSET"
   printf 'ymmsl_version: v0.2\nsettings:\n  metis.metis_psioffset: %s\n' "$PSI_OFFSET" \
     > "$CASE_DIR/preprocess_settings.ymmsl"
-  printf '  metis_init.metis_psioffset: %s\n' "$PSI_OFFSET" \
-    >> "$CASE_DIR/preprocess_settings.ymmsl"
 fi

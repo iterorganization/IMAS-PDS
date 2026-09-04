@@ -23,6 +23,11 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
+  initial_state_splitter:
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/utils/initial_state_splitter.py
+
   metis:
     script: |
       #!/bin/bash
