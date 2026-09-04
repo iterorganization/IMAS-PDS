@@ -29,41 +29,6 @@ Loading the module
   module use /work/projects/pds/modules/all
   module load PDS
 
-The tool stack
---------------
-
-Only the first three are dependencies of ``PDS``. MUSCLE3 loads the rest when it starts
-the actor that needs them, which is why loading ``PDS`` is enough to run a workflow
-using any of them.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 26 74
-
-   * - Module
-     - Role
-   * - ``IMAS-Python``
-     - Reading and writing IMAS data.
-   * - ``IMAS-MUSCLE3``
-     - The MUSCLE3 manager plus the generic actors (source, sink, recorder,
-       validator, ...).
-   * - ``ymmsl2svg``
-     - Renders a workflow's coupling graph as SVG.
-   * - ``NICE``
-     - Free-boundary equilibrium: inverse, direct and evolutive solvers.
-   * - ``TORAX-MUSCLE3``
-     - Core transport.
-   * - ``METIS-IRFM``
-     - Fast integrated transport, driven through MATLAB.
-   * - ``Waveform-Editor``
-     - Turns a ``waveforms.yaml`` into the target waveforms sent to the solvers.
-   * - ``PCS``
-     - The PCSSP magnetic controller, MATLAB/Simulink.
-   * - ``CHEASE``
-     - Fixed-boundary equilibrium.
-   * - ``IMAS-Validator``
-     - Rule-based checks on IDS contents.
-
 Verifying the install
 ---------------------
 
