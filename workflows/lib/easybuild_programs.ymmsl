@@ -23,6 +23,11 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
+  initial_state_splitter:
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/utils/initial_state_splitter.py
+
   metis:
     script: |
       #!/bin/bash
@@ -102,6 +107,12 @@ programs:
       # by hand, pointing at a per-user run/pcs checkout.
       export PCS_PATH="$EBROOTPCS"
       export CONTROLLER_PATH="$controller_path"
+      # NICE/3.0.0.dev258's evolutive actor applies received IDS coil voltages without
+      # the COCOS sign flip it applies to coil currents (nice_imas.cc,
+      # ReadDataEvolutiveProblemWithRD: `signIc = 1`, flip commented out), so the plant the
+      # controller sees is inverted. muscle_NICE_input.m negates the voltages it sends when
+      # this is -1. Set to 1 / remove once NICE converts voltages like currents.
+      export NICE_VOLTAGE_SIGN=-1
       # NICE's own runmatlab/muscle3/matlab_iter/ (added to the path by
       # initNice4matlab.m below) ships its own, much older,
       # different-port-signature muscle_controller_NICE_IMAS_iter_init.m, which

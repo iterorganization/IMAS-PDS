@@ -1,0 +1,106 @@
+ymmsl_version: v0.2
+
+# Generic settings for metis_nice_evol_from_dina, stacked after workflow.ymmsl by
+# bin/pds-create-case / bin/pds-run-case.sbatch. ${SHOT} is filled in by pds-create-case.
+#
+# This workflow's preprocess.sh builds both source_metis's and source_nice's inputs, once, at
+# bin/pds-create-case time, from this shot's raw DINA source (same dual build as
+# metis_nice_inverse_from_dina's preprocess.sh: METIS's own dataset into
+# ${CASE_DIR}/preprocess/metis_in, NICE's DINA-derived machine description into
+# ${CASE_DIR}/preprocess/dina_in).
+#
+# Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
+# from DINA). A shot needing interpretative mode overrides the five metis_external_data_*
+# settings via cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl.
+#
+# source_nice.t_min has no sane generic default (which DINA slice to bootstrap NICE/METIS/the
+# controller from is genuinely per-shot); every shot needs
+# cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for it, same as evolutive_controller's
+# source.t_min.
+
+resources:
+  metis_nice_evol_from_dina.source_nice: {threads: 1}
+  metis_nice_evol_from_dina.source_metis: {threads: 1}
+  metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
+  metis_nice_evol_from_dina.metis: {threads: 10}
+  metis_nice_evol_from_dina.metis_to_nice: {threads: 1}
+  metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
+  metis_nice_evol_from_dina.magnetic_controller: {threads: 1}
+  metis_nice_evol_from_dina.sink_transport: {threads: 1}
+  metis_nice_evol_from_dina.sink_equilibrium: {threads: 1}
+  metis_nice_evol_from_dina.sink_control: {threads: 1}
+
+settings:
+  source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
+  source_nice.iterative: false
+  source_nice.t_min: 0.0
+
+  source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  source_metis.iterative: false
+  source_metis.t_min: 0.0
+
+  synchro_nice_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  # The METIS input dataset has slices ~0.11 s apart while the loop runs every 2 ms; with the
+  # default 'closest' pick METIS's boundary conditions (and, in interpretative mode, Te/ne)
+  # jump by ~15% every ~55 steps, and NICE's evolutive Newton solve diverged exactly at the
+  # first such jump (2026-09-04). Interpolate linearly in time instead.
+  synchro_nice_metis.interpolation_method: linear
+
+  sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
+  sink_transport.sink_mode: "w"
+  sink_equilibrium.sink_uri: "imas:hdf5?path=../../../nice_out"
+  sink_equilibrium.sink_mode: "w"
+  sink_control.sink_uri: "imas:hdf5?path=../../../controller_out"
+  sink_control.sink_mode: "w"
+
+  metis.metis_computation: 1
+  # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
+  # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script). Matters
+  # here because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
+  metis.metis_psioffset: 9.0
+  metis.metis_alwaysreadinitport: 0
+
+  nice_evo_rd.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
+  nice_evo_rd.t_interval: 0.002
+  nice_evo_rd.dt: 0.002
+  # Optional end of NICE's own time loop. Without it nothing ends the run: NICE's
+  # next_timestamp chain is circular (nice_evo_rd -> synchro_nice_metis -> metis ->
+  # metis_to_nice -> nice_evo_rd), so the run only stops at the SLURM time limit.
+  # nice_evo_rd.t_end: 2.5
+
+  # METIS switches for reading external data from the received IDSs -- predictive defaults,
+  # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
+  # shot. The METIS runaway model is switched off via metis_option_runaway, see below.
+  metis.metis_external_data_equilibrium: 1
+  metis.metis_external_data_current_diffusion: 1
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_charge_effective: 0
+  metis.metis_external_data_momentum: 0
+  metis.metis_external_data_LHCD: 0
+  # METIS's ECCD deposition is a near-delta on axis (width_ecrh=0 -> internal formula) that
+  # its 21-point radial grid cannot resolve: 60-75 kA of driven current show up as a
+  # j_non_inductive spike of 1.6-2.6 MA/m2 (several times j_total), forcing a locally
+  # reversed ohmic current, an ohmic power of -29 MW at one step and a Te collapse
+  # 6 keV -> 0.8 keV within 6 ms; NICE's resistive diffusion then diverges (2026-09-04).
+  # The METIS-from-DINA dataset carries the same spike, so reading it back does not help;
+  # EC is heating-only here (DINA drives <10 kA with it): metis_option_sens 0 = normal
+  # injection, no driven current.
+  metis.metis_external_data_ECRH: 0
+  metis.metis_external_data_ICRH: 0
+  metis.metis_external_data_NBI: 0
+  metis.metis_external_data_PLINE: 0
+  # METIS's own runaway-electron model (runaway=1 in the METIS dataset options) predicts
+  # >50% of Ip as runaway current at this low-density ramp-up point; NICE's resistive
+  # diffusion takes j_non_inductive as a fixed driven current and diverged to NaN in 5
+  # steps (2026-09-04). Reading DINA's runaway current instead (metis_external_data_runaway
+  # 1) only applies from the first S exchange, not at METIS's initialisation, so METIS's
+  # initial state (q0 ~ 0.5, j_ni ~ 2 MA/m2) and its first evolved state (q0 ~ 2) were
+  # inconsistent and NICE failed at its second step. DINA's runaway current here is ~37 kA
+  # (3% of Ip): switch the model off in both phases instead.
+  metis.metis_external_data_runaway: 0
+  metis.metis_option_runaway: 0
+  metis.metis_option_sens: 0
+
+  muscle_remote_log_level: 'INFO'
