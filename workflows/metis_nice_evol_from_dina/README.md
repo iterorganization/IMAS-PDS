@@ -90,9 +90,7 @@ the static checker doesn't validate operator pairing across conduits.
 - `nice_evo_rd.t_interval`/`nice_evo_rd.dt` default to `0.002`, matching the branch's own
   template (comment: "Need to match controller dt") -- not validated for solver stability here,
   same caveat as `evolutive_controller`'s `0.01` default.
-- `config_nice.xml` is the branch's own `param.xml.template` (verbatim, no placeholders to
-  resolve) -- it differs from `evolutive_controller/config_nice.xml` in `algoMode` (21 vs 31)
-  and several mesh-refinement parameters; not reconciled against that file.
+- `config_nice.xml` is the branch's own `param.xml.template` with `use_desired_psib` 1 and `abserrIg` 3e5 (see the comment there); it differs from `evolutive_controller/config_nice.xml` in `algoMode` (21 vs 31), mesh refinement and profile degrees of freedom -- the latter was tried on 2026-09-04 and NICE's evolutive solve diverged at its third step with it, so the branch's config is kept.
 
 ## Input requirements
 

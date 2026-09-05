@@ -62,6 +62,23 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
             # profiles_1d.psi: 0..0.995 - 0..1
             # boundary: 0.995 - 1
             # boundary_separatrix: 1 - na
+            # DINA fills boundary.geometric_axis.r but never .z; the PCSSP magnetic
+            # controller uses geometric_axis.z as its vertical-position reference and
+            # otherwise reads IMAS's empty-float sentinel (-9e40). Take the midpoints of
+            # the ORIGINAL closed boundary outline (psi_norm 0.995 surface; its r midpoint
+            # matches DINA's own geometric_axis.r to 1e-3) before it is replaced below by
+            # the separatrix outline, whose open divertor legs (z down to -6 m) would put
+            # the midpoint 1.5 m too low on diverted slices.
+            r_out = np.asarray(eq_orig_ts.boundary.outline.r)
+            z_out = np.asarray(eq_orig_ts.boundary.outline.z)
+            if r_out.size == 0:
+                r_out = np.asarray(eq_orig_ts.boundary_separatrix.outline.r)
+                z_out = np.asarray(eq_orig_ts.boundary_separatrix.outline.z)
+            if r_out.size:
+                if not eq_orig_ts.boundary.geometric_axis.r.has_value:
+                    eq_orig_ts.boundary.geometric_axis.r = (r_out.min() + r_out.max()) / 2
+                if not eq_orig_ts.boundary.geometric_axis.z.has_value:
+                    eq_orig_ts.boundary.geometric_axis.z = (z_out.min() + z_out.max()) / 2
             eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
             eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
             eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z

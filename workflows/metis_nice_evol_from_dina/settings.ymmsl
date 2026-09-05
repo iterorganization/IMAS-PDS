@@ -40,6 +40,11 @@ settings:
   source_metis.t_min: 0.0
 
   synchro_nice_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  # The METIS input dataset has slices ~0.11 s apart while the loop runs every 2 ms; with the
+  # default 'closest' pick METIS's boundary conditions (and, in interpretative mode, Te/ne)
+  # jump by ~15% every ~55 steps, and NICE's evolutive Newton solve diverged exactly at the
+  # first such jump (2026-09-04). Interpolate linearly in time instead.
+  synchro_nice_metis.interpolation_method: linear
 
   sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
   sink_transport.sink_mode: "w"
@@ -65,7 +70,7 @@ settings:
 
   # METIS switches for reading external data from the received IDSs -- predictive defaults,
   # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
-  # shot.
+  # shot. The METIS runaway model is switched off via metis_option_runaway, see below.
   metis.metis_external_data_equilibrium: 1
   metis.metis_external_data_current_diffusion: 1
   metis.metis_external_data_electron_temperature: 0
@@ -74,10 +79,28 @@ settings:
   metis.metis_external_data_charge_effective: 0
   metis.metis_external_data_momentum: 0
   metis.metis_external_data_LHCD: 0
+  # METIS's ECCD deposition is a near-delta on axis (width_ecrh=0 -> internal formula) that
+  # its 21-point radial grid cannot resolve: 60-75 kA of driven current show up as a
+  # j_non_inductive spike of 1.6-2.6 MA/m2 (several times j_total), forcing a locally
+  # reversed ohmic current, an ohmic power of -29 MW at one step and a Te collapse
+  # 6 keV -> 0.8 keV within 6 ms; NICE's resistive diffusion then diverges (2026-09-04).
+  # The METIS-from-DINA dataset carries the same spike, so reading it back does not help;
+  # EC is heating-only here (DINA drives <10 kA with it): metis_option_sens 0 = normal
+  # injection, no driven current.
   metis.metis_external_data_ECRH: 0
   metis.metis_external_data_ICRH: 0
   metis.metis_external_data_NBI: 0
   metis.metis_external_data_PLINE: 0
+  # METIS's own runaway-electron model (runaway=1 in the METIS dataset options) predicts
+  # >50% of Ip as runaway current at this low-density ramp-up point; NICE's resistive
+  # diffusion takes j_non_inductive as a fixed driven current and diverged to NaN in 5
+  # steps (2026-09-04). Reading DINA's runaway current instead (metis_external_data_runaway
+  # 1) only applies from the first S exchange, not at METIS's initialisation, so METIS's
+  # initial state (q0 ~ 0.5, j_ni ~ 2 MA/m2) and its first evolved state (q0 ~ 2) were
+  # inconsistent and NICE failed at its second step. DINA's runaway current here is ~37 kA
+  # (3% of Ip): switch the model off in both phases instead.
   metis.metis_external_data_runaway: 0
+  metis.metis_option_runaway: 0
+  metis.metis_option_sens: 0
 
   muscle_remote_log_level: 'INFO'

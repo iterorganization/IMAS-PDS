@@ -267,10 +267,18 @@
 	<zx>-3.346</zx>
 	<n_desired_bnd_points>96</n_desired_bnd_points>
 
-	<use_desired_psib>0</use_desired_psib>
-	
+	<!-- The initial inverse must honour the DINA boundary flux and stay close to the DINA
+	     coil currents (use_desired_psib 1, abserrIg 3e5 as in inverse_convergence /
+	     evolutive_controller). With 0 / 3e7 NICE landed in a flux state with CS currents of
+	     a few hundred A instead of DINA's ~35 kA and the magnetic controller saturated from
+	     step one (2026-09-04, shot 105084). evolutive_controller's whole config_nice.xml
+	     (algoMode 31, coarser mesh, rd_n_dof_petajnib 10) was also tried here and made
+	     NICE's evolutive Newton solve diverge at its third step; this file's finer mesh and
+	     20 profile dofs held 8-20 steps under the same inputs, so it is kept. -->
+	<use_desired_psib>1</use_desired_psib>
+
 	<!-- InverseSQP2  -->
-	<abserrIg>3e7</abserrIg>
+	<abserrIg>3e5</abserrIg>
 	<relerrIg>0</relerrIg>
     	<n_coil_group_index>14</n_coil_group_index>
     	<coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 12</coil_group_index>
