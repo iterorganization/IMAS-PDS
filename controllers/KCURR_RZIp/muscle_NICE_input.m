@@ -22,17 +22,39 @@ if numel(voltage) ~= 11
     error('muscle_NICE_input:unexpectedVoltageWidth', ...
         'expected the 11-wide CSPF voltage command, got %s', mat2str(size(voltage)));
 end
-cspf_to_coil = [1 2 3 3 4 5 6 7 8 9 10 11];
+
+%cspf_to_coil = [1 2 3 3 4 5 6 7 8 9 10 11];
+%voltage_full = zeros(1,14);
+%voltage_full(1:12) = voltage(cspf_to_coil);
+
+%14x11
+map_to_NICE = [1 0 0 0 0 0 0 0 0 0 0, %CS3U
+               0 1 0 0 0 0 0 0 0 0 0, %CS2U
+               0 0 0.5 0 0 0 0 0 0 0 0, %CS1U
+               0 0 0.5 0 0 0 0 0 0 0 0, %CS1L
+               0 0 0 1 0 0 0 0 0 0 0, %CS2L
+               0 0 0 0 1 0 0 0 0 0 0, %CS3L
+               0 0 0 0 0 1 0 0 0 0 0, %PF1
+               0 0 0 0 0 0 1 0 0 0 0, %PF2
+               0 0 0 0 0 0 0 1 0 0 0, %PF3
+               0 0 0 0 0 0 0 0 1 0 0, %PF4
+               0 0 0 0 0 0 0 0 0 1 0, %PF5
+               0 0 0 0 0 0 0 0 0 0 0, %VS1
+               0 0 0 0 0 0 0 0 0 0 1, %PF6
+               0 0 0 0 0 0 0 0 0 0 0]; %VS2
+
 voltage_full = zeros(1,14);
-voltage_full(1:12) = voltage(cspf_to_coil);
+voltage_full = map_to_NICE*voltage
 
 % RZIp's VS voltage command isn't wired into this signal. Fall back to a
 % resistive (V=IR) estimate from the last measured VS currents when
 % available, otherwise leave the VS coils unforced (0V).
 if numel(coil_current) >= 14 && all(~isnan(coil_current(13:14)))
-    voltage_full(13:14) = resistances(13:14) .* reshape(coil_current(13:14),1,[]);
+    voltage_full(12) = resistances(12) .* reshape(coil_current(12),1,[]);
+    voltage_full(14) = resistances(14) .* reshape(coil_current(14),1,[]);
 else
-    voltage_full(13:14) = 0;
+    voltage_full(12) = 0;
+    voltage_full(14) = 0;
 end
 voltage = voltage_full;
 
