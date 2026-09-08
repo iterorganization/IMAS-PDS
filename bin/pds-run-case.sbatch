@@ -28,13 +28,21 @@ set -euo pipefail
 # imported implementation with no env: override of its own (base_env: MANAGER) still gets a
 # run-wide variable it needs -- e.g. workflows/metis_from_dina/env.sh.
 #
-# If the case has a postprocess.sh (bin/pds-create-case copies it in from
-# workflows/<workflow>/postprocess.sh, if that exists -- see its header), it runs once after
-# muscle_manager finishes (e.g. validation plots against the run's own output -- see
+# When muscle_manager finishes, bin/pds-postprocess runs. It is workflow-agnostic: driven
+# only by the run's own flattened configuration.ymmsl, it always produces $RUN_DIR/imas_out
+# (one IMAS data entry for the whole run, with a summary IDS), pds_git_state.txt,
+# README_REPRODUCE.md and simdb_manifest.yaml -- see bin/pds-postprocess and
+# workflows/utils/pds_postprocess.py.
+#
+# Before that, bin/pds-postprocess runs the case's postprocess.sh if it is executable
+# (bin/pds-create-case copies it in from workflows/<workflow>/postprocess.sh, if that
+# exists -- see its header). That script is now only the workflow-specific hook: whatever
+# just that workflow can do, e.g. validation plots against its own reference data (see
 # workflows/metis_from_dina/postprocess.sh). It gets PDS_REPO/SCENARIOS_REPO/SHOT/CASE_DIR/
 # RUN_DIR/PYTHON (the same interpreter muscle_manager itself resolved to -- use "$PYTHON"
 # rather than a bare `python`) and should write into $RUN_DIR/ (preprocessing, if any,
-# already ran once at bin/pds-create-case time -- see that script's header).
+# already ran once at bin/pds-create-case time -- see that script's header). A failing hook
+# only warns; the generic part still runs.
 
 CASE_ARG="${1:-}"
 [[ -n "$CASE_ARG" ]] || { echo "usage: $0 <case-dir> [overlay.ymmsl ...]" >&2; exit 1; }
@@ -101,9 +109,8 @@ unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
 rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
-POSTPROCESS="$CASE_DIR/postprocess.sh"
-if [[ -x "$POSTPROCESS" ]]; then
-  [[ -f "$CASE_DIR/case.env" ]] && source "$CASE_DIR/case.env"
-  export SHOT
-  "$POSTPROCESS"
+if [[ -f "$CASE_DIR/case.env" ]]; then
+  source "$CASE_DIR/case.env"
 fi
+export SHOT="${SHOT:-}"
+"$PDS_REPO/bin/pds-postprocess"

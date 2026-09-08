@@ -1,0 +1,147 @@
+#!/bin/bash
+# pds-postprocess -- generic post-processing of a PDS run, for any workflow.
+#
+# Run by bin/pds-run-case.sbatch once muscle_manager has finished, and usable by hand
+# on any past run, in either of two forms:
+#
+#   1. environment-driven (what bin/pds-run-case.sbatch uses):
+#
+#        PDS_REPO=... CASE_DIR=... RUN_DIR=... [SCENARIOS_REPO=...] [SHOT=...] bin/pds-postprocess
+#
+#   2. positional (handy by hand -- resolves PDS_REPO/RUN_DIR/SCENARIOS_REPO for you
+#      and auto-loads the PDS module if it isn't loaded yet):
+#
+#        pds-postprocess [<case-dir> [<run-dir>]]
+#
+#      <run-dir> defaults to the latest run for <case-dir>, i.e. the symlink
+#      bin/pds-run-case.sbatch maintains at cases/runs/<case-dir-basename>. Examples:
+#
+#        bin/pds-postprocess cases/inverse_convergence_105073
+#        bin/pds-postprocess cases/inverse_convergence_105073 cases/runs/inverse_convergence_105073_20260903_111446
+#
+# It does two things, in this order:
+#
+#   1. the workflow-specific hook $CASE_DIR/postprocess.sh, if it is executable -- a
+#      local copy of workflows/<workflow>/postprocess.sh made by bin/pds-create-case,
+#      for whatever only that workflow can do (validation plots against its own
+#      reference data, for instance). Guarded: a failing hook only warns.
+#   2. workflows/utils/pds_postprocess.py, which is workflow-agnostic: it reads the
+#      run's own flattened configuration.ymmsl to find the sinks, which code produced
+#      what, and which data entries were read, and from that writes $RUN_DIR/imas_out
+#      (one IMAS data entry for the whole run, with a summary IDS), pds_git_state.txt,
+#      README_REPRODUCE.md and simdb_manifest.yaml. See its docstring.
+#
+# Required environment (form 1): PDS_REPO, CASE_DIR, RUN_DIR. SHOT and SCENARIOS_REPO
+# are optional (SHOT and WF_NAME are read from $CASE_DIR/case.env when it exists).
+# PDS_SIMDB_VERSION is the version of the SimDB registration: the SimDB entry is named
+# pds-<workflow>-<pulse>-<date>-<time>-v<N> (date/time = those of the run directory) and
+# PDS_SIMDB_VERSION sets the vN. It defaults to v1; bump it every time the same run is
+# registered anew, then push the new entry with `--replaces <previous alias>`:
+#   PDS_SIMDB_VERSION=v2 bin/pds-postprocess cases/inverse_convergence_105073
+# PDS_SIMDB_RUN is an opt-in for the special case where this result is also stored in the
+# shared IMAS database under a real <pulse>/<run>: it then names the SimDB entry the same
+# way (PDS_SIMDB_RUN=7 -> alias 105073/7). The run number must be free on the server
+# (`simdb remote ITER info 105073/7` answers "not found" when it is).
+# PYTHON is the interpreter to use and defaults to whatever `python` resolves to.
+set -uo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+usage: pds-postprocess [<case-dir> [<run-dir>]]
+   or: PDS_REPO=... CASE_DIR=... RUN_DIR=... [SCENARIOS_REPO=...] [SHOT=...] pds-postprocess
+
+Positional form:
+  <case-dir>  a case folder built by bin/pds-create-case, e.g. cases/inverse_convergence_105073
+  <run-dir>   a specific run directory; defaults to the latest run for <case-dir>
+              (the cases/runs/<case-dir-basename> symlink bin/pds-run-case.sbatch maintains)
+
+Examples:
+  bin/pds-postprocess cases/inverse_convergence_105073
+  bin/pds-postprocess cases/inverse_convergence_105073 cases/runs/inverse_convergence_105073_20260903_111446
+
+Environment-driven form: set PDS_REPO, CASE_DIR, RUN_DIR (and optionally SCENARIOS_REPO,
+SHOT, PDS_SIMDB_VERSION, PDS_SIMDB_RUN, PYTHON) and run pds-postprocess with no
+arguments. This is how bin/pds-run-case.sbatch invokes it.
+
+PDS_SIMDB_VERSION=vN is the version of the SimDB registration, the -vN of the alias
+pds-<workflow>-<pulse>-<date>-<time>-v<N>. Default v1; bump it for each new registration
+of the same run, and push that entry with --replaces <previous alias>:
+  PDS_SIMDB_VERSION=v2 bin/pds-postprocess cases/inverse_convergence_105073
+
+PDS_SIMDB_RUN=N is an opt-in for the special case where the result is also stored in the
+shared IMAS database under a real <pulse>/<run>; the SimDB alias is then that location:
+  PDS_SIMDB_RUN=7 bin/pds-postprocess cases/inverse_convergence_105073   # alias 105073/7
+EOF
+  exit 0
+fi
+
+# Positional form: a bare (non-option) first argument is a case-dir. Resolve
+# PDS_REPO/CASE_DIR/RUN_DIR/SCENARIOS_REPO from it, and auto-load the PDS module if
+# needed -- none of this runs in the environment-driven form (no positional arg),
+# which stays byte-for-byte as before.
+if [[ $# -ge 1 && "$1" != -* ]]; then
+  PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+  [[ -d "$1" ]] || { echo "pds-postprocess: case dir '$1' does not exist or is not a directory" >&2; exit 1; }
+  CASE_DIR="$(cd "$1" && pwd)"
+
+  if [[ -n "${2:-}" ]]; then
+    RUN_DIR="$(readlink -f "$2")"
+  else
+    RUN_DIR="$(readlink -f "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")")"
+  fi
+  [[ -n "$RUN_DIR" && -d "$RUN_DIR" ]] || { echo "pds-postprocess: run dir for case '$CASE_DIR' not found (looked for '${2:-$PDS_REPO/cases/runs/$(basename "$CASE_DIR")}')" >&2; exit 1; }
+
+  export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
+
+  # workflows/utils/pds_postprocess.py needs IMAS-Python; load the PDS module the same
+  # way bin/pds-create-case does for its own preprocess step, if it isn't loaded yet.
+  if [[ -z "${IMAS_VERSION:-}" ]]; then
+    : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    if [[ -f "$LMOD_INIT" ]]; then
+      source "$LMOD_INIT"
+      module use "$PDS_MODULEPATH" 2>/dev/null || true
+      module load PDS 2>/dev/null || true
+    fi
+  fi
+  : "${IMAS_VERSION:?pds-postprocess: IMAS_VERSION not set and could not load PDS automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+fi
+
+: "${PDS_REPO:?pds-postprocess: PDS_REPO is not set}"
+: "${CASE_DIR:?pds-postprocess: CASE_DIR is not set}"
+: "${RUN_DIR:?pds-postprocess: RUN_DIR is not set}"
+export PDS_REPO CASE_DIR RUN_DIR
+export SCENARIOS_REPO="${SCENARIOS_REPO:-}"
+
+# case.env carries WF_NAME and SHOT; the hook below expects SHOT in its environment and
+# pds_postprocess.py reads case.env itself, so only export what is there.
+if [[ -f "$CASE_DIR/case.env" ]]; then
+  # shellcheck disable=SC1091
+  source "$CASE_DIR/case.env"
+fi
+export SHOT="${SHOT:-}"
+export WF_NAME="${WF_NAME:-}"
+
+PYTHON="${PYTHON:-$(command -v python3 2>/dev/null || command -v python)}"
+export PYTHON
+[[ -n "$PYTHON" ]] || { echo "pds-postprocess: no python interpreter found" >&2; exit 1; }
+
+HOOK="$CASE_DIR/postprocess.sh"
+if [[ -x "$HOOK" ]]; then
+  echo "pds-postprocess: running the workflow hook $HOOK"
+  "$HOOK" || echo "pds-postprocess: workflow hook failed (see above), continuing" >&2
+else
+  echo "pds-postprocess: no executable workflow hook at $HOOK, skipping"
+fi
+
+echo "pds-postprocess: running the generic post-processing"
+"$PYTHON" "$PDS_REPO/workflows/utils/pds_postprocess.py" \
+  --run-dir "$RUN_DIR" \
+  --case-dir "$CASE_DIR" \
+  --pds-repo "$PDS_REPO" \
+  --scenarios-repo "$SCENARIOS_REPO" \
+  --shot "$SHOT" \
+  ${PDS_SIMDB_VERSION:+--simdb-version "$PDS_SIMDB_VERSION"} \
+  ${PDS_SIMDB_RUN:+--simdb-run "$PDS_SIMDB_RUN"} \
+  || echo "pds-postprocess: generic post-processing failed (see above)" >&2

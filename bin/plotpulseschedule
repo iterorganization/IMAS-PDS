@@ -1,0 +1,20 @@
+#!/bin/bash
+# plotpulseschedule -- plot the pulse schedule of a PDS run, with its input
+# waveforms overlaid.  A thin launcher for workflows/utils/pdsplot: it works from
+# any directory, adds workflows/utils to PYTHONPATH and forwards every argument.
+#
+#   plotpulseschedule -u URI [-r URI ...] [-t TIME] [--save] [--directory DIR]
+#                     [--rc KEY=VAL] [--dpi N] [-v]
+#
+# Requires IMAS-Python and matplotlib, i.e. the PDS module (or any environment
+# providing them).  Set MPLBACKEND=Agg for a headless run.  PYTHON selects the
+# interpreter and defaults to whatever python resolves to.
+set -uo pipefail
+
+PDS_REPO="${PDS_REPO:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
+export PYTHONPATH="$PDS_REPO/workflows/utils${PYTHONPATH:+:$PYTHONPATH}"
+
+PYTHON="${PYTHON:-$(command -v python3 2>/dev/null || command -v python)}"
+[[ -n "$PYTHON" ]] || { echo "plotpulseschedule: no python interpreter found" >&2; exit 1; }
+
+exec "$PYTHON" -m pdsplot.scripts.plotpulseschedule "$@"
