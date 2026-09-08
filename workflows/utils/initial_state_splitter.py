@@ -17,6 +17,12 @@ This actor sits in between: for each connected IDS channel, it forwards the
 first message received on `<channel>_in` to `<channel>_init_out` (wire to
 the peer's F_INIT), and every following message to `<channel>_out` (wire to
 the peer's S), unchanged.
+
+The `<channel>_init_out` ports are optional: a channel whose `_init_out` is
+left unconnected simply has its first message dropped, so with none of them
+wired the actor is a plain drop-first filter -- which is how
+metis_nice_evol_from_dina uses it, its peer's F_INIT being bootstrapped by a
+separate one-shot instance instead.
 """
 
 import logging
