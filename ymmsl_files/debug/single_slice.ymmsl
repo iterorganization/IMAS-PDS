@@ -1,0 +1,23 @@
+ymmsl_version: v0.2
+
+# Cuts a run down to a short slice of the pulse, for the tap workflows in this
+# directory: one message per stream is all you need to see which nodes are filled, and
+# it keeps the equilibrium solve down to a slice or two.
+#
+# The source filters the scenario's own time array with `t_min <= t <= t_max`, so the
+# window has to *contain* at least one of its times -- it does not snap to the nearest
+# one, and an empty selection fails with `IndexError: list index out of range` in
+# data_sink_source.py. Setting t_min == t_max therefore only works if the data happens
+# to have a slice at exactly that time. To see what times you can pick from:
+#
+#   python -c "import imas; \
+#     db = imas.DBEntry('imas:hdf5?path=$SCENARIOS_REPO/105092/data/in', 'r'); \
+#     print(db.get('equilibrium', lazy=True).time[:])"
+#
+# The values below bracket the flattop of the 105092 pulse; pick a window your own
+# scenario covers. Both must be floats: the source declares them as float, and MUSCLE3
+# rejects an int up front.
+
+settings:
+  source.t_min: 20.0
+  source.t_max: 21.0

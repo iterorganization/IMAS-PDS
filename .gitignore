@@ -23,6 +23,8 @@ ymmsl_files/output/
 local_installs/*
 !local_installs/.gitkeep
 ymmsl_files/*
+# ...except the hand-written tap workflows, which are not generated from templates:
+!ymmsl_files/debug/
 
 cases/*/
 !cases/overrides/
