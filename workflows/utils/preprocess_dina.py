@@ -76,9 +76,13 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
                 z_out = np.asarray(eq_orig_ts.boundary_separatrix.outline.z)
             if r_out.size:
                 if not eq_orig_ts.boundary.geometric_axis.r.has_value:
-                    eq_orig_ts.boundary.geometric_axis.r = (r_out.min() + r_out.max()) / 2
+                    eq_orig_ts.boundary.geometric_axis.r = (
+                        r_out.min() + r_out.max()
+                    ) / 2
                 if not eq_orig_ts.boundary.geometric_axis.z.has_value:
-                    eq_orig_ts.boundary.geometric_axis.z = (z_out.min() + z_out.max()) / 2
+                    eq_orig_ts.boundary.geometric_axis.z = (
+                        z_out.min() + z_out.max()
+                    ) / 2
             eq_orig_ts.boundary.psi = eq_orig_ts.boundary_separatrix.psi
             eq_orig_ts.boundary.outline.r = eq_orig_ts.boundary_separatrix.outline.r
             eq_orig_ts.boundary.outline.z = eq_orig_ts.boundary_separatrix.outline.z
