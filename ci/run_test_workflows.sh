@@ -54,6 +54,10 @@ run_actor_test_clean test_nice_actor
 run_actor_test_clean test_metis_actor
 run_actor_test_clean test_chease_actor
 
+# Repeatability: the same coupling twice must give bit-identical sinks (catches
+# thread-order or uninitialised-memory non-determinism in an actor).
+bash ci/check_repeatability.sh ymmsl_files/test_nice_actor.ymmsl 2
+
 # RUN WORKFLOWS
 
 run_case_clean prescribed_transport 105099
