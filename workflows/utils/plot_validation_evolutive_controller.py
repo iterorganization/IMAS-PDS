@@ -36,7 +36,9 @@ def handle_args():
         ),
     )
     parser.add_argument(
-        "--nice_uri", type=str, help="URI to load evolutive_controller's NICE output from"
+        "--nice_uri",
+        type=str,
+        help="URI to load evolutive_controller's NICE output from",
     )
     parser.add_argument(
         "--output_dir", type=str, help="path to directory in which to put plots"
@@ -162,7 +164,10 @@ def kcurr_plot(args, dbs):
     the raw-DINA target vs NICE's actual per-coil current, one panel per coil."""
     coil_figure_path = f"{args.output_dir}/pds_kcurr_{args.shot_nr}.png"
     coil_dict = {}
-    pfas = {"reference": dbs["dina"].get("pf_active"), "nice": dbs["nice"].get("pf_active")}
+    pfas = {
+        "reference": dbs["dina"].get("pf_active"),
+        "nice": dbs["nice"].get("pf_active"),
+    }
     nice_mask = nice_output_flags(dbs["nice"]) != -1
     ref_time = np.asarray(pfas["reference"].time)
     nice_time = np.asarray(pfas["nice"].time)[nice_mask]
