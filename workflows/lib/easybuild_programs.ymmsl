@@ -23,10 +23,16 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
-  initial_state_splitter:
+  # IMAS_AL_DISABLE_VALIDATE: this actor deserialises a NICE-inverse equilibrium (whose
+  # grids_ggd is not itself time-varying and so stays at shape (1,) while the rest of the
+  # IDS has one entry per slice -- a coordinate mismatch IMAS's strict validator rejects,
+  # same reason as the waveform_editor and nice_* entries).
+  reference_rebase:
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
     executable: python
-    args: -u $PDS_REPO/workflows/utils/initial_state_splitter.py
+    args: -u $PDS_REPO/workflows/utils/reference_rebase.py
 
   metis:
     script: |

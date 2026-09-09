@@ -34,7 +34,7 @@ imports:
 - from lib.easybuild_programs import implementation nice_evo_rd
 - from lib.easybuild_programs import implementation nice_inv
 - from lib.easybuild_programs import implementation magnetic_controller
-- from lib.easybuild_programs import implementation initial_state_splitter
+- from lib.easybuild_programs import implementation reference_rebase
 
 models:
   metis_nice_evol_from_dina:
@@ -81,14 +81,13 @@ models:
         ports:
           f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
           o_f: [equilibrium_out, pf_active_out]
-  
 
-      metis_to_nice:
-        description: "drops METIS's initialisation-turn message: METIS emits its initial state on its O_I ports before its first evolved state, and nice_evo_rd's S ports must only see evolved states"
-        implementation: initial_state_splitter
+      reference_rebase:
+        description: rebases the controller's feed-forward references -- coil currents, Ip, plasma position -- onto the NICE inverse solution at the start time
+        implementation: reference_rebase
         ports:
-          s: [equilibrium_in, core_profiles_in]
-          o_i: [equilibrium_out, core_profiles_out]
+          f_init: [equilibrium_in, pf_active_in, equilibrium_ref_in, pf_active_ref_in]
+          o_f: [equilibrium_out, pf_active_out]
 
       nice_evo_rd:
         description: nice evolutive free-boundary + resistive-diffusion solve
@@ -175,13 +174,11 @@ models:
       metis_init.equilibrium_out_f: nice_evo_rd.equilibrium_f_init
       metis_init.core_profiles_out_f: nice_evo_rd.core_profiles_f_init
 
-      # NICE in-loop input from METIS, through metis_to_nice: METIS's initialisation turn
-      # emits its initial state on its O_I ports (next_timestamp None) before its first
-      # evolved state, and nice_evo_rd's evolutive time loop stops on such an S message.
-      metis.equilibrium_out_i: metis_to_nice.equilibrium_in
-      metis.core_profiles_out_i: metis_to_nice.core_profiles_in
-      metis_to_nice.equilibrium_out: nice_evo_rd.equilibrium_s
-      metis_to_nice.core_profiles_out: nice_evo_rd.core_profiles_s
+      # the in-loop METIS instance must not send its initialisation-turn state on its O_I ports
+      # (fixed in metis4muscle3.m: no O_I send on the initialisation turn when not in init-only
+      # mode); nice_evo_rd's evolutive time loop would otherwise stop on that first message
+      metis.equilibrium_out_i: nice_evo_rd.equilibrium_s
+      metis.core_profiles_out_i: nice_evo_rd.core_profiles_s
       # NICE in-loop input from the controller
       magnetic_controller.pf_active_out_i: nice_evo_rd.pf_active_s
 
@@ -197,9 +194,18 @@ models:
       nice_evo_rd.equilibrium_o_i: sink_equilibrium.equilibrium_in
       nice_evo_rd.pf_active_o_i: sink_equilibrium.pf_active_in
 
-      # Controller bootstrap from machine description
-      nice_inv.equilibrium_out: magnetic_controller.equilibrium_in_f
-      source_nice.pf_active_out: magnetic_controller.pf_active_in_f
+      # Controller bootstrap: the DINA scenario trace (whole trace, the shape and time
+      # base the controller needs) rebased onto nice_inv's solution at the start time.
+      # Wiring nice_inv straight into the controller's F_INIT instead does not work: the
+      # controller reads its whole reference trajectory once from these two ports
+      # (equilibrium.time -> Simulink StartTime/StopTime, then one timeseries per
+      # reference), while nice_inv emits a single time slice.
+      source_nice.equilibrium_out: reference_rebase.equilibrium_in
+      source_nice.pf_active_out: reference_rebase.pf_active_in
+      nice_inv.equilibrium_out: reference_rebase.equilibrium_ref_in
+      nice_inv.pf_active_out: reference_rebase.pf_active_ref_in
+      reference_rebase.equilibrium_out: magnetic_controller.equilibrium_in_f
+      reference_rebase.pf_active_out: magnetic_controller.pf_active_in_f
 
       # Controller output to sink
       magnetic_controller.pf_active_out_i: sink_control.pf_active_in

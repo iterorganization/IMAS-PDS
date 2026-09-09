@@ -16,13 +16,45 @@ as `evolutive_controller`'s `torax`/`nice_evo_rd` pair. Unlike TORAX, METIS also
 actuator/current-drive input), supplied by `synchro_nice_metis` re-slicing METIS's own
 DINA-derived input trace at NICE's current equilibrium timestamp.
 
-`metis_to_nice` (`initial_state_splitter`) sits on the `metis` -> `nice_evo_rd` S path as a
-drop-first filter. METIS's actor emits, during its initialisation turn, one O_I message
-carrying its initial state (`next_timestamp` None, the same state `metis_init` writes on its
-O_F ports) before the one-per-step evolved states; `nice_evo_rd`'s evolutive actor takes its
-clock and its termination from every S message, so that first one would stop its time loop
-after a single step. `metis_to_nice` forwards only the evolved states; `nice_evo_rd`'s F_INIT
-is still bootstrapped by `metis_init`.
+The fix for METIS's initialisation-turn message on its O_I ports lives in the METIS actor
+itself (`metis4muscle3.m`: no O_I send on the initialisation turn when not in init-only mode;
+patch in the METIS repository, branch `develop`). METIS versions without that fix need a
+drop-first filter between `metis` and `nice_evo_rd`, since `nice_evo_rd`'s evolutive actor
+takes its clock and termination from every S message and would otherwise stop its time loop
+after a single step.
+
+`reference_rebase` (`workflows/utils/reference_rebase.py`) sits between the scenario source
+and the controller's F_INIT ports. The magnetic controller reads its whole reference
+trajectory once, from `equilibrium_in_f` and `pf_active_in_f`
+(`controllers/KCURR_RZIp/muscle_controller_NICE_IMAS_iter_init.m:67-126`): `equilibrium.time`
+becomes Simulink's start/stop time, and `global_quantities.ip`,
+`boundary.geometric_axis.r/.z` and `pf_active.coil{i}.current.data` become the `Ipl_ref`,
+`Rpl_ref`, `Zpl_ref` and `CSPF_curr_ref` timeseries (with `CSPF_volt_cmd_FF` the
+feed-forward voltage built from the first current sample and the coil resistances). Those
+references come from the DINA scenario, while the plant is started from `nice_inv`'s own
+inverse solve at the run's start time -- and the few-percent disagreement at t0 is answered
+by saturated coil voltages on the first steps. Wiring `nice_inv` straight into the
+controller's F_INIT is not an option either: it delivers a single time slice where the
+controller needs the whole trace. `reference_rebase` therefore keeps the scenario trace --
+its shape, its time base, its length -- and shifts it so that at t0 it agrees exactly with
+the NICE inverse solution, the same rebase the JT-60SA simulator applies:
+
+    X_ff(t) = X_src(t) - X_src(t0) + X_nice(t0)
+
+with `t0` the time of the NICE-inverse slice and `X_src(t0)` interpolated linearly
+(`numpy.interp`, clamped at the ends, so a t0 on or just outside the first scenario sample
+is fine). It is applied per coil to `pf_active.coil[].current.data` (coils matched by name,
+falling back to index with a warning), and to `equilibrium.time_slice[].global_quantities.ip`
+and `.boundary.geometric_axis.r/.z` -- exactly the quantities the controller reads.
+Everything else is forwarded untouched, including message timestamps: no flux quantity is
+shifted, because the controller reads no `psi` from either its F_INIT or its S ports. For
+the position it evaluates the controller's own fallback chain (geometric axis -> boundary
+outline midpoint -> magnetic axis) on both sides and writes the shifted result back into
+`boundary.geometric_axis`, so the controller reads a valid axis directly. The shifts are
+logged per coil and for ip/r/z at INFO level. Optional settings `rebase_currents`,
+`rebase_ip`, `rebase_position` (all default true) and `shift_mode` (`additive` default,
+`none` for a pure passthrough) allow switching parts of it off for A/B debugging without
+rewiring the workflow.
 
 Ported from `itergit/feature/metis_nice_evol`'s
 `workflows/metis_predictive_nice_evol_from_dina/workflow.ymmsl.template` ("first version of the

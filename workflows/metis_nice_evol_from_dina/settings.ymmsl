@@ -24,10 +24,10 @@ resources:
   metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
   metis_nice_evol_from_dina.metis: {threads: 10}
   metis_nice_evol_from_dina.metis_init: {threads: 4}
-  metis_nice_evol_from_dina.metis_to_nice: {threads: 1}
   metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
   metis_nice_evol_from_dina.nice_inv: {threads: 2}
-    # Simulink controller: 4 threads
+  metis_nice_evol_from_dina.reference_rebase: {threads: 1}
+  # Simulink controller: 4 threads
   metis_nice_evol_from_dina.magnetic_controller: {threads: 4}
   metis_nice_evol_from_dina.sink_transport: {threads: 1}
   metis_nice_evol_from_dina.sink_metis_init: {threads: 1}
