@@ -32,6 +32,7 @@ imports:
 - from imas_muscle3 import implementation sink_source_component
 - from lib.local_programs import implementation metis
 - from lib.easybuild_programs import implementation nice_evo_rd
+- from lib.easybuild_programs import implementation nice_inv
 - from lib.easybuild_programs import implementation magnetic_controller
 - from lib.easybuild_programs import implementation initial_state_splitter
 
@@ -73,6 +74,14 @@ models:
         ports:
           f_init: [pulse_schedule_f_init, core_profiles_f_init, core_sources_f_init]
           o_f: [equilibrium_out_f, pulse_schedule_out_f, core_profiles_out_f, plasma_profiles_out_f, plasma_sources_out_f, summary_out_f]
+
+      nice_inv:
+        description: NICE inverse solve on METIS's equilibrium (bare, no load balancer)
+        implementation: nice_inv
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+  
 
       metis_to_nice:
         description: "drops METIS's initialisation-turn message: METIS emits its initial state on its O_I ports before its first evolved state, and nice_evo_rd's S ports must only see evolved states"
@@ -150,7 +159,15 @@ models:
       # synchronisation between METIS source and NICE one
       source_nice.pf_active_out: source_metis.pf_active_in
 
-      # NICE bootstrap from machine description
+      # NICE inv bootstrap from machine description and init 
+      source_nice.pf_active_out: nice_inv.pf_active_in
+      source_nice.pf_passive_out: nice_inv.pf_passive_in
+      source_nice.iron_core_out: nice_inv.iron_core_in
+      source_nice.wall_out: nice_inv.wall_in
+      metis_init.equilibrium_out_f: nice_inv.equilibrium_in
+     
+
+      # NICE evol bootstrap from machine description
       source_nice.pf_active_out: nice_evo_rd.pf_active_f_init
       source_nice.pf_passive_out: nice_evo_rd.pf_passive_f_init
       source_nice.iron_core_out: nice_evo_rd.iron_core_f_init
@@ -181,7 +198,7 @@ models:
       nice_evo_rd.pf_active_o_i: sink_equilibrium.pf_active_in
 
       # Controller bootstrap from machine description
-      source_nice.equilibrium_out: magnetic_controller.equilibrium_in_f
+      nice_inv.equilibrium_out: magnetic_controller.equilibrium_in_f
       source_nice.pf_active_out: magnetic_controller.pf_active_in_f
 
       # Controller output to sink

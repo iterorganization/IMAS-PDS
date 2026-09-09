@@ -23,10 +23,11 @@ resources:
   metis_nice_evol_from_dina.source_metis: {threads: 1}
   metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
   metis_nice_evol_from_dina.metis: {threads: 10}
-  metis_nice_evol_from_dina.metis_init: {threads: 1}
+  metis_nice_evol_from_dina.metis_init: {threads: 4}
   metis_nice_evol_from_dina.metis_to_nice: {threads: 1}
   metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
-  # Simulink controller: 4 threads
+  metis_nice_evol_from_dina.nice_inv: {threads: 2}
+    # Simulink controller: 4 threads
   metis_nice_evol_from_dina.magnetic_controller: {threads: 4}
   metis_nice_evol_from_dina.sink_transport: {threads: 1}
   metis_nice_evol_from_dina.sink_metis_init: {threads: 1}
@@ -36,11 +37,11 @@ resources:
 settings:
   source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
   source_nice.iterative: false
-  source_nice.t_min: 0.0
+  source_nice.t_min: 72.0
 
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
-  source_metis.iterative: false
-  source_metis.t_min: 0.0
+  #source_metis.iterative: false
+  #source_metis.t_min: 72.0
 
   synchro_nice_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
   # The METIS input dataset has slices ~0.11 s apart while the loop runs every 2 ms; with the
@@ -77,6 +78,7 @@ settings:
   nice_evo_rd.dt: 0.002
   # NICE/3.0.0.dev258's evolutive actor has no end-time setting of its own; the run ends
   # through METIS's metis_clock_time_stop (default Inf, i.e. unset) or the SLURM time limit.
+  nice_inv.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
 
   # METIS switches for reading external data from the received IDSs -- predictive defaults,
   # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
