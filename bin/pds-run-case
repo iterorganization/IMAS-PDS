@@ -15,6 +15,20 @@ set -euo pipefail
 [[ $# -ge 1 ]] || { echo "usage: $0 <case-dir> [overlay.ymmsl ...]" >&2; exit 1; }
 
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PDS_REPO="${PDS_REPO:-$(cd "$BIN_DIR/.." && pwd)}"
+
+CASE_DIR="$1"
+[[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$1"
+if [[ ! -d "$CASE_DIR" ]]; then
+  echo "$0: no case dir $1" >&2
+  echo "Build one first: bin/pds-create-case <workflow> <shot>" >&2
+  exit 1
+fi
+if [[ ! -f "$CASE_DIR/case.env" ]]; then
+  echo "$0: $1 is not a case folder (no case.env)" >&2
+  echo "Pass a directory built by bin/pds-create-case, not a workflow or a run." >&2
+  exit 1
+fi
 if command -v sbatch >/dev/null 2>&1; then
   exec sbatch "$BIN_DIR/pds-run-case.sbatch" "$@"
 else
