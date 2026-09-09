@@ -8,7 +8,8 @@
 #SBATCH --partition=sun,vega,sirius,sun_debug,vega_debug,sirius_debug
 set -euo pipefail
 
-# SLURM wrapper that runs a case folder created by bin/pds-create-case. Submit from the
+# SLURM wrapper that runs a case folder created by bin/pds-create-case. Output goes to
+# <case-dir>/runs/<timestamp>/, with <case-dir>/runs/latest symlinked to it. Submit from the
 # repo root, e.g.:
 #
 #   bin/pds-create-case inverse_convergence 105084
@@ -48,6 +49,9 @@ export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 CASE_DIR="$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || { echo "$0: no case dir $CASE_ARG" >&2; exit 1; }
+# Absolute from here on: the run directory hangs off it, and postprocess.sh and every actor
+# resolve it from a working directory of their own.
+CASE_DIR="$(cd "$CASE_DIR" && pwd)"
 export CASE_DIR
 
 export YMMSL_PATH="$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
@@ -73,9 +77,11 @@ fi
 PYTHON="$(command -v python3 2>/dev/null || command -v python)"
 export PYTHON
 
-# Timestamped so successive runs of the same case don't collide or overwrite each other --
-# cases/runs/<case> is kept as a symlink to the latest one, updated below.
-RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
+# Runs live inside the case they belong to, one timestamped directory each, so successive
+# runs don't collide and everything about a case -- its inputs and its output -- is in one
+# place you can copy or delete as a unit. runs/latest points at the most recent one (see
+# below).
+RUN_DIR="$CASE_DIR/runs/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
 
@@ -96,10 +102,10 @@ unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
 # Stable path to this case's most recent run, for consumers that need one fixed location
 # (e.g. evolutive_controller/settings.ymmsl reading inverse_convergence's output) instead of
 # having to know the timestamp. rm -rf first: ln -sfn only replaces an existing symlink --
-# if a pre-timestamp run left a real directory at this path, ln would silently nest the new
-# symlink inside it instead of replacing it.
-rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
-ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
+# if something left a real directory at this path, ln would silently nest the new symlink
+# inside it instead of replacing it.
+rm -rf "$CASE_DIR/runs/latest"
+ln -sfn "$(basename "$RUN_DIR")" "$CASE_DIR/runs/latest"
 
 POSTPROCESS="$CASE_DIR/postprocess.sh"
 if [[ -x "$POSTPROCESS" ]]; then

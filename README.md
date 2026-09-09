@@ -25,7 +25,8 @@ The PDS tool is currently set up to be used on SDCC and needs significant manual
 
 A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
 is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
-materializes that pairing as a **case** directory under `cases/`.
+materializes that pairing as a **case** directory under `cases/` (or wherever you point
+it), and each run of that case lands in `<case>/runs/<timestamp>/`.
 These premade cases are examples that can be built upon. The user is free to change anything in the
 case directory. `bin/pds-run-case.sbatch` is then used to run the case using a Slurm job:
 

@@ -4,6 +4,8 @@
 #   pds-run-case <case-dir> [overlay.ymmsl ...]
 #   e.g. pds-run-case cases/inverse_convergence_105073
 #
+# Output goes to <case-dir>/runs/<timestamp>/, with <case-dir>/runs/latest symlinked to it.
+#
 # Thin `sbatch` wrapper around bin/pds-run-case.sbatch -- see that script's header for what
 # actually happens once the job starts. If sbatch isn't on PATH (no Slurm on this machine),
 # runs bin/pds-run-case.sbatch directly under bash instead. To override Slurm resources

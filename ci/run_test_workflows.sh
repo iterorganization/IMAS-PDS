@@ -28,7 +28,8 @@ export SLURM_PARTITION=sun_debug,vega_debug,sirius_debug
 
 # Single-actor smoke tests: catch a broken actor environment in seconds. Without an
 # explicit --run-dir the manager creates run_<model>_<timestamp> in the CI workspace and
-# nothing ever prunes them, so these land in cases/runs/ same as the case runs below.
+# nothing ever prunes them, so these get one fixed directory each under cases/runs/. (Case
+# runs go elsewhere: those live inside their own case, in <case>/runs/<timestamp>.)
 run_actor_test_clean() {
   local test_name="$1"
   rm -rf "cases/runs/$test_name"

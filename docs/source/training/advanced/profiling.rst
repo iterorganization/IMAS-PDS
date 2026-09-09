@@ -21,7 +21,7 @@ for what each plot shows and how the numbers are measured.
 
         .. code-block:: bash
 
-            RUN=cases/runs/inverse_convergence_105092
+            RUN=cases/inverse_convergence_105092/runs/latest
 
             muscle3 profile --instances $RUN/performance.sqlite
             muscle3 profile --resources $RUN/performance.sqlite

@@ -59,7 +59,7 @@ and in the terminal where you keep the dashboard:
 
 .. code-block:: bash
 
-    m3dash open cases/runs/
+    m3dash open cases/
 
 Click the run, and the ``recorder_equilibrium`` tab appears as soon as the recorder has
 written something.

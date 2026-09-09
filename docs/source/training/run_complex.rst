@@ -57,7 +57,7 @@ Some useful commands while the job is in the queue:
     tail -f slurm-<jobid>.out    # Check the job script itself printed
 
 The MUSCLE3 dashboard from the previous section works exactly the same way when
-you submit to a compute node. The run directory lands in ``cases/runs/`` on the shared filesystem, 
+you submit to a compute node. The run directory lands inside the case on the shared filesystem, 
 so a dashboard you started on the login node picks the run up and follows it live, 
 while the simulation itself runs on a compute node.
 
@@ -105,7 +105,7 @@ coupled transport solver.
         Check if the results look as expected using the recorder actor plots in muscle3-dashboard.
         You can disable the ``Live View`` checkbox to scroll through the time line of the results.
         The solved equilibrium and coil currents are written to ``out_nice`` in the run
-        directory, ``cases/runs/prescribed_transport_105092/``, so you can also open them with
+        directory, ``cases/prescribed_transport_105092/runs/latest/``, so you can also open them with
         the standard IMAS exploration tools.
 
 
@@ -148,7 +148,7 @@ calculated by NICE to a transport solve using TORAX.
             You can take a look at the results of the recorder actor for NICE and TORAX 
             while the run is still going, or after the run is finished, you can check out the
             post-processed plots. These are available in the created run folder under:
-            ``cases/runs/inverse_convergence_105092/plots``
+            ``cases/inverse_convergence_105092/runs/latest/plots``
 
 
 
@@ -162,7 +162,7 @@ calculated by NICE to a transport solve using TORAX.
 
         Check if results look as expected using the recorder actor plots in muscle3-dashboard.
         The solved equilibrium and coil currents are written to ``out_nice`` in the run
-        directory, ``cases/runs/inverse_convergence_105092/``, and the converged pulse to
+        directory, ``cases/inverse_convergence_105092/runs/latest/``, and the converged pulse to
         ``out_torax``.
 
         .. image:: images/pds_coils_105092.png
@@ -177,7 +177,7 @@ When the job finishes, everything it produced is in one place:
 
 .. code-block:: text
 
-    cases/runs/inverse_convergence_105092/
+    cases/inverse_convergence_105092/runs/20260904_101500/
         muscle3_manager.log     # what the manager did
         configuration.ymmsl     # the settings this run actually used, fully resolved
         instances/              # per-actor logs and working directories

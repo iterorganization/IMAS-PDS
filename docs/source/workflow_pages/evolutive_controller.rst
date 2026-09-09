@@ -75,7 +75,7 @@ needs flux-surface quantities -- ``r_inboard``/``r_outboard``, ``gm1`` through `
 own equilibrium record never populates them. So this case reads the output of a completed
 :ref:`inverse convergence <case-inverse-convergence>` run for the same shot, directly from
 that run's directory: ``source.source_uri`` points at
-``$PDS_REPO/cases/runs/inverse_convergence_${SHOT}/out_nice``. Run that case first, and do
+``cases/inverse_convergence_${SHOT}/runs/latest/out_nice``. Run that case first, and do
 not clear its run directory before running this one.
 
 The waveform editor passes that equilibrium through an ``equilibrium/*: {ref: eq}`` wildcard, 

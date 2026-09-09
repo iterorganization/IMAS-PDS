@@ -71,7 +71,7 @@ Templating
 ``pds-create-case`` substitutes exactly four variables when it copies files into
 a case:
 
-``${PDS_REPO}`` ``${SCENARIOS_REPO}`` ``${SHOT}`` ``${CASE_DIR}``
+``${PDS_REPO}`` ``${SCENARIOS_REPO}`` ``${SHOT}`` ``${CASE_DIR}`` ``${CASES_DIR}``
 
 No other placeholders are expanded, and there is no wider templating scheme.
 

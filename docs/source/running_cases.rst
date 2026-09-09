@@ -18,8 +18,8 @@ A run pairs two things:
   repository, keyed by shot number.
 
 **Case**
-  The pairing of the two, materialised as a directory under ``cases/``. This is
-  what you actually run.
+  The pairing of the two, materialised as a directory -- under ``cases/`` unless you say
+  otherwise. This is what you actually run, and its runs land inside it.
 
 You do not write a case by hand: ``bin/pds-create-case`` builds one and
 ``bin/pds-run-case.sbatch`` submits it.
@@ -33,9 +33,22 @@ Creating a case
 
   bin/pds-create-case inverse_convergence 105073
 
-That writes ``cases/inverse_convergence_105073``; a third argument puts it elsewhere.
+That writes ``cases/inverse_convergence_105073``. A third argument puts the case wherever
+you want it instead, and ``PDS_CASES_DIR`` moves the default for every case you build:
+
+.. code-block:: bash
+
+  bin/pds-create-case inverse_convergence 105073 /scratch/$USER/my-case
+
+  export PDS_CASES_DIR=/scratch/$USER/cases     # -> /scratch/$USER/cases/<workflow>_<shot>
+
 ``source completion.sh`` gives tab completion over the available workflows and the shots
 in your ``$SCENARIOS_REPO``. :ref:`workflows` lists what is available.
+
+A shot that is neither in your ``$SCENARIOS_REPO`` nor covered by a file in
+``cases/overrides/`` is refused here, with the shots that are available -- a typo in a
+shot number costs you an error message rather than a case whose every input path points
+at nothing.
 
 What is in a case directory
 ---------------------------
@@ -88,6 +101,10 @@ The script stacks the case's ymmsl files -- ``workflow.ymmsl``,
 ``preprocess_settings.ymmsl``, in that order -- and hands them to ``muscle_manager``,
 loading the module stack itself if you have not.
 
+``bin/pds-run-case`` checks the case before it submits anything: a path that does not
+exist, or one that is not a case folder (no ``case.env`` -- a workflow directory, say),
+is refused rather than queued and left to fail once the job starts.
+
 Changing one setting for one run
 --------------------------------
 
@@ -114,12 +131,14 @@ workflow.
 Where the output goes
 ---------------------
 
-Each run lands in ``cases/runs/<workflow>_<shot>/``.
+Each run lands in ``<case-dir>/runs/<timestamp>/``, and ``<case-dir>/runs/latest``
+symlinks to the most recent one -- so a case carries its own history, and everything one
+case produced can be copied or deleted as a unit.
 
-.. warning::
+.. note::
 
-   That directory is deleted at the start of every run. Copy anything you want
-   to keep before re-running the same case.
+   Runs accumulate: nothing prunes them, and rebuilding the case with
+   ``pds-create-case`` keeps them. Delete the ones you no longer need yourself.
 
 It also receives all the ymmsl files exactly as passed. 
 When a run does something unexpected, read ``configuration.ymmsl`` as it shows the 

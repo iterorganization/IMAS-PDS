@@ -29,7 +29,8 @@ The `settings.ymmsl` contains (all templated from `${SHOT}`):
 - This workflow's own `waveforms_no_transport.yaml` pulse-design template
 - The input DBEntry
 
-If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `cases/runs/<case>`.
+If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `<case>/runs/<timestamp>`
+(with `<case>/runs/latest` pointing at the most recent one).
 
 Scenarios available: 105078, 105084, 105092, 105099.
 

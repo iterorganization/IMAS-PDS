@@ -5,11 +5,17 @@
 #   e.g. pds-create-case inverse_convergence 105084
 #        pds-create-case inverse_convergence 105084 /tmp/my-case
 #
+# <case-dir> is where this case is written; it may be anywhere, and is resolved to an
+# absolute path (everything the case records about itself has to survive being run from a
+# different working directory). Without it the case goes to
+# $PDS_CASES_DIR/<workflow>_<shot>, and PDS_CASES_DIR itself defaults to $PDS_REPO/cases --
+# so `export PDS_CASES_DIR=/scratch/$USER/cases` moves every case you build from then on.
+#
 # Rebuilding a case deletes the existing folder, edits included. If it is already there you
 # are asked to confirm; -f skips the question, and so does a non-interactive shell (CI).
 #
-# Writes, under <case-dir> (default cases/<workflow>_<shot>), substituting
-# ${PDS_REPO}/${SCENARIOS_REPO}/${SHOT} in each file:
+# Writes, under <case-dir>, substituting
+# ${PDS_REPO}/${SCENARIOS_REPO}/${SHOT}/${CASE_DIR}/${CASES_DIR} in each file:
 #
 #   workflow.ymmsl           the workflow's structure
 #   workflow_settings.ymmsl  the workflow's generic settings (resources, solver defaults,
@@ -24,7 +30,7 @@
 #                             reference to workflows/lib or pds-scenarios
 #   case.env                  WF_NAME (provenance) / SHOT -- bin/pds-run-case.sbatch sources
 #                             this for SHOT, which postprocess.sh needs at run time, without
-#                             re-deriving it from the case-dir name (which may be custom, via $3)
+#                             re-deriving it from the case-dir name (which may be custom)
 #   postprocess.sh             a local copy of workflows/<workflow>/postprocess.sh, if it
 #                             exists -- like everything else here, the case is a frozen
 #                             snapshot, so bin/pds-run-case.sbatch runs $CASE_DIR/postprocess.sh
@@ -73,9 +79,12 @@ WF="$PDS_REPO/workflows/$WF_NAME"
 export SHOT="$2"
 export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 OVERRIDE="$PDS_REPO/cases/overrides/${WF_NAME}_${SHOT}.ymmsl"
-CASE_DIR="${3:-$PDS_REPO/cases/${WF_NAME}_${SHOT}}"
+export CASES_DIR="${PDS_CASES_DIR:-$PDS_REPO/cases}"
+# -m: the case dir does not exist yet (and neither may its parent, if PDS_CASES_DIR points
+# somewhere new), so resolve the path without requiring it to be there.
+CASE_DIR="$(realpath -m "${3:-$CASES_DIR/${WF_NAME}_${SHOT}}")"
 export CASE_DIR
-VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR}'
+VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR} ${CASES_DIR}'
 
 [[ -d "$WF" ]] || { echo "pds-create-case: no workflow dir $WF" >&2; exit 1; }
 
@@ -95,6 +104,7 @@ if [[ -d "$CASE_DIR" && "$FORCE" -eq 0 ]]; then
   if [[ -t 0 ]]; then
     echo "pds-create-case: ${CASE_DIR#"$PDS_REPO"/} already exists." >&2
     echo "Rebuilding replaces it, discarding any changes you made in that folder." >&2
+    echo "Previous runs under runs/ are kept." >&2
     read -r -p "Continue? [y/N] " reply
     [[ "$reply" == [Yy] || "$reply" == [Yy][Ee][Ss] ]] || {
       echo "pds-create-case: aborted" >&2
@@ -105,8 +115,21 @@ if [[ -d "$CASE_DIR" && "$FORCE" -eq 0 ]]; then
   fi
 fi
 
+# Runs live inside the case, and a rebuild is about the case's *inputs* -- so park runs/
+# next to the case (same filesystem, so this is a rename, not a copy) and put it back.
+KEEP_RUNS=""
+if [[ -d "$CASE_DIR/runs" ]]; then
+  KEEP_RUNS="$(dirname "$CASE_DIR")/.$(basename "$CASE_DIR").runs.$$"
+  rm -rf "$KEEP_RUNS"
+  mv "$CASE_DIR/runs" "$KEEP_RUNS"
+fi
+
 rm -rf "$CASE_DIR"
 mkdir -p "$CASE_DIR"
+
+if [[ -n "$KEEP_RUNS" ]]; then
+  mv "$KEEP_RUNS" "$CASE_DIR/runs"
+fi
 
 CONFIG_KEY_RE='^[[:space:]]*[A-Za-z0-9_.]+\.(xml_path|python_config_module|config|waveforms):'
 

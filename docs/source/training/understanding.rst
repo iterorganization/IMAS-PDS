@@ -31,9 +31,9 @@ any per-shot override from ``cases/overrides/``, and copies in every config file
 settings point at. ``bin/pds-run-case`` is what you hand that folder to. You will
 directly interface with case folders in the next chapter.
 
-Run - The run is what you get when you execute a case: a run directory,
-``cases/runs/<workflow>_<shot>/``, with the logs, the simulation output, and a record of the
-exact configuration that was used.
+Run - The run is what you get when you execute a case: a run directory inside the case,
+``cases/<workflow>_<shot>/runs/<timestamp>/``, with the logs, the simulation output, and a
+record of the exact configuration that was used.
 
 Keeping them apart is what makes the pieces reusable.
 
@@ -108,7 +108,7 @@ Exercise 2: find out what a case will do
 
         Start from :ref:`case-inverse-convergence`, which describes
         the coupling and what the case produces, then read the case folder itself,
-        written into ``cases/runs/inverse_convergence_105092/``.
+        written into ``cases/inverse_convergence_105092/runs/latest/``.
 
         ``workflow.ymmsl`` names the components and how they are wired. Additionally,
         ``workflow_settings.ymmsl`` contains the specific settings for each of the 

@@ -42,7 +42,7 @@ this generally only appears when invoking ``muscle_manager`` by hand:
 ------------------------------------
 
 A leftover ``instances/`` directory from a previous run. ``bin/pds-run-case.sbatch``
-clears the run directory each time, so this only bites hand-rolled ``muscle_manager``
+gives every run a directory of its own, so this only bites hand-rolled ``muscle_manager``
 invocations. Remove the run directory, or pass a fresh ``--run-dir``.
 
 ``IMAS-MUSCLE3/... not loaded and could not be loaded automatically``

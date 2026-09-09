@@ -81,8 +81,8 @@ a case directory for it and the only thing left to build is the actor.
 
         This submits a Slurm job (``squeue --me`` to watch it) and writes its own
         ``slurm-<jobid>.out`` at the repo root; the run itself lands under
-        ``cases/runs/my_actor_<timestamp>/`` (``cases/runs/my_actor`` symlinks to the latest
-        one). If no ``sbatch`` is on your ``PATH``, ``bin/pds-run-case`` falls back to running
+        ``cases/my_actor/runs/<timestamp>/`` (``cases/my_actor/runs/latest`` symlinks to the
+        latest one). If no ``sbatch`` is on your ``PATH``, ``bin/pds-run-case`` falls back to running
         the same script directly instead, no Slurm needed.
 
         ``sink.sink_mode`` is ``"x"`` (exclusive create), so a second attempt fails unless you
@@ -184,11 +184,11 @@ a case directory for it and the only thing left to build is the actor.
         ``my_actor`` has no ``base_env``/``modules``, so it inherits the environment you
         already loaded (``module load PDS`` gives it ``imas`` and ``libmuscle``) instead of a
         purged one -- appropriate for a plain script, not an EasyBuild-installed actor. Its
-        ``args`` uses ``$PDS_REPO`` rather than ``$CASE_DIR``: ``$PDS_REPO`` (set by
-        ``module load PDS``) is always an absolute path, while ``$CASE_DIR`` stays whatever
-        (possibly relative) path you gave ``bin/pds-run-case`` -- and each actor runs from its
-        own per-instance working directory, so a relative script path resolves against the
-        wrong place there.
+        ``args`` uses ``$PDS_REPO`` rather than ``$CASE_DIR``: the script lives in the
+        repository, not in the case, and ``$PDS_REPO`` (set by ``module load PDS``) is what
+        names it wherever the case itself happens to sit. Both are absolute, which matters
+        because each actor runs from its own per-instance working directory, where a relative
+        path resolves against the wrong place.
 
 Exercise 2: a density source
 -----------------------------
