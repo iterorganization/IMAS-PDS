@@ -65,6 +65,7 @@ settings:
   # here because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
   metis.metis_psioffset: 9.0
   metis.metis_alwaysreadinitport: 0
+  metis.metis_clock_time_dt: 0.002
 
   metis_init.metis_computation: 1
   # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
@@ -72,6 +73,7 @@ settings:
   # here because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
   metis_init.metis_psioffset: 9.0
   metis_init.metis_alwaysreadinitport: 0
+  metis_init.metis_clock_time_dt: 0.002
 
   nice_evo_rd.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
   nice_evo_rd.t_interval: 0.002
