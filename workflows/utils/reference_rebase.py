@@ -100,6 +100,7 @@ to the message timestamp).
 """
 
 import logging
+from typing import Any
 
 import numpy as np
 from imas_muscle3.utils import ids_from_message
@@ -211,7 +212,7 @@ def rebase_pf_active(source, reference, t0: float) -> None:
     ``I(t) <- I(t) + I_nice(t0) - I_src(t0)``, per coil, matched by name and
     falling back to position in the coil list when the names differ.
     """
-    ref_coils: dict[str, object] = {}
+    ref_coils: dict[str, Any] = {}
     for coil in reference.coil:
         name = str(coil.name).strip()
         if name:
@@ -428,12 +429,22 @@ def main() -> None:
             logger.warning("shift_mode='none' -- forwarding both traces unchanged")
         else:
             if rebase_currents and "pf_active" in sources and "pf_active" in references:
+                if t0 is None:
+                    raise RuntimeError(
+                        "t0 could not be determined even though a NICE-inverse "
+                        "pf_active reference was received -- this should not happen"
+                    )
                 rebase_pf_active(sources["pf_active"], references["pf_active"], t0)
             if (
                 (rebase_ip or rebase_position)
                 and "equilibrium" in sources
                 and "equilibrium" in references
             ):
+                if t0 is None:
+                    raise RuntimeError(
+                        "t0 could not be determined even though a NICE-inverse "
+                        "equilibrium reference was received -- this should not happen"
+                    )
                 rebase_equilibrium(
                     sources["equilibrium"],
                     references["equilibrium"],
