@@ -2,15 +2,35 @@
 # `eq` (the one-shot `source` actor) is a NICE-reconstructed equilibrium, not raw DINA -- see
 # workflow.ymmsl's header comment for why TORAX's geometry builder needs that. `reconstruction:`
 # below passes it through whole (every field, not just the hand-picked ones); `state:`/
-# `targets:` then overlay specific fields on top, same as inverse_convergence. `cp` (previously
-# a Picard-loop port there) is just this scenario's own DINA data here, so referenced directly
-# via `input` instead of a port.
+# `targets:` then overlay specific fields on top, same as inverse_convergence. `nice` is that
+# same completed inverse_convergence run's own out_nice (the same file `source` reads for
+# `eq`) -- used here for the pf_active coil current NICE actually solved for, rather than
+# DINA's pre-solve design target.
+#
+# The equilibrium-IDS targets (r0/b0/ip/boundary outline) reference `eq` rather than raw
+# `input`: `eq` is NICE's own solved equilibrium (the same one `reconstruction:` above passes
+# through whole), so these values are geometrically consistent with the flux surfaces already
+# in `eq`, whereas `input`'s are DINA's independent pre-solve design values.
+#
+# core_profiles stays on raw `input`, not inverse_convergence's out_torax: out_torax's own
+# core_profiles/profiles_1d/grid/psi is TORAX's internal solver grid, whose span doesn't
+# match `eq`'s psi grid closely enough (unlike DINA's, which is close enough for NICE's
+# interpolation to tolerate) -- feeding it in made nice_evo_rd's F_INIT Newton step blow up
+# ("no valid PL and no valid PX"). Regridding out_torax's profiles onto `eq`'s own grid was
+# tried (interpolation scheme, point count, grid-point matching, and blending against DINA
+# all ruled out as fixes -- even single-field swaps eventually destabilize nice_evo_rd) and
+# abandoned; a real fix needs either TORAX-MUSCLE3 re-anchoring TORAX's psi to NICE's
+# equilibrium, or NICE's resistive-diffusion solve made more robust to TORAX's profile shape.
+# `core_sources` (ECRH) and `pf_active` coil `voltage.data` also stay on `input`:
+# inverse_convergence never writes either to disk (core_sources is passed straight through
+# to TORAX over a port, and voltage is never computed by NICE/TORAX at all).
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
     eq: {port: equilibrium_in}
+    nice: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
 
 # Static machine-description reference
 machine_description:
@@ -58,22 +78,22 @@ state:
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
+    - {ref: eq}
   core_profiles/global_quantities/ip:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
+    - {ref: eq}
   core_sources/*:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
   pf_active/coil(*)/current/data:
-    - {ref: input}
+    - {ref: nice}
   pf_active/coil(*)/voltage/data:
     - {ref: input}
