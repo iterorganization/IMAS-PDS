@@ -1,9 +1,15 @@
+# 105073 variant (MD_LAYOUT=combined: no separate data/in_md, input_md points at data/in
+# too). Same content as ../../workflows/evolutive_controller/waveforms.yaml otherwise --
+# see that file for why `eq`/`nice` (a completed inverse_convergence run's own out_nice)
+# replace raw DINA `input` for the equilibrium-IDS targets and pf_active coil current, and
+# why core_profiles stays on `input` rather than that same run's out_torax.
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     eq: {port: equilibrium_in}
+    nice: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
 
 # Static machine-description reference
 machine_description:
@@ -28,6 +34,8 @@ state:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
     - {ref: eq}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: eq}
   core_profiles/global_quantities/v_loop:
     - {ref: input}
   core_profiles/profiles_1d/time:
@@ -49,24 +57,22 @@ state:
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
+    - {ref: eq}
   core_profiles/global_quantities/ip:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/psi_boundary:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
+    - {ref: eq}
   core_sources/*:
     - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
   pf_active/coil(*)/current/data:
-    - {ref: input}
+    - {ref: nice}
   pf_active/coil(*)/voltage/data:
     - {ref: input}
