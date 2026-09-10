@@ -1,0 +1,7 @@
+ymmsl_version: v0.2
+# DINA shot 105073. Converted from
+# workflows/metis_predictive_nice_evol_from_dina/scenarios/105073/scenario_config.env, whose
+# TSTART=75 is where that scenario bootstrapped NICE/METIS/the controller from.
+settings:
+  source_nice.t_min: 75.0
+  source_metis.t_min: 75.0
