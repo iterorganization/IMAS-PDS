@@ -22,12 +22,12 @@ sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribe
 `pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
 `cases/overrides/prescribed_transport_<shot>.ymmsl`.
 
-The `settings.ymmsl` contains (all templated from `${SHOT}`):
+The `settings.ymmsl` contains:
 
 - Resources
 - Solver config
-- This workflow's own `waveforms_no_transport.yaml` pulse-design template
-- The input DBEntry
+- This workflow's own `waveforms_no_transport.yaml` pulse design
+- The input DBEntry (templated from `${SHOT}`)
 
 If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `cases/runs/<case>`.
 
@@ -35,7 +35,8 @@ Scenarios available: 105078, 105084, 105092, 105099.
 
 Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
 pulse design (`waveforms_no_transport.yaml`) lives in this workflow's own directory, so it's
-versioned and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is
+versioned and editable here. The waveform actor reads those two entries itself -- it takes
+nothing but a time base from the workflow. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is
 produced from DINA and machine-description sources.
 
 ## Assumptions

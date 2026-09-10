@@ -11,6 +11,8 @@ resources:
 
 settings:
   # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # The design names the entries it reads itself; pds-create-case resolves the ${SHOT} in
+  # those URIs as it copies the file into the case, so the editor only sees literal ones.
   waveform_editor.waveforms: ${PDS_REPO}/workflows/prescribed_transport/waveforms_no_transport.yaml
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: false

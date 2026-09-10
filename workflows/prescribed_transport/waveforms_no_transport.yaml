@@ -1,44 +1,130 @@
-# Waveform-Editor configuration for prescribed_transport. Equilibrium only, no
-# core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
-# pds-create-case.
+# prescribed_transport -- the pulse design, in the new format.
+#
+# Generic across scenarios: the scenario repo and shot in the URIs below are filled
+# in by pds-create-case, which envsubst's this file as it copies it into the case's
+# config/.
+# The waveform editor itself never expands anything -- by the time it opens the file the
+# URIs are literal. Opening this file directly (`waveform-editor gui`) therefore needs
+# those two variables exported, or a case's resolved copy under cases/<case>/config/.
+#
+# It produces exactly what the previous version of this file did. That one said it in
+# four whole-IDS copies (`wall/*`, `pf_passive/*`, `iron_core/*`,
+# `pf_active/*` from the machine description) plus a handful of leaves. Without a base
+# IDS every node it produced is listed here instead -- the node lists below are what a
+# tapped run of this case actually emitted, so the output is the same IDS content.
+#
+# Two things the old file did that this one cannot, because the actor no longer takes
+# data on ports:
+#   - `eq: {port: equilibrium_in}` read psi/f_df_dpsi/dpressure_dpsi/psi_boundary from
+#     the equilibrium arriving from `source`. That message is `data/in` windowed by
+#     source.t_min/t_max, so reading the same entry here gives the same values on the
+#     same time base.
+#   - nothing else: everything else already came from these two entries.
 
-globals:
-  dd_version: 4.0.0
-  imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
-    eq: {port: equilibrium_in}
+version: 0.2
+dd_version: 4.0.0
 
-machine_description:
-  wall/*:
-    - {ref: input_md}
-  pf_passive/*:
-    - {ref: input_md}
-  iron_core/*:
-    - {ref: input_md}
-  pf_active/*:
-    - {ref: input_md}
+imports:
+  scenario: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  machine: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
-state:
-  equilibrium/time_slice/profiles_1d/psi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/f_df_dpsi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
-    - {ref: eq}
-  equilibrium/time_slice/global_quantities/psi_boundary:
-    - {ref: eq}
+waveforms:
+  # ---- targets: what NICE-inverse solves against -------------------------------
+  field:
+    equilibrium/vacuum_toroidal_field/r0: { copy: scenario }
+    equilibrium/vacuum_toroidal_field/b0: { copy: scenario }
 
-targets:
-  equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
-  equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
-  pf_active/coil(*)/current/data:
-    - {ref: input}
+  plasma_current:
+    equilibrium/time_slice/global_quantities/ip: { copy: scenario }
+
+  shape:
+    equilibrium/time_slice/boundary/outline/r: { copy: scenario }
+    equilibrium/time_slice/boundary/outline/z: { copy: scenario }
+
+  # ---- state: what each slice's solve starts from ------------------------------
+  # Came over the port in the old file; same entry, so same values.
+  flux_state:
+    equilibrium/time_slice/global_quantities/psi_boundary: { copy: scenario }
+    equilibrium/time_slice/profiles_1d/psi: { copy: scenario }
+    equilibrium/time_slice/profiles_1d/f_df_dpsi: { copy: scenario }
+    equilibrium/time_slice/profiles_1d/dpressure_dpsi: { copy: scenario }
+
+  # ---- machine description: was `<ids>/*`, now node by node --------------------
+  wall:
+    wall/ids_properties/creation_date: { copy: machine }
+    wall/description_2d(:)/type/index: { copy: machine }
+    wall/description_2d(:)/limiter/type/name: { copy: machine }
+    wall/description_2d(:)/limiter/type/index: { copy: machine }
+    wall/description_2d(:)/limiter/type/description: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/name: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/name: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/index: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/description: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/outline/r: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/outline/z: { copy: machine }
+    wall/description_2d(:)/vessel/type/name: { copy: machine }
+    wall/description_2d(:)/vessel/type/index: { copy: machine }
+    wall/description_2d(:)/vessel/type/description: { copy: machine }
+
+  pf_passive:
+    pf_passive/ids_properties/comment: { copy: machine }
+    pf_passive/ids_properties/creation_date: { copy: machine }
+    pf_passive/ids_properties/provenance/node(:)/reference(:)/name: { copy: machine }
+    pf_passive/loop(:)/name: { copy: machine }
+    pf_passive/loop(:)/resistance: { copy: machine }
+    pf_passive/loop(:)/resistivity: { copy: machine }
+    pf_passive/loop(:)/element(:)/name: { copy: machine }
+    pf_passive/loop(:)/element(:)/description: { copy: machine }
+    pf_passive/loop(:)/element(:)/turns_with_sign: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/geometry_type: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/r: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/z: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/length_alpha: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/length_beta: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/alpha: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/beta: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/r: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/z: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/width: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/height: { copy: machine }
+
+  iron_core:
+    # This machine description carries no iron core: the old `iron_core/*` copy produced
+    # an IDS with nothing but its time base. One node is still needed for the IDS to be
+    # created and sent at all.
+    iron_core/ids_properties/homogeneous_time: { copy: machine }
+
+  pf_active:
+    pf_active/ids_properties/comment: { copy: machine }
+    pf_active/ids_properties/provider: { copy: machine }
+    pf_active/ids_properties/creation_date: { copy: machine }
+    pf_active/ids_properties/provenance/node(:)/reference(:)/name: { copy: machine }
+    pf_active/coil(:)/name: { copy: machine }
+    pf_active/coil(:)/description: { copy: machine }
+    pf_active/coil(:)/resistance: { copy: machine }
+    pf_active/coil(:)/current_limit_max: { copy: machine }
+    pf_active/coil(:)/b_field_max: { copy: machine }
+    pf_active/coil(:)/temperature: { copy: machine }
+    pf_active/coil(:)/element(:)/turns_with_sign: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/geometry_type: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/r: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/z: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/width: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/height: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/outline/r: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/outline/z: { copy: machine }
+    pf_active/circuit(:)/name: { copy: machine }
+    pf_active/circuit(:)/description: { copy: machine }
+    pf_active/circuit(:)/connections: { copy: machine }
+    pf_active/supply(:)/name: { copy: machine }
+    pf_active/supply(:)/description: { copy: machine }
+    pf_active/supply(:)/current_limit_max: { copy: machine }
+    pf_active/supply(:)/current_limit_min: { copy: machine }
+    pf_active/supply(:)/voltage_limit_max: { copy: machine }
+    pf_active/supply(:)/voltage_limit_min: { copy: machine }
+
+  # ---- seed currents: from the scenario, after the machine description ---------
+  # Entries apply in order, so these land on top of the coils copied above -- which is
+  # what the old file's `pf_active/coil(*)/current/data: {ref: input}` did.
+  coil_currents:
+    pf_active/coil(:)/current/data: { copy: scenario }

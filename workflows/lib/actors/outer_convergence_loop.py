@@ -5,12 +5,13 @@ and receives one on the S ports (coils from NICE, evolved equilibrium + core_pro
 TORAX). It restores the prescribed boundary outline on the evolved equilibrium and iterates
 until the max coil-current change drops below `tolerance`, or its relative change stalls
 below `rel_tolerance`. The driver only paces the iteration; the coupling itself is a
-pipeline (loop -> waveform_editor -> nice -> torax -> loop).
+pipeline (loop -> waveform_editor -> merger -> nice -> torax -> loop).
 
 The boundary is held from the input IDS until a shape editor is wired in; Ip is held by the
-waveform_editor. Both the equilibrium target and core_profiles reach TORAX via
-`waveform_editor` -- the equilibrium drives its export time base, core_profiles is mirrored
-through unchanged.
+waveform_editor. Both O_I lanes go to `merger`, which writes the design over them: the
+equilibrium lane also drives the waveform_editor's export time base. Because `merger`
+rejects two IDSs whose root /time differ, the two lanes must leave here on the same time
+base -- hence the padding on both of them below.
 
 Three things deliberately never travel around the loop, because they do not change between
 iterations: the static machine description (wall, pf_passive, iron_core) and the
@@ -251,7 +252,15 @@ def main() -> None:
                 [_hold_boundary(ev[i], boundary[i]) for i in range(len(ev))],
                 "equilibrium",
             )
-            cp = _assemble(_split(torax_cp, "core_profiles", times), "core_profiles")
+            cpv = _split(torax_cp, "core_profiles", times)
+            if len(cpv) < len(cp_slices):
+                # Pad exactly as `ev` is padded above, from the initial trace. Both O_I
+                # lanes have to come out on the same time base: `merger` overlays the
+                # design on each of them and refuses to merge two IDSs whose root /time
+                # differ, and TORAX under-covering the requested slices is the one thing
+                # that can make the two lanes disagree.
+                cpv = cpv + cp_slices[len(cpv) :]
+            cp = _assemble(cpv, "core_profiles")
 
             stalled = False
             if dI is not None and prev_dI is not None and prev_dI != 0:

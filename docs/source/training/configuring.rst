@@ -48,13 +48,14 @@ Exercise 1: change the plasma current value in the waveform file
 
         Take a look at the waveform YAML file for this specific case, under 
         ``cases/prescribed_transport_105092/config/waveforms_no_transport.yaml``.
-        By YAML file shows that the ``ip`` target will just follow the reference input data:
+        The file shows that the ``ip`` target just follows the reference input data --
+        ``copy`` takes it from the ``scenario`` entry named at the top of the file:
 
         .. code-block:: yaml
 
-            targets:
-              equilibrium/time_slice/global_quantities/ip:
-                - {ref: input}
+            waveforms:
+              plasma_current:
+                equilibrium/time_slice/global_quantities/ip: {copy: scenario}
 
         To set it yourself, we can replace it with an explicit
         `piecewise-linear tendency <https://waveform-editor.readthedocs.io/en/latest/tendencies.html#piecewise-linear-tendency>`_.
@@ -69,7 +70,7 @@ Exercise 1: change the plasma current value in the waveform file
     .. md-tab-item:: Solution
 
         In ``cases/prescribed_transport_105092/config/waveforms_no_transport.yaml``, replace
-        the ``ip`` target:
+        the copy with a tendency:
 
         .. code-block:: yaml
 

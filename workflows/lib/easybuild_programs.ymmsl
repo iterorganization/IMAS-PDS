@@ -23,6 +23,14 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
+  # Same shape as temporal_coupler above: a plain script in this repo, run by the
+  # IMAS-MUSCLE3 module's python. There is no Merger EasyBuild module and there does not
+  # need to be.
+  merger:
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/utils/merger.py
+
   metis:
     script: |
       #!/bin/bash

@@ -1,61 +1,133 @@
-globals:
-  dd_version: 4.0.0
-  imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    eq: {port: equilibrium_in}
-    cp: {port: core_profiles_in}
+# Scenario 105073 -- same pulse design as workflows/inverse_convergence/waveforms.yaml,
+# for a scenario with MD_LAYOUT=combined: there is no separate data/in_md, so `machine`
+# points at data/in as well. The node lists differ a little from the generic file too --
+# this dataset's pf_active/pf_passive carry a slightly different set of filled nodes.
+#
+# The scenario repo and shot in the URIs below are filled in by pds-create-case as it
+# copies this file into the case; the waveform editor only ever sees literal URIs.
 
-machine_description:
-  wall/*:
-    - {ref: input_md}
-  pf_passive/*:
-    - {ref: input_md}
-  iron_core/*:
-    - {ref: input_md}
-  pf_active/*:
-    - {ref: input_md}
+version: 0.2
+dd_version: 4.0.0
 
-state:
-  equilibrium/time_slice/profiles_1d/psi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/f_df_dpsi:
-    - {ref: eq}
-  equilibrium/time_slice/profiles_1d/dpressure_dpsi:
-    - {ref: eq}
-  core_profiles/global_quantities/v_loop:
-    - {ref: cp}
-  core_profiles/profiles_1d/time:
-    - {ref: cp}
-  core_profiles/profiles_1d/grid/rho_tor_norm:
-    - {ref: cp}
-  core_profiles/profiles_1d/grid/psi:
-    - {ref: cp}
-  core_profiles/profiles_1d/electrons/temperature:
-    - {ref: cp}
-  core_profiles/profiles_1d/electrons/density:
-    - {ref: cp}
-  core_profiles/profiles_1d/t_i_average:
-    - {ref: cp}
+imports:
+  scenario: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  machine: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
 
-targets:
-  equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
-  equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
-  core_profiles/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/psi_boundary:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
-  equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
-  core_sources/*:
-    - {ref: input}
-  core_sources/source(1)/identifier/name:
-    - {value: ec}
-  pf_active/coil(*)/current/data:
-    - {ref: input}
+waveforms:
+  # ---- targets ----------------------------------------------------------------
+  field:
+    equilibrium/vacuum_toroidal_field/r0: { copy: scenario }
+    equilibrium/vacuum_toroidal_field/b0: { copy: scenario }
+
+  plasma_current:
+    equilibrium/time_slice/global_quantities/ip: { copy: scenario }
+    core_profiles/global_quantities/ip: { copy: scenario }
+
+  shape:
+    equilibrium/time_slice/boundary/outline/r: { copy: scenario }
+    equilibrium/time_slice/boundary/outline/z: { copy: scenario }
+    # Unlike the generic design, this one prescribes psi_boundary from the scenario
+    # rather than letting the evolved state carry it -- as the old file did.
+    equilibrium/time_slice/global_quantities/psi_boundary: { copy: scenario }
+
+  # ---- heating ----------------------------------------------------------------
+  heating:
+    core_sources/vacuum_toroidal_field/r0: { copy: scenario }
+    core_sources/vacuum_toroidal_field/b0: { copy: scenario }
+    core_sources/source(:)/identifier/index: { copy: scenario }
+    core_sources/source(:)/profiles_1d/time: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/rho_tor_norm: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/psi: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/volume: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/area: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/surface: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/psi_magnetic_axis: { copy: scenario }
+    core_sources/source(:)/profiles_1d/grid/psi_boundary: { copy: scenario }
+    core_sources/source(:)/profiles_1d/electrons/energy: { copy: scenario }
+    core_sources/source(:)/profiles_1d/total_ion_energy: { copy: scenario }
+    core_sources/source(:)/profiles_1d/j_parallel: { copy: scenario }
+    core_sources/source(:)/profiles_1d/ion(:)/name: { copy: scenario }
+    core_sources/source(:)/profiles_1d/ion(:)/z_ion: { copy: scenario }
+    core_sources/source(:)/profiles_1d/ion(:)/particles: { copy: scenario }
+    core_sources/source(:)/profiles_1d/ion(:)/element(:)/a: { copy: scenario }
+    core_sources/source(:)/profiles_1d/ion(:)/element(:)/z_n: { copy: scenario }
+    core_sources/source(:)/global_quantities/time: { copy: scenario }
+    core_sources/source(:)/global_quantities/power: { copy: scenario }
+    core_sources/source(:)/species/type/index: { copy: scenario }
+    core_sources/source(:)/species/ion/z_ion: { copy: scenario }
+    core_sources/source(:)/species/ion/element(:)/a: { copy: scenario }
+    core_sources/source(:)/species/ion/element(:)/z_n: { copy: scenario }
+    core_sources/source(:)/species/ion/element(:)/atoms_n: { copy: scenario }
+    core_sources/source(1)/identifier/name: ec
+
+  # ---- machine description ----------------------------------------------------
+  wall:
+    wall/ids_properties/creation_date: { copy: machine }
+    wall/description_2d(:)/type/index: { copy: machine }
+    wall/description_2d(:)/limiter/type/name: { copy: machine }
+    wall/description_2d(:)/limiter/type/index: { copy: machine }
+    wall/description_2d(:)/limiter/type/description: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/name: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/name: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/index: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/component_type/description: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/outline/r: { copy: machine }
+    wall/description_2d(:)/limiter/unit(:)/outline/z: { copy: machine }
+    wall/description_2d(:)/vessel/type/name: { copy: machine }
+    wall/description_2d(:)/vessel/type/index: { copy: machine }
+    wall/description_2d(:)/vessel/type/description: { copy: machine }
+
+  pf_passive:
+    pf_passive/ids_properties/comment: { copy: machine }
+    pf_passive/ids_properties/creation_date: { copy: machine }
+    pf_passive/ids_properties/provenance/node(:)/reference(:)/name: { copy: machine }
+    pf_passive/loop(:)/name: { copy: machine }
+    pf_passive/loop(:)/resistance: { copy: machine }
+    pf_passive/loop(:)/resistivity: { copy: machine }
+    pf_passive/loop(:)/element(:)/name: { copy: machine }
+    pf_passive/loop(:)/element(:)/turns_with_sign: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/geometry_type: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/r: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/z: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/length_alpha: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/length_beta: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/alpha: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/oblique/beta: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/r: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/z: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/width: { copy: machine }
+    pf_passive/loop(:)/element(:)/geometry/rectangle/height: { copy: machine }
+
+  iron_core:
+    # No iron core in this dataset either -- one node so the IDS is created and sent.
+    iron_core/ids_properties/homogeneous_time: { copy: machine }
+
+  pf_active:
+    pf_active/coil(:)/name: { copy: machine }
+    pf_active/coil(:)/resistance: { copy: machine }
+    pf_active/coil(:)/current_limit_max: { copy: machine }
+    pf_active/coil(:)/b_field_max: { copy: machine }
+    pf_active/coil(:)/temperature: { copy: machine }
+    pf_active/coil(:)/voltage/data: { copy: machine }
+    pf_active/coil(:)/element(:)/name: { copy: machine }
+    pf_active/coil(:)/element(:)/turns_with_sign: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/geometry_type: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/r: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/z: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/width: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/rectangle/height: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/outline/r: { copy: machine }
+    pf_active/coil(:)/element(:)/geometry/outline/z: { copy: machine }
+    pf_active/circuit(:)/name: { copy: machine }
+    pf_active/circuit(:)/connections: { copy: machine }
+    pf_active/supply(:)/name: { copy: machine }
+    pf_active/supply(:)/current_limit_max: { copy: machine }
+    pf_active/supply(:)/current_limit_min: { copy: machine }
+    pf_active/supply(:)/voltage_limit_max: { copy: machine }
+    pf_active/supply(:)/voltage_limit_min: { copy: machine }
+    pf_active/supply(:)/voltage/data: { copy: machine }
+    pf_active/supply(:)/current/data: { copy: machine }
+
+  # ---- seed currents ----------------------------------------------------------
+  coil_currents:
+    pf_active/coil(:)/current/data: { copy: scenario }

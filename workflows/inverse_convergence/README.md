@@ -6,13 +6,18 @@ A MUSCLE3 workflow that drives a NICE free-boundary inverse equilibrium and TORA
 to a self-consistent pulse via an outer Picard loop.
 Each iteration the loop:
 
-- sends the whole-trace pulse to the waveform editor(target equilibrium, core_profiles, coil-current seed)
-- The `waveform_editor`: 
-  - overlays the designed Ip(t)/B0 onto the target equilibrium
-  - Mirrors core_profiles through unchanged
-  - Imports the ECRH heating
-  - Re-exports the scenario's static wall/pf_passive/iron_core machine description
-    to the NICE load balancer
+- sends the whole-trace pulse (target equilibrium, core_profiles) to the `waveform_editor`
+  and to `merger`
+- The `waveform_editor` evaluates the pulse design on that time base. It reads nothing off
+  its input port but the time base itself; everything else comes from the entries named in
+  the design's `imports:`. It produces:
+  - the designed Ip(t)/B0 and boundary target, and the designed core_profiles Ip
+  - the ECRH heating (`core_sources`)
+  - the scenario's static wall/pf_passive/iron_core machine description and the
+    coil-current seed, straight to the NICE load balancer
+- `merger` writes the design over the loop's own equilibrium and core_profiles, so the
+  evolved state the design says nothing about (psi, f_df_dpsi, dpressure_dpsi, the kinetic
+  profiles) survives. It refuses to merge two IDSs whose time bases differ.
 - The parallel NICE-inverse `load_balancer` solves it per time slice
 - its equilibrium goes to TORAX, whose evolved profiles and NICE's coil currents return to the loop.
 
@@ -36,7 +41,8 @@ sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 `pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
 `cases/overrides/inverse_convergence_<shot>.ymmsl`.
 
-The `settings.ymmsl` contains (all templated from `${SHOT}`):
+The `settings.ymmsl` contains (all templated from `${SHOT}`, including the design's own
+URIs -- `pds-create-case` resolves them as it copies the file into the case):
 
 - Resources
 - Solver config

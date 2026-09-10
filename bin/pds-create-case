@@ -183,5 +183,22 @@ if [[ -x "$PREPROCESS" ]]; then
   "$PREPROCESS"
 fi
 
+# A pulse design names the entries it reads with literal URIs -- no ${SHOT} in it -- so a
+# design written for one shot reads that shot's data whatever case it is built into. Say so
+# rather than let a case quietly simulate the wrong pulse. A warning, not an error: a case
+# may legitimately read another shot (105084_literal reads 105084's data, by design).
+for ymmsl in "$CASE_DIR"/*.ymmsl; do
+  [[ -f "$ymmsl" ]] || continue
+  while read -r design; do
+    [[ -f "$design" ]] || continue
+    others="$(grep -oE "$SCENARIOS_REPO/[^/\"' ]+" "$design" 2>/dev/null \
+              | sed "s|$SCENARIOS_REPO/||" | sort -u | grep -vFx "$SHOT" || true)"
+    if [[ -n "$others" ]]; then
+      echo "pds-create-case: warning: $(basename "$design") reads $(echo $others)" \
+           "from $SCENARIOS_REPO, but this case is for $SHOT" >&2
+    fi
+  done < <(sed -nE 's/^[[:space:]]*[A-Za-z0-9_.]+\.waveforms:[[:space:]]*//p' "$ymmsl")
+done
+
 echo "A new case has been created in the following directory:"
 echo "$CASE_DIR"

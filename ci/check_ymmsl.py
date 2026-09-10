@@ -265,10 +265,17 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
         if not path.is_file():
             continue  # data/scenario not checked out; the key check already ran
         doc = _yaml.safe_load(path.read_text()) or {}
+        # New format: every waveform lives in a group under `waveforms:`, and the top
+        # level is closed (version / dd_version / imports / waveforms). Old format:
+        # groups sit at the top level next to `globals:`.
+        if "waveforms" in doc:
+            groups = (doc.get("waveforms") or {}).values()
+        else:
+            groups = [c for g, c in doc.items() if g != "globals"]
         produced = {
             str(w).split("/", 1)[0]
-            for group, content in doc.items()
-            if group != "globals" and isinstance(content, dict)
+            for content in groups
+            if isinstance(content, dict)
             for w in content
         }
         for port in ports[instance]:
@@ -284,6 +291,8 @@ def check_waveform_ports(cfg, flat_model, case_name, errors: list) -> None:
         # And the reverse: every port-import the config reads from must be an input port
         # on this instance. The exporter builds every IDS the config mentions, so an
         # unreachable port-import fails the run with "no IDS received on import port".
+        # Only the old format can do this at all -- a new-format `imports:` is URIs only,
+        # and the actor takes nothing but a time base off its single input port.
         imports = (doc.get("globals") or {}).get("imports") or {}
         needed = {
             spec["port"]

@@ -7,6 +7,12 @@ ymmsl_version: v0.2
 #
 #   bin/pds-create-case prescribed_transport 105084
 #   sbatch bin/pds-run-case.sbatch cases/prescribed_transport_105084
+#
+# The waveform editor takes one input and takes one thing from it: the root /time of the
+# equilibrium `source` sends. Everything else in that message is ignored -- the design
+# reads the scenario and the machine description itself, from the URIs in its own
+# `imports:`. The wiring is therefore unchanged from the version that overlaid the
+# received equilibrium; only what the actor does with the message is different.
 
 imports:
 - from imas_muscle3 import implementation source_component
@@ -78,7 +84,7 @@ models:
         implementation: source_component
         ports: {o_i: [equilibrium_out]}
       waveform_editor:
-        description: waveform editor (designed Ip/B0 target + static machine description + coil-current seed)
+        description: pulse design -- equilibrium_in supplies the time base only
         implementation: waveform_editor
         ports:
           f_init: [equilibrium_in]
