@@ -53,12 +53,20 @@ models:
           f_init: [pf_active_in]
           o_f: [pulse_schedule_out, core_profiles_out, core_sources_out, equilibrium_out]
 
-      synchro_nice_metis:
-        description: re-slices METIS's input trace at NICE's current equilibrium timestamp
+      synchro_nice_metis_nearest:
+        description: re-slices METIS's input trace at NICE's current equilibrium timestamp (causal nearest resampling)
         implementation: sink_source_component
         ports:
           f_init: [equilibrium_in]
-          o_f: [pulse_schedule_out, core_profiles_out, core_sources_out]
+          o_f: [core_profiles_out, core_sources_out]
+
+      synchro_nice_metis_linear:
+        description: re-slices METIS's input trace at NICE's current equilibrium timestamp (linear resampling)
+        implementation: sink_source_component
+        ports:
+          f_init: [equilibrium_in]
+          o_f: [pulse_schedule_out]
+
 
       metis:
         description: METIS transport (coupling mode 2), stepping in lockstep with nice_evo_rd
@@ -137,9 +145,9 @@ models:
       source_metis.core_sources_out: metis_init.core_sources_f_init
 
       # METIS in-loop inputs from the NICE-equilibrium-driven resync
-      synchro_nice_metis.pulse_schedule_out: metis.pulse_schedule_in_s
-      synchro_nice_metis.core_profiles_out: metis.core_profiles_in_s
-      synchro_nice_metis.core_sources_out: metis.core_sources_in_s
+      synchro_nice_metis_linear.pulse_schedule_out: metis.pulse_schedule_in_s
+      synchro_nice_metis_nearest.core_profiles_out: metis.core_profiles_in_s
+      synchro_nice_metis_nearest.core_sources_out: metis.core_sources_in_s
 
       # METIS outputs to sink
       metis.pulse_schedule_out_i: sink_transport.pulse_schedule_in
@@ -184,7 +192,8 @@ models:
 
       # NICE outputs to METIS (closes the loop) and to the resync actor
       nice_evo_rd.equilibrium_o_i: metis.equilibrium_in_s
-      nice_evo_rd.equilibrium_o_i: synchro_nice_metis.equilibrium_in
+      nice_evo_rd.equilibrium_o_i: synchro_nice_metis_linear.equilibrium_in
+      nice_evo_rd.equilibrium_o_i: synchro_nice_metis_nearest.equilibrium_in
 
       # NICE outputs to the controller
       nice_evo_rd.equilibrium_o_i: magnetic_controller.equilibrium_in_s
