@@ -21,7 +21,8 @@ ymmsl_version: v0.2
 resources:
   metis_nice_evol_from_dina.source_nice: {threads: 1}
   metis_nice_evol_from_dina.source_metis: {threads: 1}
-  metis_nice_evol_from_dina.synchro_nice_metis: {threads: 1}
+  metis_nice_evol_from_dina.synchro_nice_metis_nearest: {threads: 1}
+  metis_nice_evol_from_dina.synchro_nice_metis_linear: {threads: 1}
   metis_nice_evol_from_dina.metis: {threads: 10}
   metis_nice_evol_from_dina.metis_init: {threads: 4}
   metis_nice_evol_from_dina.nice_evo_rd: {threads: 2}
@@ -43,12 +44,15 @@ settings:
   #source_metis.iterative: false
   #source_metis.t_min: 72.0
 
-  synchro_nice_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  synchro_nice_metis_linear.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
   # The METIS input dataset has slices ~0.11 s apart while the loop runs every 2 ms; with the
   # default 'closest' pick METIS's boundary conditions (and, in interpretative mode, Te/ne)
   # jump by ~15% every ~55 steps, and NICE's evolutive Newton solve diverged exactly at the
   # first such jump (2026-09-04). Interpolate linearly in time instead.
-  synchro_nice_metis.interpolation_method: linear
+  synchro_nice_metis_linear.interpolation_method: "linear"
+
+  synchro_nice_metis_nearest.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  synchro_nice_metis_nearest.interpolation_method: "closest"
 
   sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
   sink_transport.sink_mode: "w"
