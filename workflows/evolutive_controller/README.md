@@ -16,12 +16,14 @@ imported, via `waveform_editor.core_sources_out -> torax.core_sources_in_f` (sam
 `inverse_convergence` uses on its own imported `core_sources`).
 
 **F_INIT bootstrap**: `source` reads a NICE-*reconstructed* equilibrium (not raw DINA -- see
-Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The `waveform_editor` passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
-wildcard import in `waveforms.yaml`, so every field survives, not just hand-picked ones) and
-overlays it with the static machine description (`<shot>_in_md`), core_profiles, and the ECRH
-trace read directly from this scenario's own DINA-preprocessed data
-(`<shot>_in_waveform_editor`), into one assembled F_INIT message for `torax`, `nice_evo_rd`,
-and `magnetic_controller`.
+Assumptions) from a completed `inverse_convergence` run's `_out_nice`. That equilibrium goes
+two ways: to `waveform_editor`, which takes nothing from it but its time base, and to
+`merger` as the IDS to build on. `waveform_editor` reads the static machine description
+(`<shot>_in_md`), core_profiles, the ECRH trace and the coil seed directly from this
+scenario's own DINA-preprocessed data, and `merger` writes its equilibrium targets over the
+reconstruction -- so every field of the reconstruction survives unless the design names it.
+The result is the F_INIT equilibrium for `torax`, `nice_evo_rd` and `magnetic_controller`;
+the other IDSs go to them straight from `waveform_editor`.
 
 A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/KCURR_RZIp/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.

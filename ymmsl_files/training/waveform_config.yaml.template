@@ -1,12 +1,28 @@
-globals:
-  dd_version: 4.0.0
-  imports:
-    md: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
-machine_description:
-  equilibrium/*:
-    - {ref: md}
-equilibrium:
-  equilibrium/time_slice/global_quantities/ip:
-    - { type: constant, value: -1.5e7 }
-  equilibrium/vacuum_toroidal_field/b0:
-    - { type: constant, value: -2.65 }
+# Waveform-Editor configuration for the training workflows.
+#
+# The actor takes nothing but a time base from its input port; everything else it reads
+# itself, from the entries named under `imports:`. So the equilibrium NICE solves against
+# is copied from the training data here, and this design prescribes two of its quantities
+# itself. Entries apply in the order they appear, so the prescribed values win over the
+# copies above them.
+version: 0.2
+dd_version: 4.0.0
+
+imports:
+  training: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
+
+waveforms:
+  state:
+    equilibrium/vacuum_toroidal_field/r0: { copy: training }
+    equilibrium/time_slice/boundary/outline/r: { copy: training }
+    equilibrium/time_slice/boundary/outline/z: { copy: training }
+    equilibrium/time_slice/global_quantities/psi_boundary: { copy: training }
+    equilibrium/time_slice/profiles_1d/psi: { copy: training }
+    equilibrium/time_slice/profiles_1d/f_df_dpsi: { copy: training }
+    equilibrium/time_slice/profiles_1d/dpressure_dpsi: { copy: training }
+
+  equilibrium:
+    equilibrium/time_slice/global_quantities/ip:
+      - { type: constant, value: -1.5e7 }
+    equilibrium/vacuum_toroidal_field/b0:
+      - { type: constant, value: -2.65 }

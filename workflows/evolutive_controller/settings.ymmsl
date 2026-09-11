@@ -16,6 +16,14 @@ settings:
   source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
   source.t_min: 0.0
+  # Every case here must set `source.dt` in its override, and this is why: NICE writes
+  # out_nice with ids_properties/homogeneous_time = 0, even though its root /time is
+  # fully populated and matches the per-slice times exactly. `source` passes that mode
+  # through unchanged on the plain-window path, and `merger` merges homogeneous IDSs
+  # only -- so without a `dt` the run dies on the first F_INIT message. Setting `dt`
+  # sends it through get_sample's resampling path, which emits a homogeneous trace.
+  # (`dt` also anchors the sampled grid at t_min rather than snapping forward to the
+  # next native NICE slice, which is the reason 105073 set it in the first place.)
   waveform_editor.waveforms: ${PDS_REPO}/workflows/evolutive_controller/waveforms.yaml
 
   torax.output_all_timeslices: True

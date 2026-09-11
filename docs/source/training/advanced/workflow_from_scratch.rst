@@ -174,9 +174,17 @@ A simple waveform editor config file has been prepared for you, located at ``<pd
 
     .. md-tab-item:: Solution
 
-        The Waveform Editor configuration defines 2 waveforms.
-        1 for the plasma current (Ip) which is set to be a constant value at 15 MA.
-        1 for the toroidal magnetic field in vacuum (b0) which is set to be a constant value at 2.65 T.
+        It copies the parts of the equilibrium that NICE solves against -- the boundary
+        outline, the flux state and ``r0`` -- straight out of the training data entry
+        listed under ``imports:``, and then prescribes 2 waveforms of its own on top:
+        1 for the plasma current (Ip) which is set to be a constant value at 15 MA,
+        and 1 for the toroidal magnetic field in vacuum (b0) which is set to be a constant
+        value at 2.65 T.
+
+        Entries apply in the order they appear, so the 2 prescribed waveforms win over
+        anything copied above them. Note that the actor reads those copies from disk
+        itself: the only thing it takes from its input port is the time base to evaluate
+        the waveforms on.
 
 Exercise 4b
 -----------
@@ -252,9 +260,11 @@ Exercise 5b
         .. code-block:: yaml
 
             [...]
-            equilibrium:
-              equilibrium/time_slice/global_quantities/ip:
-              - {type: constant, value: -2.0e7}
+            waveforms:
+              [...]
+              equilibrium:
+                equilibrium/time_slice/global_quantities/ip:
+                  - {type: constant, value: -2.0e7}
 
         The OLC actor will fail, as this does not adhere to the ruleset defined in
         previous exercise. It should look something like:

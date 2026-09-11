@@ -78,9 +78,11 @@ that run's directory: ``source.source_uri`` points at
 ``$PDS_REPO/cases/runs/inverse_convergence_${SHOT}/out_nice``. Run that case first, and do
 not clear its run directory before running this one.
 
-The waveform editor passes that equilibrium through an ``equilibrium/*: {ref: eq}`` wildcard, 
-so every field survives rather than a hand-pickedfew, and overlays the static machine 
-description, ``core_profiles`` and the ECRH trace from the scenario's own data.
+That equilibrium goes both to the waveform editor, which takes nothing from it but its
+time base, and to ``merger`` as the IDS to build on. The waveform editor reads the static
+machine description, ``core_profiles``, the ECRH trace and the coil seed from the
+scenario's own data, and ``merger`` writes its equilibrium targets over the reconstruction
+-- so every field of the reconstruction survives rather than a hand-picked few.
 
 Two fields in that overlay are load-bearing, both because NICE indexes them without a
 size check and segfaults on an empty one:

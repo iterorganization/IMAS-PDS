@@ -4,6 +4,10 @@ ymmsl_version: v0.2
 settings:
   source.t_min: 136.0
   source.t_max: 256.0
+  # Required, not optional -- see the note by source.t_min in the workflow's
+  # settings.ymmsl. The value mirrors 105073's; check it against this shot's own
+  # out_nice grid once an inverse_convergence_105084 run exists.
+  source.dt: 1
   torax.t_final: 136.6
   torax.fixed_dt: 0.005
   nice_evo_rd.t_end: 136.6
