@@ -38,7 +38,7 @@ resources:
 settings:
   source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
   source_nice.iterative: false
-  source_nice.t_min: 72.0
+  source_nice.t_min: 2.40
 
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
   #source_metis.iterative: false
