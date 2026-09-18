@@ -11,6 +11,18 @@ pfa_base = evalin('base','pf_active');
 Vmax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
 Vmin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -55000.0 -55000.0 -55000.0 -22500.0 -48000.0 -60000.0];
 
+% Optional tighter symmetric clamp on the commanded coil voltages (V), e.g. the ITER
+% main-converter rating (~1.35 kV) instead of the coil terminal limits above. Set the
+% environment variable NICE_VOLTAGE_LIMIT to enable; unset means the limits above.
+% Motivation: at start-up the current loop reacts to a ~2% mismatch between NICE's
+% inverse currents and the DINA references with commands at the +-45 kV limits for
+% two 2 ms steps, a flux kick that threw NICE's evolutive solve into NaN (2026-09-04).
+nice_voltage_limit = str2double(getenv('NICE_VOLTAGE_LIMIT'));
+if ~isnan(nice_voltage_limit) && nice_voltage_limit > 0
+    Vmax = min(Vmax,  nice_voltage_limit);
+    Vmin = max(Vmin, -nice_voltage_limit);
+end
+
 resistances= [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0057 0.00791];
 
 % KCURR_PFPO1's CSPF vector is 11-wide, sorted CS3U CS2U CS1 CS2L CS3L
@@ -38,6 +50,20 @@ voltage = voltage_full;
 
 voltage=max(voltage,Vmin);
 voltage=min(voltage,Vmax);
+
+% Sign convention adapter towards NICE. NICE/3.0.0.dev258's evolutive actor flips
+% coil currents to its internal (Ip>0) convention but applies the received IDS
+% voltages unflipped (ReadDataEvolutiveProblemWithRD: `signIc = 1`, the
+% change_coil_sign branch is commented out), so the IDS current it returns moves
+% opposite to the IDS voltage we send -- an inverted plant for this controller
+% (confirmed on all 11 coils, 2026-09-04, shot 105084). NICE_VOLTAGE_SIGN=-1 in the
+% magnetic_controller launch script compensates; set it to 1 (or unset) once NICE
+% converts voltages with the same COCOS sign as currents.
+nice_voltage_sign = str2double(getenv('NICE_VOLTAGE_SIGN'));
+if isnan(nice_voltage_sign)
+    nice_voltage_sign = 1;
+end
+voltage = nice_voltage_sign * voltage;
 
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
