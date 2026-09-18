@@ -10,7 +10,7 @@ ymmsl_version: v0.2
 # receives changes by a factor 50 per step and NICE's resistive diffusion diverges after
 # ~20 steps (2026-09-04). DINA's Te at this time is ~0.4 keV.
 settings:
-  metis.metis_external_data_electron_temperature: 1
-  metis.metis_external_data_ion_temperature: 1
-  metis.metis_external_data_electron_density: 1
-  metis.metis_external_data_charge_effective: 1
+  metis.metis_external_data_electron_temperature: 0
+  metis.metis_external_data_ion_temperature: 0
+  metis.metis_external_data_electron_density: 0
+  metis.metis_external_data_charge_effective: 0
