@@ -1,7 +1,10 @@
 globals:
   dd_version: 4.0.0
-  machine_description:
-    equilibrium: imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/
+  imports:
+    md: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
+machine_description:
+  equilibrium/*:
+    - {ref: md}
 equilibrium:
   equilibrium/time_slice/global_quantities/ip:
     - { type: constant, value: -1.5e7 }

@@ -13,14 +13,14 @@ Boundary-prescribed pulse design, solved once with NICE inverse. Available for D
 The plasma shape, the ``Ip``/``B0`` waveforms and the profile shapes (``p'`` and ``FF'``)
 are all fixed up front by the scenario's ``waveforms_no_transport.yaml``. No transport
 model runs, and NICE solves each time slice independently, so there is no time coupling
-and no outer iteration -- one pass and done.
+and no outer iteration.
 
 :Workflow: ``prescribed_transport`` -- :src:`workflows/prescribed_transport/README.md`
-:Scenario: DINA shots 105078, 105084, 105092, 105099, in ``pds-scenarios``
+:Scenarios: DINA shots 105078, 105084, 105092, 105099, in ``pds-scenarios``
 :Output: ``<run_dir>/out_nice``
 
 The four cases are the same run against different scenario data -- apart from the shot
-number in their paths the case files are identical, so there is nothing to tune per shot.
+number in their paths the case files are identical.
 
 Running it
 ----------

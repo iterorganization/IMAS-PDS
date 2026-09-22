@@ -6,11 +6,9 @@ A MUSCLE3 workflow that runs TORAX and NICE in genuine evolutive (forward, locks
 co-simulation, self-consistently, with a PCSSP magnetic controller closing the coil-current
 feedback loop.
 
-Unlike `inverse_convergence` (an outer Picard loop around a static per-slice NICE-inverse
-solve) or `prescribed_transport` (NICE-inverse only, no transport solver at all), this
+Unlike `inverse_convergence` or `prescribed_transport`, this
 workflow has TORAX and NICE step forward together: each internal step, TORAX evolves
-current/temperature and hands `equilibrium` + `core_profiles` to `nice_evo_rd`
-(`nice_imas_evo_rd_muscle3`, NICE's resistive-diffusion evolutive free-boundary solver), which
+current/temperature and hands `equilibrium` + `core_profiles` to `nice_evo_rd`, which
 returns the updated `equilibrium` for TORAX's next geometry. TORAX computes its own ohmic
 heating and impurity radiation self-consistently from its evolving profiles (see
 `config_torax.py`) rather than importing them from DINA; only the ECRH actuator trace is
@@ -18,8 +16,7 @@ imported, via `waveform_editor.core_sources_out -> torax.core_sources_in_f` (sam
 `inverse_convergence` uses on its own imported `core_sources`).
 
 **F_INIT bootstrap**: `source` reads a NICE-*reconstructed* equilibrium (not raw DINA -- see
-Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The Waveform-Editor
-(`waveform_editor`) passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
+Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The `waveform_editor` passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
 wildcard import in `waveforms.yaml`, so every field survives, not just hand-picked ones) and
 overlays it with the static machine description (`<shot>_in_md`), core_profiles, and the ECRH
 trace read directly from this scenario's own DINA-preprocessed data

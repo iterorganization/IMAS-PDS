@@ -3,29 +3,28 @@
 ## What it does
 
 A MUSCLE3 workflow that drives a NICE free-boundary inverse equilibrium and TORAX transport
-to a self-consistent pulse via an outer Picard loop (`loop`, `outer_convergence_loop.py`).
-Each iteration the loop sends a whole-trace pulse (target equilibrium, core_profiles,
-coil-current seed); the Waveform-Editor (`waveform_editor`) overlays the designed Ip(t)/B0
-onto the target equilibrium, mirrors core_profiles through unchanged, imports the ECRH
-heating, and re-exports the scenario's static wall/pf_passive/iron_core machine description
-straight to the NICE inverse (these three never change across the pulse or across
-iterations, so the loop never carries them); one `nice_imas_inv_muscle3` receives the whole
-trace and solves it in batch mode; its equilibrium goes to TORAX, whose evolved profiles and
-NICE's coil currents return to the loop. It converges when the max coil-current change
-between iterations drops below `loop.tolerance` (and `loop.rel_tolerance`).
+to a self-consistent pulse via an outer Picard loop.
+Each iteration the loop:
 
-`equilibrium` is the `nice_inverse` submodel (defined in `workflow.ymmsl`): `psi_anchor`,
-one NICE inverse actor, and `recorder_equilibrium` on its output. Batch mode splits the trace
-into chunks of consecutive slices, one chunk per thread, each warm-starting along the chunk
-from a cold head; from the second Picard iteration on each slice restarts from its own
-previous solution instead, so no head is cold. `psi_anchor` shifts each slice's
-`profiles_1d.psi` onto the designed `psi_boundary` before NICE, which reads its boundary-flux
-target off `psi[-1]`: iteration 1 needs no shift, but the state returns from TORAX in TORAX's
-own gauge, tens of Wb away. The former load balancer (per-slice scatter over N workers) did
-that same re-gauging on its way past.
+- sends the whole-trace pulse to the waveform editor(target equilibrium, core_profiles, coil-current seed)
+- The `waveform_editor`: 
+  - overlays the designed Ip(t)/B0 onto the target equilibrium
+  - Mirrors core_profiles through unchanged
+  - Imports the ECRH heating
+  - Re-exports the scenario's static wall/pf_passive/iron_core machine description
+    to the NICE inverse
+- One `nice_imas_inv_muscle3` receives the whole trace and solves it in batch mode
+- its equilibrium goes to TORAX, whose evolved profiles and NICE's coil currents return to the loop.
 
-An `imas-validator` actor (`validator`) checks the converged pf_active against the
-`iter-olc` ruleset.
+It converges when the max coil-current change between iterations drops below `loop.tolerance`
+An `imas-validator` actor checks the converged pf_active against the `iter-olc` ruleset.
+
+`equilibrium` is the `nice_inverse` submodel (`workflow.ymmsl`): `psi_anchor`, one NICE inverse
+actor and `recorder_equilibrium` on its output. Batch mode splits the trace into chunks of
+consecutive slices, one per thread, each warm-starting along the chunk; from the second Picard
+iteration each slice restarts from its own previous solution. `psi_anchor` shifts each slice's
+`profiles_1d.psi` onto the designed `psi_boundary`, which NICE reads its boundary-flux target
+from via `psi[-1]`: a no-op on iteration 1, tens of Wb once the state has been through TORAX.
 
 Structure lives entirely in `workflow.ymmsl`; everything scenario- and run-specific lives
 in the case.
@@ -41,14 +40,17 @@ bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_converge
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 ```
 
-`pds-create-case` stacks `workflow.ymmsl`, this workflow's `settings.ymmsl` (resources,
-loop/solver defaults, this workflow's own `waveforms.yaml` pulse-design template, and the
-input DBEntry, all templated from `${SHOT}`), and
-`cases/overrides/inverse_convergence_<shot>.ymmsl` if it exists (a `waveforms.yaml` variant
-for MD_LAYOUT=combined shots, a calibrated `config_torax.py`, a narrower loop window --
-whatever a shot needs beyond the generic template) into numbered files under the case
-folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
-`cases/runs/<case>`.
+`pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
+`cases/overrides/inverse_convergence_<shot>.ymmsl`.
+
+The `settings.ymmsl` contains (all templated from `${SHOT}`):
+
+- Resources
+- Solver config
+- This workflow's own `waveforms.yaml` pulse-design template
+- The input DBEntry
+
+If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `cases/runs/<case>`.
 
 Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_literal` (same
 source data as 105084, a literal rather than loop-designed pulse).

@@ -79,6 +79,18 @@ VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR}'
 
 [[ -d "$WF" ]] || { echo "pds-create-case: no workflow dir $WF" >&2; exit 1; }
 
+if [[ -d "$SCENARIOS_REPO" ]]; then
+  if [[ ! -d "$SCENARIOS_REPO/$SHOT" && ! -f "$OVERRIDE" ]]; then
+    echo "pds-create-case: no scenario $SHOT in $SCENARIOS_REPO" >&2
+    available="$(cd "$SCENARIOS_REPO" && ls -d [0-9]* 2>/dev/null | tr '\n' ' ')"
+    [[ -n "$available" ]] && echo "Available shots: $available" >&2
+    exit 1
+  fi
+else
+  echo "pds-create-case: warning: SCENARIOS_REPO=$SCENARIOS_REPO does not exist," \
+       "skipping the scenario check" >&2
+fi
+
 if [[ -d "$CASE_DIR" && "$FORCE" -eq 0 ]]; then
   if [[ -t 0 ]]; then
     echo "pds-create-case: ${CASE_DIR#"$PDS_REPO"/} already exists." >&2

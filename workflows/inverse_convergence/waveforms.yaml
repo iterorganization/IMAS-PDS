@@ -29,6 +29,8 @@ state:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
     - {ref: eq}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: eq}
   core_profiles/global_quantities/v_loop:
     - {ref: cp}
   core_profiles/profiles_1d/time:
@@ -52,8 +54,6 @@ targets:
   core_profiles/global_quantities/ip:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/psi_boundary:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}

@@ -26,10 +26,6 @@ the received IDSs rather than computing itself. ``settings.ymmsl`` sets all of t
 Interpretative mode means enabling the relevant settings in
 ``cases/overrides/metis_from_dina_<shot>.ymmsl``.
 
-That is why this one workflow replaces the former ``metis_predictive_from_dina`` and
-``metis_interpretative_from_dina`` -- their graphs were identical and differed only in
-those settings.
-
 Running it
 ----------
 

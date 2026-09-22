@@ -23,6 +23,9 @@ module --ignore_cache load PDS
 
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
+export SBATCH_PARTITION=sun_debug,vega_debug,sirius_debug
+export SLURM_PARTITION=sun_debug,vega_debug,sirius_debug
+
 # Single-actor smoke tests: catch a broken actor environment in seconds. Without an
 # explicit --run-dir the manager creates run_<model>_<timestamp> in the CI workspace and
 # nothing ever prunes them, so these land in cases/runs/ same as the case runs below.

@@ -1,12 +1,11 @@
 #!/bin/bash
 #SBATCH -J pds_case
-#SBATCH -p all
 #SBATCH -A iter
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=00:59:00
-#SBATCH --partition=sun_debug,vega_debug,sirius_debug
+#SBATCH --partition=sun,vega,sirius,sun_debug,vega_debug,sirius_debug
 set -euo pipefail
 
 # SLURM wrapper that runs a case folder created by bin/pds-create-case. Submit from the
