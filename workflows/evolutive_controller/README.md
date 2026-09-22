@@ -62,6 +62,10 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   dependency on a completed `inverse_convergence` run for the same shot (`preprocess_data.sh`
   copies its `_out_nice` output), which the very first version of this bootstrap chain had
   tried to avoid.
+- `nice_evo_rd` runs with 4 threads (`workflow.ymmsl` `resources:`), TORAX with 8. The NICE
+  actor's `OMP_NUM_THREADS` in `lib/easybuild_programs.ymmsl` is overwritten by `resources:
+  threads`, so that line is the only place the count can be set. NICE is on the lockstep
+  critical path, so its per-step compute comes off the wall time one for one.
 - The `magnetic_controller` is not optional decoration: `nice_imas_evo_rd_muscle3`
   unconditionally receives on `pf_active_s` every internal step (see
   `local_installs/nice/src/main_imas_evo_rd_muscle3.cc`), and nothing else in this workflow feeds that
