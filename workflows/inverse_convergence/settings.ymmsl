@@ -7,7 +7,12 @@ ymmsl_version: v0.2
 # cases/overrides/inverse_convergence_<shot>.ymmsl.
 
 resources:
-  inverse_convergence.equilibrium.nice: {threads: 2}
+  # batch mode: one chunk per thread (105073's 37 slices -> 8 chunks of 5). More threads
+  # buy little past this -- the chunk is already short enough that its cold head (~500 ms
+  # against 215 ms warm) is a third of it -- and fewer leave the trace in long serial
+  # chains. batch_chunk_slices would fix the chunking instead, making the result
+  # independent of the thread count.
+  inverse_convergence.equilibrium.nice: {threads: 8}
   inverse_convergence.transport.torax: {threads: 8}
   inverse_convergence.equilibrium.recorder_equilibrium: {threads: 1}
   inverse_convergence.recorder_transport: {threads: 1}

@@ -10,20 +10,16 @@ working purely on whole traces -- the per-slice/scatter/gather/assemble all live
 Lanes fixed to the NICE inverse contract. STATIC lanes (wall/pf_passive/iron_core) are
 forwarded whole to every worker call (NICE re-reads them each F_INIT); the rest are sliced.
 
-Each equilibrium slice is re-gauged before scatter (_anchor_psi). NICE derives its desired
-boundary flux, and the normalization of the p'/ff' coordinate, from profiles_1d.psi[-1], so
-whatever gauge the Picard state is in would become the coil-current target. Shifting the
-whole psi array so its edge lands on the designed global_quantities.psi_boundary anchors
-every iteration to the designed transformer-flux state; p'(psi)/ff'(psi) are invariant
-under it. Slices without psi_boundary or without a psi profile pass through unchanged.
+Each equilibrium slice is re-gauged before scatter, onto the designed psi_boundary -- see
+psi_anchor, which holds the shift and applies it whole-trace for the batch-mode inverse.
 """
 
 import logging
 
-import numpy as np
 from imas import DBEntry, IDSFactory
 from imas.ids_defs import CLOSEST_INTERP
 from libmuscle import Instance, Message
+from psi_anchor import anchor_psi
 from ymmsl.v0_2 import Operator
 
 logger = logging.getLogger()
@@ -51,19 +47,12 @@ def _assemble(slices, name):
 
 
 def _anchor_psi(ser):
-    """Shift one equilibrium slice's profiles_1d.psi so psi[-1] == the designed
-    psi_boundary (see module docstring). Returns (slice, shift) -- shift is None
-    when the slice carries no anchor or no psi profile."""
+    """anchor_psi on one serialized slice. Returns (slice, shift); shift is None when
+    the slice carries no anchor or no psi profile."""
     eq = IDSFactory().new("equilibrium")
     eq.deserialize(ser)
-    ts = eq.time_slice[0]
-    if not ts.global_quantities.psi_boundary.has_value or not len(ts.profiles_1d.psi):
-        return ser, None
-    shift = float(ts.global_quantities.psi_boundary) - float(ts.profiles_1d.psi[-1])
-    if shift == 0.0:
-        return ser, 0.0
-    ts.profiles_1d.psi = np.asarray(ts.profiles_1d.psi) + shift
-    return eq.serialize(), shift
+    shift = anchor_psi(eq)[0]
+    return (ser if not shift else eq.serialize()), shift
 
 
 def main() -> None:

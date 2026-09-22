@@ -12,12 +12,19 @@ Each iteration the loop:
   - Mirrors core_profiles through unchanged
   - Imports the ECRH heating
   - Re-exports the scenario's static wall/pf_passive/iron_core machine description
-    to the NICE load balancer
-- The parallel NICE-inverse `load_balancer` solves it per time slice
+    to the NICE inverse
+- One `nice_imas_inv_muscle3` receives the whole trace and solves it in batch mode
 - its equilibrium goes to TORAX, whose evolved profiles and NICE's coil currents return to the loop.
 
 It converges when the max coil-current change between iterations drops below `loop.tolerance`
 An `imas-validator` actor checks the converged pf_active against the `iter-olc` ruleset.
+
+`equilibrium` is the `nice_inverse` submodel (`workflow.ymmsl`): `psi_anchor`, one NICE inverse
+actor and `recorder_equilibrium` on its output. Batch mode splits the trace into chunks of
+consecutive slices, one per thread, each warm-starting along the chunk; from the second Picard
+iteration each slice restarts from its own previous solution. `psi_anchor` shifts each slice's
+`profiles_1d.psi` onto the designed `psi_boundary`, which NICE reads its boundary-flux target
+from via `psi[-1]`: a no-op on iteration 1, tens of Wb once the state has been through TORAX.
 
 Structure lives entirely in `workflow.ymmsl`; everything scenario- and run-specific lives
 in the case.
@@ -62,6 +69,9 @@ from DINA and machine-description sources.
   around the loop.
 - Convergence is judged purely on coil currents (`loop.tolerance`/`loop.rel_tolerance`), not on
   a residual of the equilibrium or profiles themselves.
+- `equilibrium.nice` runs with 8 threads (`settings.ymmsl` resources), so the batch solve
+  scales with the thread count up to the number of slices; `OMP_NUM_THREADS` in
+  `lib/easybuild_programs.ymmsl` is overwritten by `resources: threads`.
 - `loop.max_iterations` bounds the run regardless of whether `loop.tolerance` was reached --
   a run that hits the iteration cap without converging still produces output, so check the
   loop's own convergence log rather than assuming the presence of output means convergence.

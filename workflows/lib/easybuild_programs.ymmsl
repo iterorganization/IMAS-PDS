@@ -134,3 +134,8 @@ programs:
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
+
+  psi_anchor:
+    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/psi_anchor.py
