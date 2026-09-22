@@ -8,12 +8,21 @@ Each iteration the loop sends a whole-trace pulse (target equilibrium, core_prof
 coil-current seed); the Waveform-Editor (`waveform_editor`) overlays the designed Ip(t)/B0
 onto the target equilibrium, mirrors core_profiles through unchanged, imports the ECRH
 heating, and re-exports the scenario's static wall/pf_passive/iron_core machine description
-straight to the NICE load balancer (these three never change across the pulse or across
-iterations, so the loop never carries them); a parallel NICE-inverse load balancer
-(`load_balancer`, `nice_load_balancer.py`) solves it per time slice; its equilibrium goes to
-TORAX, whose evolved profiles and NICE's coil currents return to the loop. It converges when
-the max coil-current change between iterations drops below `loop.tolerance` (and
-`loop.rel_tolerance`).
+straight to the NICE inverse (these three never change across the pulse or across
+iterations, so the loop never carries them); one `nice_imas_inv_muscle3` receives the whole
+trace and solves it in batch mode; its equilibrium goes to TORAX, whose evolved profiles and
+NICE's coil currents return to the loop. It converges when the max coil-current change
+between iterations drops below `loop.tolerance` (and `loop.rel_tolerance`).
+
+`equilibrium` is the `nice_inverse` submodel (defined in `workflow.ymmsl`): `psi_anchor`,
+one NICE inverse actor, and `recorder_equilibrium` on its output. Batch mode splits the trace
+into chunks of consecutive slices, one chunk per thread, each warm-starting along the chunk
+from a cold head; from the second Picard iteration on each slice restarts from its own
+previous solution instead, so no head is cold. `psi_anchor` shifts each slice's
+`profiles_1d.psi` onto the designed `psi_boundary` before NICE, which reads its boundary-flux
+target off `psi[-1]`: iteration 1 needs no shift, but the state returns from TORAX in TORAX's
+own gauge, tens of Wb away. The former load balancer (per-slice scatter over N workers) did
+that same re-gauging on its way past.
 
 An `imas-validator` actor (`validator`) checks the converged pf_active against the
 `iter-olc` ruleset.
@@ -58,6 +67,9 @@ from DINA and machine-description sources.
   around the loop.
 - Convergence is judged purely on coil currents (`loop.tolerance`/`loop.rel_tolerance`), not on
   a residual of the equilibrium or profiles themselves.
+- `equilibrium.nice` runs with 8 threads (`settings.ymmsl` resources), so the batch solve
+  scales with the thread count up to the number of slices; `OMP_NUM_THREADS` in
+  `lib/easybuild_programs.ymmsl` is overwritten by `resources: threads`.
 - `loop.max_iterations` bounds the run regardless of whether `loop.tolerance` was reached --
   a run that hits the iteration cap without converging still produces output, so check the
   loop's own convergence log rather than assuming the presence of output means convergence.
