@@ -96,10 +96,16 @@ if instance.reuse_instance()
     ip_ref = zeros(1,n_slices);
     rgeo_ref = zeros(1,n_slices);
     zgeo_ref = zeros(1,n_slices);
+    % DINA never fills boundary.geometric_axis.z (only .r); this loop uses
+    % zgeo_ref as the RZIp controller's vertical-position reference, and
+    % receiving IMAS's empty-float sentinel (-9e40) here previously saturated
+    % all coil voltages to about -45 kV (found 2026-09-04, shot 105084).
     for i=1:n_slices
         ip_ref(i) = abs(equilibrium.time_slice{i}.global_quantities.ip);
         rgeo_ref(i) = equilibrium.time_slice{i}.boundary.geometric_axis.r;
         zgeo_ref(i) = equilibrium.time_slice{i}.boundary.geometric_axis.z;
+        rgeo_ref(i) = geo_ref_with_fallback(rgeo_ref(i), equilibrium.time_slice{i}, 'r', logger);
+        zgeo_ref(i) = geo_ref_with_fallback(zgeo_ref(i), equilibrium.time_slice{i}, 'z', logger);
     end
 
     enable_KCURR=1;
@@ -142,4 +148,32 @@ if instance.reuse_instance()
     plasma_duration=t_max-t_start;
 
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
+end
+
+function value = geo_ref_with_fallback(value, ts, field, logger)
+    % Recompute boundary.geometric_axis.(field) from the boundary outline
+    % midpoint when the primary value is empty or carries IMAS's
+    % empty-float sentinel (abs > 1e30). If the outline is itself empty,
+    % fall back further to global_quantities.magnetic_axis.(field). Warns
+    % only the first time any fallback is used across the whole loop.
+    persistent warned
+    if isempty(warned)
+        warned = false;
+    end
+    if isempty(value) || abs(value) > 1e30
+        outline_field = ts.boundary.outline.(field);
+        if ~isempty(outline_field)
+            value = (max(outline_field) + min(outline_field)) / 2;
+            fallback = 'outline midpoint';
+        else
+            value = ts.global_quantities.magnetic_axis.(field);
+            fallback = 'magnetic_axis';
+        end
+        if ~warned
+            logger.warning(sprintf( ...
+                ['muscle_controller_NICE_IMAS_iter_init: boundary.geometric_axis.%s ' ...
+                 'was empty/sentinel, falling back to %s'], field, fallback));
+            warned = true;
+        end
+    end
 end

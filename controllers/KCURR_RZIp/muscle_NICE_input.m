@@ -2,14 +2,33 @@ function muscle_NICE_input(t_cur,voltage,coil_current)
 % This function receives the current simulation time and
 % a voltage from simulink.
 
+global z_cur
+persistent z_ref
 % retrieve instance object from base WS
 instance = evalin('base','instance');
 logger = evalin('base','logger');
 pfa_base = evalin('base','pf_active');
 
 %add min max and some check
-Vmax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
-Vmin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -55000.0 -55000.0 -55000.0 -22500.0 -48000.0 -60000.0];
+% This is coil currents limits and not voltage !!!!!
+Imax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
+Imin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -55000.0 -55000.0 -55000.0 -22500.0 -48000.0 -60000.0];
+% just some rapid guess from Girbov documentation not to far from reality,
+% should be checked and improved.
+Vmax =  2.65e3 * ones(1,14);
+Vmin = -2.65e3 * ones(1,14);
+
+% Optional tighter symmetric clamp on the commanded coil voltages (V), e.g. the ITER
+% main-converter rating (~1.35 kV) instead of the coil terminal limits above. Set the
+% environment variable NICE_VOLTAGE_LIMIT to enable; unset means the limits above.
+% Motivation: at start-up the current loop reacts to a ~2% mismatch between NICE's
+% inverse currents and the DINA references with commands at the +-45 kV limits for
+% two 2 ms steps, a flux kick that threw NICE's evolutive solve into NaN (2026-09-04).
+nice_voltage_limit = str2double(getenv('NICE_VOLTAGE_LIMIT'));
+if ~isnan(nice_voltage_limit) && nice_voltage_limit > 0
+    Vmax = min(Vmax,  nice_voltage_limit);
+    Vmin = max(Vmin, -nice_voltage_limit);
+end
 
 resistances= [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0057 0.00791];
 
@@ -39,9 +58,35 @@ voltage = voltage_full;
 voltage=max(voltage,Vmin);
 voltage=min(voltage,Vmax);
 
+% Sign convention adapter towards NICE. NICE/3.0.0.dev258's evolutive actor flips
+% coil currents to its internal (Ip>0) convention but applies the received IDS
+% voltages unflipped (ReadDataEvolutiveProblemWithRD: `signIc = 1`, the
+% change_coil_sign branch is commented out), so the IDS current it returns moves
+% opposite to the IDS voltage we send -- an inverted plant for this controller
+% (confirmed on all 11 coils, 2026-09-04, shot 105084). NICE_VOLTAGE_SIGN=-1 in the
+% magnetic_controller launch script compensates; set it to 1 (or unset) once NICE
+% converts voltages with the same COCOS sign as currents.
+nice_voltage_sign = str2double(getenv('NICE_VOLTAGE_SIGN'));
+if isnan(nice_voltage_sign)
+    nice_voltage_sign = 1;
+end
+voltage = nice_voltage_sign * voltage;
+
+% simple vertical control
+dz_max      = 0.04;
+if isempty(z_ref)
+	z_ref = z_cur;
+else
+	z_ref = 0.99 .* z_ref + 0.01 .* z_cur;
+end
+dz_cor      = (z_ref -z_cur)/dz_max;
+voltage(13) =  Vmax(end) .* tanh(exp(1) *((dz_cor/5 + dz_cor^3)/1.2));
+voltage(14) = - voltage(13);
+logger.info(sprintf('dz_cor = %g & Vs = %g (V) with z_ref = %g (m) & z_cur = %g (m)\n',dz_cor,voltage(13),z_ref,z_cur));
+
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
-pfa.time = [t_cur];
+pfa.time = t_cur;
 pfa.coil=ids_allocate('pf_active', 'coil', 14);
 for i = 1:14
     pfa.coil{i}.element = pfa_base.coil{i}.element;
