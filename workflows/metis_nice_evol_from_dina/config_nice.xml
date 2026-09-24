@@ -278,7 +278,7 @@
 	<use_desired_psib>1</use_desired_psib>
 
 	<!-- InverseSQP2  -->
-	<abserrIg>3e5</abserrIg>
+	<abserrIg>5e5</abserrIg>
 	<relerrIg>0</relerrIg>
     	<n_coil_group_index>14</n_coil_group_index>
     	<coil_group_index>0 1 2 2 3 4 5 6 7 8 9 10 11 12</coil_group_index>
