@@ -2,14 +2,21 @@ function muscle_NICE_input(t_cur,voltage,coil_current)
 % This function receives the current simulation time and
 % a voltage from simulink.
 
+global z_cur
+persistent z_ref
 % retrieve instance object from base WS
 instance = evalin('base','instance');
 logger = evalin('base','logger');
 pfa_base = evalin('base','pf_active');
 
 %add min max and some check
-Vmax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
-Vmin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -55000.0 -55000.0 -55000.0 -22500.0 -48000.0 -60000.0];
+% This is coil currents limits and not voltage !!!!!
+Imax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
+Imin=[-45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -45000.0 -48000.0 -55000.0 -55000.0 -55000.0 -55000.0 -22500.0 -48000.0 -60000.0];
+% just some rapid guess from Girbov documentation not to far from reality,
+% should be checked and improved.
+Vmax =  2.65e3 * ones(1,14);
+Vmin = -2.65e3 * ones(1,14);
 
 % Optional tighter symmetric clamp on the commanded coil voltages (V), e.g. the ITER
 % main-converter rating (~1.35 kV) instead of the coil terminal limits above. Set the
@@ -65,9 +72,21 @@ if isnan(nice_voltage_sign)
 end
 voltage = nice_voltage_sign * voltage;
 
+% simple vertical control
+dz_max      = 0.04;
+if isempty(z_ref)
+	z_ref = z_cur;
+else
+	z_ref = 0.99 .* z_ref + 0.01 .* z_cur;
+end
+dz_cor      = (z_ref -z_cur)/dz_max;
+voltage(13) =  Vmax(end) .* tanh(exp(1) *((dz_cor/5 + dz_cor^3)/1.2));
+voltage(14) = - voltage(13);
+logger.info(sprintf('dz_cor = %g & Vs = %g (V) with z_ref = %g (m) & z_cur = %g (m)\n',dz_cor,voltage(13),z_ref,z_cur));
+
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
-pfa.time = [t_cur];
+pfa.time = t_cur;
 pfa.coil=ids_allocate('pf_active', 'coil', 14);
 for i = 1:14
     pfa.coil{i}.element = pfa_base.coil{i}.element;
