@@ -62,9 +62,9 @@ clone's run directory works), and the plasmaless repository installed in
 `local_installs/plasmaless-tokamak-circuits`. Install it once with `pds_setup.sh`
 (set `INSTALL_PLASMALESS="true"`) or directly with
 `cd local_installs && bash ../setup_files/setup_plasmaless.sh`: it clones
-`https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git` at the commit pinned
-in `BRANCH_PLASMALESS` (a commit of the `IMAS_Muscle3` branch; MATLAB code, nothing to
-build) and, when re-run, moves the checkout to a new pin. There is no EasyBuild module
+`https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git` on branch
+`IMAS_Muscle3` (`BRANCH_PLASMALESS`, which holds the MUSCLE3 actor; MATLAB code, nothing to
+build). A tag or commit may be passed instead to pin a version. There is no EasyBuild module
 for it, so the workflow imports the `plasmaless` program from
 `workflows/lib/local_programs.ymmsl`, which runs the actor from that checkout. The model
 machine description ships with the repository (`data/md_dd4`), so no

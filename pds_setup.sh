@@ -31,8 +31,7 @@ BRANCH_NICE='master'
 BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
-# plasmaless: a pinned commit of the IMAS_Muscle3 branch (see setup_files/setup_plasmaless.sh)
-BRANCH_PLASMALESS='a870c621ff512b6ee7ead46f83f0a384c2ce4652'
+BRANCH_PLASMALESS='IMAS_Muscle3'
 
 is_sourced() {
   [[ "${BASH_SOURCE[0]}" != "$0" ]]

@@ -93,8 +93,8 @@ be run directly from inside ``run/``. Each clones its tool and builds it into
      - Optional; live view of a running coupling.
    * - ``setup_plasmaless.sh``
      - ``local_installs/plasmaless-tokamak-circuits/``
-     - MATLAB, clone only, at the commit pinned in ``BRANCH_PLASMALESS``. The
-       ``plasmaless`` actor of ``plasmaless_controller`` runs from here.
+     - MATLAB, clone only, on branch ``IMAS_Muscle3`` (``BRANCH_PLASMALESS``; a tag
+       or commit may be set there to pin a version). The ``plasmaless`` actor of ``plasmaless_controller`` runs from here.
 
 .. important::
 
