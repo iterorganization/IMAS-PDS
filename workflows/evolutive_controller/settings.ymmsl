@@ -13,21 +13,26 @@ settings:
   # inverse_convergence case run for the same shot (see bin/pds-create-case /
   # bin/pds-run-case.sbatch's cases/runs/<case> convention); waveform_editor.waveforms
   # assembles the rest (machine description, core_profiles, ECRH) from pds-scenarios.
+  # source: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
   source.t_min: 0.0
+  # waveform_editor: https://waveform-editor.readthedocs.io/en/latest/muscle3.html#available-settings
   waveform_editor.waveforms: ${PDS_REPO}/workflows/evolutive_controller/waveforms.yaml
 
+  # torax: https://torax-muscle3.readthedocs.io/en/latest/usage.html#available-settings
   torax.output_all_timeslices: True
   torax.max_consecutive_invalid_input: 20
   torax.fixed_dt: 0.01
+  torax.python_config_module: ${PDS_REPO}/workflows/evolutive_controller/config_torax.py
+  # nice_evo_rd: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo_rd.t_interval: 0.01
   nice_evo_rd.dt: 0.01
   nice_evo_rd.xml_path: ${PDS_REPO}/workflows/evolutive_controller/config_nice.xml
-  torax.python_config_module: ${PDS_REPO}/workflows/evolutive_controller/config_torax.py
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.
+  # sink_*: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html#available-settings
   sink_equilibrium.sink_uri: "imas:hdf5?path=../../../out_nice"
   sink_transport.sink_uri: "imas:hdf5?path=../../../out_torax"
   sink_control.sink_uri: "imas:hdf5?path=../../../out_controller"
@@ -35,6 +40,7 @@ settings:
   sink_transport.sink_mode: "w"
   sink_control.sink_mode: "w"
 
+  # recorder_*: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html#available-settings
   recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
   recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
