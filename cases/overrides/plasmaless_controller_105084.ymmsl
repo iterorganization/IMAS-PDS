@@ -1,7 +1,9 @@
 ymmsl_version: v0.2
 # Same window and time step as evolutive_controller_105084 (flattop, source.t_min 136.0 /
-# t_max 256.0, nice_evo_rd.t_end 136.6, dt = t_interval 0.005), so the two runs can be
-# compared step by step. preprocess.sh reads the window [t_min, t_max] of
+# t_max 256.0, dt = t_interval 0.005). plasmaless.t_end 160.0 = medium run (~4,750
+# exchanges at dt 0.005, transient plus start of the slow CS/PF drift over 4 inverse slices
+# 136.2/143.2/150.2/155.4); the actor requires t_end inside the inverse data window (last
+# slice 251.08 s). preprocess.sh reads the window [t_min, t_max] of
 # metis_nice_inverse_from_dina_105084/nice_out with no dt, i.e. the native inverse slices
 # 136.2276 .. 251.0776 s (19 slices, all output_flag 0), into the case's
 # preprocess/initial_state, which source then sends whole, so t0 = 136.2276 s. The plasmaless model has no
@@ -10,6 +12,6 @@ ymmsl_version: v0.2
 settings:
   source.t_min: 136.0
   source.t_max: 256.0
-  plasmaless.t_end: 136.6
+  plasmaless.t_end: 160.0
   plasmaless.dt: 0.005
   plasmaless.t_interval: 0.005

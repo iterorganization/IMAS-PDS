@@ -198,3 +198,36 @@ programs:
       # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
       # above, which parse fine across multiple lines.
       exec matlab -batch "try; pyenv('Version','$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
+
+  # Plasmaless coil+vessel model (no plasma), a stand-in for nice_evo_rd in controller
+  # tests (workflows/plasmaless_controller, which imports it from here). MATLAB, no
+  # EasyBuild module: the actor (muscle3/muscle_plasmaless_actor.m) runs from the
+  # checkout $PDS_REPO/local_installs/plasmaless-tokamak-circuits, made at a pinned
+  # commit by setup_files/setup_plasmaless.sh (pds_setup.sh, INSTALL_PLASMALESS). The
+  # actor finds imas_model/ and its default machine description data/md_dd4/ next to its
+  # own file, so they come from the same checkout. Developers can point PLASMALESS_REPO
+  # at their own clone to override it (optional; unset = local_installs).
+  # The path is captured before `module purge`, which can take $PDS_REPO out with the PDS
+  # module. PCS is loaded only for its muscle3 venv ($EBROOTPCS/muscle3_venv),
+  # IMAS-MATLAB for the IMAS MATLAB API; `unset PYTHONPATH` as for the other actors.
+  # -singleCompThread: the actor only does small dense matrix-vector products and gets 1
+  # thread in the workflow resources. The final os._exit(0) (reached only when the actor
+  # returned without error, after it deregistered from the manager) skips MATLAB's own
+  # exit: MATLAB R2025b segfaults on exit (exit code 137) in any session that read an
+  # imas:hdf5 entry through IMAS-MATLAB/5.6.0 (reproduced with imas_open/ids_get/
+  # imas_close alone, without MUSCLE3), and the manager would report the run as failed.
+  plasmaless:
+    script: |
+      #!/bin/bash
+      plasmaless_repo="${PLASMALESS_REPO:-$PDS_REPO/local_installs/plasmaless-tokamak-circuits}"
+      if [[ ! -f "$plasmaless_repo/muscle3/muscle_plasmaless_actor.m" ]]; then
+        echo "plasmaless: no muscle3/muscle_plasmaless_actor.m in '$plasmaless_repo'" \
+          "-- run setup_files/setup_plasmaless.sh (pds_setup.sh) or set PLASMALESS_REPO" >&2
+        exit 1
+      fi
+      echo "plasmaless: actor from $plasmaless_repo"
+      module purge
+      module load PCS/2026.08-pds
+      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      unset PYTHONPATH
+      exec matlab -singleCompThread -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath('$plasmaless_repo/muscle3');muscle_plasmaless_actor;pyrun('import os; os._exit(0)');"

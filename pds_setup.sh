@@ -9,6 +9,7 @@
 # https://gitlab.eufus.psnc.pl/g2jfa/metis/-/tree/master/doc
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
 # https://torax.readthedocs.io/en/latest/installation.html
+# https://github.com/MireilleSchneider/plasmaless-tokamak-circuits/tree/IMAS_Muscle3/muscle3
 
 INSTALL_PDS="true"
 INSTALL_IMAS_MUSCLE3="false"
@@ -19,6 +20,7 @@ INSTALL_NICE="false"
 INSTALL_TORAX="false"
 INSTALL_CHEASE="false"
 INSTALL_PCS="false"
+INSTALL_PLASMALESS="false"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
@@ -29,6 +31,8 @@ BRANCH_NICE='master'
 BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
+# plasmaless: a pinned commit of the IMAS_Muscle3 branch (see setup_files/setup_plasmaless.sh)
+BRANCH_PLASMALESS='a870c621ff512b6ee7ead46f83f0a384c2ce4652'
 
 is_sourced() {
   [[ "${BASH_SOURCE[0]}" != "$0" ]]
@@ -152,6 +156,18 @@ CURR_INSTALL='START'
     echo "############## FINISHED PCS ##############"
   else
     echo "Skipping PCS"
+  fi
+
+  # SET UP PLASMALESS (MATLAB coil+vessel model, actor of workflows/plasmaless_controller)
+  CURR_INSTALL='PLASMALESS'
+  PLASMALESS_URL="https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git"
+  if [ "$INSTALL_PLASMALESS" = "true" ] \
+    && git ls-remote "$PLASMALESS_URL" &>/dev/null; then
+    echo "############## INSTALLING PLASMALESS ##############"
+    bash ../setup_files/setup_plasmaless.sh $PLASMALESS_URL $BRANCH_PLASMALESS
+    echo "############## FINISHED PLASMALESS ##############"
+  else
+    echo "Skipping PLASMALESS"
   fi
 
   # SET UP CHEASE

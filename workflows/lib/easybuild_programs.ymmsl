@@ -113,28 +113,6 @@ programs:
       # the right one.
       exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m'));"
 
-  # Plasmaless coil+vessel model (no plasma), a stand-in for nice_evo_rd in controller
-  # tests (workflows/plasmaless_controller). The actor lives in the plasmaless repo
-  # (muscle3/muscle_plasmaless_actor.m); point PLASMALESS_REPO at its checkout.
-  # Same launch pattern as magnetic_controller above (path captured before
-  # `module purge`, PCS only for its muscle3 venv, IMAS-MATLAB for the IMAS MATLAB API,
-  # `unset PYTHONPATH`), without NICE and the PCS/SCDDS paths. -singleCompThread: the
-  # actor only does small dense matrix-vector products and gets 1 thread in the
-  # workflow resources. The final os._exit(0) (reached only when the actor returned
-  # without error, after it deregistered from the manager) skips MATLAB's own exit:
-  # MATLAB R2025b segfaults on exit (exit code 137) in any session that read an
-  # imas:hdf5 entry through IMAS-MATLAB/5.6.0 (reproduced with imas_open/ids_get/
-  # imas_close alone, without MUSCLE3), and the manager would report the run as failed.
-  plasmaless:
-    script: |
-      #!/bin/bash
-      plasmaless_repo="${PLASMALESS_REPO:-/home/ITER/schneim/public/git/plasmaless-tokamak-circuits}"
-      module purge
-      module load PCS/2026.08-pds
-      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
-      unset PYTHONPATH
-      exec matlab -singleCompThread -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath('$plasmaless_repo/muscle3');muscle_plasmaless_actor;pyrun('import os; os._exit(0)');"
-
   torax:
     base_env: clean
     modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds

@@ -22,7 +22,7 @@ imports:
 - from imas_muscle3 import implementation source_component
 - from imas_muscle3 import implementation sink_component
 - from imas_muscle3 import implementation recorder_component
-- from lib.easybuild_programs import implementation plasmaless
+- from lib.local_programs import implementation plasmaless
 - from lib.easybuild_programs import implementation magnetic_controller
 
 models:

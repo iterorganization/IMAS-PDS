@@ -58,14 +58,21 @@ elsewhere. Nothing is read from pds-scenarios `<shot>/data/in` (DINA).
 
 Prerequisites: pds-scenarios data for the shot, a completed `metis_nice_inverse_from_dina`
 run for the shot in `cases/runs/metis_nice_inverse_from_dina_<shot>` (a symlink to another
-clone's run directory works), and a checkout of the plasmaless repository. Set
-`PLASMALESS_REPO` to your (or a colleague's) clone before running; the default in the
-`plasmaless` program (`workflows/lib/easybuild_programs.ymmsl`) is one user's clone,
-`/home/ITER/schneim/public/git/plasmaless-tokamak-circuits`. The model machine description
-ships with that repository (`data/md_dd4`), so no `plasmaless.md_uri` is needed.
+clone's run directory works), and the plasmaless repository installed in
+`local_installs/plasmaless-tokamak-circuits`. Install it once with `pds_setup.sh`
+(set `INSTALL_PLASMALESS="true"`) or directly with
+`cd local_installs && bash ../setup_files/setup_plasmaless.sh`: it clones
+`https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git` at the commit pinned
+in `BRANCH_PLASMALESS` (a commit of the `IMAS_Muscle3` branch; MATLAB code, nothing to
+build) and, when re-run, moves the checkout to a new pin. There is no EasyBuild module
+for it, so the workflow imports the `plasmaless` program from
+`workflows/lib/local_programs.ymmsl`, which runs the actor from that checkout. The model
+machine description ships with the repository (`data/md_dd4`), so no
+`plasmaless.md_uri` is needed. Optionally, a developer can set `PLASMALESS_REPO` to their
+own clone to override the local install.
 
 ```bash
-export PLASMALESS_REPO=<your clone of plasmaless-tokamak-circuits>
+cd local_installs && bash ../setup_files/setup_plasmaless.sh && cd ..   # once
 bin/pds-create-case plasmaless_controller 105084   # runs preprocess.sh, about 2 min
 sbatch bin/pds-run-case.sbatch cases/plasmaless_controller_105084
 ```
@@ -147,6 +154,6 @@ Notes:
   overrides are generated from `cases/pulses/<shot>.yaml` and hand-written overrides are
   refused by `pds/configure.py`. When merging, add `plasmaless_controller` to
   `cases/pulses/105084.yaml` `workflows:` with its window and step (`source.t_min` 136.0,
-  `source.t_max` 256.0, `plasmaless.t_end` 136.6, `plasmaless.dt` =
+  `source.t_max` 256.0, `plasmaless.t_end` 160.0, `plasmaless.dt` =
   `plasmaless.t_interval` = 0.005) and remove the hand-written
   `cases/overrides/plasmaless_controller_105084.ymmsl`.

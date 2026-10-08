@@ -27,7 +27,8 @@ settings:
   plasmaless.t_interval: 0.01
   # Model machine description (em_coupling, pf_active, pf_passive, DD 4): not set here,
   # the actor's default is data/md_dd4 of the plasmaless repository it runs from
-  # (PLASMALESS_REPO, see the plasmaless program in lib/easybuild_programs.ymmsl).
+  # (local_installs/plasmaless-tokamak-circuits, or PLASMALESS_REPO if set; see the
+  # plasmaless program in lib/local_programs.ymmsl).
   # Set plasmaless.md_uri to use another entry.
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries

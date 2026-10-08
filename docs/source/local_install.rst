@@ -91,6 +91,10 @@ be run directly from inside ``run/``. Each clones its tool and builds it into
    * - ``setup_muscle3_dashboard.sh``
      - ``run/muscle3-dashboard/venv``
      - Optional; live view of a running coupling.
+   * - ``setup_plasmaless.sh``
+     - ``local_installs/plasmaless-tokamak-circuits/``
+     - MATLAB, clone only, at the commit pinned in ``BRANCH_PLASMALESS``. The
+       ``plasmaless`` actor of ``plasmaless_controller`` runs from here.
 
 .. important::
 
@@ -109,12 +113,14 @@ Building the tools is half of it; a workflow still has to be told to use them. P
 definitions live in two files:
 
 ``workflows/lib/easybuild_programs.ymmsl``
-  Each program is an EasyBuild module plus an executable. **All five workflows
-  import from here.**
+  Each program is an EasyBuild module plus an executable. **Every workflow
+  imports from here.**
 
 ``workflows/lib/local_programs.ymmsl``
   The same programs as shell scripts activating the corresponding ``run/<Tool>/venv``.
-  The from-source counterpart; currently no users in the tree.
+  The from-source counterpart. ``plasmaless``, which has no EasyBuild module, is defined
+  only here and ``plasmaless_controller`` imports it from this file (its other actors
+  still come from ``easybuild_programs.ymmsl``).
 
 To run against your build, repoint the import in the workflow:
 
