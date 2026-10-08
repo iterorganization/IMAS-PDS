@@ -14,8 +14,9 @@ A run pairs two things:
 
 **Scenario**
   *What* is simulated: the machine description, the input equilibrium, the
-  waveforms for one shot. Scenarios live in the separate ``pds-scenarios``
-  repository, keyed by shot number.
+  waveforms for one shot. Scenarios are prepared, keyed by shot number, into the
+  scenario data root ``scenarios/`` (``SCENARIOS_REPO``), from a pulse file
+  ``cases/pulses/<shot>.yaml`` -- see :src:`cases/pulses/README.md`.
 
 **Case**
   The pairing of the two, materialised as a directory under ``cases/``. This is
@@ -23,6 +24,20 @@ A run pairs two things:
 
 You do not write a case by hand: ``bin/pds-create-case`` builds one and
 ``bin/pds-run-case.sbatch`` submits it.
+
+Preparing the scenario data
+----------------------------
+
+Before a shot can be run for the first time, its data has to be prepared into
+``scenarios/<shot>/`` from its pulse file:
+
+.. code-block:: bash
+
+  bin/pds-configure cases/pulses/105073.yaml --prepare
+
+This writes ``source.env`` and the converted IMAS data for that shot (about 25 s). See
+:src:`cases/pulses/README.md` for the full pulse-file workflow (editing a pulse file,
+``--create``, ``--explain``) and :src:`preprocessing/README.md` for what preparation does.
 
 Creating a case
 ---------------

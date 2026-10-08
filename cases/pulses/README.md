@@ -366,7 +366,6 @@ This writes the override files, runs `bin/pds-create-case` for each workflow, ap
 Equivalent by hand:
 
 ```bash
-export SCENARIOS_REPO=$PDS_REPO/scenarios
 bin/pds-create-case <workflow> <case>             # once per workflow listed in the pulse file
 ```
 
@@ -376,14 +375,8 @@ generated from cases/pulses/<case>.yaml`), so a plain `bin/pds-create-case` afte
 the pulse file is enough; for a workflow the pulse file does not list it says `does not
 list <workflow>: generic workflow settings only`. `--create` additionally records the
 data location in each case's `case.env` and draws `cases/<wf>_<case>/check_<shot>.png`;
-without `--create`, `SCENARIOS_REPO` must also be exported when submitting the run (see
-Step 3).
-
-**Warning:** `bin/pds-create-case` and `bin/pds-run-case` default `SCENARIOS_REPO` to
-`/work/projects/pds/pds-scenarios` (the shared, older data; it has no 105033) when the
-variable is not set, whereas `bin/pds-configure` defaults to `$PDS_REPO/scenarios`. Export
-`SCENARIOS_REPO` explicitly, or use `--create` (which records it in `case.env` for you),
-to avoid silently picking up the wrong data root.
+without `--create`, re-export the same `SCENARIOS_REPO` used in Step 1 when submitting the
+run (see Step 3) if it was not left at the default `$PDS_REPO/scenarios`.
 
 Rerun this step after **every** change of the pulse file (see the key/rerun table in
 Step 0).
@@ -518,9 +511,10 @@ prescribed_transport for 105099 (the CI case, generic settings).
 
 ## Tips and troubleshooting
 
-- **Post-processing fails looking in `/work/projects/pds/pds-scenarios`**: the case was
-  not made by `bin/pds-configure --create` (its `case.env` has no `SCENARIOS_REPO`).
-  Rerun Step 2, or export `SCENARIOS_REPO` when submitting.
+- **Post-processing can't find the scenario data**: the case was not made by
+  `bin/pds-configure --create` (its `case.env` has no `SCENARIOS_REPO`) and a non-default
+  `SCENARIOS_REPO` was used when the data was prepared. Rerun Step 2, or export
+  `SCENARIOS_REPO` when submitting.
 - **"hand-written overrides are no longer supported"**: a
   `cases/overrides/<wf>_<case>.ymmsl` without the GENERATED line exists. Move its
   settings into the pulse file (`settings:` section, companion files under

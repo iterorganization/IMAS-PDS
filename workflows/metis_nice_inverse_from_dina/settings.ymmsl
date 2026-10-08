@@ -4,9 +4,9 @@ ymmsl_version: v0.2
 # bin/pds-create-case / bin/pds-run-case.sbatch. ${SHOT} is filled in by pds-create-case.
 #
 # This workflow's preprocess.sh builds both source_metis's and source_nice's inputs, once, at
-# bin/pds-create-case time, from this shot's raw DINA source (pds-scenarios/${SHOT}/source.env)
+# bin/pds-create-case time, from this shot's raw DINA source (${SCENARIOS_REPO}/${SHOT}/source.env)
 # -- METIS's own dataset into ${CASE_DIR}/preprocess/metis_in (its IMAS DD layout is
-# workflow-specific, so nothing pre-bakes it into pds-scenarios), and NICE's DINA-derived
+# workflow-specific, so nothing pre-bakes it into the scenario data root), and NICE's DINA-derived
 # machine description into ${CASE_DIR}/preprocess/dina_in.
 #
 # Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read

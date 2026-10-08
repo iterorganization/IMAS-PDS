@@ -6,7 +6,7 @@ ymmsl_version: v0.2
 # source_metis reads METIS's own input dataset, which this workflow's preprocess.sh builds
 # from this shot's raw DINA source into ${CASE_DIR}/preprocess/metis_in, once, at
 # bin/pds-create-case time (METIS's IMAS DD layout is workflow-specific, so nothing pre-bakes
-# it into pds-scenarios).
+# it into the scenario data root).
 #
 # Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
 # from DINA). A shot needing interpretative mode (DINA profiles/sources fed in as external

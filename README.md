@@ -58,16 +58,18 @@ other configuration layer is the workflow's generic `workflows/<workflow>/settin
 `bin/pds-create-case <workflow> <case>` regenerates the per-workflow override
 (`cases/overrides/`, a git-ignored cache) from the pulse file itself. The legacy shots
 (105073, 105078, 105084, 105092, 105099, plus the `105084_literal` design) have pulse
-files reproducing their former cases; they can still use the shared prepared data in
-`/work/projects/pds/pds-scenarios` through `SCENARIOS_REPO` (the default used by
-`bin/pds-create-case` and `bin/pds-run-case`). The user is free to change anything in the
+files reproducing their former cases; their data is prepared like any other shot's, into
+`scenarios/` (`SCENARIOS_REPO`, the default root used by `bin/pds-create-case` and
+`bin/pds-run-case`; it can instead point at another data root, e.g. a shared one, if you
+keep one). The user is free to change anything in the
 case directory. `bin/pds-run-case.sbatch` is then used to run the case using a Slurm job:
 
 ```bash
 # PDS_REPO before the module load: without it the PDS module only finds the
 # checkout when it happens to be your current directory.
 export PDS_REPO=/path/to/pds
-export SCENARIOS_REPO=/path/to/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: only to use a data root other
+#                                             # than $PDS_REPO/scenarios
 
 module use /work/projects/pds/modules/all
 module load PDS

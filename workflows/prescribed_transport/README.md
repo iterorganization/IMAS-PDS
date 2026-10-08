@@ -13,7 +13,7 @@ psi, and gathers the results back in the original order.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: defaults to $PDS_REPO/scenarios
 
 bin/pds-create-case prescribed_transport 105084       # -> cases/prescribed_transport_105084
 sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
@@ -34,7 +34,8 @@ If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_ma
 
 Scenarios available: 105078, 105084, 105092, 105099.
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from the scenario data root
+(`scenarios/` by default, prepared from the pulse file by `bin/pds-configure --prepare`); the
 pulse design (`waveforms_no_transport.yaml`) lives in this workflow's own directory, so it's
 versioned and editable here. See `preprocessing/README.md` for how `data/` itself is
 produced from DINA and machine-description sources.

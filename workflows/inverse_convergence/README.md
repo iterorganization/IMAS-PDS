@@ -27,7 +27,7 @@ in the case.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: defaults to $PDS_REPO/scenarios
 
 bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_convergence_105084
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
@@ -50,7 +50,8 @@ Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_litera
 source data as 105084, a literal rather than loop-designed pulse: `cases/pulses/105084_literal.yaml`,
 `shot: 105084`, `case: 105084_literal`, built with `bin/pds-create-case inverse_convergence 105084_literal`).
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from the scenario data root
+(`scenarios/` by default, prepared from the pulse file by `bin/pds-configure --prepare`); the
 pulse design (`waveforms.yaml`) lives in this workflow's own directory, and any per-shot
 variant or calibrated solver config is declared in the shot's pulse file
 (`cases/pulses/<shot>.yaml`, companion files under `cases/pulses/files/`), so both are

@@ -13,7 +13,8 @@
 #
 #   workflow.ymmsl           the workflow's structure
 #   workflow_settings.ymmsl  the workflow's generic settings (resources, solver defaults,
-#                            and the ${SHOT}-templated pds-scenarios data/waveform paths)
+#                            and the ${SHOT}-templated data/waveform paths from the scenario
+#                            data root)
 #   scenario_settings.ymmsl  the shot's override cases/overrides/<workflow>_<shot>.ymmsl,
 #                            (re)generated here from cases/pulses/<shot>.yaml when that pulse
 #                            file exists (pds/configure.py --overrides-only), else none --
@@ -25,7 +26,7 @@
 #                             settings above point at (any *.xml_path, *.python_config_module,
 #                             *.config, or *.waveforms setting), with its own placeholders
 #                             resolved too -- the case is a frozen snapshot, not a live
-#                             reference to workflows/lib or pds-scenarios
+#                             reference to workflows/lib or the scenario data root
 #   case.env                  WF_NAME (provenance) / SHOT -- bin/pds-run-case.sbatch sources
 #                             this for SHOT, which postprocess.sh needs at run time, without
 #                             re-deriving it from the case-dir name (which may be custom, via $3)
@@ -46,7 +47,7 @@
 #                             (once, not on every bin/pds-run-case.sbatch) with PDS_REPO/
 #                             SCENARIOS_REPO/SHOT/CASE_DIR, and expected to write its output
 #                             under $CASE_DIR/preprocess/ -- e.g. a workflow-specific input
-#                             dataset that can't be pre-baked into pds-scenarios, see
+#                             dataset that can't be pre-baked into the scenario data root, see
 #                             workflows/metis_from_dina/preprocess.sh. Frozen into the case
 #                             like everything else here, so settings.ymmsl can reference
 #                             ${CASE_DIR}/preprocess/<name> directly.
@@ -75,7 +76,7 @@ export PDS_REPO
 WF_NAME="$1"
 WF="$PDS_REPO/workflows/$WF_NAME"
 export SHOT="$2"
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
+export SCENARIOS_REPO="${SCENARIOS_REPO:-$PDS_REPO/scenarios}"
 OVERRIDE="$PDS_REPO/cases/overrides/${WF_NAME}_${SHOT}.ymmsl"
 PULSE_FILE="$PDS_REPO/cases/pulses/${SHOT}.yaml"
 CASE_DIR="${3:-$PDS_REPO/cases/${WF_NAME}_${SHOT}}"

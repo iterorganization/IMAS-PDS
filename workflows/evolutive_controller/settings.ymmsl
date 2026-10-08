@@ -13,7 +13,7 @@ settings:
   # Scenario: `source` reads the NICE-reconstructed equilibrium from a completed
   # inverse_convergence case run for the same shot (see bin/pds-create-case /
   # bin/pds-run-case.sbatch's cases/runs/<case> convention); waveform_editor.waveforms
-  # assembles the rest (machine description, core_profiles, ECRH) from pds-scenarios.
+  # assembles the rest (machine description, core_profiles, ECRH) from the scenario data root.
   source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
   source.t_min: 0.0

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds METIS's own input dataset from this shot's raw DINA source (METIS's IMAS DD layout
-# is workflow-specific, so nothing pre-bakes it into pds-scenarios). Ported from the old
+# is workflow-specific, so nothing pre-bakes it into the scenario data root). Ported from the old
 # metis_interpretative_from_dina/preprocess_data.sh + create_runnable_files.sh -- run once by
 # bin/pds-create-case, its output frozen into $CASE_DIR/preprocess/ (not rebuilt on every
 # bin/pds-run-case.sbatch). See that script's header for the PDS_REPO/SCENARIOS_REPO/SHOT/

@@ -14,7 +14,7 @@ the whole trace, and NICE is a single downstream pass over its equilibrium. METI
 once, NICE runs once.
 
 :Workflow: ``metis_nice_inverse_from_dina`` -- :src:`workflows/metis_nice_inverse_from_dina/workflow.ymmsl`
-:Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099, in ``pds-scenarios``
+:Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099, prepared into ``scenarios/`` from ``cases/pulses/<shot>.yaml``
 :Output: ``<run_dir>/metis_out`` and ``<run_dir>/nice_out``
 
 Running it
@@ -52,7 +52,7 @@ once, at ``pds-create-case`` time, and frozen into the case:
 ``$CASE_DIR/preprocess/metis_in``:
    The METIS dataset. METIS does not take a plasma state the way TORAX does -- it builds
    its input from a ``pulse_schedule`` IDS, in a DD layout that is workflow-specific, so
-   nothing pre-bakes it into ``pds-scenarios``. Producing it needs MATLAB and the
+   nothing pre-bakes it into the scenario data root. Producing it needs MATLAB and the
    ``METIS-IRFM`` module.
 
 ``$CASE_DIR/preprocess/dina_in``

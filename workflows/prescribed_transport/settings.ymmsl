@@ -10,7 +10,7 @@ resources:
   prescribed_transport.equilibrium.recorder_equilibrium: {threads: 1}
 
 settings:
-  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from the scenario data root.
   waveform_editor.waveforms: ${PDS_REPO}/workflows/prescribed_transport/waveforms_no_transport.yaml
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: false
