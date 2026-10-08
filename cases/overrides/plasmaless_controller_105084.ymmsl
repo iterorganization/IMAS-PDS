@@ -1,9 +1,10 @@
 ymmsl_version: v0.2
 # Same window and time step as evolutive_controller_105084 (flattop, source.t_min 136.0 /
 # t_max 256.0, nice_evo_rd.t_end 136.6, dt = t_interval 0.005), so the two runs can be
-# compared step by step. The source (metis_nice_inverse_from_dina_105084/nice_out) has no
-# dt set: it sends the native inverse slices in [t_min, t_max], 136.2276 .. 251.0776 s
-# (19 slices, all output_flag 0), so t0 = 136.2276 s. The plasmaless model has no
+# compared step by step. preprocess.sh reads the window [t_min, t_max] of
+# metis_nice_inverse_from_dina_105084/nice_out with no dt, i.e. the native inverse slices
+# 136.2276 .. 251.0776 s (19 slices, all output_flag 0), into the case's
+# preprocess/initial_state, which source then sends whole, so t0 = 136.2276 s. The plasmaless model has no
 # divergence limit; the only bound is that F_INIT equilibrium time range, checked by the
 # actor.
 settings:

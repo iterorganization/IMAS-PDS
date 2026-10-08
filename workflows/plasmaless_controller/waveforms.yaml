@@ -1,11 +1,13 @@
-# Waveform-Editor configuration for plasmaless_controller's F_INIT bootstrap.
-# Derived from workflows/evolutive_controller/waveforms.yaml, with every plasma and coil
-# quantity taken from the NICE inverse run instead of pds-scenarios ${SHOT}/data/in (DINA):
-# - `eq` (port equilibrium_in) is the inverse equilibrium (nice_out), passed through whole
-#   by `reconstruction:`; the `targets:` overrides of ip, boundary outline and vacuum
-#   toroidal field from data/in are gone, so those come from nice_out too. nice_out
-#   leaves vacuum_toroidal_field/r0 empty (b0 is filled); no consumer of this workflow
-#   reads r0.
+# Waveform-Editor configuration for plasmaless_controller's initial state, evaluated once
+# at case creation by preprocess.sh (preprocess_initial_state.py), no longer by a
+# waveform_editor actor inside the workflow. Derived from
+# workflows/evolutive_controller/waveforms.yaml, with every plasma and coil quantity taken
+# from the NICE inverse run instead of pds-scenarios ${SHOT}/data/in (DINA):
+# - `eq` (port equilibrium_in) is the inverse equilibrium (nice_out); its time slices are
+#   passed through by `reconstruction:` (see the note there). The `targets:` overrides of
+#   ip, boundary outline and vacuum toroidal field from data/in are gone, so ip and the
+#   boundary come from nice_out too; vacuum_toroidal_field is not passed (no consumer of
+#   this workflow reads it).
 # - `pf` (port pf_active_in) is the inverse pf_active (nice_out), resampled onto the
 #   equilibrium times: coil currents and voltages. For 105084, nice_out's coil voltages
 #   equal the DINA data/in voltages of the closest DINA sample exactly (carried through
@@ -32,8 +34,17 @@ machine_description:
   pf_active/*:
     - {ref: input_md}
 
+# `equilibrium/time_slice/*`, not `equilibrium/*`: `equilibrium/*` also copies nice_out's
+# grids_ggd (one grid per slice, up to 12 749 objects) leaf by leaf, with a lookup that is
+# quadratic in the number of grid objects (Waveform-Editor import_resolver.py:191-212,
+# imas ids_base.py:55-80): 507 s for the 19 slices of 105084, against 67 s here. Every
+# field the controller and the plasmaless actor consume (equilibrium time,
+# homogeneous_time, slice count, ip, boundary geometric_axis r/z; all of pf_active) is
+# identical; dropped: grids_ggd and the other non-time_slice nodes (e.g.
+# vacuum_toroidal_field), which no component of this workflow reads. Reproducer:
+# /home/ITER/schneim/public/git/wfe_slow_init_repro.
 reconstruction:
-  equilibrium/*:
+  equilibrium/time_slice/*:
     - {ref: eq}
 
 targets:

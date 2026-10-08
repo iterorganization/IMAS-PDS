@@ -1,45 +1,46 @@
 ymmsl_version: v0.2
 # evolutive_controller with the plant replaced: the plasmaless coil+vessel model (no
 # plasma) stands in for nice_evo_rd, and there is no transport (no torax,
-# temporal_coupler, sink_transport, recorders). For controller tests.
+# temporal_coupler, sink_transport, recorder_transport). For controller tests.
+# recorder_plasmaless taps the plasmaless coil and vessel currents (and the coil
+# voltages it applied) for live figures in m3dash (visualization/plasmaless_currents.py).
 #
 # magnetic_controller and sink_control are identical to
-# workflows/evolutive_controller/workflow.ymmsl. source and waveform_editor differ: the
-# source also sends the inverse pf_active, and waveform_editor uses this directory's
-# waveforms.yaml (plasma and coil data from the inverse run only, machine description
-# from pds-scenarios data/in_md). plasmaless keeps nice_evo_rd's
-# equilibrium/pf_active port names and timing (see the plasmaless repo's
-# muscle3/README.md); its equilibrium_o_i is a reference pass-through of ip and the
-# boundary geometric axis (no plasma), and it also sends the vessel currents.
+# workflows/evolutive_controller/workflow.ymmsl. There is no waveform_editor actor: the
+# initial state (NICE inverse equilibrium time slices + pf_active = machine description
+# with the inverse coil currents/voltages) is built once at case creation by this
+# directory's preprocess.sh (Waveform-Editor, waveforms.yaml) into
+# ${CASE_DIR}/preprocess/initial_state, and `source` sends it directly as F_INIT data.
+# plasmaless keeps nice_evo_rd's equilibrium/pf_active port names and timing (see the
+# plasmaless repo's muscle3/README.md); its equilibrium_o_i is a reference pass-through
+# of ip and the boundary geometric axis (no plasma), and it also sends the vessel
+# currents.
 #
 # Settings come from workflows/plasmaless_controller/settings.ymmsl
 
 imports:
 - from imas_muscle3 import implementation source_component
 - from imas_muscle3 import implementation sink_component
-- from lib.easybuild_programs import implementation waveform_editor
+- from imas_muscle3 import implementation recorder_component
 - from lib.easybuild_programs import implementation plasmaless
 - from lib.easybuild_programs import implementation magnetic_controller
 
 models:
   plasmaless_controller:
     components:
-      source:  {description: NICE inverse equilibrium + pf_active from a completed metis_nice_inverse_from_dina run, implementation: source_component, ports: {o_i: [equilibrium_out, pf_active_out]}}
-      waveform_editor: {description: waveform editor (passes through the received inverse equilibrium; pf_active = machine description + inverse coil currents/voltages), implementation: waveform_editor, ports: {f_init: [equilibrium_in, pf_active_in], o_f: [equilibrium_out, wall_out, pf_passive_out, iron_core_out, pf_active_out]}}
+      source:  {description: initial state (equilibrium + pf_active) built by preprocess.sh from a completed metis_nice_inverse_from_dina run, implementation: source_component, ports: {o_i: [equilibrium_out, pf_active_out]}}
       plasmaless: {description: plasmaless coil+vessel circuit model (no plasma; reference pass-through equilibrium), implementation: plasmaless, ports: {f_init: [equilibrium_f_init, pf_active_f_init], s: [pf_active_s], o_i: [equilibrium_o_i, pf_active_o_i, pf_passive_o_i]}}
       magnetic_controller: {description: PCSSP magnetic (SCDDS) controller, implementation: magnetic_controller, ports: {f_init: [equilibrium_in_f, pf_active_in_f], s: [equilibrium_in_s, pf_active_in_s], o_i: [pf_active_out_i]}}
       sink_equilibrium: {description: sink -- plasmaless outputs, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in, pf_passive_in]}}
       sink_control: {description: sink -- controller outputs, implementation: sink_component, ports: {f_init: [pf_active_in]}}
+      recorder_plasmaless: {description: distill recorder (plasmaless coil and passive loop currents and applied coil voltages), implementation: recorder_component, ports: {s: [pf_active_in, pf_passive_in]}}
     conduits:
-      source.equilibrium_out: waveform_editor.equilibrium_in
-      source.pf_active_out: waveform_editor.pf_active_in
-
-      waveform_editor.equilibrium_out: [magnetic_controller.equilibrium_in_f, plasmaless.equilibrium_f_init]
-      waveform_editor.pf_active_out: [magnetic_controller.pf_active_in_f, plasmaless.pf_active_f_init]
+      source.equilibrium_out: [magnetic_controller.equilibrium_in_f, plasmaless.equilibrium_f_init]
+      source.pf_active_out: [magnetic_controller.pf_active_in_f, plasmaless.pf_active_f_init]
 
       plasmaless.equilibrium_o_i: [magnetic_controller.equilibrium_in_s, sink_equilibrium.equilibrium_in]
-      plasmaless.pf_active_o_i: [magnetic_controller.pf_active_in_s, sink_equilibrium.pf_active_in]
-      plasmaless.pf_passive_o_i: sink_equilibrium.pf_passive_in
+      plasmaless.pf_active_o_i: [magnetic_controller.pf_active_in_s, sink_equilibrium.pf_active_in, recorder_plasmaless.pf_active_in]
+      plasmaless.pf_passive_o_i: [sink_equilibrium.pf_passive_in, recorder_plasmaless.pf_passive_in]
 
       magnetic_controller.pf_active_out_i: [plasmaless.pf_active_s, sink_control.pf_active_in]
-resources: {plasmaless_controller.plasmaless: {threads: 1}, plasmaless_controller.magnetic_controller: {threads: 1}}
+resources: {plasmaless_controller.plasmaless: {threads: 1}, plasmaless_controller.magnetic_controller: {threads: 1}, plasmaless_controller.recorder_plasmaless: {threads: 1}}

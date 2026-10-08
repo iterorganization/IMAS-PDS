@@ -6,17 +6,20 @@ ymmsl_version: v0.2
 # per-shot: every shot needs cases/overrides/plasmaless_controller_<shot>.ymmsl.
 
 settings:
-  # Scenario: source reads the NICE inverse equilibrium and pf_active (nice_out) of a
-  # completed metis_nice_inverse_from_dina run for the same shot (cases/runs/<case>
-  # convention of bin/pds-create-case / bin/pds-run-case.sbatch), one whole-window
-  # message per IDS. waveform_editor (this directory's waveforms.yaml) passes the
-  # equilibrium through and fills pf_active coil currents/voltages from the inverse
-  # pf_active; only the machine description (wall, pf_passive, iron_core, pf_active)
-  # comes from pds-scenarios ${SHOT}/data/in_md. Nothing is read from ${SHOT}/data/in.
-  source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/metis_nice_inverse_from_dina_${SHOT}/nice_out"
+  # Initial state: preprocess.sh (run once by bin/pds-create-case) reads the NICE
+  # inverse equilibrium and pf_active (nice_out) of a completed
+  # metis_nice_inverse_from_dina run for the same shot (cases/runs/<case> convention of
+  # bin/pds-create-case / bin/pds-run-case.sbatch) in the window source.t_min/t_max
+  # (below and in the case override), applies this directory's waveforms.yaml
+  # (equilibrium time slices passed through; pf_active = machine description of
+  # pds-scenarios ${SHOT}/data/in_md with the inverse coil currents/voltages) and writes
+  # the result to ${CASE_DIR}/preprocess/initial_state. Nothing is read from
+  # ${SHOT}/data/in. source sends that entry as one whole-window message per IDS
+  # (iterative: False); the entry holds only the window, so the same t_min/t_max select
+  # all of it.
+  source.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/initial_state"
   source.iterative: False
   source.t_min: 0.0
-  waveform_editor.waveforms: ${PDS_REPO}/workflows/plasmaless_controller/waveforms.yaml
 
   # Plasmaless model: step and exchange period (must be equal), same value as
   # nice_evo_rd in evolutive_controller.
@@ -33,5 +36,10 @@ settings:
   sink_control.sink_uri: "imas:hdf5?path=../../../out_controller"
   sink_equilibrium.sink_mode: "w"
   sink_control.sink_mode: "w"
+
+  # Live figures (m3dash): coil currents, passive loop currents and applied coil
+  # voltages; the recorder writes Zarr stores under
+  # <run_dir>/instances/recorder_plasmaless/workdir/<port>/.
+  recorder_plasmaless.config: ${PDS_REPO}/visualization/plasmaless_currents.py
 
   muscle_remote_log_level: 'INFO'
