@@ -48,6 +48,7 @@ try
 catch ME
     if contains(ME.message, 'was closed while trying to receive')
         logger.warning('muscle_IDS_NICE_output: peer port closed without a next_timestamp=None sentinel, stopping cleanly');
+        assignin('base', 'muscle_already_shut_down', true);
         coils_current = last_coils_current;
         rgeo = last_rgeo;
         zgeo = last_zgeo;
