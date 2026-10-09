@@ -38,7 +38,7 @@ programs:
 
   nice_inv:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: NICE/3.0.0.dev446-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -47,7 +47,7 @@ programs:
 
   nice_dir:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: NICE/3.0.0.dev446-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -56,7 +56,7 @@ programs:
 
   nice_evo_rd:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: NICE/3.0.0.dev446-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -65,7 +65,7 @@ programs:
 
   nice_evo:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: NICE/3.0.0.dev446-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -82,7 +82,7 @@ programs:
       # silently evaluate to "/controllers/KCURR_RZIp".
       controller_path="$PDS_REPO/controllers/KCURR_RZIp"
       module purge
-      module load PCS/2026.08-pds NICE/3.0.0.dev258-intel-2025b-pds
+      module load PCS/2026.08-pds NICE/3.0.0.dev446-intel-2025b-pds
       # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
       # against intel-2023b, so loading it here silently downgrades this
       # whole shell's toolchain out from under NICE's own intel-2025b build

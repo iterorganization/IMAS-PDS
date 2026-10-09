@@ -7,17 +7,6 @@ ymmsl_version: v0.2
 # no repo-local venv builds required. Resolve with YMMSL_PATH pointing at the
 # workflows/ directory (bin/pds-run does this).
 #
-# Exception: nice_evo_rd comes from lib.local_programs -- the local NICE develop
-# build in local_installs/nice (memory-safe, deterministic evo_rd; the dev258
-# EasyBuild module reads uninitialised memory), until a NICE module built from
-# develop is available.
-#
-# Exception: torax also comes from lib.local_programs -- the TORAX-MUSCLE3/0.1.3
-# module's dependencies (TORAX 1.4.0) with the local checkout in
-# local_installs/TORAX-MUSCLE3 (b4311d3 + pds-local-fixes) shadowing its actor, so
-# a TORAX SimError ends the run with a clean end-of-stream instead of closing the
-# ports mid-receive, until that fix is in a TORAX-MUSCLE3 module.
-#
 # Settings come from workflows/evolutive_controller/settings.ymmsl
 
 imports:
@@ -26,8 +15,8 @@ imports:
 - from imas_muscle3 import implementation recorder_component
 - from imas_muscle3 import implementation passthrough_component
 - from lib.easybuild_programs import implementation waveform_editor
-- from lib.local_programs import implementation torax
-- from lib.local_programs import implementation nice_evo_rd
+- from lib.easybuild_programs import implementation torax
+- from lib.easybuild_programs import implementation nice_evo_rd
 - from lib.easybuild_programs import implementation magnetic_controller
 - from lib.easybuild_programs import implementation temporal_coupler
 
