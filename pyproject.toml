@@ -96,6 +96,13 @@ include = ["pds*"]
 
 [tool.setuptools_scm]
 
+[tool.uv]
+# ymmsl2svg depends on ymmsl@develop, which dropped Timeline.absolute (d80ebea) that
+# ymmsl2svg still uses. Pin a develop commit from before that until ymmsl2svg catches up.
+override-dependencies = [
+    "ymmsl @ git+https://github.com/multiscale/ymmsl-python.git@c3a144f3cd07d4632618c722a85cfcce251aa4a2",
+]
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--strict-markers"

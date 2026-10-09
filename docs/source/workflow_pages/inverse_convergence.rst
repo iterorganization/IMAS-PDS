@@ -19,7 +19,7 @@ transport, stopping once the largest coil-current change between iterations fall
 ruleset.
 
 :Workflow: ``inverse_convergence`` -- :src:`workflows/inverse_convergence/README.md`
-:Scenario: DINA shots 105073, 105078, 105084, 105092, 105099, in ``pds-scenarios``
+:Scenario: DINA shots 105073, 105078, 105084, 105092, 105099, prepared into ``scenarios/`` from ``cases/pulses/<shot>.yaml``
 :Output: ``<run_dir>/out_nice``, ``<run_dir>/out_torax``
 
 Running it

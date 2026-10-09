@@ -14,7 +14,7 @@ identical to it. Use it where the transport solution is needed but coil currents
 to that equilibrium are not.
 
 :Workflow: ``metis_from_dina`` -- :src:`workflows/metis_from_dina/workflow.ymmsl`
-:Scenario: DINA shots 105084 and 105092, in ``pds-scenarios``
+:Scenario: DINA shots 105084 and 105092, prepared into ``scenarios/`` from ``cases/pulses/<shot>.yaml``
 :Output: ``<run_dir>/metis_out``
 
 Predictive or interpretative
@@ -40,8 +40,8 @@ directory holds and where the output goes.
 .. note::
 
    ``pds-create-case`` takes noticeably longer for this workflow than for the design
-   cases. METIS's IMAS layout is workflow-specific, so nothing pre-bakes it into
-   ``pds-scenarios``: ``preprocess.sh`` builds it from the shot's raw DINA source into
+   cases. METIS's IMAS layout is workflow-specific, so nothing pre-bakes it into the
+   scenario data root: ``preprocess.sh`` builds it from the shot's raw DINA source into
    ``$CASE_DIR/preprocess/metis_in``, once, using MATLAB, and the case carries the
    result as a frozen snapshot.
 

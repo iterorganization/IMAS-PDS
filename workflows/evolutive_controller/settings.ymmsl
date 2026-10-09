@@ -3,8 +3,9 @@ ymmsl_version: v0.2
 # Generic settings for evolutive_controller, stacked after workflow.ymmsl by
 # bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. The pulse
 # window (t_min/t_max/t_final/t_end) is genuinely per-shot (the flattop window differs per
-# pulse) and has no sane generic default, so every shot needs
-# cases/overrides/evolutive_controller_<shot>.ymmsl for those; the time step (fixed_dt/dt/
+# pulse) and has no sane generic default, so every shot needs its time.forward_* keys in
+# cases/pulses/<shot>.yaml (generated into cases/overrides/evolutive_controller_<shot>.ymmsl)
+# for those; the time step (fixed_dt/dt/
 # t_interval) defaults below to the same value as everywhere else, and a shot only needs to
 # override it if it genuinely needs a different one (e.g. 105084's finer 0.005).
 
@@ -12,7 +13,7 @@ settings:
   # Scenario: `source` reads the NICE-reconstructed equilibrium from a completed
   # inverse_convergence case run for the same shot (see bin/pds-create-case /
   # bin/pds-run-case.sbatch's cases/runs/<case> convention); waveform_editor.waveforms
-  # assembles the rest (machine description, core_profiles, ECRH) from pds-scenarios.
+  # assembles the rest (machine description, core_profiles, ECRH) from the scenario data root.
   source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
   source.t_min: 0.0

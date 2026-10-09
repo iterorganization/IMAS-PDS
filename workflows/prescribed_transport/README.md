@@ -13,14 +13,15 @@ psi, and gathers the results back in the original order.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: defaults to $PDS_REPO/scenarios
 
 bin/pds-create-case prescribed_transport 105084       # -> cases/prescribed_transport_105084
 sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
 ```
 
 `pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
-`cases/overrides/prescribed_transport_<shot>.ymmsl`.
+`cases/overrides/prescribed_transport_<shot>.ymmsl`, which it generates from the pulse
+file `cases/pulses/<shot>.yaml` if that lists this workflow (see `cases/pulses/README.md`).
 
 The `settings.ymmsl` contains (all templated from `${SHOT}`):
 
@@ -33,9 +34,10 @@ If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_ma
 
 Scenarios available: 105078, 105084, 105092, 105099.
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from the scenario data root
+(`scenarios/` by default, prepared from the pulse file by `bin/pds-configure --prepare`); the
 pulse design (`waveforms_no_transport.yaml`) lives in this workflow's own directory, so it's
-versioned and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is
+versioned and editable here. See `preprocessing/README.md` for how `data/` itself is
 produced from DINA and machine-description sources.
 
 ## Assumptions
@@ -55,7 +57,7 @@ produced from DINA and machine-description sources.
 
 ## Input requirements
 
-Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
+Produced by `preprocessing/prepare <shot>` (converter in `preprocessing/dina2pds/`; ITER has no iron core, so the converter writes an empty static `iron_core`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace to seed NICE's first solve:
   `vacuum_toroidal_field/r0`

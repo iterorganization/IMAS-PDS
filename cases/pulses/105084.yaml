@@ -1,0 +1,40 @@
+# Pulse file for 105084 -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105084.yaml
+shot: 105084
+description: "Boundary-prescribed pulse design for DINA shot 105084; source: official ITER store /work/imas/shared/imasdb (HDF5)"
+
+# The one workflow this shot has a tuned configuration for (migrated from the former
+# hand-written cases/overrides/evolutive_controller_105084.ymmsl). The METIS workflows are
+# deliberately not listed: they ran with an empty override, i.e. the generic settings, and
+# listing them here would write source_metis.t_min/t_max = time.t_start/t_end, cutting
+# METIS's own input range (metis_in spans the whole DINA pulse). bin/pds-create-case
+# metis_* 105084 keeps using the generic settings only (identical to the former empty
+# override). The literal pulse design of the same data is cases/pulses/105084_literal.yaml.
+workflows:
+  - evolutive_controller
+
+prepare:
+  source: imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1
+  # The stored data (pds-scenarios) were prepared with the "legacy" set (ITER_MD
+  # 111001/203, 115005/2, 116000/4); "basic" = the active ITER_MD versions.
+  machine_description: basic
+  n_timeslices: 41
+  md_layout: separate
+  dd_version: "4.0.0"
+
+time:
+  # Stored slice range 2.42 .. 280.35 s, rounded outward to 0.1 s (inverse_convergence /
+  # prescribed_transport window, if those workflows are added).
+  t_start: 2.4
+  t_end: 280.4
+  # evolutive_controller: the flattop runs t=16.5-256.4 (Ip trace); start mid-flattop to
+  # skip the rampup->flattop transient. The source loads the flattop up to 256 s
+  # (forward_load_t_end); the forward simulation itself stops at 136.6 s (forward_t_end),
+  # with a finer 0.005 s step.
+  forward_t_start: 136.0
+  forward_t_end: 136.6
+  forward_load_t_end: 256.0
+  forward_dt: 0.005
+
+postprocess:
+  t_list: [10, 150, 270]

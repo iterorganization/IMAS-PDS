@@ -123,6 +123,14 @@ programs:
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_inv_muscle3 "$@"
 
+  nice_dir:
+    script: |
+      #!/bin/bash
+      source /etc/profile.d/modules.sh
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/local_installs/nice/run/nice_imas_dir_muscle3 "$@"
+
   nice_evo_rd:
     script: |
       #!/bin/bash
@@ -130,6 +138,14 @@ programs:
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_evo_rd_muscle3 "$@"
+
+  nice_evo:
+    script: |
+      #!/bin/bash
+      source /usr/share/lmod/lmod/init/bash
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
+      exec $PDS_REPO/local_installs/nice/run/nice_imas_evo_muscle3 "$@"
 
   torax:
     script: |
@@ -142,12 +158,33 @@ programs:
       export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/local_installs/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
       exec python -u -m torax_muscle3.torax_actor "$@"
 
-  # METIS is always driven through MATLAB's pyenv()/py.* bridge and a module-installed
-  # IMAS-AL-Matlab -- there is no repo-local build of it, so this is identical to
-  # lib/easybuild_programs.ymmsl's `metis`.
+  # CHEASE: the iWrap MUSCLE3-Fortran actor built by setup_files/setup_chease.sh in
+  # local_installs/chease/chease_m3 (it reads its code parameters from ../input/ next to
+  # its bin/, with COCOS 17 set by that script). Its runtime libraries (IMAS AL, XMLlib,
+  # INTERPOS, libmuscle_fortran, Intel runtime) come from the same modules it was built
+  # against, so the build's own environment file is sourced instead of repeating that
+  # module list here. That file starts with `module purge`, which unloads the PDS module
+  # and with it $PDS_REPO, hence the copy first.
+  chease:
+    script: |
+      #!/bin/bash
+      pds_repo="$PDS_REPO"
+      source /etc/profile.d/modules.sh
+      source "$pds_repo/local_installs/chease/python/config_muscle3.sh"
+      exec "$pds_repo/local_installs/chease/chease_m3/bin/chease.exe" "$@"
+
+  # METIS is driven through MATLAB's pyenv()/py.* bridge and a module-installed
+  # IMAS-AL-Matlab. The METIS code itself comes from the local_installs/metis checkout
+  # made by setup_files/setup_metis.sh: metis4muscle3.m adds the METIS root (four levels
+  # above its own directory) and runs zineb_path itself, so only its mfile directory is
+  # put on the path here. The METIS-IRFM module is still loaded, but only for MATLAB and
+  # its muscle3==0.10.0 Python venv (a local METIS checkout has no venv of its own); its
+  # METIS code (DIR_METIS4MUSCLE3) is not used.
   metis:
     script: |
       #!/bin/bash
+      # Saved before `module purge`, which unloads the PDS module and with it $PDS_REPO.
+      pds_repo="$PDS_REPO"
       module purge
       module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
       # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
@@ -156,45 +193,52 @@ programs:
       # $EBROOTMETIS/muscle3_venv is a dedicated Python 3.11 + muscle3==0.10.0
       # venv, matching both MATLAB's supported Python range and the real
       # manager's libmuscle version (see the METIS-IRFM easyconfig).
-      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
+      exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath('$pds_repo/local_installs/metis/workflow/muscle3/mfile');metis4muscle3(2);"
 
-  # Explicitly pyenv() at the repo-local muscle3-0.10.0 venv python, NOT `which python`:
-  # on this system that resolves to a stray user ~/.local muscle3-0.8.0 libmuscle install,
-  # which is wire-incompatible with the 0.10.0 manager every other actor here uses --
-  # produces a "socket closed while receiving" registration failure after MATLAB startup.
-  # Unlike every other actor above, this one used to be the declarative env/modules/
-  # executable/args form -- but env: values are set directly by the manager (not run
-  # through a shell), so its $PDS_REPO never expanded: MATLAB's own getenv('PCS_PATH')
-  # came back with the literal string "$PDS_REPO/local_installs/pcs", addpath resolved that as a
-  # relative path under the instance's workdir, and pcssp_pcs_add_paths (which that
-  # addpath was supposed to put on the path) came back "unrecognized function or
-  # variable". `export` lines in a script:, like every actor above, are expanded in the
-  # actor's own shell instead, so $PDS_REPO resolves correctly.
+  # Local PCS code only; NICE MATLAB tools, MUSCLE3 Python and the MATLAB IMAS module
+  # come from the modules below, same as easybuild_programs.ymmsl's magnetic_controller
+  # (USE_LOCAL_PCS needs only local_installs/pcs).
   magnetic_controller:
     script: |
       #!/bin/bash
-      module load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
-      module load MATLAB/2025b-r1-GCCcore-13.2.0
-      export PCS_PATH=$PDS_REPO/local_installs/pcs
-      export CONTROLLER_PATH=$PDS_REPO/controllers/KCURR_RZIp
-      export SCDDS_COREPATH=$PDS_REPO/local_installs/pcs/pcssp/scdds
-      # run() the controller by full path, not by name: NICE's own
-      # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
-      # below) ships its own, much older, different-port-signature
-      # muscle_controller_NICE_IMAS_iter_init.m, which shadows CONTROLLER_PATH's
-      # despite being added to the path first -- confirmed on every NICE
-      # install, local and EasyBuild alike, and not fixable by removing that
-      # directory from the path (it also holds the Simulink .slx models the
-      # real controller loads by name).
-      # try/catch + exit(1): a bare error inside -batch (especially one thrown from deep
-      # inside the py.* bridge, e.g. libmuscle's Instance() registration) can otherwise
-      # surface as a silent `exit code 0, never registered` with zero output -- indistinguishable
-      # from the script just not running. getReport() forces the real stack trace into
-      # stdout/stderr and exit(1) makes muscle3 report it as an actual crash instead.
-      #
-      # The whole try/catch/end MUST be one physical line: -batch feeds its argument to
-      # the parser more like sequential REPL input than a script file, so a newline
-      # anywhere between `try` and `end` fails immediately with "This statement is
-      # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
-      # above, which parse fine across multiple lines.
-      exec matlab -batch "try; pyenv('Version','$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
+      # Captured before `module purge` below: the PDS module sets PDS_REPO via
+      # lmod's setenv(), which `module purge` unconditionally reverts -- even
+      # though the manager also plain-exports PDS_REPO into this shell, purge
+      # wipes it anyway (confirmed live, see the EasyBuild entry). Saved once as
+      # pds_repo and reused below for controller_path and the local PCS/PCSSP
+      # paths that replace the module's own.
+      pds_repo="$PDS_REPO"
+      controller_path="$pds_repo/controllers/KCURR_RZIp"
+      module purge
+      module load PCS/2026.08-pds NICE/3.0.0.dev446-intel-2025b-pds
+      # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
+      # against intel-2023b, so loading it here silently downgrades this
+      # whole shell's toolchain out from under NICE's own intel-2025b build
+      # (Boost, HDF5, GCCcore, ~40 packages -- confirmed live) rather than
+      # just switching MATLAB versions. IMAS-MATLAB/*-intel-2025b-DD-4.1.1
+      # matches NICE/IMAS-Core's own toolchain and DD version, so no
+      # toolchain-wide reload happens -- only MATLAB itself still reloads
+      # 2023b-r5 (PCS's pinned version) -> 2025b-r1, since PCS hasn't been
+      # rebuilt against 2025b-r1 yet.
+      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      # IMAS-MATLAB leaks its own numpy onto PYTHONPATH, conflicting with
+      # $EBROOTPCS/muscle3_venv's numpy (same reason as the metis actor).
+      unset PYTHONPATH
+      # The PCS module exports EBROOTPCS and SCDDS_COREPATH (under $EBROOTPCS), but no
+      # PCS_PATH -- same as in the EasyBuild entry. Here both PCS_PATH and
+      # SCDDS_COREPATH are overridden to this repo's own local_installs/pcs checkout,
+      # so no PCS/PCSSP code is read from $EBROOTPCS; only $EBROOTPCS/muscle3_venv's
+      # Python is used below (pyenv), same as the EasyBuild entry.
+      export PCS_PATH="$pds_repo/local_installs/pcs"
+      export SCDDS_COREPATH="$pds_repo/local_installs/pcs/pcssp/scdds"
+      export CONTROLLER_PATH="$controller_path"
+      # NICE's own runmatlab/muscle3/matlab_iter/ (added to the path by
+      # initNice4matlab.m below) ships its own, much older,
+      # different-port-signature muscle_controller_NICE_IMAS_iter_init.m, which
+      # shadows CONTROLLER_PATH's despite being added to the path first --
+      # confirmed on every NICE install, local and EasyBuild alike, and not
+      # something we can fix by removing that directory from the path (it also
+      # holds the Simulink .slx models the real controller loads by name). So
+      # `run()` it by full path instead of relying on name resolution to find
+      # the right one.
+      exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m'));"

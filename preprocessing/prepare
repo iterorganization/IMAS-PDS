@@ -1,0 +1,190 @@
+#!/bin/bash
+# Generate a scenario's data/ from the DINA and machine-description sources named in its
+# source.env. Everything it reads is read-only; everything it writes is inside the
+# scenario's own data/ directory, $SCENARIOS_REPO/<scenario>/data.
+#
+#   preprocessing/prepare 105084              # regenerate $SCENARIOS_REPO/105084/data
+#   preprocessing/prepare 105084 --dry-run    # print the command without running it
+#   preprocessing/prepare 105084 --metis      # also build data/metis_in (needs MATLAB)
+#
+# The recommended entry point is `bin/pds-configure cases/pulses/<shot>.yaml --prepare`,
+# which writes $SCENARIOS_REPO/<shot>/source.env from the pulse file and then runs this
+# script. See preprocessing/README.md.
+#
+# source.env must define exactly one slice selection: N_TIMESLICES (that many slices,
+# uniform over the viable DINA time range) or DT_STEP (one slice every DT_STEP seconds
+# from the first viable time). Optional REPORT_T_START/REPORT_T_END (the simulation
+# window) only add the number of slices inside that window to the converter's summary
+# line; they change nothing in the data.
+#
+# Scenario data root: SCENARIOS_REPO, default <PDS repo>/scenarios (not committed). Point
+# it elsewhere, e.g. /work/projects/pds/pds-scenarios, to use another data root.
+#
+# Requires a Python with imas-python and imas_core. On SDCC:
+#     module load IMAS-Python IDStools/2.3.0
+# Elsewhere, point PREPARE_PYTHON at an interpreter that has them.
+#
+# HDF5_USE_FILE_LOCKING=FALSE is exported because the sources live on a network filesystem
+# and, at run time, `source` and the waveform editor read the same entry concurrently.
+set -euo pipefail
+
+# TOOLS: this preprocessing/ directory (dina2pds/ converter).
+TOOLS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PDS_ROOT="$(dirname "$TOOLS")"
+ROOT="${SCENARIOS_REPO:-$PDS_ROOT/scenarios}"
+PYTHON="${PREPARE_PYTHON:-python3}"
+
+usage() { echo "usage: preprocessing/prepare <scenario> [--dry-run] [--metis]" >&2; exit 1; }
+[[ $# -ge 1 ]] || usage
+SCENARIO="$1"; shift
+DRY_RUN=0; WANT_METIS=0
+for a in "$@"; do
+  case "$a" in
+    --dry-run) DRY_RUN=1;;
+    --metis)   WANT_METIS=1;;
+    *) usage;;
+  esac
+done
+
+DIR="$ROOT/$SCENARIO"
+[[ -d "$DIR" ]]            || { echo "prepare: no scenario directory $DIR" >&2; exit 1; }
+[[ -f "$DIR/source.env" ]] || { echo "prepare: no $DIR/source.env" >&2; exit 1; }
+
+# TOOLS is exported for source.env files that reference it (legacy ones do, for
+# $TOOLS/md/iron_core_empty, which the converter now treats as MD_IRON_CORE=empty).
+export TOOLS
+# shellcheck source=/dev/null
+source "$DIR/source.env"
+
+for v in SOURCE_URI SUMMARY_URI MD_PF_ACTIVE MD_PF_PASSIVE MD_WALL MD_IRON_CORE; do
+  [[ -n "${!v:-}" ]] || { echo "prepare: $v unset in $DIR/source.env" >&2; exit 1; }
+done
+
+# Slice selection: exactly one of N_TIMESLICES and DT_STEP.
+if [[ -n "${N_TIMESLICES:-}" && -n "${DT_STEP:-}" ]]; then
+  echo "prepare: both N_TIMESLICES and DT_STEP set in $DIR/source.env; set exactly one" >&2; exit 1
+elif [[ -n "${N_TIMESLICES:-}" ]]; then
+  SLICES=(--n_timeslices "$N_TIMESLICES")
+elif [[ -n "${DT_STEP:-}" ]]; then
+  SLICES=(--dt_step "$DT_STEP")
+else
+  echo "prepare: neither N_TIMESLICES nor DT_STEP set in $DIR/source.env; set exactly one" >&2; exit 1
+fi
+# Optional simulation window, only reported in the converter's summary line.
+REPORT=()
+if [[ -n "${REPORT_T_START:-}" && -n "${REPORT_T_END:-}" ]]; then
+  REPORT=(--report_window "$REPORT_T_START" "$REPORT_T_END")
+fi
+# --metis: METIS_NBT defaults to N_TIMESLICES; a DT_STEP selection gives no slice count.
+if [[ $WANT_METIS -eq 1 && -z "${METIS_NBT:-}" && -z "${N_TIMESLICES:-}" ]]; then
+  echo "prepare: --metis with DT_STEP needs METIS_NBT (set prepare.metis.nbt in the pulse file)" >&2; exit 1
+fi
+
+# MD_LAYOUT decides whether the machine description lands in its own entry.
+#
+#   separate  data/in + data/in_md. For workflows whose waveform editor imports the machine
+#             description (prescribed_transport, inverse_convergence). data/in_md carries a
+#             machine-description pf_active with geometry but no currents.
+#   combined  data/in only. The converter defaults md_sink_uri to sink_uri and then skips
+#             the machine-description pf_active entirely (write_pf_active is false when the
+#             two entries are the same), so the entry keeps DINA's pf_active WITH its coil
+#             currents. This is what the forward co-simulations need: their `sink_source`
+#             re-emits all four machine-description lanes out of this one entry.
+#
+# Getting this wrong is quiet: the run only fails when sink_source cannot find a lane, or
+# succeeds with the wrong pf_active.
+MD_LAYOUT="${MD_LAYOUT:-separate}"
+case "$MD_LAYOUT" in
+  separate|combined) ;;
+  *) echo "prepare: MD_LAYOUT must be 'separate' or 'combined', got '$MD_LAYOUT'" >&2; exit 1;;
+esac
+
+# The converter writes at the session's default data-dictionary version. The stored
+# datasets of the existing scenarios (105073/78/84/92/99) are DD 4.0.0, so 4.0.0 is the
+# default: regenerating them at any other version cannot reproduce them. Export another
+# IMAS_VERSION to override (pds-configure does so from prepare.dd_version).
+export IMAS_VERSION="${IMAS_VERSION:-4.0.0}"
+export IMAS_LOGLEVEL="${IMAS_LOGLEVEL:-WARNING}"
+export HDF5_USE_FILE_LOCKING=FALSE
+
+CMD=("$PYTHON" "$TOOLS/dina2pds/convert_dina_data_to_input.py"
+     --source_uri        "$SOURCE_URI"
+     --summary_uri       "$SUMMARY_URI"
+     --md_pf_active_uri  "$MD_PF_ACTIVE"
+     --md_pf_passive_uri "$MD_PF_PASSIVE"
+     --md_wall_uri       "$MD_WALL"
+     --md_iron_core_uri  "$MD_IRON_CORE"
+     --sink_uri          "imas:hdf5?path=$DIR/data/in"
+     "${SLICES[@]}" "${REPORT[@]}")
+if [[ "$MD_LAYOUT" == "separate" ]]; then
+  CMD+=(--md_sink_uri "imas:hdf5?path=$DIR/data/in_md")
+fi
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  printf '%q ' "${CMD[@]}"; echo
+  exit 0
+fi
+
+# The converter appends; start from empty so a rerun is a regeneration, not a merge.
+# u+w first: finished data is left read-only (see the end of this script).
+chmod -R u+w "$DIR/data" 2>/dev/null || true
+rm -rf "$DIR/data/in" "$DIR/data/in_md"
+mkdir -p "$DIR/data/in"
+# Not `[[ ... ]] && mkdir`: under `set -e` a false test as the last command of a statement
+# exits the script, so MD_LAYOUT=combined would abort here before the converter ever ran.
+if [[ "$MD_LAYOUT" == "separate" ]]; then
+  mkdir -p "$DIR/data/in_md"
+fi
+
+echo "prepare: $SCENARIO -> $DIR/data"
+cd "$TOOLS/dina2pds"          # the converter imports its siblings by bare module name
+"${CMD[@]}"
+
+# --metis additionally builds data/metis_in, the pulse_schedule METIS takes its input from
+# (get_metis_input_from_muscle3.m errors out without one). Needs MATLAB plus the PDS-METIS
+# and IMAS-MATLAB modules, so it is opt-in rather than part of every prepare.
+if [[ $WANT_METIS -eq 1 ]]; then
+  command -v matlab >/dev/null || { echo "prepare: --metis needs matlab on PATH (module load PDS)" >&2; exit 1; }
+  [[ -n "${EBROOTMETIS:-}" ]] || { echo "prepare: --metis needs \$EBROOTMETIS (module load PDS-METIS)" >&2; exit 1; }
+
+  # The DINA sources are DD 3.x and METIS reads them through a DD 4.x IMAS-MATLAB, so the
+  # IDSs it needs are converted first -- see preprocessing/dina2pds/convert_for_metis.py for why
+  # neither `imas convert --ids` nor implicit conversion on read can do this. Takes about
+  # three minutes; the raw DINA traces are ~40k time points.
+  #
+  # IMAS_AL_DISABLE_VALIDATE matches the legacy scripts: DINA data carries static IDSs with
+  # homogeneous_time=1, which trips validation but which METIS reads fine.
+  export IMAS_AL_DISABLE_VALIDATE=1
+  STAGE="$DIR/data/.dina_dd"
+  rm -rf "$STAGE"; mkdir -p "$STAGE"
+  echo "prepare: converting the METIS input IDSs to DD ${IMAS_VERSION:-4.0.0}"
+  "$PYTHON" "$TOOLS/dina2pds/convert_for_metis.py" \
+    "$SOURCE_URI" "imas:hdf5?path=$STAGE" "${IMAS_VERSION:-4.0.0}"
+
+  rm -rf "$DIR/data/metis_in"; mkdir -p "$DIR/data/metis_in"
+  export METIS_DINA_SOURCE="imas:hdf5?path=$STAGE"
+  export METIS_OUTPUT="imas:hdf5?path=$DIR/data/metis_in"
+  export METIS_MODE="${METIS_MODE:-interpretative}"
+  export METIS_NBT="${METIS_NBT:-$N_TIMESLICES}"
+  echo "prepare: building the METIS dataset ($METIS_MODE, $METIS_NBT slices)"
+  ( cd "$TOOLS/dina2pds" && matlab -batch "make_metis_input" )
+  rm -rf "$STAGE"
+fi
+
+# Leave the data read-only. Opening an IMAS entry even with mode "r" rewrites its
+# master.h5, so every actor that reads a scenario mutates it: the files show up modified in
+# git after any run, and several jobs reading one entry at once race on that write and
+# corrupt it ("Unable to open HDF5 master file"). Read-only permissions stop the rewrite
+# and IMAS reads the entry perfectly well without it.
+chmod -R a-w "$DIR/data" 2>/dev/null || true
+
+echo "prepare: done"
+# Report apparent size and file counts, not `du` block usage: on the ITER parallel
+# filesystem freshly-written files can report near-zero allocated blocks until they are
+# flushed, which makes a good run look like it wrote nothing.
+for d in "$DIR/data"/*/; do
+  n=$(find "$d" -maxdepth 1 -name '*.h5' | wc -l)
+  bytes=$(find "$d" -maxdepth 1 -name '*.h5' -printf '%s\n' | awk '{s+=$1} END {print s+0}')
+  printf '  %-24s %2d IDS files, %s\n' "$(basename "$d")" "$n" \
+         "$(numfmt --to=iec --suffix=B "$bytes" 2>/dev/null || echo "${bytes}B")"
+done

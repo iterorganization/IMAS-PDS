@@ -55,6 +55,7 @@ end
 % exited -- it hangs retrying the dead connection for ~5 minutes, then
 % crashes with "OSError: Bad file descriptor" instead of exiting cleanly
 % (confirmed live). `if` runs the one cycle that exists and stops there.
+muscle_already_shut_down = false;
 if instance.reuse_instance()
     %% Prepare IDS Python object
     % equilibrium_python=py.imas.equilibrium();
@@ -142,4 +143,12 @@ if instance.reuse_instance()
     plasma_duration=t_max-t_start;
 
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
+    % NICE develop honours nice_evo_rd.t_end and ends the run with
+    % next_timestamp=None; libmuscle is then still up, so one more
+    % reuse_instance() receives the ClosePort and runs the normal shutdown
+    % (otherwise peers hang/crash at teardown). Skipped when libmuscle
+    % already shut down on the ClosePort error path (older NICE builds).
+    if ~evalin('base','exist(''muscle_already_shut_down'',''var'') && muscle_already_shut_down')
+        instance.reuse_instance();
+    end
 end

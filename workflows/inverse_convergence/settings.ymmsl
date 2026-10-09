@@ -3,8 +3,8 @@ ymmsl_version: v0.2
 # Generic settings for inverse_convergence, stacked after workflow.ymmsl by
 # bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. A shot
 # needing different values (MD_LAYOUT=combined's own waveforms.yaml, a calibrated
-# config_torax.py, a narrower loop window, ...) overrides them via
-# cases/overrides/inverse_convergence_<shot>.ymmsl.
+# config_torax.py, a narrower loop window, ...) overrides them through its pulse file
+# cases/pulses/<shot>.yaml (generated into cases/overrides/inverse_convergence_<shot>.ymmsl).
 
 resources:
   inverse_convergence.equilibrium.nice: {threads: 2}
@@ -13,7 +13,7 @@ resources:
   inverse_convergence.recorder_transport: {threads: 1}
 
 settings:
-  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from the scenario data root.
   waveform_editor.waveforms: ${PDS_REPO}/workflows/inverse_convergence/waveforms.yaml
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: False

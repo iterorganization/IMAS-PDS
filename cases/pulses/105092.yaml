@@ -1,0 +1,29 @@
+# Pulse file for 105092 -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105092.yaml
+shot: 105092
+description: "DINA shot 105092; source: DINA project database /work/projects/dina/imasdb (MDSplus), not the official ITER store"
+
+# Preparation only: this shot has no tuned workflow configuration (its former
+# cases/overrides/*.ymmsl were empty, i.e. the generic settings). The METIS workflows
+# are deliberately not listed: listing them would write source_metis.t_min/t_max =
+# time.t_start/t_end, cutting METIS's own input range (metis_in spans the whole DINA
+# pulse). bin/pds-create-case <workflow> 105092 uses the generic settings only.
+workflows: []
+
+prepare:
+  source: imas:mdsplus?path=/work/projects/dina/imasdb/iter/3/105092/1
+  # The stored data (pds-scenarios) were prepared with the "legacy" set (ITER_MD
+  # 111001/203, 115005/2, 116000/4); "basic" = the active ITER_MD versions.
+  machine_description: basic
+  n_timeslices: 41
+  md_layout: separate
+  dd_version: "4.0.0"
+
+time:
+  # Stored slice range 3.82 .. 167.204 s, rounded outward to 0.1 s.
+  # Used by the overrides generated from this file (none while workflows is empty).
+  t_start: 3.8
+  t_end: 167.3
+
+postprocess:
+  t_list: [30, 110, 130]

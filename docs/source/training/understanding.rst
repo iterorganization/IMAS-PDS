@@ -15,13 +15,15 @@ Workflow - The workflow describes *how* something is simulated. Which actors tak
 and how they are connected, in ``workflows/<name>/workflow.ymmsl``. it is structure only, 
 so the same workflow can be used for multiple different scenarios.
 
-Scenario - The scenario describes *what* is simulated. This includes the input data and the 
-designed targets for one pulse, in the separate ``pds-scenarios`` repository, one directory 
-per shot. This repository is available on SDCC on ``/work/projects/pds/pds-scenarios``.
+Scenario - The scenario describes *what* is simulated. This includes the input data and the
+designed targets for one pulse, one directory per shot under the scenario data root
+``scenarios/`` in this checkout. It is prepared from a pulse file
+(``cases/pulses/<shot>.yaml``) by ``bin/pds-configure ... --prepare`` -- see
+:ref:`training/setup` and :src:`cases/pulses/README.md`.
 You will see that path written as ``${SCENARIOS_REPO}`` in the settings files -- the PDS
-scripts fill it in for you, and you only ever set it yourself if you keep your own copy of
-the scenarios somewhere else.
-The scenarios knows nothing about which codes will consume it, so the same scenario can be run 
+scripts fill it in for you, and you only ever set it yourself if you keep your data
+somewhere else.
+The scenarios knows nothing about which codes will consume it, so the same scenario can be run
 through several workflows.
 
 Case - The combination of a workflow and a scenario. You build one with
@@ -51,7 +53,7 @@ For the scenarios and your own runs:
 
 .. code-block:: bash
 
-    ls /work/projects/pds/pds-scenarios     # the scenarios, one directory per shot
+    ls scenarios                            # the scenarios, one directory per shot
     m3dash ls                               # the runs you have already produced
 
 Reading a case
@@ -68,7 +70,7 @@ structure -- which components exist and how they are wired -- and
 
     settings:
       waveform_editor.waveforms: /path/to/pds/cases/prescribed_transport_105092/config/waveforms_no_transport.yaml
-      source.source_uri: "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in"
+      source.source_uri: "imas:hdf5?path=/path/to/pds/scenarios/105092/data/in"
       equilibrium.nice.xml_path: /path/to/pds/cases/prescribed_transport_105092/config/config_nice_inverse.xml
       sink.sink_uri: "imas:hdf5?path=../../../out_nice"
 
@@ -76,7 +78,7 @@ structure -- which components exist and how they are wired -- and
 which scenario data to read, which configuration each solver uses, and where the output goes.
 Note that the config paths point into the case's own ``config/`` -- ``pds-create-case``
 copied them there and rewrote the settings, so the case does not depend on
-``workflows/`` or ``pds-scenarios`` still looking the same later. If the case has a
+``workflows/`` or the scenario data root still looking the same later. If the case has a
 ``scenario_settings.ymmsl`` as well, it is stacked after this file and wins on any key it
 repeats. Reading these blocks tells you most of what that run will do.
 
@@ -137,7 +139,7 @@ Exercise 3: look at a scenario before running it
     .. md-tab-item:: Exercise
 
         Take a look at the ``105092`` scenario, which lives in
-        ``/work/projects/pds/pds-scenarios/105092/``.
+        ``scenarios/105092/`` in your checkout (prepared in :ref:`training/setup`).
 
         ``IDStools`` is a separate module with a set of ready-made IMAS plotting scripts. In
         this case, you can use the
@@ -155,6 +157,6 @@ Exercise 3: look at a scenario before running it
 
             module load IDStools
 
-            plotscenario --uri "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in" -t 80
+            plotscenario --uri "imas:hdf5?path=$PDS_REPO/scenarios/105092/data/in" -t 80
 
         Compare ``-t 5``, ``-t 80`` and ``-t 160``.

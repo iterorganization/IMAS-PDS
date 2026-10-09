@@ -1,0 +1,9 @@
+# workflow: inverse_convergence
+ymmsl_version: v0.2
+# Quick-test overlay for any inverse_convergence case: first 3 slices of the
+# window, one outer iteration. Stacked after the case by
+# `sbatch bin/pds-run-case.sbatch cases/<case> cases/quick_test.ymmsl`;
+# it changes nothing in the case itself.
+settings:
+  loop.max_slices: 3
+  loop.max_iterations: 1

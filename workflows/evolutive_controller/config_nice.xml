@@ -301,6 +301,9 @@
     <rd_n_dof_petajnib>10</rd_n_dof_petajnib>
 
     <!-- Must match nice_evo_rd.dt in settings.ymmsl / torax.fixed_dt -->
+    <evoDiscretization>0</evoDiscretization>
+    <!-- 0 = never abort on rejected steps (hold last good state, previous behaviour); NICE develop default is 3 -->
+    <maxConsecutiveRejectedSteps>0</maxConsecutiveRejectedSteps>
     <dt>1.0e-2</dt>
 
 <!-- inverse (psi, theta) grid  -->

@@ -197,6 +197,7 @@ class Peer:
             self.rcvd = resume_from_state["rcvd"]
             self.to_send = resume_from_state["to_send"]
             self.next = resume_from_state["next"]
+            self.awaiting_reply = resume_from_state.get("awaiting_reply", False)
         else:
             for label, port in self.in_ports.items():
                 msg = self.instance.receive(port)
@@ -205,6 +206,9 @@ class Peer:
                     self.rcvd = msg.timestamp
                     self.to_send = msg.timestamp
                     self.next = msg.next_timestamp
+            # The peer pairs every O_I send with one S receive: after we
+            # received from it, it is blocked until we send to it.
+            self.awaiting_reply = True
 
     def done(self) -> bool:
         """Return whether we are done commmunicating with this peer."""
@@ -216,6 +220,12 @@ class Peer:
             self.next is not None
             and self.to_send is not None
             and self.next <= self.to_send
+            # Never receive twice in a row from a peer that waits for our
+            # reply: its announced next_timestamp is only a prediction
+            # (TORAX: t + fixed_dt clipped to t_final, but a sawtooth crash
+            # step lasts 1e-5 s), and a stale prediction made this fire twice
+            # near t_final, with both sides then blocked in receive.
+            and not self.awaiting_reply
         )
 
     def receive(self) -> None:
@@ -227,6 +237,7 @@ class Peer:
             if label == self.primary_label:
                 self.rcvd = msg.timestamp
                 self.next = msg.next_timestamp
+        self.awaiting_reply = True
 
     def can_send(self, peer_rcvd: float, peer_next: float | None) -> bool:
         """Return whether we can send to this peer.
@@ -266,6 +277,7 @@ class Peer:
         Args:
             peer: The other peer, whose caches hold the data to send.
         """
+        self.awaiting_reply = False
         assert self.to_send is not None
         done = peer.done()
         next_timestamp = None if done else self.next
@@ -288,6 +300,7 @@ class Peer:
             },
             "rcvd": self.rcvd,
             "to_send": self.to_send,
+            "awaiting_reply": self.awaiting_reply,
             "next": self.next,
         }
 

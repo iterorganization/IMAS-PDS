@@ -61,7 +61,7 @@ CONFIG = {
             "model_name": "P_in_scaled_flat_profile",
             "fraction_P_heating": 0.3,
         },
-        # Actuators: 'ecrh' added by cases/overrides/<workflow>_<shot>_config_torax.py.
+        # Actuators: 'ecrh' added dynamically by receive_core_sources() (see the docstring).
     },
     "transport": {
         "model_name": "qlknn",

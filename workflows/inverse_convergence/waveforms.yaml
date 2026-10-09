@@ -2,7 +2,7 @@
 # core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
 # pds-create-case. Scenarios using MD_LAYOUT=combined (no separate data/in_md) need a
 # variant with input_md pointing at data/in instead -- see
-# cases/overrides/inverse_convergence_105073_waveforms.yaml.
+# cases/pulses/files/inverse_convergence_105073_waveforms.yaml.
 
 globals:
   dd_version: 4.0.0

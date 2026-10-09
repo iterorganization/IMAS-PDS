@@ -1,0 +1,35 @@
+# Pulse file for 105033 -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105033.yaml
+shot: 105033
+description: "DINA 105033 (official ITER store), Ip 7.5 MA, flattop 29-95 s, diverted from 12.23 s"
+# evolutive_controller needs the out_nice of a FULL inverse_convergence run: the latest
+# local run is a 3-slice quick test (12.23..17.73 s), so its forward-window check fails
+# until that run is redone (pds-configure skips it and still handles the others). After
+# the full run, set time.forward_t_start to an exact (native) slice of its out_nice.
+workflows:
+  - prescribed_transport
+  - inverse_convergence
+  - evolutive_controller
+  # metis_from_dina and metis_nice_inverse_from_dina are left out: METIS-IRFM's own
+  # preprocessing (acces/dina/get_interresting_time_from_dina.m) fails on 105033 because the
+  # DINA summary has minor_radius = elongation = magnetic_axis_r = 0 for t = 0-1.1 s, which
+  # makes its vertical-field proxy infinite ("The sample points must be finite"). Reported
+  # to the METIS developer; re-add them once METIS is fixed.
+
+prepare:
+  source: imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105033/1
+  machine_description: basic
+  n_timeslices: 41
+
+time:
+  # First diverted slice: earlier slices are limiter plasmas that NICE inverse cannot
+  # solve (boundary type 0 up to 9.23 s, diverted from 12.23 s).
+  t_start: 12.0
+  t_end: 113.5
+  inverse_dt: 0.3
+
+# No transport_calibration: the generic qlknn transport is used as-is; calibrate only
+# after a first comparison with DINA.
+
+postprocess:
+  t_list: [15, 60, 105]

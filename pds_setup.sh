@@ -20,6 +20,25 @@ INSTALL_TORAX="false"
 INSTALL_CHEASE="false"
 INSTALL_PCS="false"
 
+# USE_LOCAL_<COMP>="true" makes every workflows/*/workflow.ymmsl (and every rendered
+# actor test ymmsl_files/*.ymmsl) import that component's implementations from
+# workflows/lib/local_programs.ymmsl (the build in local_installs/) instead of
+# workflows/lib/easybuild_programs.ymmsl (the EasyBuild module); "false" switches them
+# back to the module. For MUSCLE3_DASHBOARD it selects which build the `m3dash` command
+# (bin/m3dash) runs. Applied at the end of this script by
+# setup_files/use_local_programs.sh (also when nothing is installed; see its header for
+# the component -> implementation table). A component whose local install is missing
+# stays on the module with a warning. Workflow files switched to local are local
+# changes: do not commit them.
+USE_LOCAL_IMAS_MUSCLE3="false"
+USE_LOCAL_MUSCLE3_DASHBOARD="false"
+USE_LOCAL_WAVEFORM_EDITOR="false"
+USE_LOCAL_METIS="false"
+USE_LOCAL_NICE="false"
+USE_LOCAL_TORAX="false"
+USE_LOCAL_CHEASE="false"
+USE_LOCAL_PCS="false"
+
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
 BRANCH_MUSCLE3_DASHBOARD='main'
@@ -169,6 +188,11 @@ CURR_INSTALL='START'
 
   cd ..
 )
+
+# SELECT MODULE OR LOCAL IMPLEMENTATIONS IN THE WORKFLOWS (USE_LOCAL_* flags above)
+export USE_LOCAL_IMAS_MUSCLE3 USE_LOCAL_MUSCLE3_DASHBOARD USE_LOCAL_WAVEFORM_EDITOR \
+  USE_LOCAL_METIS USE_LOCAL_NICE USE_LOCAL_TORAX USE_LOCAL_CHEASE USE_LOCAL_PCS
+bash setup_files/use_local_programs.sh
 
 # END MESSAGE
 echo 'YOU CAN TRY OUT THE TEST COUPLINGS IN THE PDS/YMMSL_FILES DIRECTORY BY RUNNING'

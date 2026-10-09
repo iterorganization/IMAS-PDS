@@ -27,14 +27,15 @@ in the case.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: defaults to $PDS_REPO/scenarios
 
 bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_convergence_105084
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 ```
 
 `pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
-`cases/overrides/inverse_convergence_<shot>.ymmsl`.
+`cases/overrides/inverse_convergence_<shot>.ymmsl`, which it generates from the pulse file
+`cases/pulses/<shot>.yaml` (see `cases/pulses/README.md`).
 
 The `settings.ymmsl` contains (all templated from `${SHOT}`):
 
@@ -46,12 +47,15 @@ The `settings.ymmsl` contains (all templated from `${SHOT}`):
 If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `cases/runs/<case>`.
 
 Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_literal` (same
-source data as 105084, a literal rather than loop-designed pulse).
+source data as 105084, a literal rather than loop-designed pulse: `cases/pulses/105084_literal.yaml`,
+`shot: 105084`, `case: 105084_literal`, built with `bin/pds-create-case inverse_convergence 105084_literal`).
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from the scenario data root
+(`scenarios/` by default, prepared from the pulse file by `bin/pds-configure --prepare`); the
 pulse design (`waveforms.yaml`) lives in this workflow's own directory, and any per-shot
-variant or calibrated solver config lives under `cases/overrides/`, so both are versioned
-and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is produced
+variant or calibrated solver config is declared in the shot's pulse file
+(`cases/pulses/<shot>.yaml`, companion files under `cases/pulses/files/`), so both are
+versioned and editable here. See `preprocessing/README.md` for how `data/` itself is produced
 from DINA and machine-description sources.
 
 ## Assumptions
@@ -68,7 +72,7 @@ from DINA and machine-description sources.
 
 ## Input requirements
 
-Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
+Produced by `preprocessing/prepare <shot>` (converter in `preprocessing/dina2pds/`; ITER has no iron core, so the converter writes an empty static `iron_core`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace, plus `core_profiles`
   (electron/ion temperature and density) for TORAX and the ECRH heating trace picked up via

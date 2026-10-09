@@ -1,0 +1,70 @@
+# Pulse file for 105073 -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105073.yaml
+shot: 105073
+description: "DINA shot 105073, prepared for inverse_convergence and the forward co-simulation workflows; source: DINA project database /work/projects/dina/imasdb (MDSplus), not the official ITER store"
+
+# The two workflows this shot has a tuned configuration for (migrated from the former
+# hand-written cases/overrides/*_105073*). The METIS workflows are deliberately not listed:
+# they ran with an empty override, i.e. the generic settings, and listing them here would
+# write source_metis.t_min/t_max = time.t_start/t_end, cutting METIS's own input range
+# (metis_in spans the whole DINA pulse). bin/pds-create-case metis_* 105073 keeps using
+# the generic settings only (identical to the former empty override).
+workflows:
+  - inverse_convergence
+  - evolutive_controller
+
+prepare:
+  source: imas:mdsplus?path=/work/projects/dina/imasdb/iter/3/105073/6
+  # The stored data (pds-scenarios) were prepared with the "legacy" set (ITER_MD
+  # 111001/203, 115005/2, 116000/4); "basic" = the active ITER_MD versions.
+  machine_description: basic
+  n_timeslices: 41
+  # combined: the MD IDSs are written into data/in (no data/in_md). The settings
+  # pass-through below redirects every data/in_md read of inverse_convergence to data/in.
+  md_layout: combined
+  dd_version: "4.0.0"
+
+time:
+  # inverse_convergence loop window (loop.t_min / loop.t_max).
+  t_start: 10.0
+  t_end: 205.0
+  # evolutive_controller: forward_t_start pinned to out_nice's native t=84.3176 slice, not
+  # the flattop's nominal t=80.0: the closest native slice to 80.0 is t=79.2176, and seeding
+  # nice_evo_rd's Newton solve from that state diverges within 3 iterations on the very
+  # first step, regardless of the configured dt (ruled out a source.dt/label-mismatch
+  # theory -- identical blowup either way). t=84.3176 steps cleanly through the full
+  # window; confirmed live. The source loads up to 130 s (forward_load_t_end) while the
+  # forward simulation stops at 84.7 s (forward_t_end).
+  forward_t_start: 84.31759781205469
+  forward_t_end: 84.7
+  forward_load_t_end: 130.0
+  forward_source_dt: 1
+  forward_dt: 0.01
+
+inverse_convergence:
+  max_iterations: 5
+
+# Bohm-gyroBohm transport calibrated onto this scenario's DINA trace (default BgB
+# coefficients under-transport it: flattop W_th +40% vs DINA, and nothing pulls Te back
+# during ramp-down where DINA's confinement collapses with Ip): x1.8 through flattop,
+# ramped to x4 over the t=140-205s ramp-down. Applied to both workflows with TORAX
+# (inverse_convergence and evolutive_controller -- same plasma).
+transport_calibration:
+  model: bohm-gyrobohm
+  chi_multiplier: {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0}
+
+settings:
+  inverse_convergence:
+    # combined-layout waveform design (input_md -> data/in) that also takes psi_boundary
+    # from the DINA input instead of the loop's equilibrium
+    waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_waveforms.yaml
+    # NICE inverse with a tighter coil-current tolerance (abserrIg 3e4 instead of 3e5)
+    equilibrium.nice.xml_path: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_config_nice_inverse.xml
+    # combined layout: the machine description is in data/in
+    equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  evolutive_controller:
+    # combined-layout variant of the forward waveform design (same two changes as above)
+    waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/evolutive_controller_105073_waveforms.yaml
+
+postprocess:
+  t_list: [25, 130, 175]

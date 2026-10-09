@@ -16,7 +16,7 @@ model runs, and NICE solves each time slice independently, so there is no time c
 and no outer iteration.
 
 :Workflow: ``prescribed_transport`` -- :src:`workflows/prescribed_transport/README.md`
-:Scenarios: DINA shots 105078, 105084, 105092, 105099, in ``pds-scenarios``
+:Scenarios: DINA shots 105078, 105084, 105092, 105099, prepared into ``scenarios/`` from ``cases/pulses/<shot>.yaml``
 :Output: ``<run_dir>/out_nice``
 
 The four cases are the same run against different scenario data -- apart from the shot

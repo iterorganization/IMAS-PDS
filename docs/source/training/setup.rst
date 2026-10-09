@@ -47,5 +47,18 @@ set these up as well:
 
     bash setup_files/setup_test_files.sh
 
+The exercises run against a handful of DINA shots (105073, 105084, 105092, 105099); their
+data is prepared from a pulse file into this checkout's ``scenarios/`` directory, not read
+from a shared location, so it must exist before the first case using them is built. Ask
+your trainer whether this was already done for you; otherwise prepare it yourself:
+
+.. code-block:: bash
+
+    for shot in 105073 105084 105092 105099; do
+        bin/pds-configure cases/pulses/$shot.yaml --prepare
+    done
+
+See :src:`cases/pulses/README.md` for what ``--prepare`` does (about 25 s per shot).
+
 Now we are all set up to run a PDS workflow!
 

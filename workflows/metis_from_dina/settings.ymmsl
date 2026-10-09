@@ -6,12 +6,12 @@ ymmsl_version: v0.2
 # source_metis reads METIS's own input dataset, which this workflow's preprocess.sh builds
 # from this shot's raw DINA source into ${CASE_DIR}/preprocess/metis_in, once, at
 # bin/pds-create-case time (METIS's IMAS DD layout is workflow-specific, so nothing pre-bakes
-# it into pds-scenarios).
+# it into the scenario data root).
 #
 # Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
 # from DINA). A shot needing interpretative mode (DINA profiles/sources fed in as external
-# data) overrides the five metis_external_data_* settings via
-# cases/overrides/metis_from_dina_<shot>.ymmsl.
+# data) overrides the five metis_external_data_* settings through the settings: section of
+# its pulse file cases/pulses/<shot>.yaml (generated into cases/overrides/metis_from_dina_<shot>.ymmsl).
 
 resources:
   metis_from_dina.source_metis: {threads: 1}
@@ -29,7 +29,7 @@ settings:
   metis.metis_psioffset: 9.0
 
   # METIS switches for reading external data from the received IDSs -- predictive defaults,
-  # all off. See cases/overrides/metis_from_dina_<shot>.ymmsl for an interpretative shot.
+  # all off; an interpretative shot switches them on in its pulse file (settings: section).
   metis.metis_external_data_equilibrium: 0
   metis.metis_external_data_current_diffusion: 0
   metis.metis_external_data_electron_temperature: 0

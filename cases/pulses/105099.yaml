@@ -1,0 +1,39 @@
+# Pulse file for 105099 -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105099.yaml
+shot: 105099
+description: "DINA shot 105099; source: DINA project database /work/projects/dina/imasdb (MDSplus), not the official ITER store"
+
+# The one workflow this shot has a tuned configuration for (migrated from the former
+# hand-written cases/overrides/inverse_convergence_105099*). The METIS workflows are
+# deliberately not listed: they ran with an empty override, i.e. the generic settings, and
+# listing them here would write source_metis.t_min/t_max = time.t_start/t_end, cutting
+# METIS's own input range (metis_in spans the whole DINA pulse). bin/pds-create-case
+# metis_* 105099 keeps using the generic settings only (identical to the former empty
+# override). prescribed_transport 105099 (the CI case) also runs with the generic settings.
+workflows:
+  - inverse_convergence
+
+prepare:
+  source: imas:mdsplus?path=/work/projects/dina/imasdb/iter/3/105099/2
+  # The stored data (pds-scenarios) were prepared with the "legacy" set (ITER_MD
+  # 111001/203, 115005/2, 116000/4); "basic" = the active ITER_MD versions.
+  machine_description: basic
+  n_timeslices: 41
+  md_layout: separate
+  dd_version: "4.0.0"
+
+time:
+  # inverse_convergence loop window: from 5 s to the last stored slice 76.554 s, rounded
+  # outward to 0.1 s (the former override left loop.t_max unset = all slices; 76.6
+  # selects the same slices).
+  t_start: 5.0
+  t_end: 76.6
+
+# Bohm-gyroBohm transport with time-dependent chi multipliers adapted to this pulse
+# (Ip peaks ~7.4 MA at t~35 s, ramp-down t~40-77 s).
+transport_calibration:
+  model: bohm-gyrobohm
+  chi_multiplier: {0: 1.8, 40: 1.8, 60: 4.0, 80: 4.0}
+
+postprocess:
+  t_list: [20, 35, 60]

@@ -54,6 +54,16 @@ run_actor_test_clean test_nice_actor
 run_actor_test_clean test_metis_actor
 run_actor_test_clean test_chease_actor
 
+# PREPARE SCENARIO DATA
+#
+# Data are no longer read from the shared /work/projects/pds/pds-scenarios: each shot the
+# cases below need is prepared into this checkout's scenario data root (SCENARIOS_REPO,
+# default $PDS_REPO/scenarios) first. ~25 s per shot.
+
+for shot in 105099 105073 105084; do
+  bin/pds-configure "cases/pulses/${shot}.yaml" --prepare
+done
+
 # RUN WORKFLOWS
 
 run_case_clean prescribed_transport 105099
