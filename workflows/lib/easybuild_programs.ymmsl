@@ -123,6 +123,13 @@ programs:
     executable: python
     args: -u -m torax_muscle3.torax_actor
 
+  # iWrap MUSCLE3-Fortran actor; reads its code parameters from
+  # $EBROOTCHEASE/chease_m3/input/ (COCOS 17).
+  chease:
+    base_env: clean
+    modules: CHEASE/2026.08-intel-2025b-pds
+    executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
+
   # No base_env: clean and no virtual_env on these three either -- same reasons as
   # temporal_coupler above.
   loop:

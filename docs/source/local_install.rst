@@ -126,6 +126,24 @@ To run against your build, repoint the import in the workflow:
 Both files resolve because the PDS module puts ``$PDS_REPO/workflows`` on
 ``YMMSL_PATH``; ``bin/pds-run-case.sbatch`` sets it too.
 
+``pds_setup.sh`` does this switching for you. Next to each ``INSTALL_<COMP>`` flag it
+has a ``USE_LOCAL_<COMP>`` flag (``IMAS_MUSCLE3``, ``MUSCLE3_DASHBOARD``,
+``WAVEFORM_EDITOR``, ``METIS``, ``NICE``, ``TORAX``, ``CHEASE``, ``PCS``). At the end of
+every ``bash pds_setup.sh`` run, ``setup_files/use_local_programs.sh`` rewrites the
+``lib.easybuild_programs`` import of every implementation of a component whose flag is
+``"true"`` into ``lib.local_programs`` in all ``workflows/*/workflow.ymmsl`` and in the
+rendered actor tests ``ymmsl_files/*.ymmsl`` (``CHEASE`` is only used by
+``test_chease_actor`` so far), and back for ``"false"``. The ``*.template`` files stay on
+the module, so re-rendering the actor tests with ``setup_files/setup_test_files.sh``
+resets them: run the script again afterwards. ``MUSCLE3_DASHBOARD`` is a tool rather
+than an actor: its flag decides whether the ``m3dash`` command (``bin/m3dash``, first on
+``PATH`` once the PDS module is loaded) runs ``local_installs/muscle3-dashboard/venv`` or
+the module's dashboard. A component whose local install is missing stays on the module
+with a warning. The component-to-implementation table is in the header of that script,
+which can also be run on its own, e.g.
+``USE_LOCAL_NICE=true bash setup_files/use_local_programs.sh``. Workflow files switched
+to local are changes for your installation only: do not commit them.
+
 .. note::
 
    The local definitions use ``script:`` rather than the declarative
