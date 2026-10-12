@@ -12,6 +12,7 @@ import sys
 
 import imas
 import numpy as np
+from imas.ids_primitive import IDSNumericArray
 
 
 def dedup_profile(profile):
@@ -23,7 +24,11 @@ def dedup_profile(profile):
     keep = np.append(np.diff(profile.grid.psi) != 0, True)
     n = len(keep)
     for leaf in imas.util.tree_iter(profile, leaf_only=True):
-        if leaf.metadata.ndim == 1 and len(leaf) == n:
+        if (
+            isinstance(leaf, IDSNumericArray)
+            and leaf.metadata.ndim == 1
+            and len(leaf) == n
+        ):
             leaf.value = np.asarray(leaf)[keep]
     return n - keep.sum()
 
