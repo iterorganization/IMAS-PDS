@@ -18,10 +18,12 @@ imported, via `waveform_editor.core_sources_out -> torax.core_sources_in_f` (sam
 **F_INIT bootstrap**: `source` reads a NICE-*reconstructed* equilibrium (not raw DINA -- see
 Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The `waveform_editor` passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
 wildcard import in `waveforms.yaml`, so every field survives, not just hand-picked ones) and
-overlays it with the static machine description (`<shot>_in_md`), core_profiles, and the ECRH
-trace read directly from this scenario's own DINA-preprocessed data
-(`<shot>_in_waveform_editor`), into one assembled F_INIT message for `torax`, `nice_evo_rd`,
-and `magnetic_controller`.
+overlays it with that same run's converged TORAX core_profiles and NICE coil currents, plus
+the static machine description, ECRH trace and coil voltages from this scenario's DINA data
+(inverse_convergence never writes those), into one assembled F_INIT message for `torax`,
+`nice_evo_rd`, and `magnetic_controller`. `preprocess.sh` (run by `pds-create-case`) copies
+the TORAX core_profiles into the case, dropping TORAX's repeated axis grid point: its psiN
+starting 0, 0 makes NICE evo_rd's F decomposition divide by zero and NaN on the first solve.
 
 A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/KCURR_RZIp/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.
@@ -96,11 +98,11 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   `nice_imas_evo_rd_muscle3` binary (not yet part of the NICE easybuild module as of this
   writing -- see the commented-out entries in `ci/run_test_workflows.sh` -- so it must be
   source-built, see `local_installs/nice`).
-- A completed `inverse_convergence` run's `_out_nice` output for the same shot, to seed
-  `source`'s F_INIT equilibrium (see Assumptions).
-- DINA-preprocessed scenario data supplying the static machine description, `core_profiles`
-  (including `conductivity_parallel` and `j_non_inductive`, which the static machine
-  description alone doesn't carry), the ECRH trace, and `pf_active` coil `voltage.data` (the
+- A completed `inverse_convergence` run for the same shot *before* `pds-create-case`: its
+  `out_nice` seeds the F_INIT equilibrium and coil currents, its `out_torax` the core_profiles
+  (frozen into the case by `preprocess.sh`, so rebuild the case after rerunning it).
+- DINA-preprocessed scenario data supplying the static machine description, the ECRH trace,
+  and `pf_active` coil `voltage.data` (the
   static machine description's per-coil `voltage.data` is empty, so `waveforms.yaml` sources it
   from DINA's raw `pf_active` instead).
 
