@@ -19,12 +19,14 @@ resources:
 
 settings:
   # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # waveform_editor: https://waveform-editor.readthedocs.io/en/latest/muscle3.html#available-settings
   waveform_editor.waveforms: ${PDS_REPO}/workflows/inverse_convergence/waveforms.yaml
+  # source: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: False
-  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
   # Convergence defaults; a scenario may override any of these.
+  # loop: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/outer_convergence_loop.py
   loop.cold_start: False
   loop.max_iterations: 2
   loop.max_slices: 0
@@ -32,23 +34,29 @@ settings:
   loop.rel_tolerance: 0.03
 
   # Solvers.
+  # equilibrium.nice: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   equilibrium.nice.xml_path: ${PDS_REPO}/workflows/inverse_convergence/config_nice_inverse.xml
+  # transport.torax: https://torax-muscle3.readthedocs.io/en/latest/usage.html#available-settings
   transport.torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
   transport.torax.output_all_timeslices: True
   transport.torax.fixed_dt: 0.3
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.
+  # sink_*: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html#available-settings
   sink_equilibrium.sink_uri: "imas:hdf5?path=../../../out_nice"
   sink_equilibrium.sink_mode: "w"
   sink_transport.sink_uri: "imas:hdf5?path=../../../out_torax"
   sink_transport.sink_mode: "w"
 
   # Recording.
+  # recorder_*: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html#available-settings
   equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
 
   # Validation.
+  # validator: https://imas-muscle3.readthedocs.io/en/latest/actor_olc.html#available-settings
   validator.halt_on_error: True
   validator.extra_rule_dirs: ${PDS_REPO}/pds_validation_tests
   validator.rulesets: iter-olc

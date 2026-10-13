@@ -32,6 +32,7 @@ programs:
   #     venv/bin/activate` does not clear PYTHONPATH, so the module's numpy shadows the
   #     venv's own ABI-incompatible build unless it is unset first (same fix as `torax`
   #     below).
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html
   source_component:
     script: |
       #!/bin/bash
@@ -39,6 +40,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.source_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html
   sink_component:
     script: |
       #!/bin/bash
@@ -46,6 +48,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.sink_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_sink_source.html
   sink_source_component:
     script: |
       #!/bin/bash
@@ -53,6 +56,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.sink_source_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_olc.html
   olc_component:
     script: |
       #!/bin/bash
@@ -60,6 +64,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.olc_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html
   recorder_component:
     script: |
       #!/bin/bash
@@ -67,6 +72,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.recorder_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_iterator.html
   iterator_component:
     script: |
       #!/bin/bash
@@ -74,6 +80,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.iterator_component "$@"
 
+  # Docs: https://imas-muscle3.readthedocs.io/en/latest/actor_passthrough.html
   passthrough_component:
     script: |
       #!/bin/bash
@@ -81,6 +88,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u -m imas_muscle3.actors.passthrough_component "$@"
 
+  # Docs: https://waveform-editor.readthedocs.io/en/latest/muscle3.html
   waveform_editor:
     script: |
       #!/bin/bash
@@ -94,6 +102,7 @@ programs:
       export IMAS_AL_DISABLE_VALIDATE=1
       exec waveform-editor actor "$@"
 
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/utils/temporal_coupler.py
   temporal_coupler:
     script: |
       #!/bin/bash
@@ -101,6 +110,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/utils/temporal_coupler.py "$@"
 
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/outer_convergence_loop.py
   loop:
     script: |
       #!/bin/bash
@@ -108,6 +118,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py "$@"
 
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/nice_load_balancer.py
   load_balancer:
     script: |
       #!/bin/bash
@@ -122,6 +133,7 @@ programs:
       source $PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/activate
       exec python -u $PDS_REPO/workflows/lib/actors/psi_anchor.py "$@"
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_inv:
     script: |
       #!/bin/bash
@@ -130,6 +142,7 @@ programs:
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_inv_muscle3 "$@"
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo_rd:
     script: |
       #!/bin/bash
@@ -138,6 +151,7 @@ programs:
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_evo_rd_muscle3 "$@"
 
+  # Docs: https://torax-muscle3.readthedocs.io/en/latest/usage.html#available-settings
   torax:
     script: |
       #!/bin/bash
@@ -152,6 +166,7 @@ programs:
   # METIS is always driven through MATLAB's pyenv()/py.* bridge and a module-installed
   # IMAS-AL-Matlab -- there is no repo-local build of it, so this is identical to
   # lib/easybuild_programs.ymmsl's `metis`.
+  # Docs: https://git.iter.org/projects/SCEN/repos/metis/browse/workflow/muscle3/mfile/metis4muscle3_setting_list.m
   metis:
     script: |
       #!/bin/bash
@@ -177,6 +192,7 @@ programs:
   # addpath was supposed to put on the path) came back "unrecognized function or
   # variable". `export` lines in a script:, like every actor above, are expanded in the
   # actor's own shell instead, so $PDS_REPO resolves correctly.
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/controllers/KCURR_RZIp/muscle_controller_NICE_IMAS_iter_init.m
   magnetic_controller:
     script: |
       #!/bin/bash

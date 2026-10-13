@@ -22,15 +22,20 @@ resources:
   metis_nice_inverse_from_dina.nice: {threads: 1}
 
 settings:
+  # source_metis: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  # sink_*: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html#available-settings
   sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
   sink_transport.sink_mode: "w"
-
-  source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
   sink_equilibrium.sink_uri: "imas:hdf5?path=../../../nice_out"
   sink_equilibrium.sink_mode: "w"
+
+  # source_nice: https://imas-muscle3.readthedocs.io/en/latest/actor_sink_source.html#available-settings
+  source_nice.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/dina_in"
+  # nice: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice.xml_path: ${PDS_REPO}/workflows/metis_nice_inverse_from_dina/config_nice_inverse.xml
 
+  # metis: https://git.iter.org/projects/SCEN/repos/metis/browse/workflow/muscle3/mfile/metis4muscle3_setting_list.m
   metis.metis_computation: 1
   # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
   # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script). This is
