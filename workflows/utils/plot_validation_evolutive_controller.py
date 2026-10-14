@@ -1,5 +1,6 @@
 """
-Validate evolutive_controller output: reference vs NICE for R, Z, Ip, PF coil current.
+Validate evolutive_controller output: reference vs NICE for R, Z, Ip, PF coil current,
+plus NICE (q, pressure) and TORAX (Te, ne, q) profiles, each on its own psi grid.
 """
 
 import argparse
@@ -39,6 +40,17 @@ def handle_args():
         "--nice_path",
         type=str,
         help="Path to load evolutive_controller's NICE output from",
+    )
+    parser.add_argument(
+        "--torax_path",
+        type=str,
+        help="Path to load TORAX core_profiles output from",
+    )
+    parser.add_argument(
+        "--n_profiles",
+        type=int,
+        default=6,
+        help="Number of time slices to draw in the profiles-vs-psi plots",
     )
     parser.add_argument(
         "--output_dir", type=str, help="path to directory in which to put plots"
@@ -91,10 +103,13 @@ def main():
         "dina": DBEntry(f"imas:hdf5?path={args.dina_path}", "r"),
         "reconstruction": DBEntry(f"imas:hdf5?path={args.reconstruction_path}", "r"),
         "nice": DBEntry(f"imas:hdf5?path={args.nice_path}", "r"),
+        "torax": DBEntry(f"imas:hdf5?path={args.torax_path}", "r"),
     }
 
     rz_ip_plot(args, dbs)
     kcurr_plot(args, dbs)
+    nice_profiles_plot(args, dbs)
+    torax_profiles_plot(args, dbs)
 
     for db in dbs.values():
         db.close()
@@ -212,6 +227,96 @@ def kcurr_plot(args, dbs):
 
     fig.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig.savefig(coil_figure_path)
+
+
+def normalise_psi(psi):
+    return np.abs(psi - psi[0]) / np.abs(psi[-1] - psi[0])
+
+
+def pick_times(times, n):
+    return times[np.unique(np.linspace(0, len(times) - 1, n).astype(int))]
+
+
+def profiles_psi_plot(figure_path, title, times, labels, get_profiles):
+    """One panel per label, one line per time slice. get_profiles(t) returns
+    (psi, [values per label]) on a code's own grid, or None to skip that slice."""
+    colors = plt.get_cmap("Blues")(np.linspace(0.35, 1.0, len(times)))
+    fig, axes = plt.subplots(nrows=1, ncols=len(labels), figsize=(6 * len(labels), 5))
+    fig.suptitle(title, fontsize=16)
+    for ax, label in zip(axes, labels, strict=True):
+        ax.set_title(label)
+        ax.set_ylabel(label)
+        ax.set_xlabel("psi_norm")
+
+    for t, color in zip(times, colors, strict=True):
+        profiles = get_profiles(t)
+        if profiles is None:
+            logger.warning("%s: empty profiles at t=%.4f, skipping.", title, t)
+            continue
+        psi, values = profiles
+        for ax, val in zip(axes, values, strict=True):
+            ax.plot(normalise_psi(psi), val, label=f"t={t:.2f}", color=color)
+
+    for ax in axes:
+        ax.legend()
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
+    fig.savefig(figure_path)
+
+
+def nice_profiles_plot(args, dbs):
+    """NICE equilibrium q and pressure on NICE's own psi grid, at n_profiles of NICE's
+    valid slices."""
+    nice_t = np.asarray(dbs["nice"].get("equilibrium", lazy=True).time)
+    nice_t = nice_t[nice_output_flags(dbs["nice"]) != -1]
+
+    def get_profiles(t):
+        p1 = (
+            dbs["nice"]
+            .get_slice("equilibrium", time_requested=t, **GET_KWARGS)
+            .time_slice[0]
+            .profiles_1d
+        )
+        psi, q, pressure = (np.asarray(v) for v in (p1.psi, p1.q, p1.pressure))
+        if len(psi) < 2 or not len(psi) == len(q) == len(pressure):
+            return None
+        return psi, [q, pressure / 1e3]
+
+    profiles_psi_plot(
+        f"{args.output_dir}/pds_nice_profiles_psi_{args.shot_nr}.png",
+        f"{args.shot_nr}: NICE profiles vs psi_norm",
+        pick_times(nice_t, args.n_profiles),
+        ["q", "pressure [kPa]"],
+        get_profiles,
+    )
+
+
+def torax_profiles_plot(args, dbs):
+    """TORAX core_profiles Te, ne and q on TORAX's own psi grid."""
+    torax_t = np.asarray(dbs["torax"].get("core_profiles", lazy=True).time)
+
+    def get_profiles(t):
+        p1 = (
+            dbs["torax"]
+            .get_slice("core_profiles", time_requested=t, **GET_KWARGS)
+            .profiles_1d[0]
+        )
+        values = [
+            np.asarray(p1.electrons.temperature) / 1e3,
+            np.asarray(p1.electrons.density),
+            np.asarray(p1.q),
+        ]
+        psi = np.asarray(p1.grid.psi)
+        if len(psi) < 2 or any(len(v) != len(psi) for v in values):
+            return None
+        return psi, values
+
+    profiles_psi_plot(
+        f"{args.output_dir}/pds_torax_profiles_psi_{args.shot_nr}.png",
+        f"{args.shot_nr}: TORAX profiles vs psi_norm",
+        pick_times(torax_t, args.n_profiles),
+        ["Te [keV]", "ne [m^-3]", "q"],
+        get_profiles,
+    )
 
 
 if __name__ == "__main__":
