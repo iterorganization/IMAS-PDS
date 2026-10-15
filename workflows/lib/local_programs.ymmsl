@@ -202,7 +202,7 @@ programs:
   # Plasmaless coil+vessel model (no plasma), a stand-in for nice_evo_rd in controller
   # tests (workflows/plasmaless_controller, which imports it from here). MATLAB, no
   # EasyBuild module: the actor (muscle3/muscle_plasmaless_actor.m) runs from the
-  # checkout $PDS_REPO/local_installs/plasmaless-tokamak-circuits, made at a pinned
+  # checkout $PDS_REPO/local_installs/plasma-tokamak-circuits, made at a pinned
   # commit by setup_files/setup_plasmaless.sh (pds_setup.sh, INSTALL_PLASMALESS). The
   # actor finds imas_model/ and its default machine description data/md_dd4/ next to its
   # own file, so they come from the same checkout. Developers can point PLASMALESS_REPO
@@ -219,7 +219,7 @@ programs:
   plasmaless:
     script: |
       #!/bin/bash
-      plasmaless_repo="${PLASMALESS_REPO:-$PDS_REPO/local_installs/plasmaless-tokamak-circuits}"
+      plasmaless_repo="${PLASMALESS_REPO:-$PDS_REPO/local_installs/plasma-tokamak-circuits}"
       if [[ ! -f "$plasmaless_repo/muscle3/muscle_plasmaless_actor.m" ]]; then
         echo "plasmaless: no muscle3/muscle_plasmaless_actor.m in '$plasmaless_repo'" \
           "-- run setup_files/setup_plasmaless.sh (pds_setup.sh) or set PLASMALESS_REPO" >&2

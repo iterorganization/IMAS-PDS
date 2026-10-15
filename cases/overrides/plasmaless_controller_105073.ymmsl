@@ -26,5 +26,5 @@ settings:
   plasmaless.t_end: 83.4576
   plasmaless.dt: 0.005
   plasmaless.t_interval: 0.005
-  plasmaless.linear_model_dir: "/home/ITER/schneim/public/git/plasmaless-tokamak-circuits/linearModelSimple_105073_t84.417598"
+  plasmaless.linear_model_dir: "/home/ITER/schneim/public/git/plasma-tokamak-circuits/linearModelSimple_105073_t84.417598"
   plasmaless.operating_point: descriptor

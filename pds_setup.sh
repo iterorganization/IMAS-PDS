@@ -9,7 +9,7 @@
 # https://gitlab.eufus.psnc.pl/g2jfa/metis/-/tree/master/doc
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
 # https://torax.readthedocs.io/en/latest/installation.html
-# https://github.com/MireilleSchneider/plasmaless-tokamak-circuits/tree/IMAS_Muscle3/muscle3
+# https://github.com/federico-pesamosca/plasma-tokamak-circuits/tree/IMAS_Muscle3_with_plasma/muscle3
 
 INSTALL_PDS="true"
 INSTALL_IMAS_MUSCLE3="false"
@@ -31,7 +31,9 @@ BRANCH_NICE='master'
 BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
-BRANCH_PLASMALESS='IMAS_Muscle3'
+# IMAS_Muscle3_with_plasma: actor with the plasma-free model plus the optional linear and
+# vertical-instability models (IMAS_Muscle3 holds the plasma-free model only)
+BRANCH_PLASMALESS='IMAS_Muscle3_with_plasma'
 
 is_sourced() {
   [[ "${BASH_SOURCE[0]}" != "$0" ]]
@@ -159,7 +161,7 @@ CURR_INSTALL='START'
 
   # SET UP PLASMALESS (MATLAB coil+vessel model, actor of workflows/plasmaless_controller)
   CURR_INSTALL='PLASMALESS'
-  PLASMALESS_URL="https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git"
+  PLASMALESS_URL="https://github.com/federico-pesamosca/plasma-tokamak-circuits.git"
   if [ "$INSTALL_PLASMALESS" = "true" ] \
     && git ls-remote "$PLASMALESS_URL" &>/dev/null; then
     echo "############## INSTALLING PLASMALESS ##############"

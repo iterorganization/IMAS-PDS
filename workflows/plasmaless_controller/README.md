@@ -59,13 +59,15 @@ elsewhere. Nothing is read from pds-scenarios `<shot>/data/in` (DINA).
 Prerequisites: pds-scenarios data for the shot, a completed `metis_nice_inverse_from_dina`
 run for the shot in `cases/runs/metis_nice_inverse_from_dina_<shot>` (a symlink to another
 clone's run directory works), and the plasmaless repository installed in
-`local_installs/plasmaless-tokamak-circuits`. Install it once with `pds_setup.sh`
+`local_installs/plasma-tokamak-circuits`. Install it once with `pds_setup.sh`
 (set `INSTALL_PLASMALESS="true"`) or directly with
 `cd local_installs && bash ../setup_files/setup_plasmaless.sh`: it clones
-`https://github.com/MireilleSchneider/plasmaless-tokamak-circuits.git` on branch
-`IMAS_Muscle3` (`BRANCH_PLASMALESS`, which holds the MUSCLE3 actor; MATLAB code, nothing to
-build). A tag or commit may be passed instead to pin a version. There is no EasyBuild module
-for it, so the workflow imports the `plasmaless` program from
+`https://github.com/federico-pesamosca/plasma-tokamak-circuits.git` on branch
+`IMAS_Muscle3_with_plasma` (`BRANCH_PLASMALESS`; MATLAB code, nothing to build). That
+branch holds the MUSCLE3 actor with the plasma-free model and the optional linear and
+vertical-instability models, which need it; branch `IMAS_Muscle3` holds the plasma-free
+model only. A tag or commit may be passed instead to pin a version. There is no EasyBuild
+module for it, so the workflow imports the `plasmaless` program from
 `workflows/lib/local_programs.ymmsl`, which runs the actor from that checkout. The model
 machine description ships with the repository (`data/md_dd4`), so no
 `plasmaless.md_uri` is needed. Optionally, a developer can set `PLASMALESS_REPO` to their
