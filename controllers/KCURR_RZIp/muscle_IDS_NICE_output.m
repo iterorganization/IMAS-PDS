@@ -1,5 +1,7 @@
 function [coils_current,rgeo,zgeo,ip,t_out,stop_signal] = muscle_IDS_NICE_output()
 
+global z_cur
+
 % Receive the line average density package from MUSCLE3 via the instance
 % py-class living in the base WS of matlab. Matlab automatically converts
 % the data type into doubles for use in Simulink
@@ -100,3 +102,6 @@ else
     last_zgeo = zgeo;
     last_ip = ip;
 end
+
+z_cur = zgeo;
+
