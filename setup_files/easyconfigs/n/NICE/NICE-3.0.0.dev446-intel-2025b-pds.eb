@@ -70,6 +70,11 @@ files_to_copy = [
     (['runmatlab'], '.'),
 ]
 
+# The four actor binaries live in run/, not bin/, so EasyBuild's default guess
+# leaves them off PATH. The PDS workflows invoke them as $EBROOTNICE/run/<name>
+# and do not need this, but it makes them runnable by name after a module load.
+modextrapaths = {'PATH': 'run'}
+
 sanity_check_paths = {
     'files': ['run/%s' % t for t in _targets] + ['runmatlab/initNice4matlab.m'],
     'dirs': ['run/input', 'data'],
