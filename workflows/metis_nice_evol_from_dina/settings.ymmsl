@@ -41,6 +41,7 @@ settings:
   source_nice.t_min: 2.40
 
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  source_metis.interpolation_method: "linear"
   #source_metis.iterative: false
   #source_metis.t_min: 72.0
 
