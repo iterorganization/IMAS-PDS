@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 import numpy as np
 from imas import IDSFactory, convert_ids
+from imas.ids_defs import IDS_TIME_MODE_INDEPENDENT
 
 DD_VERSION = "4.0.0"
 
@@ -143,8 +144,15 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
 
 def preprocess_iron_core(db_out, db_md_iron_core):
     """
-    -ids needed for WEST, created an empty one for ITER.
+    -iron_core is a NICE input (needed for WEST). ITER has no iron core: with
+     db_md_iron_core None an empty static iron_core IDS is created; give a real URI
+     for machines that have one, e.g. WEST.
     """
+    if db_md_iron_core is None:
+        ids = IDSFactory(version=DD_VERSION).iron_core()
+        ids.ids_properties.homogeneous_time = IDS_TIME_MODE_INDEPENDENT  # static
+        db_out.put(ids)
+        return
     ids_orig = db_md_iron_core.get("iron_core", autoconvert=False)
     with quiet_expected_conversion_drops():
         ids = convert_ids(ids_orig, DD_VERSION)

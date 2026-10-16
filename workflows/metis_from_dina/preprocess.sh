@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds METIS's own input dataset from this shot's raw DINA source (METIS's IMAS DD layout
-# is workflow-specific, so nothing pre-bakes it into pds-scenarios). Ported from the old
+# is workflow-specific, so nothing pre-bakes it into the scenario data root). Ported from the old
 # metis_interpretative_from_dina/preprocess_data.sh + create_runnable_files.sh -- run once by
 # bin/pds-create-case, its output frozen into $CASE_DIR/preprocess/ (not rebuilt on every
 # bin/pds-run-case.sbatch). See that script's header for the PDS_REPO/SCENARIOS_REPO/SHOT/
@@ -13,11 +13,11 @@
 # $CASE_DIR/preprocess_settings.ymmsl, stacked in by bin/pds-run-case.sbatch.
 set -euo pipefail
 
-# SOURCE_URI (raw DINA). source.env is written to be sourced by pds-scenarios' own
-# tools/prepare, which sets $TOOLS first (its own tools/ dir, for MD_IRON_CORE) -- replicate
-# that here rather than pulling in tools/prepare itself. IMAS_VERSION comes from the PDS
+# SOURCE_URI (raw DINA). source.env is written to be sourced by preprocessing/prepare,
+# which sets $TOOLS first (its own dir, for MD_IRON_CORE) -- replicate
+# that here rather than pulling in preprocessing/prepare itself. IMAS_VERSION comes from the PDS
 # module already loaded.
-export TOOLS="$SCENARIOS_REPO/tools"
+export TOOLS="$PDS_REPO/preprocessing"
 source "$SCENARIOS_REPO/$SHOT/source.env"
 
 OUT="$CASE_DIR/preprocess"

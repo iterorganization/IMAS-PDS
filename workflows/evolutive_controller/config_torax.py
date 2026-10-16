@@ -1,10 +1,16 @@
 """Scenario-generic TORAX config for the evolutive_controller evolutive coupling.
 
-core_sources (the DINA-derived ECRH actuator trace) is imported the same way
-inverse_convergence imports its core_sources: over a MUSCLE3 port (waveform_editor.core_sources_out ->
-torax.core_sources_in_f), converted by the actor's receive_core_sources()/sources_from_IMAS()
-and merged in via torax_config.update_fields({"sources.<key>": ...}) -- see
-torax_muscle3/torax_actor.py.
+core_sources (the EC heating power) is imported the same way inverse_convergence imports
+its core_sources: over a MUSCLE3 port (waveform_editor.core_sources_out ->
+torax.core_sources_in_f). The Waveform-Editor "ec" source carries only
+global_quantities/power (a tendency fitted to DINA's summary power_additional by
+bin/pds-tendencies, per-pulse file cases/pulses/files/evolutive_controller_<case>_waveforms.yaml),
+which the actor puts into sources.ecrh.P_total below. Requires TORAX-MUSCLE3 with
+power-only source support (power_only_sources in torax_muscle3/torax_actor.py), which
+maps an ec source carrying only global_quantities/power to sources.ecrh.P_total.
+DINA's own core_sources is not imported: its source(1) is the "total" source
+(additional + ohmic - radiation) and would double-count the ohmic heating and the
+radiation computed below.
 
 t_initial/t_final below are placeholders that the actor overwrites at run time from the
 received equilibrium.
@@ -42,7 +48,7 @@ CONFIG = {
     # circular geometry is only for testing and prototyping
     "geometry": {
         "geometry_type": "circular",
-        "n_rho": 25,
+        "n_rho": 50,
     },
     "pedestal": {},
     "mhd": {
@@ -52,16 +58,17 @@ CONFIG = {
         },
     },
     "sources": {
-        # Physics-based: self-consistent transport, not taken from DINA.
+        # Physics-based: self-consistent, not taken from DINA (same models as
+        # inverse_convergence/config_torax.py).
         "ohmic": {},
         "fusion": {},
         "ei_exchange": {},
-        "bremsstrahlung": {"mode": "ZERO"},
-        "impurity_radiation": {
-            "model_name": "P_in_scaled_flat_profile",
-            "fraction_P_heating": 0.3,
-        },
-        # Actuators: 'ecrh' added by cases/overrides/<workflow>_<shot>_config_torax.py.
+        "bremsstrahlung": {},  # Wesson model from Z_eff/impurity above
+        "impurity_radiation": {},  # Mavrin fit from the Ne impurity above
+        # EC deposition model (gaussian_lin_liu, same gaussian as inverse_convergence).
+        # P_total is set at run time by the actor from the waveform's ec power (0 if
+        # none is received).
+        "ecrh": {"gaussian_location": 0.3, "gaussian_width": 0.33, "P_total": 0.0},
     },
     "transport": {
         "model_name": "qlknn",

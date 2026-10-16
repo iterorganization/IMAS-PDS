@@ -55,6 +55,7 @@ end
 % exited -- it hangs retrying the dead connection for ~5 minutes, then
 % crashes with "OSError: Bad file descriptor" instead of exiting cleanly
 % (confirmed live). `if` runs the one cycle that exists and stops there.
+muscle_already_shut_down = false;
 if instance.reuse_instance()
     %% Prepare IDS Python object
     % equilibrium_python=py.imas.equilibrium();

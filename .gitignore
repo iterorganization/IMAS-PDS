@@ -27,6 +27,17 @@ ymmsl_files/*
 cases/*/
 !cases/overrides/
 !cases/input/
+# pulse files (bin/pds-configure input) are sources, not generated case folders
+!cases/pulses/
+# generated cache, rebuilt by bin/pds-configure / bin/pds-create-case from
+# cases/pulses/*.yaml; never committed (only its README is tracked)
+cases/overrides/*
+!cases/overrides/README.md
+
+# Prepared scenario data (default SCENARIOS_REPO, written by preprocessing/prepare):
+# generated, never committed. Only the README is tracked.
+scenarios/*
+!scenarios/README.md
 
 !*.template
 

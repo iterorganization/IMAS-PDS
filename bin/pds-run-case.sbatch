@@ -43,7 +43,7 @@ OVERLAYS=("$@")
 
 PDS_REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 export PDS_REPO
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
+export SCENARIOS_REPO="${SCENARIOS_REPO:-$PDS_REPO/scenarios}"
 
 CASE_DIR="$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$CASE_ARG"

@@ -21,7 +21,7 @@ equilibrium for TORAX's next geometry. No outer loop and no convergence criterio
 two simply advance together until the time window ends.
 
 :Workflow: ``evolutive_controller`` -- :src:`workflows/evolutive_controller/README.md`
-:Scenario: DINA shot 105073, in ``pds-scenarios``
+:Scenario: DINA shot 105073, prepared into ``scenarios/`` from ``cases/pulses/105073.yaml``
 :Output: ``<run_dir>/out_nice``, ``<run_dir>/out_torax`` and ``<run_dir>/out_controller``
 
 Running it
