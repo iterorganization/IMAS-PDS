@@ -42,7 +42,7 @@
     <zPointsZone1>-3.5 -3.86 -3.20 -2.81</zPointsZone1>
     <rInPointZone1>5.1</rInPointZone1>
     <zInPointZone1>-3.3</zInPointZone1>
-    <zone1TriangleArea>0.001</zone1TriangleArea>
+    <zone1TriangleArea>0.00025</zone1TriangleArea>
 
     <refinedZone2>0</refinedZone2>
     <nPointsZone2>4</nPointsZone2>
@@ -58,11 +58,11 @@
     <zPointsZone3>0.2 0.2 0.4 0.2 0.2 1.0 1.0 0.8 1.0 1.0</zPointsZone3>
     <rInPointZone3>6.1</rInPointZone3>
     <zInPointZone3>0.3</zInPointZone3>
-    <zone3TriangleArea>0.001</zone3TriangleArea>
+    <zone3TriangleArea>0.00025</zone3TriangleArea>
 
 	<vacuumTriangleArea>0.008</vacuumTriangleArea>
 	<airTriangleArea>0.2</airTriangleArea>
-	<airInTriangleArea>0.02</airInTriangleArea>
+	<airInTriangleArea>0.005</airInTriangleArea>
 	<ironTriangleArea>0.005</ironTriangleArea>
 	<coilTriangleArea>0.05</coilTriangleArea>
 	<vesselTriangleArea>0.05</vesselTriangleArea>
