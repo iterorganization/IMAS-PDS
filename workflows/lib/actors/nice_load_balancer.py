@@ -10,20 +10,16 @@ working purely on whole traces -- the per-slice/scatter/gather/assemble all live
 Lanes fixed to the NICE inverse contract. STATIC lanes (wall/pf_passive/iron_core) are
 forwarded whole to every worker call (NICE re-reads them each F_INIT); the rest are sliced.
 
-Each equilibrium slice is re-gauged before scatter (_anchor_psi). NICE derives its desired
-boundary flux, and the normalization of the p'/ff' coordinate, from profiles_1d.psi[-1], so
-whatever gauge the Picard state is in would become the coil-current target. Shifting the
-whole psi array so its edge lands on the designed global_quantities.psi_boundary anchors
-every iteration to the designed transformer-flux state; p'(psi)/ff'(psi) are invariant
-under it. Slices without psi_boundary or without a psi profile pass through unchanged.
+Each equilibrium slice is re-gauged before scatter, onto the designed psi_boundary -- see
+psi_anchor, which holds the shift and applies it whole-trace for the batch-mode inverse.
 """
 
 import logging
 
-import numpy as np
 from imas import DBEntry, IDSFactory
 from imas.ids_defs import CLOSEST_INTERP
-from libmuscle import Instance, Message
+from libmuscle import Instance, InstanceFlags, Message
+from psi_anchor import anchor_psi
 from ymmsl.v0_2 import Operator
 
 logger = logging.getLogger()
@@ -51,19 +47,20 @@ def _assemble(slices, name):
 
 
 def _anchor_psi(ser):
-    """Shift one equilibrium slice's profiles_1d.psi so psi[-1] == the designed
-    psi_boundary (see module docstring). Returns (slice, shift) -- shift is None
-    when the slice carries no anchor or no psi profile."""
+    """anchor_psi on one serialized slice. Returns (slice, shift); shift is None when
+    the slice carries no anchor or no psi profile."""
     eq = IDSFactory().new("equilibrium")
     eq.deserialize(ser)
-    ts = eq.time_slice[0]
-    if not ts.global_quantities.psi_boundary.has_value or not len(ts.profiles_1d.psi):
-        return ser, None
-    shift = float(ts.global_quantities.psi_boundary) - float(ts.profiles_1d.psi[-1])
-    if shift == 0.0:
-        return ser, 0.0
-    ts.profiles_1d.psi = np.asarray(ts.profiles_1d.psi) + shift
-    return eq.serialize(), shift
+    shift = anchor_psi(eq)[0]
+    return (ser if not shift else eq.serialize()), shift
+
+
+def _slice_times(eq_trace):
+    with DBEntry("imas:memory?path=/", "w") as db:
+        eq = IDSFactory().new("equilibrium")
+        eq.deserialize(eq_trace)
+        db.put(eq)
+        return [float(t) for t in db.get("equilibrium").time]
 
 
 def main() -> None:
@@ -73,16 +70,23 @@ def main() -> None:
             Operator.O_I: [f"{lane}_scatter[]" for lane in FWD_LANES],
             Operator.S: [f"{lane}_gather[]" for lane in RES_LANES],
             Operator.O_F: [f"{lane}_out_f" for lane in RES_LANES],
-        }
+        },
+        flags=InstanceFlags.USES_CHECKPOINT_API,
     )
     while inst.reuse_instance():
-        traces = {lane: inst.receive(f"{lane}_in").data for lane in FWD_LANES}
-        with DBEntry("imas:memory?path=/", "w") as db:
-            eq = IDSFactory().new("equilibrium")
-            eq.deserialize(traces["equilibrium"])
-            db.put(eq)
-            times = [float(t) for t in db.get("equilibrium").time]
+        if inst.resuming():
+            snapshot = inst.load_snapshot().data
+        if inst.should_init():
+            traces = {lane: inst.receive(f"{lane}_in").data for lane in FWD_LANES}
+            res = None
+            done = 0
+        else:
+            traces, res, done = snapshot["traces"], snapshot["res"], snapshot["done"]
+            logger.info("nice_load_balancer: resuming at slice %d", done)
+        times = _slice_times(traces["equilibrium"])
         n = len(times)
+        if res is None:
+            res = {lane: [None] * n for lane in RES_LANES}
         per = {
             lane: _split(traces[lane], lane, times)
             for lane in FWD_LANES
@@ -102,9 +106,13 @@ def main() -> None:
             max((abs(s) for s in shifts), default=0.0),
         )
 
-        res = {lane: [None] * n for lane in RES_LANES}
-        started = done = 0
+        started = done
         while done < n:
+            # Only snapshot with nothing in flight, stamped with the next slice's time
+            # so it lines up with the workers' implicit snapshots on that F_INIT.
+            if started == done and inst.should_save_snapshot(times[done]):
+                state = {"traces": traces, "res": res, "done": done}
+                inst.save_snapshot(Message(times[done], data=state))
             while started - done < w and started < n:
                 slot, t = started % w, times[started]
                 for lane in FWD_LANES:
@@ -119,6 +127,9 @@ def main() -> None:
             inst.send(
                 f"{lane}_out_f", Message(times[0], data=_assemble(res[lane], lane))
             )
+
+        if inst.should_save_final_snapshot():
+            inst.save_final_snapshot(Message(times[-1]))
 
 
 if __name__ == "__main__":

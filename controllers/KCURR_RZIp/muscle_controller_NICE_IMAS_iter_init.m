@@ -143,12 +143,10 @@ if instance.reuse_instance()
     plasma_duration=t_max-t_start;
 
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
-    % NICE develop honours nice_evo_rd.t_end and ends the run with
-    % next_timestamp=None; libmuscle is then still up, so one more
-    % reuse_instance() receives the ClosePort and runs the normal shutdown
-    % (otherwise peers hang/crash at teardown). Skipped when libmuscle
-    % already shut down on the ClosePort error path (older NICE builds).
-    if ~evalin('base','exist(''muscle_already_shut_down'',''var'') && muscle_already_shut_down')
+
+    % A clean next_timestamp=None ending leaves nice_evo_rd/sink_control waiting for our
+    % ClosePort; this last reuse_instance() returns false and sends it, then deregisters.
+    if exist('nice_sent_final_message', 'var') && nice_sent_final_message
         instance.reuse_instance();
     end
 end

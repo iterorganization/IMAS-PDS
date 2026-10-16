@@ -45,12 +45,13 @@ Coupling
 
 ``equilibrium`` and ``transport`` are sub-models rather than single programs, so what
 sits behind them can be swapped without touching the coupling above. ``equilibrium``
-load balances the per-slice NICE solves over N workers:
+solves the whole trace in one batch call:
 
 .. coupling-diagram:: workflows/inverse_convergence/workflow.ymmsl
    :model: nice_inverse
 
-   The load balancer scatters slices to the workers and gathers the results back.
+   ``psi_anchor`` re-gauges the trace onto the designed ``psi_boundary``; ``nice`` then
+   solves it in batch mode, chunks of consecutive slices in parallel over its threads.
 
 Workflow reference
 ------------------
