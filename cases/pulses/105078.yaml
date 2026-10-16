@@ -25,11 +25,9 @@ time:
   t_start: 2.5
   t_end: 282.9
 
-# EC heating (added 2026-10-15): cases/pulses/files/inverse_convergence_105078_waveforms.yaml
-# holds the EC power tendency fitted to DINA's summary power_additional by
-# bin/pds-tendencies, ready for an inverse_convergence case; with `workflows: []` it is
-# not referenced here (a settings: entry needs its workflow listed above). To run
-# inverse_convergence, add it to workflows: and
+# EC power tendency fitted to the DINA summary (regenerate with bin/pds-tendencies):
+# cases/pulses/files/inverse_convergence_105078_waveforms.yaml. Not referenced here
+# because `workflows: []`; to run inverse_convergence, list it in workflows: and add
 #   settings: {inverse_convergence: {waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105078_waveforms.yaml}}
 
 postprocess:

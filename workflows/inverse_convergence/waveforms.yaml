@@ -61,17 +61,16 @@ targets:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:
     - {ref: input}
-  # EC heating: pulse data, not generic. Since 2026-10-15 the per-pulse waveform file
-  # written by bin/pds-tendencies (cases/pulses/files/<wf>_<case>_waveforms.yaml, a copy
-  # of this file referenced from the pulse file through
-  # settings.<wf>.waveform_editor.waveforms) carries the EC power as a piecewise-linear
-  # tendency of DINA's summary heating_current_drive/power_additional; the TORAX actor
-  # reads it into sources.ecrh.P_total and TORAX computes the deposition, the ohmic
-  # heating and the radiation itself (config_torax.py). This generic file only declares
-  # the source with a 0 W placeholder: a case built without a per-pulse file runs
-  # WITHOUT EC heating. Before, DINA's whole core_sources was copied here and its
-  # source(1) ("total" = additional + ohmic - radiation) relabelled "ec", which
-  # double-counted the ohmic heating and the radiation with TORAX's own models.
+  # EC heating: pulse data. The per-pulse waveform file written by bin/pds-tendencies
+  # (cases/pulses/files/<wf>_<case>_waveforms.yaml, a copy of this file referenced from
+  # the pulse file through settings.<wf>.waveform_editor.waveforms) carries only the EC
+  # power, as a piecewise-linear tendency of DINA's summary
+  # heating_current_drive/power_additional; the TORAX actor reads it into
+  # sources.ecrh.P_total and TORAX computes the deposition, the ohmic heating and the
+  # radiation itself (config_torax.py). This generic file only declares the source with
+  # a 0 W placeholder: a case built without a per-pulse file runs WITHOUT EC heating.
+  # DINA's own core_sources is not imported: its source(1) is the "total" source
+  # (additional + ohmic - radiation) and would double-count TORAX's own models.
   core_sources/source(1)/identifier/name:
     - {value: ec}
   core_sources/source(1)/identifier/index:

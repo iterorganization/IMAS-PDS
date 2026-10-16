@@ -15,8 +15,8 @@
 # (cases/pulses/<case>.yaml prepare.summary/prepare.source, else
 # $SCENARIOS_REPO/<shot>/source.env), fits a piecewise-linear tendency within --tol
 # (default 0.1 MW) and prints, or writes into a Waveform-Editor yaml, the EC power
-# entries that replace the former copy of DINA's core_sources relabelled "ec". Details and
-# the yaml forms: pds/tendencies.py (module docstring).
+# entries of the pulse design. Details and the yaml forms: pds/tendencies.py (module
+# docstring).
 #
 # Runs in the IMAS-MUSCLE3/1.0.0-intel-2025b-pds environment (loaded here if the current
 # python3 lacks PyYAML/numpy/imas-python), like bin/pds-configure; any environment with

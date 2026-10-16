@@ -210,12 +210,12 @@ The TORAX workflows (`inverse_convergence`, `evolutive_controller`) take the EC 
 power from the Waveform-Editor design: `core_sources/source(1)` named `ec` with a
 `global_quantities/power` tendency, which the TORAX actor puts into
 `sources.ecrh.P_total` (TORAX then computes the EC deposition, the ohmic heating and
-the radiation itself: `workflows/<wf>/config_torax.py`). Until 2026-10-15 the generic
-`waveforms.yaml` instead copied DINA's whole `core_sources` and relabelled its
-`source(1)` ("total" = additional + ohmic - radiation) as `ec`, which double-counted the
-ohmic and radiation terms. The generic `workflows/<wf>/waveforms.yaml` now only declares
-the source with a **0 W placeholder**: a case built without the per-pulse file below runs
-without EC heating.
+the radiation itself: `workflows/<wf>/config_torax.py`). The generic
+`workflows/<wf>/waveforms.yaml` only declares the source with a **0 W placeholder**: a
+case built without the per-pulse file below runs without EC heating. DINA's own
+`core_sources` is not imported: its `source(1)` is the "total" source (additional +
+ohmic - radiation), which would double-count the ohmic and radiation terms TORAX
+computes itself.
 
 For each shot and TORAX workflow, write the per-pulse waveform file (a copy of the generic
 one whose only difference is the EC power, fitted to DINA's
@@ -260,10 +260,10 @@ config); the per-pulse copies are generated and marked, so a future `pds-configu
 merge of a pulse-level EC fragment into the generic file can replace them without
 changing the pulse files.
 
-The TORAX actor side (`power_only_sources()` in `torax_muscle3/torax_actor.py`) is a
-local change of `local_installs/TORAX-MUSCLE3` that still has to be upstreamed to
-github.com/iterorganization/TORAX-MUSCLE3; the `torax` module of
-`workflows/lib/easybuild_programs.ymmsl` does not have it (see `docs/waveform_fix_notes.md`).
+Requires TORAX-MUSCLE3 with power-only source support (`power_only_sources` in
+`torax_muscle3/torax_actor.py`), which maps an `ec` source carrying only
+`global_quantities/power` to `sources.ecrh.P_total`. Design note:
+`docs/waveform_fix_notes.md`.
 
 ### Any other setting: the `settings:` pass-through
 

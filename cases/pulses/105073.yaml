@@ -56,9 +56,8 @@ transport_calibration:
 settings:
   inverse_convergence:
     # combined-layout waveform design (input_md -> data/in) that also takes psi_boundary
-    # from the DINA input instead of the loop's equilibrium, and (2026-10-15) carries the EC
-    # power tendency fitted to DINA's summary power_additional by bin/pds-tendencies
-    # (replaces the copy of DINA's core_sources relabelled "ec")
+    # from the DINA input instead of the loop's equilibrium, and carries the EC power
+    # tendency fitted to the DINA summary (regenerate with bin/pds-tendencies)
     waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_waveforms.yaml
     # NICE inverse with a tighter coil-current tolerance (abserrIg 3e4 instead of 3e5)
     equilibrium.nice.xml_path: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_config_nice_inverse.xml

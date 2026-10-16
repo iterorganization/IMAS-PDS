@@ -82,10 +82,10 @@ if that lists this workflow) into numbered files under the case folder; `pds-run
   whose `global_quantities/power` is a tendency fitted to DINA's summary `power_additional`
   by `bin/pds-tendencies` (per-pulse file `cases/pulses/files/evolutive_controller_<case>_waveforms.yaml`,
   referenced from the pulse file); the actor puts it into `sources.ecrh.P_total` and TORAX
-  computes deposition, ohmic heating and radiation itself. Until 2026-10-15 `waveforms.yaml`
-  copied DINA's raw `core_sources` and relabelled `source(1)` ("total" = additional + ohmic -
-  radiation) as `'ec'`, which `sources_from_IMAS()` prescribed as ECRH on top of TORAX's own
-  ohmic source: a double count. The generic `waveforms.yaml` now carries a 0 W placeholder.
+  computes deposition, ohmic heating and radiation itself; the generic `waveforms.yaml`
+  carries a 0 W placeholder. Do not import DINA's raw `core_sources` instead: its
+  `source(1)` is the "total" source (additional + ohmic - radiation), which
+  `sources_from_IMAS()` would prescribe as ECRH on top of TORAX's own ohmic source.
 - `magnetic_controller`'s MATLAB script points `pyenv()` explicitly at
   `$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
   (`which python`): PATH can resolve to an unrelated Python with its own muscle3 install,

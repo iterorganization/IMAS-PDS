@@ -5,11 +5,11 @@ from the equilibrium sequence the actor receives (t_initial/t_final = first/last
 and the EC heating power is taken from the core_sources IDS sent to the actor's
 core_sources_in_f port: the Waveform-Editor "ec" source carries only
 global_quantities/power (a tendency fitted to DINA's summary power_additional by
-bin/pds-tendencies), which the actor puts into sources.ecrh.P_total below
-(TORAX-MUSCLE3 torax_actor.py power_only_sources(), a local change of
-local_installs/TORAX-MUSCLE3 that still has to be upstreamed to
-github.com/iterorganization/TORAX-MUSCLE3; the TORAX module does not have it). TORAX
-computes the EC deposition, the ohmic heating and the radiation itself.
+bin/pds-tendencies), which the actor puts into sources.ecrh.P_total below. Requires
+TORAX-MUSCLE3 with power-only source support (power_only_sources in
+torax_muscle3/torax_actor.py), which maps an ec source carrying only
+global_quantities/power to sources.ecrh.P_total. TORAX computes the EC deposition,
+the ohmic heating and the radiation itself.
 t_initial/t_final below are placeholders that the actor overwrites at run time.
 """
 
@@ -55,23 +55,20 @@ CONFIG = {
         },
     },
     "sources": {
-        # 2026-10-15: the DINA "total" source (additional + ohmic - radiation, relabelled
-        # "ec") is no longer imported by any waveform file. The EC power is a
-        # Waveform-Editor waveform (core_sources/source(1)/global_quantities/power, read
-        # by the TORAX actor into sources.ecrh.P_total) and TORAX computes the ohmic
-        # heating, the radiation and the EC deposition itself. A waveform file that
-        # still imports the DINA total source as "ec" would double-count the ohmic and
-        # radiation terms with this block.
+        # The EC power is a Waveform-Editor waveform (core_sources/source(1)/
+        # global_quantities/power, read by the TORAX actor into sources.ecrh.P_total);
+        # TORAX computes the ohmic heating, the radiation and the EC deposition itself.
+        # A waveform file importing DINA's "total" source (additional + ohmic -
+        # radiation) as "ec" would double-count the ohmic and radiation terms with
+        # this block.
         "fusion": {},
         "ei_exchange": {},  # internal e<->i transfer
-        "ohmic": {},  # 2026-10-15: self-consistent ohmic heating (was off)
-        "bremsstrahlung": {},  # 2026-10-15: Wesson model from Z_eff/impurity above (was ZERO)
-        "impurity_radiation": {},  # 2026-10-15: Mavrin fit from the Ne impurity above
-        # 2026-10-15: EC deposition model (gaussian_lin_liu). P_total is overwritten at run
-        # time by the actor from the received core_sources "ec" power waveform (stays 0 if
-        # none is received). Gaussian fitted to the positive part of DINA 105073 source(1)
-        # electron heating at 60-180 s (centre 0.30, width 0.33); current drive efficiency
-        # left at the TORAX default.
+        "ohmic": {},  # self-consistent ohmic heating
+        "bremsstrahlung": {},  # Wesson model from Z_eff/impurity above
+        "impurity_radiation": {},  # Mavrin fit from the Ne impurity above
+        # EC deposition model (gaussian_lin_liu; gaussian fitted to DINA 105073's electron
+        # heating profile, current drive efficiency at the TORAX default). P_total is set
+        # at run time by the actor from the waveform's ec power (0 if none is received).
         "ecrh": {"gaussian_location": 0.3, "gaussian_width": 0.33, "P_total": 0.0},
     },
     "transport": {

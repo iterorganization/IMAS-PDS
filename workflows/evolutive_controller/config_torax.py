@@ -2,15 +2,15 @@
 
 core_sources (the EC heating power) is imported the same way inverse_convergence imports
 its core_sources: over a MUSCLE3 port (waveform_editor.core_sources_out ->
-torax.core_sources_in_f). Since 2026-10-15 the Waveform-Editor "ec" source carries only
+torax.core_sources_in_f). The Waveform-Editor "ec" source carries only
 global_quantities/power (a tendency fitted to DINA's summary power_additional by
 bin/pds-tendencies, per-pulse file cases/pulses/files/evolutive_controller_<case>_waveforms.yaml),
-which the actor puts into sources.ecrh.P_total below (TORAX-MUSCLE3 torax_actor.py
-power_only_sources(), a local change of local_installs/TORAX-MUSCLE3 that still has to
-be upstreamed to github.com/iterorganization/TORAX-MUSCLE3; the TORAX module does not
-have it). Before, DINA's whole core_sources was copied and its source(1) ("total" =
-additional + ohmic - radiation) relabelled "ec", so sources_from_IMAS() prescribed that
-net profile as ecrh while the ohmic source below was already on: a double count.
+which the actor puts into sources.ecrh.P_total below. Requires TORAX-MUSCLE3 with
+power-only source support (power_only_sources in torax_muscle3/torax_actor.py), which
+maps an ec source carrying only global_quantities/power to sources.ecrh.P_total.
+DINA's own core_sources is not imported: its source(1) is the "total" source
+(additional + ohmic - radiation) and would double-count the ohmic heating and the
+radiation computed below.
 
 t_initial/t_final below are placeholders that the actor overwrites at run time from the
 received equilibrium.
@@ -59,17 +59,15 @@ CONFIG = {
     },
     "sources": {
         # Physics-based: self-consistent, not taken from DINA (same models as
-        # inverse_convergence/config_torax.py since 2026-10-15; before: bremsstrahlung
-        # ZERO and impurity_radiation P_in_scaled_flat_profile with fraction 0.3).
+        # inverse_convergence/config_torax.py).
         "ohmic": {},
         "fusion": {},
         "ei_exchange": {},
         "bremsstrahlung": {},  # Wesson model from Z_eff/impurity above
         "impurity_radiation": {},  # Mavrin fit from the Ne impurity above
-        # EC deposition model (gaussian_lin_liu). P_total is overwritten at run time by
-        # the actor from the received core_sources "ec" power waveform (stays 0 if none
-        # is received). Same gaussian as inverse_convergence (fitted to the positive part
-        # of DINA 105073 source(1) electron heating at 60-180 s).
+        # EC deposition model (gaussian_lin_liu, same gaussian as inverse_convergence).
+        # P_total is set at run time by the actor from the waveform's ec power (0 if
+        # none is received).
         "ecrh": {"gaussian_location": 0.3, "gaussian_width": 0.33, "P_total": 0.0},
     },
     "transport": {

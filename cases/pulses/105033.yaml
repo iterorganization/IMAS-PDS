@@ -31,10 +31,7 @@ time:
 # No transport_calibration: the generic qlknn transport is used as-is; calibrate only
 # after a first comparison with DINA.
 
-# EC heating (added 2026-10-15): per-pulse waveform files with the EC power tendency
-# fitted to DINA's summary power_additional by bin/pds-tendencies (the generic
-# waveforms.yaml has a 0 W placeholder); TORAX computes ohmic heating and radiation
-# itself.
+# EC power tendency fitted to the DINA summary; regenerate with bin/pds-tendencies
 settings:
   inverse_convergence:
     waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105033_waveforms.yaml
