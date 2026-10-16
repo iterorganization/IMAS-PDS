@@ -34,9 +34,12 @@ time:
   # first step, regardless of the configured dt (ruled out a source.dt/label-mismatch
   # theory -- identical blowup either way). t=84.3176 steps cleanly through the full
   # window; confirmed live. The source loads up to 130 s (forward_load_t_end) while the
-  # forward simulation stops at 84.7 s (forward_t_end).
+  # forward simulation stops at 84.6 s (forward_t_end).
   forward_t_start: 84.31759781205469
-  forward_t_end: 84.7
+  # 84.6, not 84.7: develop b3581c9 (cases/overrides/evolutive_controller_105073.ymmsl) ends before
+  # t=84.6176, from which step on repeated runs on identical input diverge (sometimes NaN +
+  # nice_evo_rd segfault); ported here because the override is a generated cache in this design.
+  forward_t_end: 84.6
   forward_load_t_end: 130.0
   forward_source_dt: 1
   forward_dt: 0.01
