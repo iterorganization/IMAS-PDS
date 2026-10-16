@@ -35,5 +35,13 @@ transport_calibration:
   model: bohm-gyrobohm
   chi_multiplier: {0: 1.8, 40: 1.8, 60: 4.0, 80: 4.0}
 
+# EC heating (added 2026-10-15): per-pulse waveform files with the EC power tendency
+# fitted to DINA's summary power_additional by bin/pds-tendencies (the generic
+# waveforms.yaml has a 0 W placeholder); TORAX computes ohmic heating and radiation
+# itself.
+settings:
+  inverse_convergence:
+    waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105099_waveforms.yaml
+
 postprocess:
   t_list: [20, 35, 60]

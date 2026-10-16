@@ -24,7 +24,9 @@ The PDS tool is currently set up to be used on SDCC and needs significant manual
 # Simulating a new pulse
 
 Everything specific to a shot is set in one pulse file, `cases/pulses/<shot>.yaml`;
-`bin/pds-configure` turns it into the prepared scenario data and the case folders.
+`bin/pds-configure` turns it into the prepared scenario data and the case folders;
+`bin/pds-tendencies` fits the EC heating power of the shot (from the DINA summary) into
+the per-pulse waveform file the pulse file points at.
 
 Read these, in this order:
 1. `cases/pulses/README.md` — **start here**: configure the pulse (Step 0), prepare the
@@ -38,6 +40,8 @@ Read these, in this order:
 
 ```bash
 cp cases/pulses/TEMPLATE.yaml cases/pulses/<shot>.yaml   # Step 0: edit this file
+bin/pds-tendencies <shot> --write cases/pulses/files/inverse_convergence_<shot>_waveforms.yaml \
+                          --from workflows/inverse_convergence/waveforms.yaml   # Step 0b: EC power
 bin/pds-configure cases/pulses/<shot>.yaml --prepare     # Step 1
 bin/pds-configure cases/pulses/<shot>.yaml --create      # Step 2
 bin/pds-run-case cases/<workflow>_<shot>                 # Step 3

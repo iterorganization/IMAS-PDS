@@ -36,5 +36,13 @@ time:
   forward_load_t_end: 256.0
   forward_dt: 0.005
 
+# EC heating (added 2026-10-15): per-pulse waveform files with the EC power tendency
+# fitted to DINA's summary power_additional by bin/pds-tendencies (the generic
+# waveforms.yaml has a 0 W placeholder); TORAX computes ohmic heating and radiation
+# itself.
+settings:
+  evolutive_controller:
+    waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/evolutive_controller_105084_waveforms.yaml
+
 postprocess:
   t_list: [10, 150, 270]

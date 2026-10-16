@@ -123,8 +123,8 @@ Repository layout
    * - Directory
      - Contents
    * - ``bin/``
-     - The user-facing entry points: ``pds-create-case``,
-       ``pds-run-case.sbatch``.
+     - The user-facing entry points: ``pds-configure``, ``pds-tendencies``,
+       ``pds-create-case``, ``pds-run-case``, ``pds-run-case.sbatch``.
    * - ``workflows/``
      - One directory per workflow, plus ``lib/`` (shared program definitions and
        in-repo actors) and the per-workflow utility directories.

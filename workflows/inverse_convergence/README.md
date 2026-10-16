@@ -10,7 +10,9 @@ Each iteration the loop:
 - The `waveform_editor`: 
   - overlays the designed Ip(t)/B0 onto the target equilibrium
   - Mirrors core_profiles through unchanged
-  - Imports the ECRH heating
+  - Imports the EC heating power (a per-pulse tendency fitted to DINA's summary
+    `power_additional` by `bin/pds-tendencies`; TORAX computes deposition, ohmic heating
+    and radiation itself)
   - Re-exports the scenario's static wall/pf_passive/iron_core machine description
     to the NICE load balancer
 - The parallel NICE-inverse `load_balancer` solves it per time slice
@@ -75,8 +77,8 @@ from DINA and machine-description sources.
 Produced by `preprocessing/prepare <shot>` (converter in `preprocessing/dina2pds/`; ITER has no iron core, so the converter writes an empty static `iron_core`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace, plus `core_profiles`
-  (electron/ion temperature and density) for TORAX and the ECRH heating trace picked up via
-  `core_sources`.
+  (electron/ion temperature and density) for TORAX and the EC heating power picked up via
+  `core_sources` (`source(1)` "ec", `global_quantities/power` only).
 - Machine descriptions for `pf_active`, `pf_passive`, `wall`, and `iron_core`.
 - The `pf_active` machine description must have exactly one element per coil in the `elements`
   array of structures, and each coil must carry a resistance value -- both required by NICE

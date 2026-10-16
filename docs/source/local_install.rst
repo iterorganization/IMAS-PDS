@@ -76,6 +76,12 @@ be run directly from inside ``run/``. Each clones its tool and builds it into
      - ``run/TORAX-MUSCLE3/venv``
      - Force-installs ``muscle3==0.10.0`` over the package's own pin, to match
        the manager.
+       The EC power waveform of the TORAX workflows needs the actor's
+       ``power_only_sources()`` (``torax_muscle3/torax_actor.py``), a local change
+       of the PDS checkout's ``local_installs/TORAX-MUSCLE3`` since 2026-10-15 that
+       still has to be upstreamed to
+       `TORAX-MUSCLE3 <https://github.com/iterorganization/TORAX-MUSCLE3>`_; the
+       ``torax`` module does not have it (see ``docs/waveform_fix_notes.md``).
    * - ``setup_metis.sh``
      - ``run/metis/``
      - MATLAB, no venv. Source is ssh-gated on ``git.iter.org``.

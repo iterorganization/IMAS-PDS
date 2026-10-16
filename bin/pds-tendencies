@@ -1,0 +1,50 @@
+#!/bin/bash
+# pds-tendencies -- EC power tendencies of a DINA pulse from its summary IDS.
+#
+#   pds-tendencies <pulse> [--tol MW] [--ids core_sources|pulse_schedule]
+#                  [--write FILE [--from GENERIC]] [--check FILE]
+#   pds-tendencies --uri <summary-entry-uri> [...]
+#
+#   e.g. pds-tendencies 105073                   # print the core_sources EC entries
+#        pds-tendencies 105073 --ids pulse_schedule
+#        pds-tendencies 105033 --write cases/pulses/files/inverse_convergence_105033_waveforms.yaml \
+#                              --from workflows/inverse_convergence/waveforms.yaml
+#        pds-tendencies 105073 --check cases/pulses/files/inverse_convergence_105073_waveforms.yaml
+#
+# Reads summary/heating_current_drive/power_additional of the pulse's DINA entry
+# (cases/pulses/<case>.yaml prepare.summary/prepare.source, else
+# $SCENARIOS_REPO/<shot>/source.env), fits a piecewise-linear tendency within --tol
+# (default 0.1 MW) and prints, or writes into a Waveform-Editor yaml, the EC power
+# entries that replace the former copy of DINA's core_sources relabelled "ec". Details and
+# the yaml forms: pds/tendencies.py (module docstring).
+#
+# Runs in the IMAS-MUSCLE3/1.0.0-intel-2025b-pds environment (loaded here if the current
+# python3 lacks PyYAML/numpy/imas-python), like bin/pds-configure; any environment with
+# imas-python >= 2 (e.g. IMAS-Python/2.3.0-intel-2025b) works too.
+set -euo pipefail
+
+PDS_REPO="${PDS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+export PDS_REPO
+export SCENARIOS_REPO="${SCENARIOS_REPO:-$PDS_REPO/scenarios}"
+# The raw DINA entries are DD 3; the summary is read as stored (autoconvert off), so the
+# requested DD version only has to exist. No HDF5 file locking on the shared GPFS.
+export IMAS_VERSION="${IMAS_VERSION:-4.0.0}"
+export HDF5_USE_FILE_LOCKING="${HDF5_USE_FILE_LOCKING:-FALSE}"
+
+if ! python3 -c "import yaml, numpy, imas" >/dev/null 2>&1; then
+  : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
+  if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
+    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
+    if [[ -f "$LMOD_INIT" ]]; then
+      source "$LMOD_INIT"
+      module use "$PDS_MODULEPATH" 2>/dev/null || true
+      module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
+    fi
+  fi
+  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+fi
+
+# Run tendencies.py as a script, not "python3 -m pds.tendencies": importing the pds
+# package runs pds/__init__.py, which needs the installed package metadata (absent in a
+# plain checkout).
+exec python3 "$PDS_REPO/pds/tendencies.py" "$@"

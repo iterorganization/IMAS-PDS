@@ -56,14 +56,17 @@ transport_calibration:
 settings:
   inverse_convergence:
     # combined-layout waveform design (input_md -> data/in) that also takes psi_boundary
-    # from the DINA input instead of the loop's equilibrium
+    # from the DINA input instead of the loop's equilibrium, and (2026-10-15) carries the EC
+    # power tendency fitted to DINA's summary power_additional by bin/pds-tendencies
+    # (replaces the copy of DINA's core_sources relabelled "ec")
     waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_waveforms.yaml
     # NICE inverse with a tighter coil-current tolerance (abserrIg 3e4 instead of 3e5)
     equilibrium.nice.xml_path: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105073_config_nice_inverse.xml
     # combined layout: the machine description is in data/in
     equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   evolutive_controller:
-    # combined-layout variant of the forward waveform design (same two changes as above)
+    # combined-layout variant of the forward waveform design (same changes as above,
+    # EC tendency included)
     waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/evolutive_controller_105073_waveforms.yaml
 
 postprocess:
