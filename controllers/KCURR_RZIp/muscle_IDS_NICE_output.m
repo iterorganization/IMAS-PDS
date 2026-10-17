@@ -7,6 +7,7 @@ function [coils_current,rgeo,zgeo,ip,t_out,stop_signal] = muscle_IDS_NICE_output
 % retrieve instance object from base ws
 instance = evalin('base','instance');
 logger = evalin('base','logger');
+ip_sign = evalin('base','ip_sign');
 
 % Holds the last accepted measurement across calls, for the output_flag=-1
 % case below (persists for the lifetime of the MATLAB session/model).
@@ -93,7 +94,7 @@ else
 
     for ii=1:length(pf_active.coil)
        coil=struct(pf_active.coil{ii});
-       coils_current(ii)=coil.current.data;
+       coils_current(ii)=ip_sign*coil.current.data;
     end
 
     last_coils_current = coils_current;

@@ -82,7 +82,10 @@ if instance.reuse_instance()
         reference_current=[reference_current, pf_active.coil{i}.current.data];
         coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
     end
-    reference_current=reference_current;
+    % The controller sees abs(Ip), i.e. an Ip>0 frame: for Ip<0 (ITER COCOS 11) flip all
+    % coil currents and voltages too, which leaves the coil loops unchanged.
+    ip_sign = sign(equilibrium.time_slice{1}.global_quantities.ip);
+    reference_current=ip_sign*reference_current;
     coils_resistance=coils_resistance';
 
     reference_current_ts = timeseries(reference_current,equilibrium.time)
@@ -103,7 +106,7 @@ if instance.reuse_instance()
     end
 
     enable_KCURR=1;
-    IpControlMode_KCURR=0;
+    IpControlMode_KCURR=1;
     schedulingVar_KCURR=0; %Ip
 
     Ipl_ref = timeseries(ip_ref,equilibrium.time);
