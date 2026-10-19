@@ -54,7 +54,18 @@ imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 # METIS-IRFM's dependency on and the load hard-fails (set -e kills the script here).
 _PDS_REPO="$PDS_REPO"
 module purge
-module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+# Local METIS (USE_LOCAL_METIS): when this workflow imports `metis` from lib.local_programs
+# and local_installs/metis exists, no METIS module is loaded -- only what METIS-IRFM would
+# bring in (its Python and MATLAB) plus IMAS-AL-Matlab, and EBROOTMETIS (which
+# make_metis_from_dina_interpretative.m addpath()es before running zineb_path) points at the
+# local checkout. Otherwise the module path below is unchanged.
+if grep -qE '^- from lib\.local_programs import implementation metis\r?$' "$(dirname "${BASH_SOURCE[0]}")/workflow.ymmsl" \
+  && [[ -d "$_PDS_REPO/local_installs/metis" ]]; then
+  module --ignore_cache load Python/3.11.5-GCCcore-13.2.0 MATLAB/2023b-r5-GCCcore-13.2.0 IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+  export EBROOTMETIS="$_PDS_REPO/local_installs/metis"
+else
+  module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+fi
 export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"

@@ -42,11 +42,11 @@ USE_LOCAL_PCS="false"
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
 BRANCH_MUSCLE3_DASHBOARD='main'
-BRANCH_WAVEFORM_EDITOR='main'
+BRANCH_WAVEFORM_EDITOR='feature/reference-tendency-old'  # PDS waveform files need globals.imports: added upstream 2026-06-24 (e11680d), reverted on develop 2026-07-22 (0cb665e); only this branch (= PDS module commit 08eebe8) keeps it
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='master'
 BRANCH_TORAX='develop'
-BRANCH_CHEASE='feature/muscle3'
+BRANCH_CHEASE='feature/DD3_and_DD4'  # DD3/DD4-compatible CHEASE with pinned build modules (the CHEASE EasyBuild module needs the uninstalled iWrap-plugins-MUSCLE3/0.4.0)
 BRANCH_PCS='master'
 
 is_sourced() {

@@ -19,9 +19,10 @@ if [[ ! -d venv ]]; then
   "$UV" venv ./venv
 fi
 . venv/bin/activate
-"$UV" pip install -e .
+"$UV" pip install --no-config -e .
 echo "  muscle3 version: $("$UV" pip show muscle3 | grep '^Version')"
-"$UV" pip install "ymmsl2svg @ git+https://github.com/DaanVanVugt/ymmsl2svg.git@feat/conduit-hover-labels"
+"$UV" pip install --no-config "ymmsl2svg @ git+https://github.com/DaanVanVugt/ymmsl2svg.git@feat/conduit-hover-labels"
+"$UV" pip install --no-config "ymmsl==0.17.0"  # --no-config: ignore the PDS repo's [tool.uv] ymmsl override (docs only); libmuscle 0.10.0 needs ymmsl 0.17.0
 echo "  muscle3-dashboard version: $("$UV" pip show muscle3-dashboard | grep '^Version')"
 deactivate
 module purge

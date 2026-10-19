@@ -60,28 +60,33 @@ temporal_coupler       IMAS_MUSCLE3      local_installs/IMAS-MUSCLE3/venv/bin/ac
 loop                   IMAS_MUSCLE3      local_installs/IMAS-MUSCLE3/venv/bin/activate
 load_balancer          IMAS_MUSCLE3      local_installs/IMAS-MUSCLE3/venv/bin/activate
 waveform_editor        WAVEFORM_EDITOR   local_installs/Waveform-Editor/venv/bin/activate
-metis                  METIS             local_installs/metis/workflow/muscle3/mfile/metis4muscle3.m
-nice_inv               NICE              local_installs/nice/run/nice_imas_inv_muscle3
-nice_dir               NICE              local_installs/nice/run/nice_imas_dir_muscle3
-nice_evo               NICE              local_installs/nice/run/nice_imas_evo_muscle3
-nice_evo_rd            NICE              local_installs/nice/run/nice_imas_evo_rd_muscle3
+metis                  METIS             local_installs/metis/workflow/muscle3/mfile/metis4muscle3.m,local_installs/metis/muscle3_venv/bin/python
+nice_inv               NICE              local_installs/nice/run/nice_imas_inv_muscle3,local_installs/nice/run/.nice_runtime_modules
+nice_dir               NICE              local_installs/nice/run/nice_imas_dir_muscle3,local_installs/nice/run/.nice_runtime_modules
+nice_evo               NICE              local_installs/nice/run/nice_imas_evo_muscle3,local_installs/nice/run/.nice_runtime_modules
+nice_evo_rd            NICE              local_installs/nice/run/nice_imas_evo_rd_muscle3,local_installs/nice/run/.nice_runtime_modules
 torax                  TORAX             local_installs/TORAX-MUSCLE3/venv/bin/activate
-magnetic_controller    PCS               local_installs/pcs/pcssp/scdds
+magnetic_controller    PCS               local_installs/pcs/pcssp/scdds,local_installs/pcs/muscle3_venv/bin/python
 chease                 CHEASE            local_installs/chease/chease_m3/bin/chease.exe,local_installs/chease/python/config_muscle3.sh
 "
 # Notes:
 #  - IMAS_MUSCLE3: only the PDS actors run in its venv are listed. The imas_muscle3
 #    actors (source_component, sink_component, ...) are imported `from imas_muscle3`
 #    in the workflows and are not touched here.
-#  - METIS: the local `metis` entry still loads the METIS-IRFM module, but only for
-#    MATLAB and its muscle3 Python venv; the METIS code comes from local_installs/metis.
-#  - NICE: setup_nice.sh builds all four nice_imas_*_muscle3 binaries; all four
-#    implementations switch together.
-#  - PCS: the local magnetic_controller takes ONLY the PCS/PCSSP code from
-#    local_installs/pcs; NICE's MATLAB tools, the MUSCLE3 Python venv and the MATLAB
-#    IMAS module still come from the PCS/NICE/IMAS-MATLAB EasyBuild modules, exactly as
-#    in the easybuild_programs.ymmsl entry, so no local NICE or IMAS-MUSCLE3 install is
-#    required to switch PCS alone.
+#  - A local build never loads its own EasyBuild module (NICE, METIS-IRFM, PCS): the local
+#    entries load only infrastructure modules (toolchain, IMAS, MATLAB, generic libraries)
+#    and take everything else from local_installs/.
+#  - METIS: the local `metis` entry loads MATLAB + IMAS-AL-Matlab only; the METIS code and
+#    the muscle3 Python venv (muscle3_venv, created by setup_metis.sh) come from
+#    local_installs/metis.
+#  - NICE: setup_nice.sh builds all four nice_imas_*_muscle3 binaries and records the
+#    modules they were built against in run/.nice_runtime_modules, which the local entries
+#    load instead of a NICE module; all four implementations switch together.
+#  - PCS: the local magnetic_controller takes the PCS/PCSSP code and the muscle3 Python
+#    venv (muscle3_venv, created by setup_pcs.sh) from local_installs/pcs and loads only
+#    MATLAB + IMAS-MATLAB. NICE's MATLAB tools come from local_installs/nice when that
+#    exists and from the NICE module otherwise, so no local NICE install is required to
+#    switch PCS alone.
 #  - CHEASE: no workflow uses it yet; the switch acts on the actor test
 #    ymmsl_files/test_chease_actor.ymmsl (and on any workflow that imports `chease`).
 #    The local entry sources local_installs/chease/python/config_muscle3.sh, the
