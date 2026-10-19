@@ -48,7 +48,7 @@ dynamic = ["version"]
 dependencies = [
     "packaging",
     "imas-python",
-    "muscle3",
+    "muscle3>=0.10,<0.11",  # the SDCC stack runs MUSCLE3 0.10.0; 0.11.0 (2026-10-18) removed InstanceFlags.SKIP_MMSF_SEQUENCE_CHECKS used by workflows/utils/temporal_coupler.py
 ]
 
 [project.optional-dependencies]
