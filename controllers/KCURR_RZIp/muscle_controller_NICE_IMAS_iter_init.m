@@ -126,7 +126,11 @@ if instance.reuse_instance()
     obj.init;
     obj.setup;
 
-    obj2 = pcssp_RZIp_CCS_obj;
+    % pcs >= e84f36a (2026-06-23) splits RZIp into a wrapper (RZIp_CCS_wrapper_obj) and
+    % RZIp_CCS_ext (pcssp_RZIp_CCS_obj); only the wrapper loads the gains/scheduling and
+    % creates pcssp_RZIp_CCS.sldd, so use it when present, the old single object otherwise.
+    if exist('RZIp_CCS_wrapper_obj','file') == 2, obj2 = RZIp_CCS_wrapper_obj; else, obj2 = pcssp_RZIp_CCS_obj; end
+    fprintf('RZIp init via %s\n', class(obj2));
     obj2.init;
     obj2.setup;
 
