@@ -14,9 +14,11 @@ Requirements
 
 - An account on the ITER cluster, with read access to ``/work/projects/pds``.
 - A checkout of this repository.
-- The separate ``pds-scenarios`` repository, which holds the shot data. A copy is
-  published at ``/work/projects/pds/pds-scenarios``, which is the default when
-  ``SCENARIOS_REPO`` is unset. A private checkout is only needed to override it.
+- Nothing else to check out for the shot data: it is prepared into this checkout's
+  ``scenarios/`` directory (``SCENARIOS_REPO``, the default when the variable is unset)
+  by :src:`preprocessing/prepare`, driven by ``bin/pds-configure cases/pulses/<shot>.yaml
+  --prepare`` -- see :src:`cases/pulses/README.md`. Point ``SCENARIOS_REPO`` elsewhere to
+  use another data root instead.
 
 Loading the module
 ------------------
@@ -26,8 +28,11 @@ Loading the module
   git clone https://github.com/iterorganization/IMAS-PDS.git
   cd IMAS-PDS
 
-  module use /work/projects/pds/modules/all
-  module load PDS
+  export COMBO=intel-2025b-dd4
+  source ci/resolve_deps.sh
+  source ci/pds_env.sh
+
+``deps.yaml`` at the repository root pins every dependency version; ``module load PDS`` (umbrella module) still works as a convenience and must stay consistent with it.
 
 Verifying the install
 ---------------------

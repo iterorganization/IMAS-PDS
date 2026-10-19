@@ -18,22 +18,27 @@ imported, via `waveform_editor.core_sources_out -> torax.core_sources_in_f` (sam
 **F_INIT bootstrap**: `source` reads a NICE-*reconstructed* equilibrium (not raw DINA -- see
 Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The `waveform_editor` passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
 wildcard import in `waveforms.yaml`, so every field survives, not just hand-picked ones) and
-overlays it with the static machine description (`<shot>_in_md`), core_profiles, and the ECRH
-trace read directly from this scenario's own DINA-preprocessed data
-(`<shot>_in_waveform_editor`), into one assembled F_INIT message for `torax`, `nice_evo_rd`,
-and `magnetic_controller`.
+overlays it with that same run's converged TORAX core_profiles and NICE coil currents, plus
+the static machine description, ECRH trace and coil voltages from this scenario's DINA data
+(inverse_convergence never writes those), into one assembled F_INIT message for `torax`,
+`nice_evo_rd`, and `magnetic_controller`. `preprocess.sh` (run by `pds-create-case`) copies
+the TORAX core_profiles into the case, dropping TORAX's repeated axis grid point: its psiN
+starting 0, 0 makes NICE evo_rd's F decomposition divide by zero and NaN on the first solve.
 
 A PCSSP `magnetic_controller` (MATLAB/Simulink, see `controllers/KCURR_RZIp/`) reads NICE's `equilibrium`
 + `pf_active` every step and returns a corrected `pf_active`.
 
 Structure lives in `workflow.ymmsl`; shared knobs (including a default `waveforms.yaml`
 template) in `settings.ymmsl`; per-shot solver timing (the flattop window genuinely differs
-per pulse, so has no sane generic default) in `cases/overrides/evolutive_controller_<shot>.ymmsl`
-(105084's restricts the run to flattop only, see below).
+per pulse, so has no sane generic default) in the shot's pulse file `cases/pulses/<shot>.yaml`
+(`time.forward_*`), from which `bin/pds-create-case` generates
+`cases/overrides/evolutive_controller_<shot>.ymmsl` (105084's restricts the run to flattop
+only, see below).
 
 ## Running it
 
-Requires the scenario's data in `pds-scenarios` (see Input requirements below) and a
+Requires the scenario's data prepared into the scenario data root (`scenarios/` by
+default, see `cases/pulses/README.md`; see Input requirements below) and a
 completed `inverse_convergence` case run for the same shot (`bin/pds-create-case
 inverse_convergence <shot>` + `bin/pds-run-case.sbatch`, which writes to
 `cases/runs/inverse_convergence_<shot>/out_nice` -- this workflow's `source` reads from there).
@@ -45,8 +50,8 @@ sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105084
 ```
 
 `pds-create-case` stacks `workflow.ymmsl`, `settings.ymmsl` (resources, shared knobs), and
-`cases/overrides/evolutive_controller_<shot>.ymmsl` if it exists into numbered files under
-the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
+`cases/overrides/evolutive_controller_<shot>.ymmsl` (generated from `cases/pulses/<shot>.yaml`
+if that lists this workflow) into numbered files under the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
 `cases/runs/<case>`.
 
 ## Assumptions
@@ -59,6 +64,10 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   dependency on a completed `inverse_convergence` run for the same shot (`preprocess_data.sh`
   copies its `_out_nice` output), which the very first version of this bootstrap chain had
   tried to avoid.
+- `nice_evo_rd` runs with 4 threads (`workflow.ymmsl` `resources:`), TORAX with 8. The NICE
+  actor's `OMP_NUM_THREADS` in `lib/easybuild_programs.ymmsl` is overwritten by `resources:
+  threads`, so that line is the only place the count can be set. NICE is on the lockstep
+  critical path, so its per-step compute comes off the wall time one for one.
 - The `magnetic_controller` is not optional decoration: `nice_imas_evo_rd_muscle3`
   unconditionally receives on `pf_active_s` every internal step (see
   `local_installs/nice/src/main_imas_evo_rd_muscle3.cc`), and nothing else in this workflow feeds that
@@ -75,11 +84,14 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   once `torax` finishes at `t_final` and `nice_evo_rd` has no stopping condition of its own, the
   coupled loop livelocks instead of terminating -- this is what `105084/settings.ymmsl` sets it
   for.
-- `config_torax.py` assumes DINA's raw `core_sources` labels exactly one entry as ECRH: for
-  105084 it has 15 source entries all with an empty `identifier.name`, and `waveforms.yaml`
-  relabels only `source(1)` to `'ec'`, so TORAX's `sources_from_IMAS()` picks up exactly `ecrh`
-  and nothing else (see the comment in `config_torax.py`). Re-check this for any other shot
-  before trusting its self-consistent ohmic/radiation numbers.
+- `config_torax.py` takes the EC power from the Waveform-Editor `core_sources` "ec" source,
+  whose `global_quantities/power` is a tendency fitted to DINA's summary `power_additional`
+  by `bin/pds-tendencies` (per-pulse file `cases/pulses/files/evolutive_controller_<case>_waveforms.yaml`,
+  referenced from the pulse file); the actor puts it into `sources.ecrh.P_total` and TORAX
+  computes deposition, ohmic heating and radiation itself; the generic `waveforms.yaml`
+  carries a 0 W placeholder. Do not import DINA's raw `core_sources` instead: its
+  `source(1)` is the "total" source (additional + ohmic - radiation), which
+  `sources_from_IMAS()` would prescribe as ECRH on top of TORAX's own ohmic source.
 - `magnetic_controller`'s MATLAB script points `pyenv()` explicitly at
   `$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
   (`which python`): PATH can resolve to an unrelated Python with its own muscle3 install,
@@ -92,11 +104,11 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   `nice_imas_evo_rd_muscle3` binary (not yet part of the NICE easybuild module as of this
   writing -- see the commented-out entries in `ci/run_test_workflows.sh` -- so it must be
   source-built, see `local_installs/nice`).
-- A completed `inverse_convergence` run's `_out_nice` output for the same shot, to seed
-  `source`'s F_INIT equilibrium (see Assumptions).
-- DINA-preprocessed scenario data supplying the static machine description, `core_profiles`
-  (including `conductivity_parallel` and `j_non_inductive`, which the static machine
-  description alone doesn't carry), the ECRH trace, and `pf_active` coil `voltage.data` (the
+- A completed `inverse_convergence` run for the same shot *before* `pds-create-case`: its
+  `out_nice` seeds the F_INIT equilibrium and coil currents, its `out_torax` the core_profiles
+  (frozen into the case by `preprocess.sh`, so rebuild the case after rerunning it).
+- DINA-preprocessed scenario data supplying the static machine description, the ECRH trace,
+  and `pf_active` coil `voltage.data` (the
   static machine description's per-coil `voltage.data` is empty, so `waveforms.yaml` sources it
   from DINA's raw `pf_active` instead).
 

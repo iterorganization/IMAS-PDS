@@ -1,3 +1,5 @@
+_PDS_COMPLETION_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 _pds_create_case_complete() {
   local cur prev base dir scenarios_repo
 
@@ -20,7 +22,7 @@ _pds_create_case_complete() {
 
   # Second argument: list shots available in the scenarios repo
   if [[ $COMP_CWORD -eq 2 ]]; then
-    scenarios_repo="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
+    scenarios_repo="${SCENARIOS_REPO:-${PDS_REPO:-$_PDS_COMPLETION_REPO}/scenarios}"
     dir="$scenarios_repo"
     if [[ -d "$dir" ]]; then
       COMPREPLY=($(compgen -W "$(find "$dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | grep -E '^[0-9]+$')" -- "$cur"))

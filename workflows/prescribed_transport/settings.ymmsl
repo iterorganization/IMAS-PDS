@@ -2,28 +2,34 @@ ymmsl_version: v0.2
 
 # Generic settings for prescribed_transport, stacked after workflow.ymmsl by
 # bin/pds-create-case / bin/pds-run. ${SHOT} is filled in by pds-create-case. A shot
-# needing different values overrides them via
-# cases/overrides/prescribed_transport_<shot>.ymmsl.
+# needing different values overrides them through its pulse file cases/pulses/<shot>.yaml
+# (generated into cases/overrides/prescribed_transport_<shot>.ymmsl).
 
 resources:
   prescribed_transport.equilibrium.nice: {threads: 2}
   prescribed_transport.equilibrium.recorder_equilibrium: {threads: 1}
 
 settings:
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from the scenario data root.
   # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # waveform_editor: https://waveform-editor.readthedocs.io/en/latest/muscle3.html#available-settings
   waveform_editor.waveforms: ${PDS_REPO}/workflows/prescribed_transport/waveforms_no_transport.yaml
+  # source: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
   source.iterative: false
-  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
+  # equilibrium.nice: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   equilibrium.nice.xml_path: ${PDS_REPO}/workflows/prescribed_transport/config_nice_inverse.xml
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.
+  # sink: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html#available-settings
   sink.sink_uri: "imas:hdf5?path=../../../out_nice"
   sink.sink_mode: "w"
 
   # Recording.
+  # equilibrium.recorder_equilibrium: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html#available-settings
   equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
 
   muscle_remote_log_level: 'INFO'

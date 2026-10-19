@@ -2,7 +2,7 @@
 set -euo pipefail # stop if anything doesn't work
 
 CHEASE_URL=${1:-"https://gitlab.epfl.ch/spc/chease.git"}
-BRANCH_CHEASE=${2:-"feature/muscle3"}
+BRANCH_CHEASE=${2:-"feature/DD3_and_DD4"}  # DD3/DD4-compatible CHEASE with pinned build modules (the CHEASE EasyBuild module needs the uninstalled iWrap-plugins-MUSCLE3/0.4.0)
 
 export XML_USE_CHOICE="NO"
 # source ../cases/imas_base_env

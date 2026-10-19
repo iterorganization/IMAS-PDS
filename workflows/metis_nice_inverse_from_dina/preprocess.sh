@@ -14,11 +14,11 @@
 # it actually matters, since NICE's inverse solve is what psi_LCFS constrains.
 set -euo pipefail
 
-# SOURCE_URI/SUMMARY_URI/MD_*/N_TIMESLICES (raw DINA + standard machine description).
-# source.env is written to be sourced by pds-scenarios' own tools/prepare, which sets $TOOLS
-# first (its own tools/ dir, for MD_IRON_CORE) -- replicate that here rather than pulling in
-# tools/prepare itself. IMAS_VERSION comes from the PDS module already loaded.
-export TOOLS="$SCENARIOS_REPO/tools"
+# SOURCE_URI/SUMMARY_URI/MD_*/N_TIMESLICES or DT_STEP (raw DINA + standard machine description).
+# source.env is written to be sourced by preprocessing/prepare, which sets $TOOLS
+# first (its own dir, for MD_IRON_CORE) -- replicate that here rather than pulling in
+# preprocessing/prepare itself. IMAS_VERSION comes from the PDS module already loaded.
+export TOOLS="$PDS_REPO/preprocessing"
 source "$SCENARIOS_REPO/$SHOT/source.env"
 
 OUT="$CASE_DIR/preprocess"
@@ -26,7 +26,13 @@ mkdir -p "$OUT"
 
 export IMAS_AL_DISABLE_VALIDATE=1
 
-python "$PDS_REPO/workflows/utils/convert_dina_data_to_input.py" \
+# Slice selection: DT_STEP (a time step) when source.env defines it, else N_TIMESLICES.
+SLICES=(--n_timeslices "${N_TIMESLICES:-51}")
+if [[ -n "${DT_STEP:-}" ]]; then
+  SLICES=(--dt_step "$DT_STEP")
+fi
+
+python "$PDS_REPO/preprocessing/dina2pds/convert_dina_data_to_input.py" \
   --source_uri "$SOURCE_URI" \
   --summary_uri "${SUMMARY_URI:-$SOURCE_URI}" \
   --md_pf_active_uri "$MD_PF_ACTIVE" \
@@ -34,7 +40,7 @@ python "$PDS_REPO/workflows/utils/convert_dina_data_to_input.py" \
   --md_wall_uri "$MD_WALL" \
   --md_iron_core_uri "$MD_IRON_CORE" \
   --sink_uri "imas:hdf5?path=$OUT/dina_in" \
-  --n_timeslices "${N_TIMESLICES:-51}"
+  "${SLICES[@]}"
 
 imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 
@@ -48,7 +54,18 @@ imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 # METIS-IRFM's dependency on and the load hard-fails (set -e kills the script here).
 _PDS_REPO="$PDS_REPO"
 module purge
-module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+# Local METIS (USE_LOCAL_METIS): when this workflow imports `metis` from lib.local_programs
+# and local_installs/metis exists, no METIS module is loaded -- only what METIS-IRFM would
+# bring in (its Python and MATLAB) plus IMAS-AL-Matlab, and EBROOTMETIS (which
+# make_metis_from_dina_interpretative.m addpath()es before running zineb_path) points at the
+# local checkout. Otherwise the module path below is unchanged.
+if grep -qE '^- from lib\.local_programs import implementation metis\r?$' "$(dirname "${BASH_SOURCE[0]}")/workflow.ymmsl" \
+  && [[ -d "$_PDS_REPO/local_installs/metis" ]]; then
+  module --ignore_cache load Python/3.11.5-GCCcore-13.2.0 MATLAB/2023b-r5-GCCcore-13.2.0 IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+  export EBROOTMETIS="$_PDS_REPO/local_installs/metis"
+else
+  module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+fi
 export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"

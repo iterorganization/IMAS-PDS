@@ -1,0 +1,34 @@
+#!/bin/bash
+# m3dash: run the MUSCLE3 dashboard selected by pds_setup.sh's
+# USE_LOCAL_MUSCLE3_DASHBOARD flag.
+#
+# The PDS module puts this bin/ directory first on PATH, so `m3dash open .` (see the
+# training docs) lands here. While local_installs/.use_local_muscle3_dashboard exists
+# (written by setup_files/use_local_programs.sh for USE_LOCAL_MUSCLE3_DASHBOARD="true"),
+# the local build of setup_files/setup_muscle3_dashboard.sh is run; otherwise the next
+# m3dash on PATH, i.e. the one the PDS module provides through IMAS-MUSCLE3.
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+repo="$(dirname "$(dirname "$self")")"
+local_m3dash="$repo/local_installs/muscle3-dashboard/venv/bin/m3dash"
+
+if [ -e "$repo/local_installs/.use_local_muscle3_dashboard" ]; then
+  if [ -x "$local_m3dash" ]; then
+    # The modules' PYTHONPATH (IMAS-MUSCLE3's Python 3.13 site-packages) would shadow
+    # the venv's own packages.
+    unset PYTHONPATH
+    exec "$local_m3dash" "$@"
+  fi
+  echo "WARNING: USE_LOCAL_MUSCLE3_DASHBOARD is set but $local_m3dash is missing;" \
+    "using the module's m3dash." >&2
+fi
+
+IFS=: read -ra path_dirs <<<"$PATH"
+for d in "${path_dirs[@]}"; do
+  candidate="${d:-.}/m3dash"
+  if [ -x "$candidate" ] && [ "$(readlink -f "$candidate")" != "$self" ]; then
+    exec "$candidate" "$@"
+  fi
+done
+echo "ERROR: no m3dash found on PATH besides $self (load the PDS module)." >&2
+exit 127

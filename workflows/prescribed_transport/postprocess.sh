@@ -7,6 +7,10 @@
 # over as-is from that script's scenario_config.env values.
 set -euo pipefail
 
+PULSE_FILE="$PDS_REPO/cases/pulses/$SHOT.yaml"
+if [[ -f "$PULSE_FILE" ]]; then
+  T_LIST="$("$PYTHON" "$PDS_REPO/pds/configure.py" "$PULSE_FILE" --print-t-list)"
+else
 case "$SHOT" in
   105073) T_LIST="25 130 175" ;;
   105078) T_LIST="20 150 270" ;;
@@ -15,6 +19,7 @@ case "$SHOT" in
   105099) T_LIST="20 35 60" ;;
   *) echo "postprocess.sh: no known t_list for shot $SHOT" >&2; exit 1 ;;
 esac
+fi
 
 mkdir -p "$RUN_DIR/plots"
 

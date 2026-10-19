@@ -10,14 +10,23 @@ Each iteration the loop:
 - The `waveform_editor`: 
   - overlays the designed Ip(t)/B0 onto the target equilibrium
   - Mirrors core_profiles through unchanged
-  - Imports the ECRH heating
+  - Imports the EC heating power (a per-pulse tendency fitted to DINA's summary
+    `power_additional` by `bin/pds-tendencies`; TORAX computes deposition, ohmic heating
+    and radiation itself)
   - Re-exports the scenario's static wall/pf_passive/iron_core machine description
-    to the NICE load balancer
-- The parallel NICE-inverse `load_balancer` solves it per time slice
+    to the NICE inverse
+- One `nice_imas_inv_muscle3` receives the whole trace and solves it in batch mode
 - its equilibrium goes to TORAX, whose evolved profiles and NICE's coil currents return to the loop.
 
 It converges when the max coil-current change between iterations drops below `loop.tolerance`
 An `imas-validator` actor checks the converged pf_active against the `iter-olc` ruleset.
+
+`equilibrium` is the `nice_inverse` submodel (`workflow.ymmsl`): `psi_anchor`, one NICE inverse
+actor and `recorder_equilibrium` on its output. Batch mode splits the trace into chunks of
+consecutive slices, one per thread, each warm-starting along the chunk; from the second Picard
+iteration each slice restarts from its own previous solution. `psi_anchor` shifts each slice's
+`profiles_1d.psi` onto the designed `psi_boundary`, which NICE reads its boundary-flux target
+from via `psi[-1]`: a no-op on iteration 1, tens of Wb once the state has been through TORAX.
 
 Structure lives entirely in `workflow.ymmsl`; everything scenario- and run-specific lives
 in the case.
@@ -27,14 +36,15 @@ in the case.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
+# export SCENARIOS_REPO=/path/to/scenarios   # optional: defaults to $PDS_REPO/scenarios
 
 bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_convergence_105084
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 ```
 
 `pds-create-case` stacks: `workflow.ymmsl`, this workflow's `settings.ymmsl`, and
-`cases/overrides/inverse_convergence_<shot>.ymmsl`.
+`cases/overrides/inverse_convergence_<shot>.ymmsl`, which it generates from the pulse file
+`cases/pulses/<shot>.yaml` (see `cases/pulses/README.md`).
 
 The `settings.ymmsl` contains (all templated from `${SHOT}`):
 
@@ -46,12 +56,15 @@ The `settings.ymmsl` contains (all templated from `${SHOT}`):
 If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_manager`, writing to `cases/runs/<case>`.
 
 Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_literal` (same
-source data as 105084, a literal rather than loop-designed pulse).
+source data as 105084, a literal rather than loop-designed pulse: `cases/pulses/105084_literal.yaml`,
+`shot: 105084`, `case: 105084_literal`, built with `bin/pds-create-case inverse_convergence 105084_literal`).
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
+Only the input DBEntry (`data/in`, `data/in_md`) is read live from the scenario data root
+(`scenarios/` by default, prepared from the pulse file by `bin/pds-configure --prepare`); the
 pulse design (`waveforms.yaml`) lives in this workflow's own directory, and any per-shot
-variant or calibrated solver config lives under `cases/overrides/`, so both are versioned
-and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is produced
+variant or calibrated solver config is declared in the shot's pulse file
+(`cases/pulses/<shot>.yaml`, companion files under `cases/pulses/files/`), so both are
+versioned and editable here. See `preprocessing/README.md` for how `data/` itself is produced
 from DINA and machine-description sources.
 
 ## Assumptions
@@ -62,17 +75,20 @@ from DINA and machine-description sources.
   around the loop.
 - Convergence is judged purely on coil currents (`loop.tolerance`/`loop.rel_tolerance`), not on
   a residual of the equilibrium or profiles themselves.
+- `equilibrium.nice` runs with 8 threads (`settings.ymmsl` resources), so the batch solve
+  scales with the thread count up to the number of slices; `OMP_NUM_THREADS` in
+  `lib/easybuild_programs.ymmsl` is overwritten by `resources: threads`.
 - `loop.max_iterations` bounds the run regardless of whether `loop.tolerance` was reached --
   a run that hits the iteration cap without converging still produces output, so check the
   loop's own convergence log rather than assuming the presence of output means convergence.
 
 ## Input requirements
 
-Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
+Produced by `preprocessing/prepare <shot>` (converter in `preprocessing/dina2pds/`; ITER has no iron core, so the converter writes an empty static `iron_core`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace, plus `core_profiles`
-  (electron/ion temperature and density) for TORAX and the ECRH heating trace picked up via
-  `core_sources`.
+  (electron/ion temperature and density) for TORAX and the EC heating power picked up via
+  `core_sources` (`source(1)` "ec", `global_quantities/power` only).
 - Machine descriptions for `pf_active`, `pf_passive`, `wall`, and `iron_core`.
 - The `pf_active` machine description must have exactly one element per coil in the `elements`
   array of structures, and each coil must carry a resistance value -- both required by NICE

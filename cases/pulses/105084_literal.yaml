@@ -1,0 +1,42 @@
+# Pulse file for the case 105084_literal -- see cases/pulses/TEMPLATE.yaml for every key.
+# Regenerate the derived files with: bin/pds-configure cases/pulses/105084_literal.yaml
+#
+# LITERAL pulse design for 105084: the same scenario data as cases/pulses/105084.yaml
+# (shot 105084, prepare block identical), a different waveform design. "105084_literal"
+# is the CASE name (cases/inverse_convergence_105084_literal, built with
+# bin/pds-create-case inverse_convergence 105084_literal); the underlying data are those
+# of shot 105084, so the ${SHOT}-dependent settings are written with 105084 in the
+# generated override.
+shot: 105084
+case: 105084_literal
+description: "LITERAL pulse design for DINA shot 105084 (same data as 105084, explicit tendencies instead of imported traces); source: official ITER store /work/imas/shared/imasdb (HDF5)"
+
+workflows:
+  - inverse_convergence
+
+prepare:
+  source: imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/105084/1
+  # The stored data (pds-scenarios) were prepared with the "legacy" set (ITER_MD
+  # 111001/203, 115005/2, 116000/4); "basic" = the active ITER_MD versions.
+  machine_description: basic
+  n_timeslices: 41
+  md_layout: separate
+  dd_version: "4.0.0"
+
+time:
+  # inverse_convergence loop window: from 5 s to the last stored slice (280.35 s, rounded
+  # outward to 0.1 s).
+  t_start: 5.0
+  t_end: 280.4
+
+inverse_convergence:
+  max_iterations: 5
+
+settings:
+  inverse_convergence:
+    # the literal design: r0/b0/Ip/psi_boundary and the coil currents as explicit
+    # tendencies (the boundary outline and core_sources stay imported)
+    waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_105084_literal_waveforms.yaml
+
+postprocess:
+  t_list: [10, 150, 270]

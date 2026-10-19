@@ -34,11 +34,13 @@ Look at the available modules under the ``/work/projects/pds/modules/all`` secti
 Which modules are available? You can recognise them by the ``-pds`` at the end of their name.
 
 
-As a first step, let's load the PDS module:
+As a first step, let's set up the PDS environment (from the checkout root):
 
 .. code-block:: bash
 
-    module load PDS
+    export COMBO=intel-2025b-dd4
+    source ci/resolve_deps.sh
+    source ci/pds_env.sh
 
 Lastly, we will use some of the test workflows as examples during this training, so let's quickly 
 set these up as well:
@@ -46,6 +48,19 @@ set these up as well:
 .. code-block:: bash
 
     bash setup_files/setup_test_files.sh
+
+The exercises run against a handful of DINA shots (105073, 105084, 105092, 105099); their
+data is prepared from a pulse file into this checkout's ``scenarios/`` directory, not read
+from a shared location, so it must exist before the first case using them is built. Ask
+your trainer whether this was already done for you; otherwise prepare it yourself:
+
+.. code-block:: bash
+
+    for shot in 105073 105084 105092 105099; do
+        bin/pds-configure cases/pulses/$shot.yaml --prepare
+    done
+
+See :src:`cases/pulses/README.md` for what ``--prepare`` does (about 25 s per shot).
 
 Now we are all set up to run a PDS workflow!
 

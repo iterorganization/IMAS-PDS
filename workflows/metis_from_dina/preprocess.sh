@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds METIS's own input dataset from this shot's raw DINA source (METIS's IMAS DD layout
-# is workflow-specific, so nothing pre-bakes it into pds-scenarios). Ported from the old
+# is workflow-specific, so nothing pre-bakes it into the scenario data root). Ported from the old
 # metis_interpretative_from_dina/preprocess_data.sh + create_runnable_files.sh -- run once by
 # bin/pds-create-case, its output frozen into $CASE_DIR/preprocess/ (not rebuilt on every
 # bin/pds-run-case.sbatch). See that script's header for the PDS_REPO/SCENARIOS_REPO/SHOT/
@@ -13,11 +13,11 @@
 # $CASE_DIR/preprocess_settings.ymmsl, stacked in by bin/pds-run-case.sbatch.
 set -euo pipefail
 
-# SOURCE_URI (raw DINA). source.env is written to be sourced by pds-scenarios' own
-# tools/prepare, which sets $TOOLS first (its own tools/ dir, for MD_IRON_CORE) -- replicate
-# that here rather than pulling in tools/prepare itself. IMAS_VERSION comes from the PDS
+# SOURCE_URI (raw DINA). source.env is written to be sourced by preprocessing/prepare,
+# which sets $TOOLS first (its own dir, for MD_IRON_CORE) -- replicate
+# that here rather than pulling in preprocessing/prepare itself. IMAS_VERSION comes from the PDS
 # module already loaded.
-export TOOLS="$SCENARIOS_REPO/tools"
+export TOOLS="$PDS_REPO/preprocessing"
 source "$SCENARIOS_REPO/$SHOT/source.env"
 
 OUT="$CASE_DIR/preprocess"
@@ -37,7 +37,18 @@ imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 # METIS-IRFM's dependency on and the load hard-fails (set -e kills the script here).
 _PDS_REPO="$PDS_REPO"
 module purge
-module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+# Local METIS (USE_LOCAL_METIS): when this workflow imports `metis` from lib.local_programs
+# and local_installs/metis exists, no METIS module is loaded -- only what METIS-IRFM would
+# bring in (its Python and MATLAB) plus IMAS-AL-Matlab, and EBROOTMETIS (which
+# make_metis_from_dina_interpretative.m addpath()es before running zineb_path) points at the
+# local checkout. Otherwise the module path below is unchanged.
+if grep -qE '^- from lib\.local_programs import implementation metis\r?$' "$(dirname "${BASH_SOURCE[0]}")/workflow.ymmsl" \
+  && [[ -d "$_PDS_REPO/local_installs/metis" ]]; then
+  module --ignore_cache load Python/3.11.5-GCCcore-13.2.0 MATLAB/2023b-r5-GCCcore-13.2.0 IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+  export EBROOTMETIS="$_PDS_REPO/local_installs/metis"
+else
+  module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+fi
 export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"

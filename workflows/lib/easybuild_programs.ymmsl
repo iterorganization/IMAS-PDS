@@ -1,9 +1,13 @@
 ymmsl_version: v0.2
+# Module names are not written here: every `modules:` value and inline `module load` expands a
+# PDS_MOD_* variable that ci/resolve_deps.sh exports from deps.yaml (repository root), the single
+# place where dependency versions are pinned. `${VAR:?...}` aborts the actor if it is unset.
 
 programs:
+  # Docs: https://waveform-editor.readthedocs.io/en/latest/muscle3.html
   waveform_editor:
     base_env: clean
-    modules: Waveform-Editor/0.3.2.dev154-intel-2025b-pds
+    modules: ${PDS_MOD_WAVEFORM_EDITOR:?PDS_MOD_WAVEFORM_EDITOR-unset-source-ci/resolve_deps.sh}
     executable: waveform-editor
     args: actor
 
@@ -18,16 +22,18 @@ programs:
   # (unlike NICE/TORAX/Waveform-Editor's PDS-owned builds) -- `module load` puts numpy,
   # muscle3, imas_muscle3, etc. on PYTHONPATH directly, so `unset PYTHONPATH` here would
   # break the import rather than fix a conflict (there is no venv numpy to protect).
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/utils/temporal_coupler.py
   temporal_coupler:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: ${PDS_MOD_IMAS_MUSCLE3:?PDS_MOD_IMAS_MUSCLE3-unset-source-ci/resolve_deps.sh}
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
+  # Docs: https://git.iter.org/projects/SCEN/repos/metis/browse/workflow/muscle3/mfile/metis4muscle3_setting_list.m
   metis:
     script: |
       #!/bin/bash
       module purge
-      module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      module load ${PDS_MOD_METIS_IRFM:?PDS_MOD_METIS_IRFM-unset-source-ci/resolve_deps.sh} ${PDS_MOD_IMAS_AL_MATLAB:?PDS_MOD_IMAS_AL_MATLAB-unset-source-ci/resolve_deps.sh}
       # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
       # $EBROOTMETIS/muscle3_venv's numpy.
       unset PYTHONPATH
@@ -36,42 +42,47 @@ programs:
       # manager's libmuscle version (see the METIS-IRFM easyconfig).
       exec matlab -batch "pyenv('Version','$EBROOTMETIS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('DIR_METIS4MUSCLE3'));metis4muscle3(2);"
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_inv:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: ${PDS_MOD_NICE:?PDS_MOD_NICE-unset-source-ci/resolve_deps.sh}
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_inv_muscle3
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_dir:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: ${PDS_MOD_NICE:?PDS_MOD_NICE-unset-source-ci/resolve_deps.sh}
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_dir_muscle3
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo_rd:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: ${PDS_MOD_NICE:?PDS_MOD_NICE-unset-source-ci/resolve_deps.sh}
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_evo_rd_muscle3
 
+  # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo:
     base_env: clean
-    modules: NICE/3.0.0.dev258-intel-2025b-pds
+    modules: ${PDS_MOD_NICE:?PDS_MOD_NICE-unset-source-ci/resolve_deps.sh}
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
       OMP_NUM_THREADS: 2
     executable: $EBROOTNICE/run/nice_imas_evo_muscle3
 
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/controllers/KCURR_RZIp/muscle_controller_NICE_IMAS_iter_init.m
   magnetic_controller:
     script: |
       #!/bin/bash
@@ -82,7 +93,7 @@ programs:
       # silently evaluate to "/controllers/KCURR_RZIp".
       controller_path="$PDS_REPO/controllers/KCURR_RZIp"
       module purge
-      module load PCS/2026.08-pds NICE/3.0.0.dev258-intel-2025b-pds
+      module load ${PDS_MOD_PCS:?PDS_MOD_PCS-unset-source-ci/resolve_deps.sh} ${PDS_MOD_NICE:?PDS_MOD_NICE-unset-source-ci/resolve_deps.sh}
       # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
       # against intel-2023b, so loading it here silently downgrades this
       # whole shell's toolchain out from under NICE's own intel-2025b build
@@ -92,7 +103,7 @@ programs:
       # toolchain-wide reload happens -- only MATLAB itself still reloads
       # 2023b-r5 (PCS's pinned version) -> 2025b-r1, since PCS hasn't been
       # rebuilt against 2025b-r1 yet.
-      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      module load ${PDS_MOD_IMAS_MATLAB:?PDS_MOD_IMAS_MATLAB-unset-source-ci/resolve_deps.sh}
       # IMAS-MATLAB leaks its own numpy onto PYTHONPATH, conflicting with
       # $EBROOTPCS/muscle3_venv's numpy (same reason as the metis actor).
       unset PYTHONPATH
@@ -113,9 +124,10 @@ programs:
       # the right one.
       exec matlab -batch "pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess');addpath(getenv('PCS_PATH'));run('$EBROOTNICE/runmatlab/initNice4matlab.m');pcssp_pcs_add_paths;comparisons.ExternalSCMLink.setupGitConfig();addpath(getenv('CONTROLLER_PATH'));run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m'));"
 
+  # Docs: https://torax-muscle3.readthedocs.io/en/latest/usage.html
   torax:
     base_env: clean
-    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
+    modules: ${PDS_MOD_TORAX_MUSCLE3:?PDS_MOD_TORAX_MUSCLE3-unset-source-ci/resolve_deps.sh}
     env:
       IMAS_VERSION: "4.0.0"
       JAX_COMPILATION_CACHE_DIR: $PDS_REPO/tmp/jax_cache
@@ -123,14 +135,28 @@ programs:
     executable: python
     args: -u -m torax_muscle3.torax_actor
 
+  # iWrap MUSCLE3-Fortran actor; reads its code parameters from
+  # $EBROOTCHEASE/chease_m3/input/ (COCOS 17).
+  chease:
+    base_env: clean
+    modules: ${PDS_MOD_CHEASE:?PDS_MOD_CHEASE-unset-source-ci/resolve_deps.sh}
+    executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
+
   # No base_env: clean and no virtual_env on these three either -- same reasons as
   # temporal_coupler above.
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/outer_convergence_loop.py
   loop:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: ${PDS_MOD_IMAS_MUSCLE3:?PDS_MOD_IMAS_MUSCLE3-unset-source-ci/resolve_deps.sh}
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
 
+  # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/nice_load_balancer.py
   load_balancer:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: ${PDS_MOD_IMAS_MUSCLE3:?PDS_MOD_IMAS_MUSCLE3-unset-source-ci/resolve_deps.sh}
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
+
+  psi_anchor:
+    modules: ${PDS_MOD_IMAS_MUSCLE3:?PDS_MOD_IMAS_MUSCLE3-unset-source-ci/resolve_deps.sh}
+    executable: python
+    args: -u $PDS_REPO/workflows/lib/actors/psi_anchor.py

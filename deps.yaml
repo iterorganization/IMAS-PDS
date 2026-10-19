@@ -1,0 +1,114 @@
+# deps.yaml - external components of PDS, read by ci/resolve_deps.sh.
+#
+# combinations: one entry per target (toolchain, Data Dictionary). The CI jobs and the env files
+#   name one of them in COMBO; `modules` are loaded in the listed order (CI and local runs),
+#   `local_modules` are loaded after them by the env files only (interactive tools).
+# components: an explicitly exported src_env source tree is used first (developer override);
+#   otherwise tried in the order module -> easyconfig build -> Bamboo checkout -> git ref.
+#   Any field may be a mapping keyed by combination.
+#   module      module name; the site tree is searched first, module_paths after it
+#   easyconfig  EasyBuild recipe that builds that module into the user tree
+#   src_env     variable naming a local source tree, used in place when set
+#   checkout    Bamboo checkout directory $bamboo_build_working_directory/<checkout>
+#   git, ref    source fetched into the job directory (tag, branch, refs/pull/N/head)
+#   install     command run in the fetched source tree, installs into $DEP_PREFIX
+#   root_env    variable set to the component root (module, source tree or $DEP_PREFIX)
+#   env_var     variable exported by the resolver with the resolved value: the module name
+#               (paths a/b, or load: false), the source tree or install prefix (local/c);
+#               it is what the `modules:` lines of workflows/lib/easybuild_programs.ymmsl expand
+#   load        false = actor-only component: the resolver checks that the module exists
+#               (module is-avail) and exports env_var, but does not load it into the manager shell
+#   check       command run after the component is in the environment
+module_paths:                     # appended after the site tree (module use -a)
+  - /work/projects/pds/modules/all
+  - /work/projects/pds/stack/modules/all
+easybuild_module: EasyBuild/5.4.1
+
+combinations:
+  intel-2025b-dd4:                # manager side: exactly what the umbrella module PDS/1.0 depends_on
+    modules:
+      - IMAS-Python/2.3.0-intel-2025b
+      - IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+      - ymmsl2svg/0.1.0-intel-2025b-pds
+
+components:
+  imas_muscle3:                   # temporal_coupler, loop, load_balancer, psi_anchor, source/sink/recorder; also bin/pds-configure
+    module: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb
+    git: https://github.com/iterorganization/IMAS-MUSCLE3.git
+    ref: develop
+    install: python -m pip install --quiet --no-deps --no-build-isolation --prefix "$DEP_PREFIX" .
+    root_env: EBROOTIMASMINMUSCLE3
+    env_var: PDS_MOD_IMAS_MUSCLE3
+    check: python -c "import imas_muscle3, libmuscle; print('imas_muscle3', imas_muscle3.__file__)"
+  torax_muscle3:
+    # temporary: PR #44 head (promotion rule: back to a release module when it exists)
+    module: TORAX-MUSCLE3/0.1.4.dev1-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.4.dev1-intel-2025b-pds.eb
+    git: https://github.com/iterorganization/TORAX-MUSCLE3.git
+    ref: refs/pull/44/head
+    install: python -m pip install --quiet --no-deps --no-build-isolation --prefix "$DEP_PREFIX" .
+    root_env: EBROOTTORAXMINMUSCLE3
+    env_var: PDS_MOD_TORAX_MUSCLE3
+    load: false
+    check: >-
+      python -c "import importlib.util as u, pathlib;
+      p = pathlib.Path(u.find_spec('torax_muscle3.torax_actor').origin);
+      assert 'power_only_sources' in p.read_text(), 'power_only_sources missing';
+      print('torax_muscle3', p)"
+  nice:                           # nice_inv/nice_dir/nice_evo_rd/nice_evo, magnetic_controller
+    module: NICE/3.0.0.dev446-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/n/NICE/NICE-3.0.0.dev446-intel-2025b-pds.eb
+    root_env: EBROOTNICE
+    env_var: PDS_MOD_NICE
+    load: false
+    check: test -x "$EBROOTNICE/run/nice_imas_inv_muscle3"
+  chease:
+    module: CHEASE/2026.08-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/c/CHEASE/CHEASE-2026.08-intel-2025b-pds.eb
+    root_env: EBROOTCHEASE
+    env_var: PDS_MOD_CHEASE
+    load: false
+    check: test -x "$EBROOTCHEASE/chease_m3/bin/chease.exe"
+  metis_irfm:
+    module: METIS-IRFM/2026.08-pds
+    easyconfig: setup_files/easyconfigs/m/METIS-IRFM/METIS-IRFM-2026.08-pds.eb
+    root_env: EBROOTMETIS
+    env_var: PDS_MOD_METIS_IRFM
+    load: false
+  pcs:
+    module: PCS/2026.08-pds
+    easyconfig: setup_files/easyconfigs/p/PCS/PCS-2026.08-pds.eb
+    root_env: EBROOTPCS
+    env_var: PDS_MOD_PCS
+    load: false
+  waveform_editor:
+    module: Waveform-Editor/0.3.2.dev154-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/w/Waveform-Editor/Waveform-Editor-0.3.2.dev154-intel-2025b-pds.eb
+    git: https://github.com/iterorganization/Waveform-Editor.git
+    ref: feature/reference-tendency-old           # as setup_files/setup_waveform_editor.sh
+    install: python -m pip install --quiet --no-deps --no-build-isolation --prefix "$DEP_PREFIX" .
+    env_var: PDS_MOD_WAVEFORM_EDITOR
+    load: false
+  imas_validator:                 # dependency of the IMAS-MUSCLE3 module, listed so that the manifest is complete; no env_var
+    module: IMAS-Validator/1.0.0.dev69-intel-2025b-pds
+    easyconfig: setup_files/easyconfigs/i/IMAS-Validator/IMAS-Validator-1.0.0.dev69-intel-2025b-pds.eb
+    load: false
+
+  # Site infrastructure modules loaded only inside `script:` actors (metis, magnetic_controller)
+  # and the METIS preprocess.sh; never loaded on the manager side (IMAS-AL-Matlab would downgrade
+  # the whole shell to intel-2023b).
+  imas_al_matlab:                 # metis actor, easybuild_programs.ymmsl
+    module: IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+    env_var: PDS_MOD_IMAS_AL_MATLAB
+    load: false
+  imas_al_matlab_prep:
+    # used by workflows/metis_from_dina/preprocess.sh and metis_nice_inverse_from_dina/preprocess.sh;
+    # DRIFT: the actor pins 5.3.0 and the preprocess step 5.4.0 -- kept apart on purpose until the two are unified
+    module: IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+    env_var: PDS_MOD_IMAS_AL_MATLAB_PREP
+    load: false
+  imas_matlab:                    # magnetic_controller actor
+    module: IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+    env_var: PDS_MOD_IMAS_MATLAB
+    load: false

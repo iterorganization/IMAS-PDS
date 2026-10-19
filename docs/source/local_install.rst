@@ -6,7 +6,7 @@ Local (developer) install
 .. warning::
 
    **Developers only.** If you are running PDS on the ITER cluster, use
-   :ref:`installing` instead -- ``module load PDS`` gives you the whole stack
+   :ref:`installing` instead -- ``source ci/resolve_deps.sh`` (or ``module load PDS``) gives you the whole stack
    with nothing to build.
 
 When you need this
@@ -76,6 +76,10 @@ be run directly from inside ``run/``. Each clones its tool and builds it into
      - ``run/TORAX-MUSCLE3/venv``
      - Force-installs ``muscle3==0.10.0`` over the package's own pin, to match
        the manager.
+       The EC power waveform of the TORAX workflows requires TORAX-MUSCLE3 with
+       power-only source support (``power_only_sources()`` in
+       ``torax_muscle3/torax_actor.py``), which maps an ``ec`` source carrying only
+       ``global_quantities/power`` to ``sources.ecrh.P_total``.
    * - ``setup_metis.sh``
      - ``run/metis/``
      - MATLAB, no venv. Source is ssh-gated on ``git.iter.org``.
@@ -102,6 +106,34 @@ be run directly from inside ``run/``. Each clones its tool and builds it into
 METIS and PCS clone over ``ssh://git@git.iter.org``, so you need working SSH
 credentials for those two. The others are public.
 
+What a local build may depend on
+--------------------------------
+
+A model installed in ``local_installs/`` must not depend on its own EasyBuild module,
+neither when it is built nor when it runs -- otherwise the module's copy of the code
+(``run/``, ``runmatlab/``, ``muscle3_venv``, ...) silently takes part in a run that is
+supposed to exercise the local checkout. The setup scripts and the entries in
+``workflows/lib/local_programs.ymmsl`` only load *infrastructure* modules: compilers and
+toolchains, MATLAB, IMAS (IMAS-Cpp, IMAS-MATLAB, IMAS-AL-Matlab, IMAS-MUSCLE3), the
+MUSCLE3 library, generic libraries (Eigen, SuiteSparse, libxml2, Boost, patchelf) and
+Python. Concretely:
+
+- **NICE** -- built and run with the modules ``NICE/3.0.0-intel-2023b-DD-4.1.0`` itself
+  depends on (``intel/2023b``, ``IMAS-Cpp``, ``SuiteSparse``, ``Eigen``, ``libxml2``) plus
+  the muscle3 0.10.0 C++ library from ``setup_muscle3.sh``. ``setup_nice.sh`` records
+  that list in ``local_installs/nice/run/.nice_runtime_modules``; the ``nice_*`` entries
+  source it and load exactly those modules.
+- **METIS** -- MATLAB and IMAS-AL-Matlab modules only; the METIS code and the
+  ``muscle3==0.10.0`` Python venv (``local_installs/metis/muscle3_venv``, created by
+  ``setup_metis.sh`` like the METIS-IRFM easyconfig does) come from the checkout. The
+  ``preprocess.sh`` of the two METIS workflows follows the same rule when the workflow
+  imports ``metis`` from ``lib.local_programs``.
+- **PCS** -- MATLAB and IMAS-MATLAB modules only; the PCS/PCSSP code and the
+  ``muscle3_venv`` (created by ``setup_pcs.sh``) come from ``local_installs/pcs``. NICE's
+  MATLAB tools are taken from ``local_installs/nice`` when it exists, from the NICE module
+  otherwise.
+- **TORAX, Waveform-Editor, IMAS-MUSCLE3** -- self-contained venvs, nothing to load.
+
 Pointing a workflow at your build
 ---------------------------------
 
@@ -123,8 +155,26 @@ To run against your build, repoint the import in the workflow:
   imports:
   - from lib.local_programs import implementation nice_inv
 
-Both files resolve because the PDS module puts ``$PDS_REPO/workflows`` on
+Both files resolve because ``ci/pds_env.sh`` (like the PDS module) puts ``$PDS_REPO/workflows`` on
 ``YMMSL_PATH``; ``bin/pds-run-case.sbatch`` sets it too.
+
+``pds_setup.sh`` does this switching for you. Next to each ``INSTALL_<COMP>`` flag it
+has a ``USE_LOCAL_<COMP>`` flag (``IMAS_MUSCLE3``, ``MUSCLE3_DASHBOARD``,
+``WAVEFORM_EDITOR``, ``METIS``, ``NICE``, ``TORAX``, ``CHEASE``, ``PCS``). At the end of
+every ``bash pds_setup.sh`` run, ``setup_files/use_local_programs.sh`` rewrites the
+``lib.easybuild_programs`` import of every implementation of a component whose flag is
+``"true"`` into ``lib.local_programs`` in all ``workflows/*/workflow.ymmsl`` and in the
+rendered actor tests ``ymmsl_files/*.ymmsl`` (``CHEASE`` is only used by
+``test_chease_actor`` so far), and back for ``"false"``. The ``*.template`` files stay on
+the module, so re-rendering the actor tests with ``setup_files/setup_test_files.sh``
+resets them: run the script again afterwards. ``MUSCLE3_DASHBOARD`` is a tool rather
+than an actor: its flag decides whether the ``m3dash`` command (``bin/m3dash``, first on
+``PATH`` once the PDS module is loaded) runs ``local_installs/muscle3-dashboard/venv`` or
+the module's dashboard. A component whose local install is missing stays on the module
+with a warning. The component-to-implementation table is in the header of that script,
+which can also be run on its own, e.g.
+``USE_LOCAL_NICE=true bash setup_files/use_local_programs.sh``. Workflow files switched
+to local are changes for your installation only: do not commit them.
 
 .. note::
 
@@ -146,7 +196,7 @@ the rest on the published stack.
 .. code-block:: bash
 
   cd setup_files/easyconfigs/n/NICE
-  cp NICE-3.0.0.dev258-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
+  cp NICE-3.0.0.dev446-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
   # edit the new file to point at your branch
 
   export EASYBUILD_PREFIX=$HOME/my-modules
@@ -158,7 +208,7 @@ the rest on the published stack.
 Then point one implementation at it without disturbing the others: copy
 ``workflows/lib/local_programs.ymmsl`` to
 ``workflows/lib/local_programs_<you>.ymmsl``, change that actor's ``modules:``
-line to your new module, and import just that one implementation from your copy:
+line to your new module (or, for the shared file, the component's ``module:`` line in ``deps.yaml``), and import just that one implementation from your copy:
 
 .. code-block:: yaml
 

@@ -36,8 +36,8 @@ if isequal(finished, true)
     return;
 end
 
-% nice_evo_rd closes its output port directly once it reaches its own
-% t_end, rather than sending one more message flagged next_timestamp=None
+% Older nice_evo_rd builds (before dev446's t_end setting) close their output
+% port directly at the end, rather than sending a message flagged next_timestamp=None
 % -- so the receive() for that (never-coming) message throws
 % "Port ... was closed while trying to receive on it" instead of the
 % t_next-is-None branch below ever running. Treat that the same way: stop
@@ -48,6 +48,7 @@ try
 catch ME
     if contains(ME.message, 'was closed while trying to receive')
         logger.warning('muscle_IDS_NICE_output: peer port closed without a next_timestamp=None sentinel, stopping cleanly');
+        assignin('base', 'muscle_already_shut_down', true);
         coils_current = last_coils_current;
         rgeo = last_rgeo;
         zgeo = last_zgeo;
@@ -67,6 +68,7 @@ last_t_out = t_out;
 if isequal(t_next, py.None)
     stop_signal  = 1;
     finished = true;
+    assignin('base', 'nice_sent_final_message', true);
 end
 
 equilibrium_serial=uint8(msg_eq.data);

@@ -55,6 +55,7 @@ end
 % exited -- it hangs retrying the dead connection for ~5 minutes, then
 % crashes with "OSError: Bad file descriptor" instead of exiting cleanly
 % (confirmed live). `if` runs the one cycle that exists and stops there.
+muscle_already_shut_down = false;
 if instance.reuse_instance()
     %% Prepare IDS Python object
     % equilibrium_python=py.imas.equilibrium();
@@ -125,7 +126,11 @@ if instance.reuse_instance()
     obj.init;
     obj.setup;
 
-    obj2 = pcssp_RZIp_CCS_obj;
+    % pcs >= e84f36a (2026-06-23) splits RZIp into a wrapper (RZIp_CCS_wrapper_obj) and
+    % RZIp_CCS_ext (pcssp_RZIp_CCS_obj); only the wrapper loads the gains/scheduling and
+    % creates pcssp_RZIp_CCS.sldd, so use it when present, the old single object otherwise.
+    if exist('RZIp_CCS_wrapper_obj','file') == 2, obj2 = RZIp_CCS_wrapper_obj; else, obj2 = pcssp_RZIp_CCS_obj; end
+    fprintf('RZIp init via %s\n', class(obj2));
     obj2.init;
     obj2.setup;
 
@@ -142,4 +147,10 @@ if instance.reuse_instance()
     plasma_duration=t_max-t_start;
 
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
+
+    % A clean next_timestamp=None ending leaves nice_evo_rd/sink_control waiting for our
+    % ClosePort; this last reuse_instance() returns false and sends it, then deregisters.
+    if exist('nice_sent_final_message', 'var') && nice_sent_final_message
+        instance.reuse_instance();
+    end
 end

@@ -1,0 +1,140 @@
+# Pulse file template: copy to cases/pulses/<case>.yaml (the case is the shot unless
+# `case:` says otherwise), fill in, then run
+#   bin/pds-configure cases/pulses/<case>.yaml [--prepare] [--create] [--explain]
+# This file is the single place for everything shot-specific; the only other layer is
+# the workflow's generic workflows/<wf>/settings.ymmsl. bin/pds-configure derives
+# $SCENARIOS_REPO/<shot>/source.env and cases/overrides/<wf>_<case>.ymmsl (plus a
+# calibrated config_torax.py) from it, and bin/pds-create-case <wf> <case> regenerates
+# that override itself; never edit those generated files by hand (hand-written override
+# files are not supported, see cases/pulses/README.md). Full reference: the module
+# docstring of pds/configure.py. Unknown keys are errors.
+
+shot: 123456                        # required int: scenario directory $SCENARIOS_REPO/<shot>
+# case: 123456_variant              # optional, default: the shot: case name (cases/<wf>_<case>, bin/pds-create-case <wf> <case>)
+#                                   #   for a second design of the same shot's data (see cases/pulses/105084_literal.yaml)
+description: "free text"            # optional, default: none: copied as a comment into generated files
+
+# required: workflows to generate overrides for. Supported: inverse_convergence,
+# prescribed_transport, evolutive_controller, metis_from_dina,
+# metis_nice_inverse_from_dina. [] = preparation only (--create does nothing).
+# Each listed workflow gets a generated override and, with --create, a case
+# cases/<workflow>_<case>/; a workflow left out gets no override and, if created with
+# bin/pds-create-case, uses only its generic settings (see cases/pulses/README.md).
+# - evolutive_controller starts from the out_nice of a FULL inverse_convergence run of
+#   this shot: until that run exists (or while it covers less than the forward window)
+#   its check warns or fails; a failing workflow is skipped without blocking the others
+#   (pds-configure then exits non-zero and lists it).
+# - the METIS workflows run their MATLAB preprocessing at --create (several minutes).
+# Remove the workflows you do not intend to run.
+workflows:
+  - prescribed_transport
+  - inverse_convergence
+  - evolutive_controller
+  - metis_from_dina
+  - metis_nice_inverse_from_dina
+
+# required: inputs of preprocessing/prepare (written to $SCENARIOS_REPO/<shot>/source.env;
+# SCENARIOS_REPO defaults to scenarios/ in the PDS checkout, generated, not committed)
+prepare:
+  source: imas:hdf5?path=/work/imas/shared/imasdb/ITER/3/123456/1   # required: DINA entry (SOURCE_URI)
+  summary: null                     # optional, default: null (= source): summary entry (SUMMARY_URI)
+  # required. "basic" = the current ITER machine description (active ITER_MD catalogue versions:
+  # pf_active 111001/204, pf_passive 115005/3, wall 116000/5, and iron_core "empty",
+  # i.e. an empty static iron_core IDS, since ITER has no iron core); "legacy" =
+  # 111001/203, 115005/2, 116000/4, the datasets the five pds-scenarios scenarios
+  # 105073/78/84/92/99 were prepared with (use only to reproduce them); or a mapping:
+  #   {pf_active: <uri>, pf_passive: <uri>, wall: <uri>, iron_core: <uri> | empty}
+  machine_description: basic
+  # Slice selection (required: exactly one of n_timeslices / dt_step):
+  #   n_timeslices (int >= 2): number of prepared slices, uniform over the viable range;
+  #   dt_step (float > 0, s): one slice every dt_step seconds from the first viable time,
+  #     each mapped to the nearest viable raw sample (with metis: also set metis.nbt).
+  # This slice grid IS the outer time grid of inverse_convergence and
+  # prescribed_transport; time.t_start/t_end below only select slices from it.
+  n_timeslices: 41
+  # dt_step: 1.0
+  # optional, default: separate (data/in + data/in_md, read by inverse_convergence and
+  # prescribed_transport) or combined (data/in only: those two workflows then need their
+  # data/in_md reads redirected through settings:, see cases/pulses/105073.yaml)
+  md_layout: separate
+  # optional: data-dictionary version of the prepared data (IMAS_VERSION of the
+  # preparation); default: 4.0.0, the version of the existing scenarios' stored data
+  # dd_version: "4.0.0"
+  # optional, default: unset (no METIS dataset prepared); only if the METIS input dataset
+  # is needed (--prepare then adds --metis). mode: interpretative | predictive, default:
+  # interpretative (preprocessing/prepare); nbt default: n_timeslices, required with dt_step
+  # metis: {mode: interpretative, nbt: 41}
+
+# required: simulated time window and time steps (seconds)
+time:
+  # t_start/t_end: inverse_convergence loop window, prescribed_transport source window,
+  # METIS workflows source_metis window (first streamed slice = first native slice of the
+  # METIS input >= t_start), evolutive_controller default forward window
+  t_start: 10.0                     # required: first simulated time
+  t_end: 100.0                      # required, > t_start: last simulated time
+  inverse_dt: 0.3                   # optional, default: 0.3 s (inverse_convergence/settings.ymmsl): TORAX step inside inverse_convergence
+  # forward_dt: 0.01                # optional, default: 0.01 s (evolutive_controller/settings.ymmsl): TORAX + NICE evolutive step
+  # forward_source_dt: 1.0          # optional, default: unset (no resampling: native slices of the inverse result)
+  # evolutive_controller forward window (default: t_start / t_end). It must lie inside
+  # the time range of the inverse result it starts from; forward_t_start should be a
+  # native (stored) slice of it -- on 105073 a start from a non-native slice diverged.
+  # forward_t_start: 84.31759781205469  # optional, default: time.t_start: source.t_min (first forward time)
+  # forward_t_end: 84.7               # optional, default: time.t_end, > forward_t_start: torax.t_final,
+  #                                   #   nice_evo_rd.t_end (end of the forward simulation)
+  # forward_load_t_end: 130.0         # optional, default: forward_t_end, >= forward_t_end: source.t_max, the
+  #                                   #   end of the range the source loads (load more than is simulated)
+  # Inverse result the forward run starts from (source.source_uri); optional, default: the
+  # out_nice of the latest inverse_convergence run of the same shot,
+  # imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice
+  # (the workflow default; not written to the override). bin/pds-configure checks the
+  # forward window against it: outside its equilibrium time range -> error; a
+  # non-native forward_t_start -> warning; a non-HDF5 or not-yet-existing source ->
+  # warning only (rerun bin/pds-configure after the inverse run for a hard check).
+  # forward_source: "imas:hdf5?path=/path/to/out_nice"
+
+# optional: outer loop tuning of inverse_convergence (loop.<key>); whole block default:
+# unset (keep workflows/inverse_convergence/settings.ymmsl); per key defaults below are
+# also those of that file
+# inverse_convergence:
+#   max_iterations: 2               # int >= 1, default: 2
+#   tolerance: 1000.0               # absolute convergence tolerance, > 0, default: 1000.0
+#   rel_tolerance: 0.03             # relative convergence tolerance, >= 0, default: 0.03
+#   max_slices: 0                   # 0 = all slices in the window, default: 0
+#   cold_start: false               # default: false
+
+# optional, default: unset (generic qlknn transport). When present, a calibrated copy of
+# workflows/<wf>/config_torax.py is generated for each workflow with TORAX and the
+# override points TORAX at it.
+# transport_calibration:
+#   model: bohm-gyrobohm            # required in this block; the only supported model
+#   # A number, or a table {time_s: value}: keys are times in seconds (strictly
+#   # increasing), values > 0; piecewise-linear in time, held constant outside the given
+#   # range. chi_multiplier is applied to all four multipliers; the per-channel keys
+#   # override it.
+#   chi_multiplier: {0: 1.8, 95: 1.8, 105: 4.0}   # optional, default: unset (no common multiplier)
+#   # chi_e_bohm_multiplier: 1.0      # optional, default: 1.0 (TORAX default) or chi_multiplier
+#   # chi_i_bohm_multiplier: 1.0      # optional, default: 1.0 (TORAX default) or chi_multiplier
+#   # chi_e_gyrobohm_multiplier: 1.0  # optional, default: 1.0 (TORAX default) or chi_multiplier
+#   # chi_i_gyrobohm_multiplier: 1.0  # optional, default: 1.0 (TORAX default) or chi_multiplier
+
+# optional: any other MUSCLE3 setting, per workflow (each must be in workflows above);
+# default: unset. Written after the settings derived from the keys above, so these win
+# over workflows/<wf>/settings.ymmsl. A key must name an instance of the workflow
+# (workflows/<wf>/workflow.ymmsl, nested models included), or be a key of its
+# settings.ymmsl, or a MUSCLE3 reserved muscle_* setting; a key a pulse key already
+# controls (loop.t_min, torax.fixed_dt, ...) is refused. Values: scalars or lists of
+# scalars; ${PDS_REPO}, ${SCENARIOS_REPO}, ${SHOT}, ${CASE_DIR} are substituted by
+# bin/pds-create-case. Own config files go to cases/pulses/files/ (tracked).
+# `bin/pds-configure <pulse> --explain` shows every effective setting with its origin.
+# settings:
+#   inverse_convergence:
+#     waveform_editor.waveforms: ${PDS_REPO}/cases/pulses/files/inverse_convergence_123456_waveforms.yaml
+#     equilibrium.nice.xml_path: ${PDS_REPO}/cases/pulses/files/inverse_convergence_123456_config_nice_inverse.xml
+#     muscle_remote_log_level: DEBUG
+#   evolutive_controller:
+#     torax.max_consecutive_invalid_input: 50
+
+# optional: validation plot times (s); default: 25/50/75 % of [t_start, t_end], rounded
+# to 0.1 s
+postprocess:
+  t_list: [20, 55, 90]

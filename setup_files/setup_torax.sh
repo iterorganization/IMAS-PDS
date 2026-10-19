@@ -20,11 +20,12 @@ if [[ ! -d venv ]]; then
   "$UV" venv ./venv
 fi
 . venv/bin/activate
-"$UV" pip install -e .
+"$UV" pip install --no-config -e .
 # TORAX-MUSCLE3's pyproject.toml pins a stale muscle3==0.8.0; override so the
 # actor is compatible with the 0.10.0 manager (IMAS-MUSCLE3/Waveform-Editor
 # already resolve to 0.10.0 on their own).
-"$UV" pip install "muscle3==0.10.0"
+"$UV" pip install --no-config "muscle3==0.10.0"
+"$UV" pip install --no-config "ymmsl==0.17.0"  # --no-config: ignore the PDS repo's [tool.uv] ymmsl override (docs only); libmuscle 0.10.0 needs ymmsl 0.17.0
 echo "  muscle3 version: $("$UV" pip show muscle3 | grep '^Version')"
 deactivate
 module purge

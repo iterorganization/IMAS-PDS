@@ -41,7 +41,7 @@ Anatomy of a workflow directory
 
 ``preprocess.sh``
   Runs **once**, during ``pds-create-case``, not on every run. Use it for an input
-  dataset that cannot be pre-baked into ``pds-scenarios`` --
+  dataset that cannot be pre-baked into the scenario data root --
   ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own IMAS layout from raw
   DINA this way. It receives ``PDS_REPO``, ``SCENARIOS_REPO``, ``SHOT`` and
   ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.

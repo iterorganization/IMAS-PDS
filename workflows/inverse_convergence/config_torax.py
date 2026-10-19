@@ -2,9 +2,15 @@
 
 This config carries no scenario-specific input path: the simulated time window is taken
 from the equilibrium sequence the actor receives (t_initial/t_final = first/last /time),
-and the prescribed actuator sources (e.g. ECRH) are taken from the core_sources IDS sent
-to the actor's core_sources_in_f port. t_initial/t_final below are placeholders that the
-actor overwrites at run time.
+and the EC heating power is taken from the core_sources IDS sent to the actor's
+core_sources_in_f port: the Waveform-Editor "ec" source carries only
+global_quantities/power (a tendency fitted to DINA's summary power_additional by
+bin/pds-tendencies), which the actor puts into sources.ecrh.P_total below. Requires
+TORAX-MUSCLE3 with power-only source support (power_only_sources in
+torax_muscle3/torax_actor.py), which maps an ec source carrying only
+global_quantities/power to sources.ecrh.P_total. TORAX computes the EC deposition,
+the ohmic heating and the radiation itself.
+t_initial/t_final below are placeholders that the actor overwrites at run time.
 """
 
 import numpy as np
@@ -39,7 +45,7 @@ CONFIG = {
     # circular geometry is only for testing and prototyping
     "geometry": {
         "geometry_type": "circular",
-        "n_rho": 25,
+        "n_rho": 50,
     },
     "pedestal": {},
     "mhd": {
@@ -49,11 +55,21 @@ CONFIG = {
         },
     },
     "sources": {
-        # TORAX must therefore not add its own ohmic or subtract its own radiation
-        # through config - that double-counts terms already inside the imported source.
+        # The EC power is a Waveform-Editor waveform (core_sources/source(1)/
+        # global_quantities/power, read by the TORAX actor into sources.ecrh.P_total);
+        # TORAX computes the ohmic heating, the radiation and the EC deposition itself.
+        # A waveform file importing DINA's "total" source (additional + ohmic -
+        # radiation) as "ec" would double-count the ohmic and radiation terms with
+        # this block.
         "fusion": {},
-        "ei_exchange": {},  # internal e<->i transfer; DINA gives no ion source at all
-        "bremsstrahlung": {"mode": "ZERO"},
+        "ei_exchange": {},  # internal e<->i transfer
+        "ohmic": {},  # self-consistent ohmic heating
+        "bremsstrahlung": {},  # Wesson model from Z_eff/impurity above
+        "impurity_radiation": {},  # Mavrin fit from the Ne impurity above
+        # EC deposition model (gaussian_lin_liu; gaussian fitted to DINA 105073's electron
+        # heating profile, current drive efficiency at the TORAX default). P_total is set
+        # at run time by the actor from the waveform's ec power (0 if none is received).
+        "ecrh": {"gaussian_location": 0.3, "gaussian_width": 0.33, "P_total": 0.0},
     },
     "transport": {
         "model_name": "qlknn",

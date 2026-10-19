@@ -15,16 +15,35 @@ module purge
 
 bash setup_files/setup_test_files.sh
 
-# --ignore_cache: Lmod's module cache doesn't necessarily know about a path added via
-# `module use` at runtime (especially on a CI agent that has never seen this path), and
-# reports it as "unknown" otherwise.
-module use "/work/projects/pds/modules/all"
-module --ignore_cache load PDS
+# Dependency stack of deps.yaml (module paths, manager-side modules, PDS_MOD_* variables for the
+# ymmsl `modules:` lines) and the checkout environment the PDS module used to set. The resolver
+# exports LMOD_IGNORE_CACHE=yes: Lmod's cache on a CI agent does not know a path added by
+# `module use` at runtime, and the instance scripts muscle_manager generates do a plain `module load`.
+export COMBO=intel-2025b-dd4
+source ci/resolve_deps.sh
+source ci/pds_env.sh
 
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
 export SBATCH_PARTITION=sun_debug,vega_debug,sirius_debug
 export SLURM_PARTITION=sun_debug,vega_debug,sirius_debug
+
+# Run a job script on Slurm and block until it ends. sbatch --wait exits with the job's exit
+# code, so a failed run still fails CI under set -e; the job log is printed either way.
+# Without a Slurm client on the agent, the script runs locally with bash instead.
+slurm_run() {
+  local log="$1" status=0
+  shift
+  if ! command -v sbatch >/dev/null; then
+    echo "slurm_run: sbatch not found, running $1 locally" >&2
+    bash "$@"
+    return
+  fi
+  mkdir -p "$(dirname "$log")"
+  sbatch --wait --output="$log" "$@" || status=$?
+  cat "$log" || true
+  return "$status"
+}
 
 # Single-actor smoke tests: catch a broken actor environment in seconds. Without an
 # explicit --run-dir the manager creates run_<model>_<timestamp> in the CI workspace and
@@ -40,7 +59,34 @@ run_case_clean() {
   local workflow="$1" shot="$2"
   local case_dir="cases/${workflow}_${shot}"
   bin/pds-create-case "$workflow" "$shot"
-  bash bin/pds-run-case.sbatch "$case_dir"
+  slurm_run "cases/runs/$(basename "$case_dir").slurm.out" bin/pds-run-case.sbatch "$case_dir"
+}
+
+# Run a case with checkpointing, then resume a second run from the middle workflow snapshot.
+run_case_with_checkpoints() {
+  local workflow="$1" shot="$2" every="$3"
+  local case_dir="$PWD/cases/${workflow}_${shot}_checkpoints"
+  bin/pds-create-case "$workflow" "$shot" "$case_dir"
+  cat > "$case_dir/checkpoints.ymmsl" <<EOF
+ymmsl_version: v0.2
+checkpoints:
+  at_end: true
+  simulation_time:
+  - every: $every
+EOF
+  local runs="cases/runs/$(basename "$case_dir")"
+  slurm_run "$runs.slurm.out" bin/pds-run-case.sbatch "$case_dir" "$case_dir/checkpoints.ymmsl"
+
+  local run_dir snapshots
+  run_dir="$(realpath "$runs")"
+  # Mid-run snapshots, one per distinct simulation time, in time order. The at_end ones
+  # only hold "Final" snapshots and would resume at the very end.
+  mapfile -t snapshots < <(awk '$NF == "Intermediate" {print $2, FILENAME}' \
+    "$run_dir"/snapshots/snapshot_*.ymmsl | sort -n -u -k1,1 | cut -d' ' -f2)
+  (( ${#snapshots[@]} >= 3 )) || { echo "expected >= 3 intermediate snapshots in $run_dir/snapshots" >&2; return 1; }
+  # The resumed run needs checkpoints too: libmuscle 0.10 crashes on resume without them.
+  slurm_run "$runs.resume.slurm.out" bin/pds-run-case.sbatch "$case_dir" \
+    "$case_dir/checkpoints.ymmsl" "${snapshots[${#snapshots[@]} / 2]}"
 }
 
 # RUN TEST FILES
@@ -52,11 +98,26 @@ run_actor_test_clean test_waveform_editor
 run_actor_test_clean test_torax_actor
 run_actor_test_clean test_nice_actor
 run_actor_test_clean test_metis_actor
-run_actor_test_clean test_chease_actor
+run_actor_test_clean test_chease_actor  # Lmod cache ignored (LMOD_IGNORE_CACHE in ci/resolve_deps.sh): CHEASE's dependency resolves again
+
+# Repeatability: the same coupling twice must give bit-identical sinks (catches
+# thread-order or uninitialised-memory non-determinism in an actor).
+bash ci/check_repeatability.sh ymmsl_files/test_nice_actor.ymmsl 2
+
+# PREPARE SCENARIO DATA
+#
+# Data are no longer read from the shared /work/projects/pds/pds-scenarios: each shot the
+# cases below need is prepared into this checkout's scenario data root (SCENARIOS_REPO,
+# default $PDS_REPO/scenarios) first. ~25 s per shot.
+
+for shot in 105099 105073 105084; do
+  bin/pds-configure "cases/pulses/${shot}.yaml" --prepare
+done
 
 # RUN WORKFLOWS
 
 run_case_clean prescribed_transport 105099
+run_case_with_checkpoints prescribed_transport 105099 10
 run_case_clean inverse_convergence 105073
 run_case_clean evolutive_controller 105073
 run_case_clean metis_from_dina 105084

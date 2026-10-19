@@ -1,16 +1,21 @@
-# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap.
-# `eq` (the one-shot `source` actor) is a NICE-reconstructed equilibrium, not raw DINA -- see
-# workflow.ymmsl's header comment for why TORAX's geometry builder needs that. `reconstruction:`
-# below passes it through whole (every field, not just the hand-picked ones); `state:`/
-# `targets:` then overlay specific fields on top, same as inverse_convergence. `cp` (previously
-# a Picard-loop port there) is just this scenario's own DINA data here, so referenced directly
-# via `input` instead of a port.
+# Waveform-Editor configuration for evolutive_controller's F_INIT bootstrap, seeded from a
+# completed inverse_convergence run of the same shot wherever it has the data:
+# - `eq` (the one-shot `source` actor) is that run's NICE-reconstructed equilibrium, passed
+#   through whole -- TORAX's geometry builder needs its flux-surface quantities.
+# - `torax` is that run's converged TORAX core_profiles (copied in by preprocess.sh). All
+#   core_profiles fields come from it so they share one radial grid; it has no
+#   j_non_inductive, so NICE evo_rd falls back to j_bootstrap, same as on every later step.
+# - `nice` is that run's NICE coil currents.
+# core_sources (ECRH) and coil voltages stay on DINA `input`: inverse_convergence never
+# writes either to disk.
 globals:
   dd_version: 4.0.0
   imports:
     input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
     input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
     eq: {port: equilibrium_in}
+    nice: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
+    torax: "imas:hdf5?path=${CASE_DIR}/preprocess/inverse_convergence_${SHOT}_core_profiles"
 
 # Static machine-description reference
 machine_description:
@@ -38,42 +43,56 @@ state:
   equilibrium/time_slice/global_quantities/psi_boundary:
     - {ref: eq}
   core_profiles/global_quantities/v_loop:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/time:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/grid/rho_tor_norm:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/grid/psi:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/electrons/temperature:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/electrons/density:
-    - {ref: input}
+    - {ref: torax}
   core_profiles/profiles_1d/t_i_average:
-    - {ref: input}
+    - {ref: torax}
+  core_profiles/profiles_1d/pressure_thermal:
+    - {ref: torax}
   core_profiles/profiles_1d/conductivity_parallel:
-    - {ref: input}
-  core_profiles/profiles_1d/j_non_inductive:
-    - {ref: input}
+    - {ref: torax}
+  core_profiles/profiles_1d/j_bootstrap:
+    - {ref: torax}
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/vacuum_toroidal_field/b0:
-    - {ref: input}
+    - {ref: eq}
   core_profiles/global_quantities/ip:
-    - {ref: input}
+    - {ref: torax}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/r:
-    - {ref: input}
+    - {ref: eq}
   equilibrium/time_slice/boundary/outline/z:
-    - {ref: input}
-  core_sources/*:
-    - {ref: input}
+    - {ref: eq}
+  # EC heating: pulse data. The per-pulse waveform file written by bin/pds-tendencies
+  # (cases/pulses/files/<wf>_<case>_waveforms.yaml, a copy of this file referenced from
+  # the pulse file through settings.<wf>.waveform_editor.waveforms) carries only the EC
+  # power, as a piecewise-linear tendency of DINA's summary
+  # heating_current_drive/power_additional; the TORAX actor reads it into
+  # sources.ecrh.P_total and TORAX computes the deposition, the ohmic heating and the
+  # radiation itself (config_torax.py). This generic file only declares the source with
+  # a 0 W placeholder: a case built without a per-pulse file runs WITHOUT EC heating.
+  # DINA's own core_sources is not imported: its source(1) is the "total" source
+  # (additional + ohmic - radiation) and would double-count TORAX's own models.
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  core_sources/source(1)/identifier/index:
+    - {value: 3, start: 0, end: 1000}
+  core_sources/source(1)/global_quantities/power:
+    - {value: 0, start: 0, end: 1000}
   pf_active/coil(*)/current/data:
-    - {ref: input}
+    - {ref: nice}
   pf_active/coil(*)/voltage/data:
     - {ref: input}

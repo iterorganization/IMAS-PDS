@@ -43,7 +43,7 @@ OVERLAYS=("$@")
 
 PDS_REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 export PDS_REPO
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
+export SCENARIOS_REPO="${SCENARIOS_REPO:-$PDS_REPO/scenarios}"
 
 CASE_DIR="$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$CASE_ARG"
@@ -53,16 +53,13 @@ export CASE_DIR
 export YMMSL_PATH="$PDS_REPO/workflows${YMMSL_PATH:+:$YMMSL_PATH}"
 
 if [[ -z "${MANAGER:-}" ]]; then
-  : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
   if [[ -z "${EBROOTIMASMINMUSCLE3:-}" ]]; then
-    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
-    if [[ -f "$LMOD_INIT" ]]; then
-      source "$LMOD_INIT"
-      module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
-    fi
+    # PDS_MODULEPATH is legacy and ignored: module paths now come from deps.yaml (ci/resolve_deps.sh).
+    # Not set up yet: resolve the dependency stack and the checkout environment (what `module load PDS` did).
+    export COMBO="${COMBO:-intel-2025b-dd4}"
+    source "$PDS_REPO/ci/resolve_deps.sh" >&2 && source "$PDS_REPO/ci/pds_env.sh" || true
   fi
-  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'export COMBO=intel-2025b-dd4; source ci/resolve_deps.sh; source ci/pds_env.sh' from the checkout first}"
   MANAGER="$(command -v muscle_manager)"
   : "${MANAGER:?$0: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi

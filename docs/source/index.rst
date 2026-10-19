@@ -19,15 +19,17 @@ Getting started
   git clone https://github.com/iterorganization/IMAS-PDS.git
   cd IMAS-PDS
 
-  module use /work/projects/pds/modules/all
-  module load PDS
+  export COMBO=intel-2025b-dd4
+  source ci/resolve_deps.sh
+  source ci/pds_env.sh
 
+  bin/pds-configure cases/pulses/105073.yaml --prepare
   bin/pds-create-case inverse_convergence 105073
   sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105073
 
 :ref:`installing` describes what the module sets up, :ref:`running_cases`, what a
-case contains and where its output goes, and :ref:`workflows` which couplings are
-available.
+case contains and where its output goes (including the ``--prepare`` step above), and
+:ref:`workflows` which couplings are available.
 
 Related documentation
 ---------------------
