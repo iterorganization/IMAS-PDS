@@ -93,15 +93,12 @@ VARS='${PDS_REPO} ${SCENARIOS_REPO} ${SHOT} ${CASE_DIR}'
 if [[ -f "$PULSE_FILE" && -z "${PDS_CONFIGURE_NO_REGEN:-}" ]]; then
   # configure.py needs Python >= 3.10 with PyYAML (the PDS module's python3 has both).
   if ! python3 -c "import sys, yaml; sys.exit(sys.version_info < (3, 10))" >/dev/null 2>&1; then
-    : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
-    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
-    if [[ -f "$LMOD_INIT" ]]; then
-      source "$LMOD_INIT"
-      module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load PDS 2>/dev/null || true
-    fi
+    # PDS_MODULEPATH is legacy and ignored: module paths now come from deps.yaml (ci/resolve_deps.sh).
+    # Not set up yet: resolve the dependency stack and the checkout environment (what `module load PDS` did).
+    export COMBO="${COMBO:-intel-2025b-dd4}"
+    source "$PDS_REPO/ci/resolve_deps.sh" >&2 && source "$PDS_REPO/ci/pds_env.sh" || true
     python3 -c "import sys, yaml; sys.exit(sys.version_info < (3, 10))" >/dev/null 2>&1 || {
-      echo "pds-create-case: python3 >= 3.10 with PyYAML not found and could not load PDS automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first" >&2
+      echo "pds-create-case: python3 >= 3.10 with PyYAML not found and could not load PDS automatically -- run 'export COMBO=intel-2025b-dd4; source ci/resolve_deps.sh; source ci/pds_env.sh' from the checkout first" >&2
       exit 1
     }
   fi
@@ -220,15 +217,12 @@ if [[ -x "$PREPROCESS" ]]; then
   # actually loaded, which (unlike bin/pds-run-case.sbatch's caller) nothing guarantees yet
   # at this point. Auto-load it the same way bin/pds-run-case.sbatch does for IMAS-MUSCLE3.
   if [[ -z "${IMAS_VERSION:-}" ]]; then
-    : "${PDS_MODULEPATH:=/work/projects/pds/modules/all}"
-    LMOD_INIT="/usr/share/lmod/lmod/init/bash"
-    if [[ -f "$LMOD_INIT" ]]; then
-      source "$LMOD_INIT"
-      module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load PDS 2>/dev/null || true
-    fi
+    # PDS_MODULEPATH is legacy and ignored: module paths now come from deps.yaml (ci/resolve_deps.sh).
+    # Not set up yet: resolve the dependency stack and the checkout environment (what `module load PDS` did).
+    export COMBO="${COMBO:-intel-2025b-dd4}"
+    source "$PDS_REPO/ci/resolve_deps.sh" >&2 && source "$PDS_REPO/ci/pds_env.sh" || true
   fi
-  : "${IMAS_VERSION:?pds-create-case: IMAS_VERSION not set and could not load PDS automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${IMAS_VERSION:?pds-create-case: IMAS_VERSION not set and could not load PDS automatically -- run 'export COMBO=intel-2025b-dd4; source ci/resolve_deps.sh; source ci/pds_env.sh' from the checkout first}"
   "$PREPROCESS"
 fi
 

@@ -26,9 +26,10 @@ and load up the PDS environment again:
 
     # Open the directory in which you cloned the PDS
     cd <your PDS install>
-    # Load the PDS module
-    module use /work/projects/pds/modules/all
-    module load PDS
+    # Set up the PDS environment
+    export COMBO=intel-2025b-dd4
+    source ci/resolve_deps.sh
+    source ci/pds_env.sh
 
 Now, let's start up the MUSCLE3 dashboard, and have it look for PDS runs in the current
 working directory. This will automatically open the MUSCLE3 dashboard in a new browser tab.

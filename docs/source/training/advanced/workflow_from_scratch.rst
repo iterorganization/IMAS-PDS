@@ -13,8 +13,9 @@ These exercises are mostly relevant for developers.
 
 .. code-block:: bash
 
-    module use /work/projects/pds/modules/all  # or wherever build.sh installed it
-    module load PDS
+    export COMBO=intel-2025b-dd4
+    source ci/resolve_deps.sh
+    source ci/pds_env.sh
     module load IDStools
 
 Exercise 1

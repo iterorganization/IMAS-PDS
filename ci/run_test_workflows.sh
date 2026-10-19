@@ -15,11 +15,13 @@ module purge
 
 bash setup_files/setup_test_files.sh
 
-# --ignore_cache: Lmod's module cache doesn't necessarily know about a path added via
-# `module use` at runtime (especially on a CI agent that has never seen this path), and
-# reports it as "unknown" otherwise.
-module use "/work/projects/pds/modules/all"
-module --ignore_cache load PDS
+# Dependency stack of deps.yaml (module paths, manager-side modules, PDS_MOD_* variables for the
+# ymmsl `modules:` lines) and the checkout environment the PDS module used to set. The resolver
+# exports LMOD_IGNORE_CACHE=yes: Lmod's cache on a CI agent does not know a path added by
+# `module use` at runtime, and the instance scripts muscle_manager generates do a plain `module load`.
+export COMBO=intel-2025b-dd4
+source ci/resolve_deps.sh
+source ci/pds_env.sh
 
 export HDF5_USE_FILE_LOCKING=FALSE  # avoid spurious HDF5 locking failures on networked storage
 
@@ -96,7 +98,7 @@ run_actor_test_clean test_waveform_editor
 run_actor_test_clean test_torax_actor
 run_actor_test_clean test_nice_actor
 run_actor_test_clean test_metis_actor
-# run_actor_test_clean test_chease_actor
+run_actor_test_clean test_chease_actor  # Lmod cache ignored (LMOD_IGNORE_CACHE in ci/resolve_deps.sh): CHEASE's dependency resolves again
 
 # Repeatability: the same coupling twice must give bit-identical sinks (catches
 # thread-order or uninitialised-memory non-determinism in an actor).

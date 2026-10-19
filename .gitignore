@@ -10,6 +10,8 @@ __pycache__/
 .cache
 
 tmp
+# written by ci/resolve_deps.sh (env.sh, source-built components)
+ci-deps/
 .coverage
 .venv
 venv

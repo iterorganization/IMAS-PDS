@@ -9,7 +9,7 @@ than absent.
 ``PDS: could not determine which PDS checkout to use``
 ------------------------------------------------------
 
-``module load PDS`` could not work out which checkout to wire in: it looks at
+(only when using the convenience module ``PDS``; ``source ci/pds_env.sh`` uses the checkout it belongs to) ``module load PDS`` could not work out which checkout to wire in: it looks at
 ``$PDS_REPO`` first, then your current directory. Do one of:
 
 .. code-block:: bash
@@ -53,11 +53,13 @@ first:
 
 .. code-block:: bash
 
-  module use /work/projects/pds/modules/all
-  module load PDS
+  export COMBO=intel-2025b-dd4
+  source ci/resolve_deps.sh
+  source ci/pds_env.sh
 
 On a compute node that has never seen that module path, Lmod's cache may not know about
-it. Add ``--ignore_cache``:
+it. ``ci/resolve_deps.sh`` exports ``LMOD_IGNORE_CACHE=yes``, so this is no longer needed
+once the resolver has been sourced. For the convenience module, add ``--ignore_cache``:
 
 .. code-block:: bash
 

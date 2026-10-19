@@ -182,10 +182,10 @@ a case directory for it and the only thing left to build is the actor.
            :language: yaml
 
         ``my_actor`` has no ``base_env``/``modules``, so it inherits the environment you
-        already loaded (``module load PDS`` gives it ``imas`` and ``libmuscle``) instead of a
+        already loaded (the PDS environment -- ``source ci/resolve_deps.sh; source ci/pds_env.sh`` or ``module load PDS`` -- gives it ``imas`` and ``libmuscle``) instead of a
         purged one -- appropriate for a plain script, not an EasyBuild-installed actor. Its
         ``args`` uses ``$PDS_REPO`` rather than ``$CASE_DIR``: ``$PDS_REPO`` (set by
-        ``module load PDS``) is always an absolute path, while ``$CASE_DIR`` stays whatever
+        ``ci/pds_env.sh`` or the PDS module) is always an absolute path, while ``$CASE_DIR`` stays whatever
         (possibly relative) path you gave ``bin/pds-run-case`` -- and each actor runs from its
         own per-instance working directory, so a relative script path resolves against the
         wrong place there.

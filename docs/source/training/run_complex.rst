@@ -14,9 +14,10 @@ terminal with an active PDS environment.
 
     # Open the directory in which you cloned the PDS
     cd <your PDS install>
-    # Load the PDS module
-    module use /work/projects/pds/modules/all
-    module load PDS
+    # Set up the PDS environment
+    export COMBO=intel-2025b-dd4
+    source ci/resolve_deps.sh
+    source ci/pds_env.sh
 
 Running on a compute node
 -------------------------

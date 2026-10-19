@@ -1,0 +1,59 @@
+easyblock = 'PythonPackage'
+
+name = 'TORAX-MUSCLE3'
+version = '0.1.4.dev1'
+versionsuffix = '-pds'
+
+local_commit = '722264528c9c572daf770a6149b96e6e218d593d'  # head of PR #44 (feature/waveform_accept), 2026-10-16
+
+homepage = 'https://github.com/iterorganization/TORAX-MUSCLE3'
+description = """MUSCLE3 actor wrapper around TORAX, a differentiable tokamak
+core transport simulator, for use in IMAS coupled workflows.
+Development build with power-only core_sources support (PR #44)."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+sources = [{
+    'git_config': {
+        'url': 'https://github.com/iterorganization',
+        'repo_name': 'TORAX-MUSCLE3',
+        'commit': local_commit,
+    },
+    # commit in the filename: EasyBuild resolves sources by name, so a
+    # commit-independent one silently reuses the cached tarball
+    'filename': 'torax_muscle3-%s.tar.gz' % local_commit[:10],
+}]
+checksums = [None]
+
+preinstallopts = 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s '
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('SciPy-bundle', '2025.07'),
+]
+
+use_pip = True
+use_pip_for_deps = True
+download_dep_fail = False
+
+postinstallcmds = [
+    'PYTHONPATH=%(installdir)s/lib/python%(pyshortver)s/site-packages:$PYTHONPATH '
+    'python -m pip install --prefix=%(installdir)s --no-warn-script-location "muscle3==0.10.0"',
+]
+
+sanity_pip_check = False
+
+options = {'modulename': 'torax_muscle3'}
+
+sanity_check_paths = {
+    'files': [],
+    'dirs': ['lib/python%(pyshortver)s/site-packages/torax_muscle3'],
+}
+
+sanity_check_commands = [
+    "python -c 'import jax, torax, libmuscle'",
+    "python -c 'import libmuscle; assert libmuscle.__version__ == \"0.10.0\", libmuscle.__version__'",
+    "python -c 'import torax_muscle3.torax_actor'",
+]
+
+moduleclass = 'phys'

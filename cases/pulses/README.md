@@ -178,7 +178,9 @@ pulse:
 
 ```bash
 bin/pds-configure cases/pulses/<shot>.yaml       # first, if source.env does not exist yet
-module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+export COMBO=intel-2025b-dd4
+source ci/resolve_deps.sh
+source ci/pds_env.sh
 python preprocessing/check_scenario.py <shot>    # writes $SCENARIOS_REPO/<shot>/check_<shot>.png
 ```
 

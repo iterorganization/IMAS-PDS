@@ -143,8 +143,9 @@ thing `prepare` writes is the scenario's own `data/`.
 used by `bin/pds-configure` has everything:
 
 ```bash
-module use /work/projects/pds/modules/all
-module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+export COMBO=intel-2025b-dd4
+source ci/resolve_deps.sh
+source ci/pds_env.sh
 preprocessing/prepare 105073
 ```
 
@@ -283,7 +284,7 @@ METIS does not take a plasma state the way TORAX does; it builds its input from 
 scenarios used with a METIS workflow need one extra step:
 
 ```bash
-module use $HOME/public/modules && module load PDS   # MATLAB, PDS-METIS, IMAS-MATLAB
+export COMBO=intel-2025b-dd4; source ci/resolve_deps.sh; source ci/pds_env.sh   # or: module load PDS
 preprocessing/prepare 105084 --metis
 ```
 

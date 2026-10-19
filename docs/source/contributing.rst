@@ -94,6 +94,26 @@ Opening a pull request
   reasoning is not, and it is what the next reader needs.
 - CI runs linting, then the docs build. Both must pass.
 
+Dependencies (deps.yaml)
+------------------------
+
+``deps.yaml`` at the repository root is the single place where external versions are
+pinned: for each component the module name, the easyconfig that builds it and, for a
+source build, an optional git URL, ref and install step. There is one combination,
+``intel-2025b-dd4``.
+
+``ci/resolve_deps.sh`` is sourced by ``ci/run_test_workflows.sh`` and by the ``bin/``
+scripts when the environment is not set up. It exports one ``PDS_MOD_<NAME>`` variable
+per component, and ``workflows/lib/easybuild_programs.ymmsl`` references them as
+``${PDS_MOD_NAME:?...}``, so changing a module is a one-line change in ``deps.yaml``.
+
+Promotion rule: a line naming a ``.dev`` module or a PR head (``refs/pull/N/head``) is
+temporary and is switched back to the release module once it exists.
+``grep -n 'refs/pull\|\.dev' deps.yaml`` lists the pending ones.
+
+``module load PDS`` (the umbrella module PDS/1.0) remains a convenience; its dependency
+list must match the manifest's manager-side modules (its future is still to be decided).
+
 Running the integration tests
 -----------------------------
 
@@ -104,7 +124,7 @@ real IMAS data, so they run on the ITER cluster under Bamboo, which calls:
 
   bash ci/run_test_workflows.sh
 
-That builds the module environment, then runs eight single-actor smoke tests followed
+That sets up the environment from ``deps.yaml`` (``ci/resolve_deps.sh`` + ``ci/pds_env.sh``), then runs eight single-actor smoke tests followed
 by five full cases end to end. It is slow and needs a scenarios checkout. If your change
 touches ``workflows/``, ``bin/`` or the easyconfigs, that suite -- not GitHub CI -- is
 what will catch a regression.

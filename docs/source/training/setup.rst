@@ -34,11 +34,13 @@ Look at the available modules under the ``/work/projects/pds/modules/all`` secti
 Which modules are available? You can recognise them by the ``-pds`` at the end of their name.
 
 
-As a first step, let's load the PDS module:
+As a first step, let's set up the PDS environment (from the checkout root):
 
 .. code-block:: bash
 
-    module load PDS
+    export COMBO=intel-2025b-dd4
+    source ci/resolve_deps.sh
+    source ci/pds_env.sh
 
 Lastly, we will use some of the test workflows as examples during this training, so let's quickly 
 set these up as well:
