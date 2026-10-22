@@ -21,7 +21,7 @@ mkdir -p "$RUN_DIR/plots"
 
 "$PYTHON" "$PDS_REPO/workflows/torax_nice_utils/plot_validation.py" \
   --shot_nr "$SHOT" \
-  --dina_uri "$SCENARIOS_REPO/$SHOT/data/in" \
+  --dina_uri "$CASE_DIR/preprocess/in" \
   --nice_uri "$RUN_DIR/out_nice" \
   --torax_uri "$RUN_DIR/out_torax" \
   --output_dir "$RUN_DIR/plots" \

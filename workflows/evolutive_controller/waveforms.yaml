@@ -11,8 +11,8 @@
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
     eq: {port: equilibrium_in}
     nice: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
     torax: "imas:hdf5?path=${CASE_DIR}/preprocess/inverse_convergence_${SHOT}_core_profiles"
