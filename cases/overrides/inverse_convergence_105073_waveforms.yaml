@@ -53,9 +53,9 @@ targets:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:
     - {ref: input}
-  core_sources/*:
-    - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  core_sources/source(1)/global_quantities/power:
+    - {ref: input, path: summary/heating_current_drive/power_ec/value, interp: linear}
   pf_active/coil(*)/current/data:
     - {ref: input}
