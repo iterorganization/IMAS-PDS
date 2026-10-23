@@ -10,7 +10,7 @@ Each iteration the loop:
 - The `waveform_editor`: 
   - overlays the designed Ip(t)/B0 onto the target equilibrium
   - Mirrors core_profiles through unchanged
-  - Imports the ECRH heating
+  - Imports the EC power
   - Re-exports the scenario's static wall/pf_passive/iron_core machine description
     to the NICE inverse
 - One `nice_imas_inv_muscle3` receives the whole trace and solves it in batch mode
@@ -78,8 +78,14 @@ workflow's own directory, and any per-shot variant or calibrated solver config l
 Produced by `preprocess.sh` at case creation (see `preprocessing/`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace, plus `core_profiles`
-  (electron/ion temperature and density) for TORAX and the ECRH heating trace picked up via
-  `core_sources`.
+  (electron/ion temperature and density) for TORAX and the EC power
+  (`summary.heating_current_drive.power_ec`). The waveform editor sends only that power to
+  TORAX, as a power-only `core_sources` `ec` source that the TORAX actor deposits with
+  DINA's EC deposition shape; TORAX computes ohmic heating, radiation and the bootstrap
+  current itself.
+- `preprocess/torax_params.json` (`preprocessing/dina/torax_params.py`): the EC deposition
+  shape, impurity ratios (TORAX computes Z_eff) and W radiation multiplier `config_torax.py` takes
+  from the shot's DINA run.
 - Machine descriptions for `pf_active`, `pf_passive`, `wall`, and `iron_core`.
 - The `pf_active` machine description must have exactly one element per coil in the `elements`
   array of structures, and each coil must carry a resistance value -- both required by NICE

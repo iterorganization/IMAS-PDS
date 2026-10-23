@@ -1,13 +1,13 @@
 """
-Preprocessing of the DINA-derived data (equilibrium, core_profiles, core_sources
-and the pf_active coil-current trace) into valid PDS coupling input.
+Preprocessing of the DINA-derived data (equilibrium, core_profiles, core_sources,
+the pf_active coil-current trace and the EC power) into valid PDS coupling input.
 """
 
 import logging
 
 import numpy as np
-from imas import convert_ids
-from imas.ids_defs import CLOSEST_INTERP
+from imas import IDSFactory, convert_ids
+from imas.ids_defs import CLOSEST_INTERP, IDS_TIME_MODE_HOMOGENEOUS
 from packaging.version import Version
 from scipy.integrate import cumulative_trapezoid as cumtrapz
 from scipy.interpolate import interp1d as interp1
@@ -91,11 +91,30 @@ def write_dina_data(db_out, db_in, db_sum, db_md_pf_active, n_timeslices):
         t_list.append(t)
 
     preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list)
+    write_ec_power(db_out, summary)
 
     logger.info(
         "Following timeslices during preprocessing were not viable: %s", skipped
     )
     return t_list
+
+
+def write_ec_power(db_out, summary):
+    """Write DINA's EC power trace as summary.heating_current_drive.power_ec.
+
+    DINA leaves power_ec empty and fills power_additional; EC is its only additional
+    heating, which is checked here.
+    """
+    hcd = summary.heating_current_drive
+    for name in ("power_nbi", "power_ic", "power_lh"):
+        other = np.asarray(getattr(hcd, name).value)
+        if other.size and np.nanmax(np.abs(other)) > 0:
+            raise ValueError(f"DINA summary has non-zero {name}")
+    ec = IDSFactory(version=DD_VERSION).summary()
+    ec.ids_properties.homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS
+    ec.time = summary.time
+    ec.heating_current_drive.power_ec.value = hcd.power_additional.value
+    db_out.put(ec)
 
 
 def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
