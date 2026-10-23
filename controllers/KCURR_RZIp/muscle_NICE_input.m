@@ -6,6 +6,10 @@ function muscle_NICE_input(t_cur,voltage,coil_current)
 instance = evalin('base','instance');
 logger = evalin('base','logger');
 pfa_base = evalin('base','pf_active');
+ip_sign = evalin('base','ip_sign');
+% back from the controller's Ip>0 frame (see muscle_controller_NICE_IMAS_iter_init)
+voltage = ip_sign*voltage;
+coil_current = ip_sign*coil_current;
 
 %add min max and some check
 Vmax=[45000.0 45000.0 45000.0 45000.0 45000.0 45000.0 48000.0 55000.0 55000.0 55000.0 55000.0 22500.0 48000.0 60000.0];
@@ -35,9 +39,14 @@ else
     voltage_full(13:14) = 0;
 end
 voltage = voltage_full;
+% max/min below would turn NaN into Vmin
+voltage(isnan(voltage)) = 0;
 
 voltage=max(voltage,Vmin);
 voltage=min(voltage,Vmax);
+% NICE evo_rd stores coil currents as -I_IDS internally but applies the IDS voltage
+% unflipped, so V>0 lowers I_IDS there; negate so V>0 raises I_IDS as the controller assumes.
+voltage=-voltage;
 
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
