@@ -106,7 +106,7 @@ workflows build their own input from raw DINA at case-creation time, which makes
 Which shots work
 ----------------
 
-Any shot in your ``$SCENARIOS_REPO`` can be tried with any workflow. A file in
+Any shot in ``preprocessing/dina/shots`` can be tried with any workflow. A file in
 ``cases/overrides/`` is *not* a prerequisite -- it only exists for shots needing tuning
 beyond the workflow's generic settings. So the two lists are worth separating:
 
@@ -139,8 +139,8 @@ Trust the CI column: those five combinations run end to end on every integration
 Input data requirements
 -----------------------
 
-All workflows need DDv4 input. The METIS workflows convert DINA data during
-preprocessing if needed.
+All workflows need DDv4 input. Their ``preprocess.sh`` converts the DINA data at case
+creation (see ``preprocessing/``).
 
 Anything running NICE also needs:
 

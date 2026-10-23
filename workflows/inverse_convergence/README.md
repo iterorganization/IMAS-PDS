@@ -34,8 +34,6 @@ in the case.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
-
 bin/pds-create-case inverse_convergence 105084       # -> cases/inverse_convergence_105084
 sbatch bin/pds-run-case.sbatch cases/inverse_convergence_105084
 ```
@@ -55,11 +53,10 @@ If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_ma
 Scenarios available: 105073, 105078, 105084, 105092, 105099, plus `105084_literal` (same
 source data as 105084, a literal rather than loop-designed pulse).
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
-pulse design (`waveforms.yaml`) lives in this workflow's own directory, and any per-shot
-variant or calibrated solver config lives under `cases/overrides/`, so both are versioned
-and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is produced
-from DINA and machine-description sources.
+`preprocess.sh` builds the input DBEntry from the shot's DINA run into the case (`preprocess/in`, `preprocess/in_md`, see
+`preprocessing/dina/scenario_input.sh`). The pulse design (`waveforms.yaml`) lives in this
+workflow's own directory, and any per-shot variant or calibrated solver config lives under
+`cases/overrides/`, so both are versioned and editable here.
 
 ## Assumptions
 
@@ -78,7 +75,7 @@ from DINA and machine-description sources.
 
 ## Input requirements
 
-Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
+Produced by `preprocess.sh` at case creation (see `preprocessing/`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace, plus `core_profiles`
   (electron/ion temperature and density) for TORAX and the ECRH heating trace picked up via

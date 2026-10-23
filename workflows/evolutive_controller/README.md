@@ -35,7 +35,7 @@ per pulse, so has no sane generic default) in `cases/overrides/evolutive_control
 
 ## Running it
 
-Requires the scenario's data in `pds-scenarios` (see Input requirements below) and a
+Requires a
 completed `inverse_convergence` case run for the same shot (`bin/pds-create-case
 inverse_convergence <shot>` + `bin/pds-run-case.sbatch`, which writes to
 `cases/runs/inverse_convergence_<shot>/out_nice` -- this workflow's `source` reads from there).

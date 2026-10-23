@@ -1,9 +1,9 @@
 #!/bin/bash
 # Builds METIS's own input dataset from this shot's raw DINA source (METIS's IMAS DD layout
-# is workflow-specific, so nothing pre-bakes it into pds-scenarios). Ported from the old
+# is workflow-specific). Ported from the old
 # metis_interpretative_from_dina/preprocess_data.sh + create_runnable_files.sh -- run once by
 # bin/pds-create-case, its output frozen into $CASE_DIR/preprocess/ (not rebuilt on every
-# bin/pds-run-case.sbatch). See that script's header for the PDS_REPO/SCENARIOS_REPO/SHOT/
+# bin/pds-run-case.sbatch). See that script's header for the PDS_REPO/SHOT/
 # CASE_DIR contract.
 #
 # source_metis.source_uri in settings.ymmsl points at ${CASE_DIR}/preprocess/metis_in.
@@ -13,12 +13,8 @@
 # $CASE_DIR/preprocess_settings.ymmsl, stacked in by bin/pds-run-case.sbatch.
 set -euo pipefail
 
-# SOURCE_URI (raw DINA). source.env is written to be sourced by pds-scenarios' own
-# tools/prepare, which sets $TOOLS first (its own tools/ dir, for MD_IRON_CORE) -- replicate
-# that here rather than pulling in tools/prepare itself. IMAS_VERSION comes from the PDS
-# module already loaded.
-export TOOLS="$SCENARIOS_REPO/tools"
-source "$SCENARIOS_REPO/$SHOT/source.env"
+# SOURCE_URI (raw DINA). IMAS_VERSION comes from the PDS module already loaded.
+source "$PDS_REPO/preprocessing/dina/shots/$SHOT.env"
 
 OUT="$CASE_DIR/preprocess"
 mkdir -p "$OUT"
@@ -42,7 +38,7 @@ export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"
 export metis_imas_dataset="imas:hdf5?path=$OUT/metis_in"
-matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath('$PDS_REPO/workflows/metis_alone_utils');cd('$OUT');make_metis_from_dina_interpretative;"
+matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath('$PDS_REPO/preprocessing/metis');cd('$OUT');make_metis_from_dina_interpretative;"
 
 if [[ -f "$OUT/PSI_OFFSET" ]]; then
   source "$OUT/PSI_OFFSET"

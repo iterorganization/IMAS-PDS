@@ -1,6 +1,7 @@
 ymmsl_version: v0.2
 settings:
   waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_waveforms.yaml
+  recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in"
   # t_min pinned to out_nice's native t=84.3176 slice, not the flattop's nominal t=80.0:
   # the closest native slice to 80.0 is t=79.2176, and seeding nice_evo_rd's Newton solve
   # from that state diverges within 3 iterations on the very first step, regardless of the

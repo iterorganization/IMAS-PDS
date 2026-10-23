@@ -7,8 +7,11 @@ import logging
 from contextlib import ExitStack
 
 from imas import DBEntry
-from preprocess_dina import write_dina_data
-from preprocess_machine_description import write_machine_description_data
+
+from preprocessing.dina.preprocess_dina import write_dina_data
+from preprocessing.machine_description.preprocess_machine_description import (
+    write_machine_description_data,
+)
 
 
 def handle_args():
@@ -38,7 +41,7 @@ def handle_args():
     parser.add_argument(
         "--md_iron_core_uri",
         type=str,
-        help="URI to load machine description data for iron_core",
+        help="URI to load machine description data for iron_core (default: empty)",
     )
     parser.add_argument(
         "--sink_uri", type=str, help="URI to write the DINA-derived input data to"
@@ -73,7 +76,11 @@ def main():
         db_md_pf_active = stack.enter_context(DBEntry(args.md_pf_active_uri, "r"))
         db_md_pf_passive = stack.enter_context(DBEntry(args.md_pf_passive_uri, "r"))
         db_md_wall = stack.enter_context(DBEntry(args.md_wall_uri, "r"))
-        db_md_iron_core = stack.enter_context(DBEntry(args.md_iron_core_uri, "r"))
+        db_md_iron_core = (
+            stack.enter_context(DBEntry(args.md_iron_core_uri, "r"))
+            if args.md_iron_core_uri
+            else None
+        )
         db_out = stack.enter_context(DBEntry(args.sink_uri, "w"))
         db_md_out = (
             db_out

@@ -1,10 +1,10 @@
-# 105073 variant (no separate data/in_md: input_md points at data/in). Otherwise identical to
+# 105073 variant (no separate in_md: input_md points at in). Otherwise identical to
 # workflows/evolutive_controller/waveforms.yaml, see there.
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
     eq: {port: equilibrium_in}
     nice: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
     torax: "imas:hdf5?path=${CASE_DIR}/preprocess/inverse_convergence_${SHOT}_core_profiles"
