@@ -6,7 +6,7 @@
 #
 # The boundary outline stays {ref: input}: it is a variable-length per-slice spatial array
 # and the tendency system produces one scalar per time step, so an import is the only way
-# to populate it. Same for core_sources.
+# to populate it. The EC power stays on DINA's trace too.
 
 globals:
   dd_version: 4.0.0
@@ -66,10 +66,10 @@ targets:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:
     - {ref: input}
-  core_sources/*:
-    - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  core_sources/source(1)/global_quantities/power:
+    - {ref: input, path: summary/heating_current_drive/power_ec/value, interp: linear}
   pf_active/coil(1)/current/data:   # Central Solenoid 3U (CS3U)
     - {time: [2.42, 16.5, 72.9, 143.5, 214.0, 256.4, 280.35], value: [-35621, -40988, -32425, -27038, -20147, -16252, -22703]}
   pf_active/coil(2)/current/data:   # Central Solenoid 2U (CS2U)

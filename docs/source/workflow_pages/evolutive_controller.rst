@@ -80,7 +80,7 @@ not clear its run directory before running this one.
 
 The waveform editor passes that equilibrium through an ``equilibrium/*: {ref: eq}`` wildcard, 
 so every field survives rather than a hand-pickedfew, and overlays the static machine 
-description, ``core_profiles`` and the ECRH trace from the scenario's own data.
+description, ``core_profiles`` and the EC power from the scenario's own data.
 
 Two fields in that overlay are load-bearing, both because NICE indexes them without a
 size check and segfaults on an empty one:

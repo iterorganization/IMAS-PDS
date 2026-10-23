@@ -2,27 +2,32 @@
 
 This config carries no scenario-specific input path: the simulated time window is taken
 from the equilibrium sequence the actor receives (t_initial/t_final = first/last /time),
-and the prescribed actuator sources (e.g. ECRH) are taken from the core_sources IDS sent
-to the actor's core_sources_in_f port. t_initial/t_final below are placeholders that the
-actor overwrites at run time.
+and the EC power from the power-only 'ec' core_sources source sent to the actor's
+core_sources_in_f port, which the actor deposits with the ecrh
+extra_prescribed_power_density shape below; every other source is TORAX's own.
+t_initial/t_final below are placeholders that the actor overwrites at run time.
 """
+
+import json
+from pathlib import Path
 
 import numpy as np
 
 rhon = np.linspace(0, 1, 25)
 fixed_dt = 0.3
 
+# EC deposition shape, impurity ratios and radiation multiplier from the shot's DINA run,
+# written into the case by preprocess.sh (see preprocessing/dina/torax_params.py).
+DINA = json.loads(Path("${CASE_DIR}/preprocess/torax_params.json").read_text())
+
 CONFIG = {
     "profile_conditions": {},
     "plasma_composition": {
         "main_ion": {"H": 1},
         "impurity": {
-            "species": {
-                "Ne": None,
-            },
-            "impurity_mode": "n_e_ratios_Z_eff",
+            "species": DINA["impurities"],
+            "impurity_mode": "n_e_ratios",
         },
-        "Z_eff": 1.1,
     },
     "numerics": {
         "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
@@ -49,11 +54,26 @@ CONFIG = {
         },
     },
     "sources": {
-        # TORAX must therefore not add its own ohmic or subtract its own radiation
-        # through config - that double-counts terms already inside the imported source.
+        "ohmic": {},
         "fusion": {},
-        "ei_exchange": {},  # internal e<->i transfer; DINA gives no ion source at all
-        "bremsstrahlung": {"mode": "ZERO"},
+        "ei_exchange": {},
+        "bremsstrahlung": {},
+        "impurity_radiation": {
+            "model_name": "mavrin_fit",
+            "radiation_multiplier": DINA["radiation_multiplier"],
+        },
+        "cyclotron_radiation": {},
+        # DINA's EC deposition shape, scaled by the actor to the EC power waveform on
+        # core_sources_in_f. No ECCD: DINA's EC drives no current.
+        "ecrh": {
+            "extra_prescribed_power_density": {
+                0.0: (
+                    np.array(DINA["ec_deposition"]["rho"]),
+                    np.array(DINA["ec_deposition"]["profile"]),
+                )
+            },
+            "current_drive_efficiency": 0.0,
+        },
     },
     "transport": {
         "model_name": "qlknn",
