@@ -1,7 +1,8 @@
 # Waveform-Editor configuration for inverse_convergence. Full pulse design: equilibrium +
-# core_profiles. Generic across scenarios -- `input`/`input_md` are written by preprocess.sh.
-# Scenarios using MD_LAYOUT=combined (no separate in_md) need a variant with input_md
-# pointing at in instead -- see cases/overrides/inverse_convergence_105073_waveforms.yaml.
+# core_profiles + EC power. Generic across scenarios -- `input`/`input_md` are written by
+# preprocess.sh. Scenarios using MD_LAYOUT=combined (no separate in_md) need a variant with
+# input_md pointing at in instead -- see
+# cases/overrides/inverse_convergence_105073_waveforms.yaml.
 
 globals:
   dd_version: 4.0.0
@@ -58,9 +59,9 @@ targets:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/z:
     - {ref: input}
-  core_sources/*:
-    - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  core_sources/source(1)/global_quantities/power:
+    - {ref: input, path: summary/heating_current_drive/power_ec/value, interp: linear}
   pf_active/coil(*)/current/data:
     - {ref: input}
