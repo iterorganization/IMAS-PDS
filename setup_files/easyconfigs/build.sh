@@ -12,7 +12,7 @@
 #    shared build instead of replacing it.
 #
 #      cd n/NICE
-#      cp NICE-3.0.0.dev258-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
+#      cp NICE-3.0.0.dev446-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
 #
 # 2. Build it into your own prefix:
 #
@@ -46,7 +46,7 @@ declare -A LOCAL_EC=(
   [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-1.0.0.dev69-intel-2025b-pds.eb
   [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb
   [Waveform-Editor]=w/Waveform-Editor/Waveform-Editor-0.3.2.dev154-intel-2025b-pds.eb
-  [NICE]=n/NICE/NICE-3.0.0.dev258-intel-2025b-pds.eb
+  [NICE]=n/NICE/NICE-3.0.0.dev446-intel-2025b-pds.eb
   [CHEASE]=c/CHEASE/CHEASE-2026.08-intel-2025b-pds.eb
   [TORAX-MUSCLE3]=t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.3-intel-2025b-pds.eb
   [METIS-IRFM]=m/METIS-IRFM/METIS-IRFM-2026.08-pds.eb

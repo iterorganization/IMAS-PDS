@@ -5,8 +5,7 @@ ymmsl_version: v0.2
 #
 # source_metis reads METIS's own input dataset, which this workflow's preprocess.sh builds
 # from this shot's raw DINA source into ${CASE_DIR}/preprocess/metis_in, once, at
-# bin/pds-create-case time (METIS's IMAS DD layout is workflow-specific, so nothing pre-bakes
-# it into pds-scenarios).
+# bin/pds-create-case time (METIS's IMAS DD layout is workflow-specific).
 #
 # Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
 # from DINA). A shot needing interpretative mode (DINA profiles/sources fed in as external
@@ -19,10 +18,13 @@ resources:
   metis_from_dina.metis: {threads: 10}
 
 settings:
+  # source_metis: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source_metis.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/metis_in"
+  # sink_transport: https://imas-muscle3.readthedocs.io/en/latest/actor_sink.html#available-settings
   sink_transport.sink_uri: "imas:hdf5?path=../../../metis_out"
   sink_transport.sink_mode: "w"
 
+  # metis: https://git.iter.org/projects/SCEN/repos/metis/browse/workflow/muscle3/mfile/metis4muscle3_setting_list.m
   metis.metis_computation: 1
   # Fallback only -- preprocess.sh's own MATLAB build computes this shot's real value from its
   # DINA equilibrium and overrides it via preprocess_settings.ymmsl (see that script).

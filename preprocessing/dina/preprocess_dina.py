@@ -9,12 +9,13 @@ import numpy as np
 from imas import convert_ids
 from imas.ids_defs import CLOSEST_INTERP
 from packaging.version import Version
-from preprocess_machine_description import (
+from scipy.integrate import cumulative_trapezoid as cumtrapz
+from scipy.interpolate import interp1d as interp1
+
+from preprocessing.machine_description.preprocess_machine_description import (
     _fix_pf_active_md_geometry,
     quiet_expected_conversion_drops,
 )
-from scipy.integrate import cumulative_trapezoid as cumtrapz
-from scipy.interpolate import interp1d as interp1
 
 DD_VERSION = "4.0.0"
 logger = logging.getLogger(__name__)
@@ -125,6 +126,7 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
     solution -- not used by the waveform editor, see preprocess_pf_active_md):
     -size(time) was different from size(current.data) for coils 0 to 7, I corrected this
     """
+    name_mismatches = set()
     for t in t_list:
         # pf_active ids
         slice_orig = db_in.get_slice(
@@ -148,15 +150,10 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
         for i, coil in enumerate(slice.coil):
             if len(slice.coil) == len(slice_backup.coil):
                 if slice.coil[i].name != slice_backup.coil[i].name:
-                    # Source (DINA-derived) and machine-description pf_active use
-                    # different naming conventions (e.g. "CS3U" vs "Central Solenoid
-                    # 3U (CS3U)"
-                    logger.warning(
-                        "pf_active coil name mismatch at index %d: "
-                        "source=%r machine description=%r",
-                        i,
-                        slice.coil[i].name,
-                        slice_backup.coil[i].name,
+                    # DINA and the machine description name coils differently ("CS3U"
+                    # vs "Central Solenoid 3U (CS3U)"); ITER coil order lines up by index.
+                    name_mismatches.add(
+                        (i, str(slice.coil[i].name), str(slice_backup.coil[i].name))
                     )
                 # make sure geometry_type is nice compatible
                 slice.coil[i].element[0].geometry = (
@@ -178,6 +175,16 @@ def preprocess_pf_active(db_out, db_in, db_md_pf_active, t_list):
                     slice.coil[i].element[j].geometry.geometry_type = 2
 
         db_out.put_slice(slice)
+
+    if name_mismatches:
+        logger.warning(
+            "pf_active coil names differ from the machine description for %d coils; "
+            "matched by index. e.g. %s",
+            len(name_mismatches),
+            ", ".join(
+                f"[{i}] {a!r} vs {b!r}" for i, a, b in sorted(name_mismatches)[:2]
+            ),
+        )
 
 
 def find_interesting_time_slices(sm, n_timeslices):

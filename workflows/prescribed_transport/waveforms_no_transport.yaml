@@ -1,12 +1,11 @@
 # Waveform-Editor configuration for prescribed_transport. Equilibrium only, no
-# core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
-# pds-create-case.
+# core_profiles. Generic across scenarios -- `input`/`input_md` are written by preprocess.sh.
 
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
     eq: {port: equilibrium_in}
 
 machine_description:
@@ -26,6 +25,8 @@ state:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
     - {ref: eq}
+  equilibrium/time_slice/global_quantities/psi_boundary:
+    - {ref: eq}
 
 targets:
   equilibrium/vacuum_toroidal_field/r0:
@@ -33,8 +34,6 @@ targets:
   equilibrium/vacuum_toroidal_field/b0:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/psi_boundary:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}

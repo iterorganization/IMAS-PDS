@@ -1,0 +1,51 @@
+ymmsl_version: v0.2
+imports:
+- from imas_muscle3 import implementation source_component
+- from imas_muscle3 import implementation sink_component
+- from lib.easybuild_programs import implementation nice_inv
+models:
+  source_nice_sink:
+    components:
+      source:
+        description: source -- reads the equilibrium IDS from the training data
+        implementation: source_component
+        ports:
+          o_i: [equilibrium_out, wall_out, pf_active_out, pf_passive_out, iron_core_out]
+      nice:
+        description: NICE inverse solve -- computes the coil currents for the target shape
+        implementation: nice_inv
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+          o_f: [equilibrium_out, pf_active_out]
+      sink:
+        description: sink -- writes the solved equilibrium and coil currents
+        implementation: sink_component
+        ports:
+          f_init: [equilibrium_in, wall_in, pf_active_in, pf_passive_in, iron_core_in]
+    conduits:
+      source.equilibrium_out: nice.equilibrium_in
+      source.pf_active_out: nice.pf_active_in
+      source.pf_passive_out:
+      - nice.pf_passive_in
+      - sink.pf_passive_in
+      source.wall_out:
+      - nice.wall_in
+      - sink.wall_in
+      source.iron_core_out:
+      - nice.iron_core_in
+      - sink.iron_core_in
+      nice.equilibrium_out: sink.equilibrium_in
+      nice.pf_active_out: sink.pf_active_in
+settings:
+  source.source_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/training_data/training_ids/"
+  sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/training/source_nice_sink"
+  sink.sink_mode: "x"
+  nice.xml_path: [PWD_PLACEHOLDER]/training_data/nice_param.xml
+  muscle_remote_log_level: 'DEBUG'
+resources:
+  source:
+    threads: 1
+  nice:
+    threads: 1
+  sink:
+    threads: 1

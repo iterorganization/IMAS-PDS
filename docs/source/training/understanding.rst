@@ -15,14 +15,11 @@ Workflow - The workflow describes *how* something is simulated. Which actors tak
 and how they are connected, in ``workflows/<name>/workflow.ymmsl``. it is structure only, 
 so the same workflow can be used for multiple different scenarios.
 
-Scenario - The scenario describes *what* is simulated. This includes the input data and the 
-designed targets for one pulse, in the separate ``pds-scenarios`` repository, one directory 
-per shot. This repository is available on SDCC on ``/work/projects/pds/pds-scenarios``.
-You will see that path written as ``${SCENARIOS_REPO}`` in the settings files -- the PDS
-scripts fill it in for you, and you only ever set it yourself if you keep your own copy of
-the scenarios somewhere else.
-The scenarios knows nothing about which codes will consume it, so the same scenario can be run 
-through several workflows.
+Scenario - The scenario describes *what* is simulated: the DINA run of one shot, named in
+``preprocessing/dina/shots/<shot>.env``, together with the ITER machine description. When a
+case is created, the workflow's ``preprocess.sh`` turns these into the case's own input data
+(see ``preprocessing/``). The shot knows nothing about which codes will consume it, so the
+same scenario can be run through several workflows.
 
 Case - The combination of a workflow and a scenario. You build one with
 ``bin/pds-create-case <workflow> <shot>``, which materializes ``cases/<workflow>_<shot>/``: a
@@ -51,8 +48,8 @@ For the scenarios and your own runs:
 
 .. code-block:: bash
 
-    ls /work/projects/pds/pds-scenarios     # the scenarios, one directory per shot
-    m3dash ls                               # the runs you have already produced
+    ls preprocessing/dina/shots     # the scenarios, one file per shot
+    m3dash ls                       # the runs you have already produced
 
 Reading a case
 --------------
@@ -68,15 +65,16 @@ structure -- which components exist and how they are wired -- and
 
     settings:
       waveform_editor.waveforms: /path/to/pds/cases/prescribed_transport_105092/config/waveforms_no_transport.yaml
-      source.source_uri: "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in"
+      source.source_uri: "imas:hdf5?path=/path/to/pds/cases/prescribed_transport_105092/preprocess/in"
       equilibrium.nice.xml_path: /path/to/pds/cases/prescribed_transport_105092/config/config_nice_inverse.xml
       sink.sink_uri: "imas:hdf5?path=../../../out_nice"
 
 ``resources`` says how many threads each component gets, and ``settings`` everything else:
-which scenario data to read, which configuration each solver uses, and where the output goes.
+which input data to read, which configuration each solver uses, and where the output goes.
 Note that the config paths point into the case's own ``config/`` -- ``pds-create-case``
 copied them there and rewrote the settings, so the case does not depend on
-``workflows/`` or ``pds-scenarios`` still looking the same later. If the case has a
+``workflows/`` still looking the same later. The input data itself was built into the
+case's ``preprocess/`` when it was created. If the case has a
 ``scenario_settings.ymmsl`` as well, it is stacked after this file and wins on any key it
 repeats. Reading these blocks tells you most of what that run will do.
 
@@ -107,12 +105,15 @@ Exercise 2: find out what a case will do
     .. md-tab-item:: Solution
 
         Start from :ref:`case-inverse-convergence`, which describes
-        the coupling and what the case produces, then read the case folder itself.
+        the coupling and what the case produces, then read the case folder itself,
+        written into ``cases/runs/inverse_convergence_105092/``.
 
-        ``workflow.ymmsl`` names the components and how they are wired, the
-        ``source.source_uri`` and ``waveform_editor.waveforms`` settings name the scenario
-        data, and the ``sink_equilibrium.sink_uri`` and ``sink_transport.sink_uri`` settings name the
-        output entries, written into ``cases/runs/inverse_convergence_105092/``.
+        ``workflow.ymmsl`` names the components and how they are wired. Additionally,
+        ``workflow_settings.ymmsl`` contains the specific settings for each of the 
+        components, for example the
+        ``source.source_uri`` and ``waveform_editor.waveforms`` settings tell you where the 
+        the scenario data comes from, and the ``sink_equilibrium.sink_uri`` and 
+        ``sink_transport.sink_uri`` settings tell you where the output is stored.
 
 
 Looking at the input before you run
@@ -122,8 +123,8 @@ A case tells you *which* data it reads, but not what is in it. Since a full run 
 while, it pays to look at the input first -- an empty or unexpected IDS is much easier to
 recognise now than halfway through a simulation.
 
-Every scenario keeps its data in two DBEntries: ``data/in`` with the pulse itself, and
-``data/in_md`` with the machine description, the parts of the machine that do 
+Every case keeps its input in two DBEntries: ``preprocess/in`` with the pulse itself, and
+``preprocess/in_md`` with the machine description, the parts of the machine that do 
 not change during a pulse.
 
 Exercise 3: look at a scenario before running it
@@ -133,8 +134,8 @@ Exercise 3: look at a scenario before running it
 
     .. md-tab-item:: Exercise
 
-        Take a look at the ``105092`` scenario, which lives in
-        ``/work/projects/pds/pds-scenarios/105092/``.
+        Take a look at the ``105092`` scenario, which ``pds-create-case`` built into
+        ``cases/prescribed_transport_105092/preprocess/``.
 
         ``IDStools`` is a separate module with a set of ready-made IMAS plotting scripts. In
         this case, you can use the
@@ -152,6 +153,6 @@ Exercise 3: look at a scenario before running it
 
             module load IDStools
 
-            plotscenario --uri "imas:hdf5?path=/work/projects/pds/pds-scenarios/105092/data/in" -t 80
+            plotscenario --uri "imas:hdf5?path=cases/prescribed_transport_105092/preprocess/in" -t 80
 
         Compare ``-t 5``, ``-t 80`` and ``-t 160``.

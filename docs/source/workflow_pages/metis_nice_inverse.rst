@@ -9,12 +9,12 @@ to the equilibrium METIS produced. Overrides exist for DINA shots 105073, 105078
 105084, 105092 and 105099, and CI exercises 105084.
 
 The coupling order is the reverse of the design cases. There, NICE solves first and a
-transport code fills a hole inside an outer loop; here METIS leads, runs the transport over
+transport code fills a hole inside an outer loop. Here METIS leads, runs the transport over
 the whole trace, and NICE is a single downstream pass over its equilibrium. METIS runs
 once, NICE runs once.
 
 :Workflow: ``metis_nice_inverse_from_dina`` -- :src:`workflows/metis_nice_inverse_from_dina/workflow.ymmsl`
-:Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099, in ``pds-scenarios``
+:Scenario: DINA shots 105073, 105078, 105084, 105092 and 105099
 :Output: ``<run_dir>/metis_out`` and ``<run_dir>/nice_out``
 
 Running it
@@ -49,10 +49,9 @@ Input data
 Both inputs are built from the shot's raw DINA source by the workflow's ``preprocess.sh``,
 once, at ``pds-create-case`` time, and frozen into the case:
 
-``$CASE_DIR/preprocess/metis_in``
-   METIS's own dataset. METIS does not take a plasma state the way TORAX does -- it builds
-   its input from a ``pulse_schedule`` IDS, in a DD layout that is workflow-specific, so
-   nothing pre-bakes it into ``pds-scenarios``. Producing it needs MATLAB and the
+``$CASE_DIR/preprocess/metis_in``:
+   The METIS dataset. METIS does not take a plasma state the way TORAX does -- it builds
+   its input from a ``pulse_schedule`` IDS, in a DD layout that is workflow-specific. Producing it needs MATLAB and the
    ``METIS-IRFM`` module.
 
 ``$CASE_DIR/preprocess/dina_in``
@@ -63,9 +62,7 @@ once, at ``pds-create-case`` time, and frozen into the case:
 Predictive is the default: the workflow's ``settings.ymmsl`` leaves all five
 ``metis_external_data_*`` switches off, so METIS computes its own profiles and sources.
 Interpretative mode means enabling them in
-``cases/overrides/metis_nice_inverse_from_dina_<shot>.ymmsl``. This is why the old
-``metis_interpretative_...`` and ``metis_predictive_nice_inverse_from_dina`` templates
-collapse into one workflow -- their graphs were identical.
+``cases/overrides/metis_nice_inverse_from_dina_<shot>.ymmsl``.
 
 .. note::
 

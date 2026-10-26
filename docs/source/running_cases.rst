@@ -12,10 +12,10 @@ A run pairs two things:
   *How* something is simulated: which codes are coupled, in what order, over
   which ports. Workflows live in ``workflows/`` and contain no shot data.
 
-**Scenario**
-  *What* is simulated: the machine description, the input equilibrium, the
-  waveforms for one shot. Scenarios live in the separate ``pds-scenarios``
-  repository, keyed by shot number.
+**Shot**
+  *What* is simulated: the DINA run a shot's input is built from, named in
+  ``preprocessing/dina/shots/<shot>.env``. ``preprocessing/`` turns it, together
+  with the ITER machine description, into input.
 
 **Case**
   The pairing of the two, materialised as a directory under ``cases/``. This is
@@ -35,7 +35,7 @@ Creating a case
 
 That writes ``cases/inverse_convergence_105073``; a third argument puts it elsewhere.
 ``source completion.sh`` gives tab completion over the available workflows and the shots
-in your ``$SCENARIOS_REPO``. :ref:`workflows` lists what is available.
+in ``preprocessing/dina/shots``. :ref:`workflows` lists what is available.
 
 What is in a case directory
 ---------------------------
@@ -121,10 +121,9 @@ Each run lands in ``cases/runs/<workflow>_<shot>/``.
    That directory is deleted at the start of every run. Copy anything you want
    to keep before re-running the same case.
 
-It also receives ``input/``, the ymmsl files exactly as they were passed, and
-``configuration.ymmsl``, the fully resolved configuration that actually ran. When a run
-does something unexpected, read ``configuration.ymmsl`` first -- it shows the values
-after all the stacking.
+It also receives all the ymmsl files exactly as passed. 
+When a run does something unexpected, read ``configuration.ymmsl`` as it shows the 
+values at the end of the stack.
 
 Sink outputs land directly in the run directory, ``<run_dir>/<name>``. Relative
 IMAS URIs resolve against the instance's own work directory

@@ -31,7 +31,7 @@ set -euo pipefail
 # If the case has a postprocess.sh (bin/pds-create-case copies it in from
 # workflows/<workflow>/postprocess.sh, if that exists -- see its header), it runs once after
 # muscle_manager finishes (e.g. validation plots against the run's own output -- see
-# workflows/metis_from_dina/postprocess.sh). It gets PDS_REPO/SCENARIOS_REPO/SHOT/CASE_DIR/
+# workflows/metis_from_dina/postprocess.sh). It gets PDS_REPO/SHOT/CASE_DIR/
 # RUN_DIR/PYTHON (the same interpreter muscle_manager itself resolved to -- use "$PYTHON"
 # rather than a bare `python`) and should write into $RUN_DIR/ (preprocessing, if any,
 # already ran once at bin/pds-create-case time -- see that script's header).
@@ -43,7 +43,6 @@ OVERLAYS=("$@")
 
 PDS_REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 export PDS_REPO
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 
 CASE_DIR="$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$CASE_ARG"

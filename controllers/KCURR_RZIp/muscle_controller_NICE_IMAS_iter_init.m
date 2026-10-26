@@ -82,7 +82,10 @@ if instance.reuse_instance()
         reference_current=[reference_current, pf_active.coil{i}.current.data];
         coils_resistance=[coils_resistance; pf_active.coil{i}.resistance];
     end
-    reference_current=reference_current;
+    % The controller sees abs(Ip), i.e. an Ip>0 frame: for Ip<0 (ITER COCOS 11) flip all
+    % coil currents and voltages too, which leaves the coil loops unchanged.
+    ip_sign = sign(equilibrium.time_slice{1}.global_quantities.ip);
+    reference_current=ip_sign*reference_current;
     coils_resistance=coils_resistance';
 
     reference_current_ts = timeseries(reference_current,equilibrium.time)
@@ -109,7 +112,7 @@ if instance.reuse_instance()
     end
 
     enable_KCURR=1;
-    IpControlMode_KCURR=0;
+    IpControlMode_KCURR=1;
     schedulingVar_KCURR=0; %Ip
 
     Ipl_ref = timeseries(ip_ref,equilibrium.time);
@@ -148,6 +151,12 @@ if instance.reuse_instance()
     plasma_duration=t_max-t_start;
 
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);
+
+    % A clean next_timestamp=None ending leaves nice_evo_rd/sink_control waiting for our
+    % ClosePort; this last reuse_instance() returns false and sends it, then deregisters.
+    if exist('nice_sent_final_message', 'var') && nice_sent_final_message
+        instance.reuse_instance();
+    end
 end
 
 function value = geo_ref_with_fallback(value, ts, field, logger)

@@ -75,7 +75,7 @@ on all four operators, treats O_I and S as optional, and propagates the next tim
       eq_ids = factory.new("equilibrium")
       eq_ids.deserialize(eq_msg.data)
 
-      outer_t = eq_msg.t_timestamp
+      outer_t = eq_msg.timestamp
 
       # make sure we keep track of t_next in outer loop
       outer_t_next = eq_msg.next_timestamp

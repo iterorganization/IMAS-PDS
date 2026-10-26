@@ -14,7 +14,7 @@ identical to it. Use it where the transport solution is needed but coil currents
 to that equilibrium are not.
 
 :Workflow: ``metis_from_dina`` -- :src:`workflows/metis_from_dina/workflow.ymmsl`
-:Scenario: DINA shots 105084 and 105092, in ``pds-scenarios``
+:Scenario: DINA shots 105084 and 105092
 :Output: ``<run_dir>/metis_out``
 
 Predictive or interpretative
@@ -25,10 +25,6 @@ the received IDSs rather than computing itself. ``settings.ymmsl`` sets all of t
 ``0``, making **predictive the default**: METIS computes its own profiles and sources.
 Interpretative mode means enabling the relevant settings in
 ``cases/overrides/metis_from_dina_<shot>.ymmsl``.
-
-That is why this one workflow replaces the former ``metis_predictive_from_dina`` and
-``metis_interpretative_from_dina`` -- their graphs were identical and differed only in
-those settings.
 
 Running it
 ----------
@@ -44,9 +40,8 @@ directory holds and where the output goes.
 .. note::
 
    ``pds-create-case`` takes noticeably longer for this workflow than for the design
-   cases. METIS's IMAS layout is workflow-specific, so nothing pre-bakes it into
-   ``pds-scenarios``: ``preprocess.sh`` builds it from the shot's raw DINA source into
-   ``$CASE_DIR/preprocess/metis_in``, once, using MATLAB, and the case carries the
+   cases. ``preprocess.sh`` builds METIS's workflow-specific IMAS layout from the shot's
+   raw DINA source into ``$CASE_DIR/preprocess/metis_in``, once, using MATLAB, and the case carries the
    result as a frozen snapshot.
 
 Coupling

@@ -42,7 +42,7 @@ CONFIG = {
     # circular geometry is only for testing and prototyping
     "geometry": {
         "geometry_type": "circular",
-        "n_rho": 25,
+        "n_rho": 50,
     },
     "pedestal": {},
     "mhd": {

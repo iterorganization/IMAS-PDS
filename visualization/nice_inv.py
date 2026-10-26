@@ -52,23 +52,16 @@ class State(BaseState):
             self.data["pf_active"] = combined.drop_duplicates("time", keep="last")
 
     def _extract_equilibrium(self, ids):
-        # A live stream sends one slice per message; the recorder receives a
-        # whole trace per Picard iteration. Handle both.
+        # One slice per message when live, a whole trace from the recorder.
         for itime, ts in enumerate(ids.time_slice):
             self._extract_equilibrium_slice(ids, itime, ts)
 
     @staticmethod
     def _concat_time(current, new):
-        """Concat along "time", NaN-padding ragged non-time dims to a
-        common width first instead of relying on an index-based outer join.
+        """Concat along "time", NaN-padding ragged non-time dims.
 
-        Consecutive recorder messages can re-report the same physical time
-        (e.g. a controller iteration re-solving a boundary slice), so the
-        concatenated result is deduplicated on "time", keeping the most
-        recently written (i.e. most converged) slice. Without this, a
-        repeated time value makes `.sel(time=...)` return multiple slices
-        instead of one, breaking any consumer that expects a single slice
-        (e.g. the contour plot's `plt.tricontour` call).
+        Repeated times keep the latest slice, so `.sel(time=...)` always
+        returns a single slice.
         """
         widths = {}
         for ds in (current, new):
@@ -207,6 +200,29 @@ class Plotter(BasePlotter):
 
     levels = param.Integer(default=20, bounds=(1, 100), doc="Number of contour levels")
 
+    def __init__(self, state):
+        super().__init__(state)
+        self._contour_cache: dict = {}
+        self._contour_cache_times: tuple[float, ...] = ()
+
+    @param.depends("_state.data", watch=True)
+    def _clear_contour_cache(self) -> None:
+        """Clear cached contours unless the data only grew by appending
+        timeslices (e.g. on switching occurrence, or a recorder rebuild in
+        ``muscle3_dashboard.recorder.zarr_recorder._combine``).
+        """
+        equilibrium = self._state.data.get("equilibrium")
+        times = (
+            tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()
+        )
+        if times[: len(self._contour_cache_times)] != self._contour_cache_times:
+            self._contour_cache.clear()
+        self._contour_cache_times = times
+
+    @param.depends("levels", watch=True)
+    def _clear_contour_cache_on_levels(self) -> None:
+        self._contour_cache.clear()
+
     def get_dashboard(self):
         # Create poloidal flux plot
         flux_map_elements = [
@@ -300,7 +316,7 @@ class Plotter(BasePlotter):
 
     @pn.depends("time", "levels")
     def _plot_contours(self):
-        """Generates contour plot for poloidal flux.
+        """Generates contour plot for poloidal flux, cached per (time, levels).
 
         Returns:
             Contour plot of psi.
@@ -309,8 +325,12 @@ class Plotter(BasePlotter):
         if state is None:
             contours = hv.Contours(([0], [0], 0), vdims="psi")
         else:
-            selected_data = state.sel(time=self.time)
-            contours = self._calc_contours(selected_data, self.levels)
+            cache_key = (self.time, self.levels)
+            contours = self._contour_cache.get(cache_key)
+            if contours is None:
+                selected_data = state.sel(time=self.time)
+                contours = self._calc_contours(selected_data, self.levels)
+                self._contour_cache[cache_key] = contours
         return contours.opts(self.CONTOUR_OPTS)
 
     def _calc_contours(self, equilibrium_data, levels):
@@ -332,16 +352,12 @@ class Plotter(BasePlotter):
             z = z[0, :]
         psi = equilibrium_data.psi.values
 
+        fig, ax = plt.subplots()
         try:
-            trics = plt.tricontour(r, z, psi, levels=levels)
-        except RuntimeError:
-            logger.warning(
-                "Skipping contour: Delaunay triangulation failed for this "
-                "equilibrium timeslice (likely degenerate/NaN grid points).",
-                exc_info=True,
-            )
-            return hv.Contours(([0], [0], 0), vdims="psi")
-        return hv.Contours(self._extract_contour_segments(trics), vdims="psi")
+            trics = ax.tricontour(r, z, psi, levels=levels)
+            return hv.Contours(self._extract_contour_segments(trics), vdims="psi")
+        finally:
+            plt.close(fig)
 
     def _extract_contour_segments(self, tricontour):
         """Extracts contour segments from matplotlib tricontour.

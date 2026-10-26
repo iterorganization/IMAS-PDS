@@ -8,6 +8,10 @@ persistent z_ref
 instance = evalin('base','instance');
 logger = evalin('base','logger');
 pfa_base = evalin('base','pf_active');
+ip_sign = evalin('base','ip_sign');
+% back from the controller's Ip>0 frame (see muscle_controller_NICE_IMAS_iter_init)
+voltage = ip_sign*voltage;
+coil_current = ip_sign*coil_current;
 
 %add min max and some check
 % This is coil currents limits and not voltage !!!!!
@@ -54,9 +58,14 @@ else
     voltage_full(13:14) = 0;
 end
 voltage = voltage_full;
+% max/min below would turn NaN into Vmin
+voltage(isnan(voltage)) = 0;
 
 voltage=max(voltage,Vmin);
 voltage=min(voltage,Vmax);
+% NICE evo_rd stores coil currents as -I_IDS internally but applies the IDS voltage
+% unflipped, so V>0 lowers I_IDS there; negate so V>0 raises I_IDS as the controller assumes.
+voltage=-voltage;
 
 % Sign convention adapter towards NICE. NICE/3.0.0.dev258's evolutive actor flips
 % coil currents to its internal (Ip>0) convention but applies the received IDS

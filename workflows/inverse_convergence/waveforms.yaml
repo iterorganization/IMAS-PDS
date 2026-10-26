@@ -1,14 +1,13 @@
 # Waveform-Editor configuration for inverse_convergence. Full pulse design: equilibrium +
-# core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
-# pds-create-case. Scenarios using MD_LAYOUT=combined (no separate data/in_md) need a
-# variant with input_md pointing at data/in instead -- see
-# cases/overrides/inverse_convergence_105073_waveforms.yaml.
+# core_profiles. Generic across scenarios -- `input`/`input_md` are written by preprocess.sh.
+# Scenarios using MD_LAYOUT=combined (no separate in_md) need a variant with input_md
+# pointing at in instead -- see cases/overrides/inverse_convergence_105073_waveforms.yaml.
 
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 
@@ -28,6 +27,8 @@ state:
   equilibrium/time_slice/profiles_1d/f_df_dpsi:
     - {ref: eq}
   equilibrium/time_slice/profiles_1d/dpressure_dpsi:
+    - {ref: eq}
+  equilibrium/time_slice/global_quantities/psi_boundary:
     - {ref: eq}
   core_profiles/global_quantities/v_loop:
     - {ref: cp}
@@ -52,8 +53,6 @@ targets:
   core_profiles/global_quantities/ip:
     - {ref: input}
   equilibrium/time_slice/global_quantities/ip:
-    - {ref: input}
-  equilibrium/time_slice/global_quantities/psi_boundary:
     - {ref: input}
   equilibrium/time_slice/boundary/outline/r:
     - {ref: input}
