@@ -5,10 +5,10 @@
 # ported from itergit/feature/metis_nice_evol's
 # workflows/metis_predictive_nice_evol_from_dina/preprocess_data.sh. Run once by
 # bin/pds-create-case, output frozen into $CASE_DIR/preprocess/. See that script's header for
-# the PDS_REPO/SCENARIOS_REPO/SHOT/CASE_DIR contract.
+# the PDS_REPO/SHOT/CASE_DIR contract.
 #
-# source_metis.source_uri / synchro_nice_metis.source_uri -> ${CASE_DIR}/preprocess/metis_in
-# source_nice.source_uri                                  -> ${CASE_DIR}/preprocess/dina_in
+# source_metis.source_uri / synchro_nice_metis_*.source_uri -> ${CASE_DIR}/preprocess/metis_in
+# source_nice.source_uri                                    -> ${CASE_DIR}/preprocess/dina_in
 # metis.metis_psioffset in settings.ymmsl defaults to a fixed 9.0; if this run's own DINA
 # equilibrium yields a real value (init_metis_from_dina_ids.m computes and writes
 # $OUT/PSI_OFFSET as a side effect of the MATLAB build below), that overrides it via
@@ -16,27 +16,15 @@
 # because NICE's evolutive free-boundary solve carries psi_LCFS forward from METIS.
 set -euo pipefail
 
-# SOURCE_URI/SUMMARY_URI/MD_*/N_TIMESLICES (raw DINA + standard machine description).
-# source.env is written to be sourced by pds-scenarios' own tools/prepare, which sets $TOOLS
-# first (its own tools/ dir, for MD_IRON_CORE) -- replicate that here rather than pulling in
-# tools/prepare itself. IMAS_VERSION comes from the PDS module already loaded.
-export TOOLS="$SCENARIOS_REPO/tools"
-source "$SCENARIOS_REPO/$SHOT/source.env"
+# SOURCE_URI (raw DINA) for METIS. IMAS_VERSION comes from the PDS module already loaded.
+source "$PDS_REPO/preprocessing/dina/shots/$SHOT.env"
 
 OUT="$CASE_DIR/preprocess"
 mkdir -p "$OUT"
 
 export IMAS_AL_DISABLE_VALIDATE=1
 
-python "$PDS_REPO/workflows/utils/convert_dina_data_to_input.py" \
-  --source_uri "$SOURCE_URI" \
-  --summary_uri "${SUMMARY_URI:-$SOURCE_URI}" \
-  --md_pf_active_uri "$MD_PF_ACTIVE" \
-  --md_pf_passive_uri "$MD_PF_PASSIVE" \
-  --md_wall_uri "$MD_WALL" \
-  --md_iron_core_uri "$MD_IRON_CORE" \
-  --sink_uri "imas:hdf5?path=$OUT/dina_in" \
-  --n_timeslices "${N_TIMESLICES:-51}"
+"$PDS_REPO/preprocessing/dina/scenario_input.sh" "$OUT/dina_in"
 
 imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 
@@ -55,7 +43,7 @@ export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"
 export metis_imas_dataset="imas:hdf5?path=$OUT/metis_in"
-matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath('$PDS_REPO/workflows/metis_nice_utils');cd('$OUT');make_metis_from_dina_interpretative;"
+matlab -batch "[s,t] = unix('which python');pyenv('Version',strtrim(t),'ExecutionMode','InProcess'); addpath('$PDS_REPO/preprocessing/metis');cd('$OUT');make_metis_from_dina_interpretative;"
 
 if [[ -f "$OUT/PSI_OFFSET" ]]; then
   source "$OUT/PSI_OFFSET"

@@ -3,7 +3,6 @@ function muscle_NICE_input(t_cur,voltage,coil_current)
 % a voltage from simulink.
 
 global z_cur
-persistent z_ref
 % retrieve instance object from base WS
 instance = evalin('base','instance');
 logger = evalin('base','logger');
@@ -49,13 +48,18 @@ cspf_to_coil = [1 2 3 3 4 5 6 7 8 9 10 11];
 voltage_full = zeros(1,14);
 voltage_full(1:12) = voltage(cspf_to_coil);
 
-% RZIp's VS voltage command isn't wired into this signal. Fall back to a
-% resistive (V=IR) estimate from the last measured VS currents when
-% available, otherwise leave the VS coils unforced (0V).
-if numel(coil_current) >= 14 && all(~isnan(coil_current(13:14)))
+% RZIp's VS voltage command isn't wired into this signal. NICE_VERTICAL_CONTROL=1
+% enables a simple vertical-position loop on the VS coils (VS3U/VS3L, anti-series),
+% built in the IDS frame so the ip_sign and NICE sign handling below applies to it.
+% Experimental: on 105073 at dt=10 ms it drove Z away as is and oscillated with the
+% sign flipped (2026-10-26), so it is off by default.
+voltage_full(13:14) = NaN;
+if strcmp(getenv('NICE_VERTICAL_CONTROL'), '1')
+    voltage_full(13:14) = vertical_control_voltage(z_cur, ip_sign, Vmax(13), logger);
+end
+if any(isnan(voltage_full(13:14))) && numel(coil_current) >= 14 && all(~isnan(coil_current(13:14)))
+    % VS loop off or no valid z: resistive (V=IR) hold of the last measured VS currents
     voltage_full(13:14) = resistances(13:14) .* reshape(coil_current(13:14),1,[]);
-else
-    voltage_full(13:14) = 0;
 end
 voltage = voltage_full;
 % max/min below would turn NaN into Vmin
@@ -66,32 +70,6 @@ voltage=min(voltage,Vmax);
 % NICE evo_rd stores coil currents as -I_IDS internally but applies the IDS voltage
 % unflipped, so V>0 lowers I_IDS there; negate so V>0 raises I_IDS as the controller assumes.
 voltage=-voltage;
-
-% Sign convention adapter towards NICE. NICE/3.0.0.dev258's evolutive actor flips
-% coil currents to its internal (Ip>0) convention but applies the received IDS
-% voltages unflipped (ReadDataEvolutiveProblemWithRD: `signIc = 1`, the
-% change_coil_sign branch is commented out), so the IDS current it returns moves
-% opposite to the IDS voltage we send -- an inverted plant for this controller
-% (confirmed on all 11 coils, 2026-09-04, shot 105084). NICE_VOLTAGE_SIGN=-1 in the
-% magnetic_controller launch script compensates; set it to 1 (or unset) once NICE
-% converts voltages with the same COCOS sign as currents.
-nice_voltage_sign = str2double(getenv('NICE_VOLTAGE_SIGN'));
-if isnan(nice_voltage_sign)
-    nice_voltage_sign = 1;
-end
-voltage = nice_voltage_sign * voltage;
-
-% simple vertical control
-dz_max      = 0.04;
-if isempty(z_ref)
-	z_ref = z_cur;
-else
-	z_ref = 0.99 .* z_ref + 0.01 .* z_cur;
-end
-dz_cor      = (z_ref -z_cur)/dz_max;
-voltage(13) =  Vmax(end) .* tanh(exp(1) *((dz_cor/5 + dz_cor^3)/1.2));
-voltage(14) = - voltage(13);
-logger.info(sprintf('dz_cor = %g & Vs = %g (V) with z_ref = %g (m) & z_cur = %g (m)\n',dz_cor,voltage(13),z_ref,z_cur));
 
 pfa = ids_init('pf_active');
 pfa.ids_properties.homogeneous_time = 1;
@@ -110,3 +88,24 @@ x = py.numpy.fromstring(s, py.numpy.int8, int8(-1), char(' '));
 pfa_serialized=py.bytes(x);
 msg =  py.libmuscle.Message(t_cur,py.None,pfa_serialized);
 instance.send("pf_active_out_i", msg);
+
+
+function v = vertical_control_voltage(z_cur, ip_sign, v_max, logger)
+% IDS-frame [VS3U VS3L] voltages from a tanh loop on the geometric-axis z,
+% around a slow moving average of z. NaN when z is not available.
+persistent z_ref
+v = [NaN NaN];
+if isempty(z_cur) || isnan(z_cur) || abs(z_cur) > 1e30
+    return
+end
+if isempty(z_ref)
+    z_ref = z_cur;
+else
+    z_ref = 0.99 * z_ref + 0.01 * z_cur;
+end
+dz_max = 0.04;
+dz_cor = (z_ref - z_cur) / dz_max;
+v(1) = ip_sign * v_max * tanh(exp(1) * (dz_cor/5 + dz_cor^3) / 1.2);
+v(2) = -v(1);
+logger.info(sprintf('dz_cor = %g & V_VS3U = %g (V) with z_ref = %g (m) & z_cur = %g (m)', ...
+    dz_cor, v(1), z_ref, z_cur));

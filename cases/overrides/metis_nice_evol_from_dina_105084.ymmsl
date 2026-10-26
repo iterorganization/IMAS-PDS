@@ -1,14 +1,11 @@
 ymmsl_version: v0.2
 
-# Per-shot override for metis_nice_evol_from_dina, shot 105084 (ramp-up, t_min 2.4176 s).
+# Per-shot override for metis_nice_evol_from_dina, shot 105084 (ramp-up).
 #
-# Interpretative METIS: Te, Ti, ne and Zeff are read from the DINA-derived dataset instead
-# of being predicted. In predictive mode METIS's 0D energy balance is fed by the ohmic power
-# it derives from the external current diffusion (NICE's psi evolution, every 2 ms), and the
-# small step-to-step wobble of NICE's psi turns into ohmic powers of -50..+65 MW; Te then
-# swings between 0.7 and 9 keV from one exchange to the next, the conductivity NICE
-# receives changes by a factor 50 per step and NICE's resistive diffusion diverges after
-# ~20 steps (2026-09-04). DINA's Te at this time is ~0.4 keV.
+# Predictive METIS: Te, Ti, ne and Zeff are computed by METIS, not read from DINA.
+# Interpretative mode (these switches at 1) was used on 2026-09-04 because in predictive
+# mode the step-to-step wobble of NICE's psi turned into ohmic powers of -50..+65 MW in
+# METIS's 0D energy balance and NICE's resistive diffusion diverged after ~20 steps.
 settings:
   metis.metis_external_data_electron_temperature: 0
   metis.metis_external_data_ion_temperature: 0

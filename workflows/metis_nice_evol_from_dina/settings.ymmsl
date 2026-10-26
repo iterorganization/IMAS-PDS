@@ -9,14 +9,13 @@ ymmsl_version: v0.2
 # ${CASE_DIR}/preprocess/metis_in, NICE's DINA-derived machine description into
 # ${CASE_DIR}/preprocess/dina_in).
 #
-# Defaults below are PREDICTIVE mode (METIS computes its own profiles/sources; none are read
-# from DINA). A shot needing interpretative mode overrides the five metis_external_data_*
-# settings via cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl.
+# Defaults below are PREDICTIVE mode for the kinetic profiles (METIS computes Te/Ti/ne/Zeff
+# itself) while equilibrium and current diffusion are read from NICE. A shot needing
+# interpretative mode overrides the metis_external_data_* settings via
+# cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl.
 #
-# source_nice.t_min has no sane generic default (which DINA slice to bootstrap NICE/METIS/the
-# controller from is genuinely per-shot); every shot needs
-# cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for it, same as evolutive_controller's
-# source.t_min.
+# source_nice.t_min (2.40 s, start of the DINA trace) is where NICE/METIS/the controller are
+# bootstrapped from; override it per shot to start elsewhere.
 
 resources:
   metis_nice_evol_from_dina.source_nice: {threads: 1}
@@ -87,8 +86,8 @@ settings:
   # through METIS's metis_clock_time_stop (default Inf, i.e. unset) or the SLURM time limit.
   nice_inv.xml_path: ${PDS_REPO}/workflows/metis_nice_evol_from_dina/config_nice.xml
 
-  # METIS switches for reading external data from the received IDSs -- predictive defaults,
-  # all off. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
+  # METIS switches for reading external data from the received IDSs -- predictive defaults
+  # except equilibrium and current diffusion, which come from NICE. See cases/overrides/metis_nice_evol_from_dina_<shot>.ymmsl for an interpretative
   # shot. The METIS runaway model is switched off via metis_option_runaway, see below.
   metis.metis_external_data_equilibrium: 1
   metis.metis_external_data_current_diffusion: 1

@@ -6,10 +6,9 @@ ymmsl_version: v0.2
 #
 # Ported from itergit/feature/metis_nice_evol's
 # workflows/metis_predictive_nice_evol_from_dina/workflow.ymmsl.template ("first version of
-# the workflow with METIS + NICE evol + Controller" and its follow-up port/conduit fixes).
-# That branch also has a workflow_alternative.ymmsl.template (two METIS instances -- a
-# one-shot "metis_init" bootstrap plus the in-loop "metis") which was not ported: the
-# single-metis arrangement below is the branch's own latest committed direction.
+# the workflow with METIS + NICE evol + Controller" and its follow-up port/conduit fixes),
+# with the two-METIS arrangement of that branch's workflow_alternative.ymmsl.template: a
+# one-shot "metis_init" bootstrap plus the in-loop "metis".
 #
 # Structurally this is metis_nice_inverse_from_dina's METIS half spliced onto
 # evolutive_controller's NICE-evo/magnetic_controller loop (see those two workflows'
@@ -18,10 +17,10 @@ ymmsl_version: v0.2
 # branch's older names for the same ports); source_metis/source_nice/sink_transport/
 # sink_equilibrium keep metis_nice_inverse_from_dina's names.
 #
-# synchro_nice_metis uses f_init/o_f rather than the branch's own latest (s/o_i) commit --
+# synchro_nice_metis_* use f_init/o_f rather than the branch's own latest (s/o_i) commit --
 # see README.md for why: imas_muscle3.actors.sink_source_component only implements
 # F_INIT/O_F, and f_init/o_f is also the correct MMSF macro-micro pairing here (nice_evo_rd's
-# O_I drives synchro_nice_metis's F_INIT once per internal step; its O_F then feeds metis's S
+# O_I drives each synchro actor's F_INIT once per internal step; its O_F then feeds metis's S
 # ports, which just need one message per METIS step -- MUSCLE3 does not require the operator
 # label to match across a conduit, only the message cadence, and that's already pinned by
 # nice_evo_rd.dt == metis's own internal dt).
