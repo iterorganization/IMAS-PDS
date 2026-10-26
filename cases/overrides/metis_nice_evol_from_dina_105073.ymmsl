@@ -1,0 +1,5 @@
+ymmsl_version: v0.2
+# DINA shot 105073, bootstrapped at the start of the DINA trace.
+settings:
+  source_nice.t_min: 2.4
+  source_metis.t_min: 2.4
