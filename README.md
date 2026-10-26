@@ -23,8 +23,8 @@ The PDS tool is currently set up to be used on SDCC and needs significant manual
 
 # Example cases
 
-A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **scenario** (what
-is simulated, in the separate [pds-scenarios](../pds-scenarios) repository). `bin/pds-create-case`
+A run pairs a **workflow** (how it is simulated, in `workflows/`) with a **shot** (what
+is simulated, a DINA run named in `preprocessing/dina/shots/`). `bin/pds-create-case`
 materializes that pairing as a **case** directory under `cases/`.
 These premade cases are examples that can be built upon. The user is free to change anything in the
 case directory. `bin/pds-run-case.sbatch` is then used to run the case using a Slurm job:
@@ -33,7 +33,6 @@ case directory. `bin/pds-run-case.sbatch` is then used to run the case using a S
 # PDS_REPO before the module load: without it the PDS module only finds the
 # checkout when it happens to be your current directory.
 export PDS_REPO=/path/to/pds
-export SCENARIOS_REPO=/path/to/pds-scenarios
 
 module use /work/projects/pds/modules/all
 module load PDS

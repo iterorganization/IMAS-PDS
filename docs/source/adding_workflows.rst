@@ -40,18 +40,18 @@ Anatomy of a workflow directory
   their own instead. Write one for anything new.
 
 ``preprocess.sh``
-  Runs **once**, during ``pds-create-case``, not on every run. Use it for an input
-  dataset that cannot be pre-baked into ``pds-scenarios`` --
-  ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own IMAS layout from raw
-  DINA this way. It receives ``PDS_REPO``, ``SCENARIOS_REPO``, ``SHOT`` and
-  ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.
+  Runs **once**, during ``pds-create-case``, not on every run, to build the workflow's
+  input from the shot's DINA run with the scripts in ``preprocessing/`` (sorted by data
+  source). ``preprocessing/dina/scenario_input.sh`` builds the common DINA input and
+  machine description; ``workflows/metis_from_dina/preprocess.sh`` builds METIS's own
+  IMAS layout. It receives ``PDS_REPO``, ``SHOT`` and ``CASE_DIR``, and must write under ``$CASE_DIR/preprocess/``.
 
   To hand back a value only it can compute, write a ``preprocess_settings.ymmsl`` into
   the case; ``pds-run-case.sbatch`` stacks it in last. ``metis_psioffset``, derived from
   the shot's own DINA equilibrium, is the existing example.
 
 ``postprocess.sh``
-  Runs after ``muscle_manager`` exits, with ``PDS_REPO``, ``SCENARIOS_REPO``,
+  Runs after ``muscle_manager`` exits, with ``PDS_REPO``,
   ``SHOT``, ``CASE_DIR``, ``RUN_DIR`` and ``PYTHON`` set. Write output into
   ``$RUN_DIR``. Use ``"$PYTHON"``, not ``python`` -- it is the same interpreter
   the manager resolved to, and the module environment may not put that first on
@@ -68,10 +68,10 @@ Anatomy of a workflow directory
 Templating
 ----------
 
-``pds-create-case`` substitutes exactly four variables when it copies files into
+``pds-create-case`` substitutes exactly three variables when it copies files into
 a case:
 
-``${PDS_REPO}`` ``${SCENARIOS_REPO}`` ``${SHOT}`` ``${CASE_DIR}``
+``${PDS_REPO}`` ``${SHOT}`` ``${CASE_DIR}``
 
 No other placeholders are expanded, and there is no wider templating scheme.
 

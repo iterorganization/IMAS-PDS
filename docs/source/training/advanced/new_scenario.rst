@@ -6,7 +6,7 @@ Adding a new scenario
 Running a workflow on your own data
 -------------------------------------
 
-Every exercise so far ran against an existing shot in ``pds-scenarios`` or the small training
+Every exercise so far ran against an existing shot in ``preprocessing/dina/shots`` or the small training
 dataset. If you want to be able to run the PDS using your own scenarios, the following 
 exercise will give you some pointers on how you can go about doing so.
 

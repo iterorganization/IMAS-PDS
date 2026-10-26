@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 import numpy as np
 from imas import IDSFactory, convert_ids
+from imas.ids_defs import IDS_TIME_MODE_INDEPENDENT
 
 DD_VERSION = "4.0.0"
 
@@ -143,11 +144,15 @@ def preprocess_pf_passive(db_out, db_md_pf_passive):
 
 def preprocess_iron_core(db_out, db_md_iron_core):
     """
-    -ids needed for WEST, created an empty one for ITER.
+    -ids needed for WEST; without a source (ITER) an empty one is written.
     """
-    ids_orig = db_md_iron_core.get("iron_core", autoconvert=False)
-    with quiet_expected_conversion_drops():
-        ids = convert_ids(ids_orig, DD_VERSION)
+    if db_md_iron_core is None:
+        ids = IDSFactory(version=DD_VERSION).iron_core()
+        ids.ids_properties.homogeneous_time = IDS_TIME_MODE_INDEPENDENT
+    else:
+        ids_orig = db_md_iron_core.get("iron_core", autoconvert=False)
+        with quiet_expected_conversion_drops():
+            ids = convert_ids(ids_orig, DD_VERSION)
     db_out.put(ids)
 
 
@@ -175,8 +180,9 @@ def preprocess_wall(db_out, db_md_wall):
         wall.description_2d[0].limiter.unit[0].outline.z[::-1]
     )
 
-    # copy 2 first unit from vessel
+    # Two empty vessel units, as in the data all runs were validated on; keep=True would
+    # carry over the actual VV inner/outer shells.
     wall.description_2d[0].vessel = wallIn.description_2d[0].vessel
-    wall.description_2d[0].vessel.unit.resize(2, keep=True)
+    wall.description_2d[0].vessel.unit.resize(2)
 
     db_out.put(wall)

@@ -18,11 +18,11 @@ resources:
   inverse_convergence.recorder_transport: {threads: 1}
 
 settings:
-  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from pds-scenarios.
+  # Pulse design (generic, placeholders filled per shot) + input DBEntry, from preprocess.sh.
   # waveform_editor: https://waveform-editor.readthedocs.io/en/latest/muscle3.html#available-settings
   waveform_editor.waveforms: ${PDS_REPO}/workflows/inverse_convergence/waveforms.yaml
   # source: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
-  source.source_uri: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+  source.source_uri: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
   source.iterative: False
 
   # Convergence defaults; a scenario may override any of these.
@@ -52,7 +52,7 @@ settings:
   # Recording.
   # recorder_*: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html#available-settings
   equilibrium.recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
-  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md pf_active=imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+  equilibrium.recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in_md pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
 
   # Validation.

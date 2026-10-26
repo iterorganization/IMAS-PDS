@@ -48,7 +48,7 @@ dynamic = ["version"]
 dependencies = [
     "packaging",
     "imas-python",
-    "muscle3",
+    "muscle3>=0.10,<0.11",
 ]
 
 [project.optional-dependencies]

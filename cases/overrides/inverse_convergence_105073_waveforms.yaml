@@ -1,8 +1,8 @@
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
     eq: {port: equilibrium_in}
     cp: {port: core_profiles_in}
 

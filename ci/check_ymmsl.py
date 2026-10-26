@@ -14,7 +14,7 @@ Catches, without needing scenario data or a running MUSCLE3:
   4. model ports declared in workflows/lib/*.ymmsl but not wired inside the model --
      flatten() then drops the caller's conduit with no error, and neither
      Model.check_consistent nor _check_consistent_ports objects
-  5. scenario waveforms.yaml files whose top-level shape is wrong -- a mangled comment
+  5. waveforms*.yaml files whose top-level shape is wrong -- a mangled comment
      can swallow the machine_description: key and silently move its contents into globals
   6. undefined ${VAR} in settings -- expanded here exactly as the patched manager does,
      so CI cannot pass a case that could not start
@@ -24,7 +24,7 @@ Catches, without needing scenario data or a running MUSCLE3:
 A case either imports its workflow (self-contained, one file on the command line) or
 declares it in a `# workflow: <name>` comment header (stacked, two files).
 
-Usage:  python ci/check_ymmsl.py [--scenarios <dir>]
+Usage:  python ci/check_ymmsl.py
 """
 
 import argparse
@@ -328,12 +328,16 @@ def check_lib_ports(errors: list) -> None:
         print(f"ok  {path.name}: model ports wired")
 
 
-def check_scenarios(scenarios: Path, errors: list) -> None:
+def check_waveforms(errors: list) -> None:
     import yaml
 
-    for wf_yaml in sorted(scenarios.glob("*/waveforms.yaml")):
+    files = [
+        *REPO.glob("workflows/*/waveforms*.yaml"),
+        *REPO.glob("cases/overrides/*waveforms*.yaml"),
+    ]
+    for wf_yaml in sorted(files):
         doc = yaml.safe_load(wf_yaml.read_text())
-        rel = wf_yaml.relative_to(scenarios)
+        rel = wf_yaml.relative_to(REPO)
         missing = WAVEFORM_REQUIRED - set(doc)
         if missing:
             _fail(
@@ -353,16 +357,13 @@ def check_scenarios(scenarios: Path, errors: list) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--scenarios", type=Path, help="path to a pds-scenarios checkout")
-    args = ap.parse_args()
+    argparse.ArgumentParser(description=__doc__).parse_args()
 
     errors: list = []
     check_lib_ports(errors)
     for case in sorted((REPO / "cases").glob("*.ymmsl")):
         check_case(case, errors)
-    if args.scenarios:
-        check_scenarios(args.scenarios, errors)
+    check_waveforms(errors)
 
     if errors:
         print(f"\n{len(errors)} problem(s):", file=sys.stderr)
