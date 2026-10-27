@@ -5,7 +5,18 @@
 #
 # t_list is genuinely per-shot (each shot's own ramp-up/flattop/ramp-down times), carried
 # over as-is from that script's scenario_config.env values.
-set -euo pipefail
+set -euo pipefail # stop if anything doesn't work
+
+# Reconstruct which case matches this run
+RUN_DIR=$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )
+CASE_ROOT=$(basename ${RUN_DIR%_[[:digit:]]*_[[:digit:]]*})
+CASE_DIR=$PDS_REPO/cases/$CASE_ROOT
+pushd $CASE_DIR
+source case.env
+popd
+
+# Set runtime variables
+PYTHON=python # Best guess of Python interpreter. TODO: Can we use something else?
 
 case "$SHOT" in
   105073) T_LIST="25 130 175" ;;
@@ -18,7 +29,7 @@ esac
 
 mkdir -p "$RUN_DIR/plots"
 
-"$PYTHON" "$PDS_REPO/workflows/torax_nice_utils/plot_validation.py" \
+"$PYTHON" "$PDS_REPO/postprocessing/torax_nice/plot_validation.py" \
   --shot_nr "$SHOT" \
   --dina_uri "$CASE_DIR/preprocess/in" \
   --nice_uri "$RUN_DIR/out_nice" \

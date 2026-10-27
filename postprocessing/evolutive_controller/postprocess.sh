@@ -6,14 +6,25 @@
 #
 # reconstruction_path mirrors settings.ymmsl's source.source_uri (the inverse_convergence run
 # this case's F_INIT reference equilibrium is read from).
-set -euo pipefail
+set -euo pipefail # stop if anything doesn't work
+
+# Reconstruct which case matches this run
+RUN_DIR=$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )
+CASE_ROOT=$(basename ${RUN_DIR%_[[:digit:]]*_[[:digit:]]*})
+CASE_DIR=$PDS_REPO/cases/$CASE_ROOT
+pushd $CASE_DIR
+source case.env
+popd
+
+# Set runtime variables
+PYTHON=python # Best guess of Python interpreter. TODO: Can we use something else?
 
 mkdir -p "$RUN_DIR/plots"
 
-"$PYTHON" "$PDS_REPO/workflows/utils/plot_validation_evolutive_controller.py" \
+"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_validation_evolutive_controller.py"
   --shot_nr "$SHOT" \
-  --dina_path "$CASE_DIR/preprocess/in" \
-  --reconstruction_path "$PDS_REPO/cases/runs/inverse_convergence_${SHOT}/out_nice" \
+  #--dina_path "$CASE_DIR/preprocess/in" \
+  --reconstruction_path "$RUN_DIR/out_nice" \
   --nice_path "$RUN_DIR/out_nice" \
   --torax_path "$RUN_DIR/out_torax" \
   --output_dir "$RUN_DIR/plots"
