@@ -21,10 +21,18 @@ PYTHON=python # Best guess of Python interpreter. TODO: Can we use something els
 
 mkdir -p "$RUN_DIR/plots"
 
-"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_validation_evolutive_controller.py"
+"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_validation_evolutive_controller.py" \
   --shot_nr "$SHOT" \
-  #--dina_path "$CASE_DIR/preprocess/in" \
   --reconstruction_path "$RUN_DIR/out_nice" \
   --nice_path "$RUN_DIR/out_nice" \
   --torax_path "$RUN_DIR/out_torax" \
   --output_dir "$RUN_DIR/plots"
+  #--dina_path "$CASE_DIR/preprocess/in" \
+
+"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_gyrokinetics.py" \
+  --shot_nr "$SHOT" \
+  --nice_uri "$RUN_DIR/out_nice" \
+  --torax_uri "$RUN_DIR/out_torax" \
+  --output_dir "$RUN_DIR/plots"
+  #--reconstruction_path "$RUN_DIR/out_nice" \
+  #--dina_path "$CASE_DIR/preprocess/in" \
