@@ -21,7 +21,7 @@ T_LIST="20 35 60"
 
 mkdir -p "$RUN_DIR/plots"
 
-"$PYTHON" "$PDS_REPO/postprocessing/metis_alone/plot_validation_metis.py"
+"$PYTHON" "$PDS_REPO/postprocessing/metis_nice/plot_validation_metis_nice.py"
   --shot_nr "$SHOT" \
   --dina_uri "$CASE_DIR/preprocess/dina_update_in" \
   --nice_uri "$RUN_DIR/nice_out" \
