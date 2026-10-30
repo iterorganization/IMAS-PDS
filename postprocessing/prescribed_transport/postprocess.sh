@@ -16,7 +16,7 @@ source case.env
 popd
 
 # Set runtime variables
-PYTHON=python # Best guess of Python interpreter. TODO: Can we use something else?
+PYTHON=${PYTHON:-python}
 
 case "$SHOT" in
   105073) T_LIST="25 130 175" ;;
