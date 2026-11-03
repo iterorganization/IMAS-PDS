@@ -173,7 +173,8 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
     if "nice" in dbs:
         print("NICE data found, plotting...")
         ni: DBEntry = dbs["nice"]
-        ni_eq: IDSToplevel = ni.get("equilibrium")
+        print("Getting NICE equilibrium...")
+        ni_eq: IDSToplevel = ni.get("equilibrium", lazy=True)
         # ni_timebase: IDSNumericArray = ni_eq.time
         # ni_pf_act: IDSToplevel = ni.get("pf_active")
         # assert all(ni_timebase == ni_pf_act.time)
@@ -198,7 +199,8 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
         # dr_inb = slice.profiles_1d.r_inboard
         # dr_outb = slice.profiles_1d.r_outboard
         to: DBEntry = dbs["torax"]
-        to_cp: IDSToplevel = to.get("core_profiles")
+        print("Getting TORAX core_profiles...")
+        to_cp: IDSToplevel = to.get("core_profiles", lazy=True)
         to_timebase: IDSNumericArray = to_cp.time
         # to_pf_act: IDSToplevel = to.get("pf_active")
         # assert all(to_timebase == to_pf_act.time)
@@ -230,7 +232,8 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
         Ate = 1
 
         # Eq is on another timebase
-        to_eq: IDSToplevel = to.get("equilibrium")
+        print("Getting TORAX equilibrium...")
+        to_eq: IDSToplevel = to.get("equilibrium", lazy=True)
         to_eq_timebase: IDSNumericArray = to_eq.time
         ts = to_eq.time_slice
         time_val = to_timebase[time_idx]
@@ -249,8 +252,15 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
         # Midplane-averaged major radius of flux surface
         # Includes Shafranov shift
         Ro = (max(rr) - min(rr)) / 2
-        x = np.linspace(0, 1, len(Te))
-        tau_bounce = calc_tau_bounce(Te, qx, Ro, Rmin, x)
+        # Midplane-averaged minor radius of flux surface, normalized by
+        # midplane-averaged minor radius of last-closed-flux-surface.
+        r_inb = slice.profiles_1d.r_inboard
+        r_outb = slice.profiles_1d.r_outboard
+        r_inb_lcfs = min(rr)
+        r_outb_lcfs = max(rr)
+        xx = (r_outb - r_inb) / (r_outb_lcfs - r_inb_lcfs)
+        xx_intp = np.interp(np.linspace(0, 1, len(Te)), xx, xx)
+        tau_bounce = calc_tau_bounce(Te, qx, Ro, Rmin, xx_intp)
         nu_e = calc_nu_e(ne, Te, zeff)
         nustar = nu_e * tau_bounce
         logNustar = np.log10(nustar)  # For GK
@@ -320,8 +330,9 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
     ax_smag.plot(eq_rho_tor_norm, eq_smag, label=r"$\hat{s}_{eq,torax}$")
     ax_smag.set_ylabel(r"$\hat{s}$ [-]")
     ax_smag.legend()
-    # x is empty
-    ax_x.set_ylabel(r"$x$")
+
+    ax_x.plot(to_rho_tor_norm, xx_intp)
+    ax_x.set_ylabel(r"$x\equiv\frac{r_{outb} - r_{inb}}{r_{outb,LCFS} - r_{inb,LCFS}}$")
 
     ax_tite0.plot(to_rho_tor_norm, tite0)
     ax_tite0.set_ylabel(r"$\frac{T_{i,0}}{T_e}$ [-]")
