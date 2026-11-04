@@ -2,19 +2,24 @@ ymmsl_version: v0.2
 settings:
   waveform_editor.waveforms: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_waveforms.yaml
   recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in"
-  # t_min pinned to out_nice's native t=84.3176 slice, not the flattop's nominal t=80.0:
-  # the closest native slice to 80.0 is t=79.2176, and seeding nice_evo_rd's Newton solve
-  # from that state diverges within 3 iterations on the very first step, regardless of the
-  # configured dt (ruled out a source.dt/label-mismatch theory -- identical blowup either
-  # way). t=84.3176 steps cleanly through the full window; confirmed live.
   source.t_min: 84.31759781205469
   source.t_max: 130.0
   source.dt: 1
   torax.python_config_module: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_config_torax.py
-  torax.fixed_dt: 0.01
-  # End before t=84.6176: from that step on, repeated runs on identical input diverge
-  # (sometimes NaN + nice_evo_rd segfault).
-  torax.t_final: 84.6
-  nice_evo_rd.dt: 0.01
-  nice_evo_rd.t_interval: 0.01
-  nice_evo_rd.t_end: 84.6
+
+  torax.t_final: 87.0
+  nice_evo_rd.t_end: 87.0
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 0
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.plasma_position: 'current_centre'
+
+  torax.fixed_dt: 0.001
+  nice_evo_rd.dt: 0.001
+  nice_evo_rd.t_interval: 0.001

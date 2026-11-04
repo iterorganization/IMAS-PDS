@@ -41,7 +41,7 @@ settings:
   sink_control.sink_mode: "w"
 
   # recorder_*: https://imas-muscle3.readthedocs.io/en/latest/actor_recorder.html#available-settings
-  recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
+  recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_evo.py
   recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in_md pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
   muscle_remote_log_level: 'INFO'

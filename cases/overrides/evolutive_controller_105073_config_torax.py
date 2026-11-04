@@ -34,7 +34,7 @@ CONFIG = {
         "fixed_dt": fixed_dt,
         "adaptive_dt": False,
         "resistivity_multiplier": 1,
-        "evolve_current": True,
+        "evolve_current": False,
         "evolve_ion_heat": True,
         "evolve_electron_heat": True,
         "evolve_density": False,

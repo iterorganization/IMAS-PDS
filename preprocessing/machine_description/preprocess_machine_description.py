@@ -6,7 +6,7 @@ pf_passive and the pf_active coil-current seed) into valid PDS coupling input.
 import datetime
 import logging
 from contextlib import contextmanager
-
+import datetime
 import numpy as np
 from imas import IDSFactory, convert_ids
 from imas.ids_defs import IDS_TIME_MODE_INDEPENDENT
@@ -183,6 +183,6 @@ def preprocess_wall(db_out, db_md_wall):
     # Two empty vessel units, as in the data all runs were validated on; keep=True would
     # carry over the actual VV inner/outer shells.
     wall.description_2d[0].vessel = wallIn.description_2d[0].vessel
-    wall.description_2d[0].vessel.unit.resize(2)
+    wall.description_2d[0].vessel.unit.resize(2, keep=True)
 
     db_out.put(wall)

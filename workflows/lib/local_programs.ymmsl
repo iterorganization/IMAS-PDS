@@ -137,7 +137,10 @@ programs:
   nice_inv:
     script: |
       #!/bin/bash
-      source /etc/profile.d/modules.sh
+      repo="$PDS_REPO"
+      source /usr/share/lmod/lmod/init/bash
+      module purge
+      export PDS_REPO="$repo"
       eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_inv_muscle3 "$@"
@@ -146,8 +149,11 @@ programs:
   nice_evo_rd:
     script: |
       #!/bin/bash
+      repo="$PDS_REPO"
       source /usr/share/lmod/lmod/init/bash
-      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0 2>/dev/null)"
+      module purge
+      export PDS_REPO="$repo"
+      eval "$($LMOD_CMD bash load NICE/3.0.0-intel-2023b-DD-4.1.0)"
       export IMAS_AL_DISABLE_VALIDATE=1 IMAS_VERSION=4.0.0 OMP_NUM_THREADS=2
       exec $PDS_REPO/local_installs/nice/run/nice_imas_evo_rd_muscle3 "$@"
 
@@ -196,10 +202,14 @@ programs:
   magnetic_controller:
     script: |
       #!/bin/bash
-      module load IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
-      module load MATLAB/2025b-r1-GCCcore-13.2.0
+      repo="$PDS_REPO"
+      module purge
+      export PDS_REPO="$repo"
+      module load PCS/2026.08-pds
+      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      unset PYTHONPATH
       export PCS_PATH=$PDS_REPO/local_installs/pcs
-      export CONTROLLER_PATH=$PDS_REPO/controllers/KCURR_RZIp
+      export CONTROLLER_PATH=$PDS_REPO/controllers/CCS
       export SCDDS_COREPATH=$PDS_REPO/local_installs/pcs/pcssp/scdds
       # run() the controller by full path, not by name: NICE's own
       # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
@@ -220,4 +230,4 @@ programs:
       # anywhere between `try` and `end` fails immediately with "This statement is
       # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
       # above, which parse fine across multiple lines.
-      exec matlab -batch "try; pyenv('Version','$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
+      exec matlab -batch "try; pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"

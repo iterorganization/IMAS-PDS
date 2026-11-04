@@ -18,8 +18,10 @@ constant timestepping.
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
+import numpy as np
+from imas import IDSFactory
 from libmuscle import Instance, InstanceFlags, Message
 from ymmsl import Operator
 
@@ -46,6 +48,37 @@ CHANNELS = [
     "pulse_schedule",
     "summary",
 ]
+
+
+def valid_r0(r0: float) -> bool:
+    return 0 < r0 < 1e30
+
+
+def equilibrium_r0(data: Any) -> Optional[float]:
+    """vacuum_toroidal_field.r0 of a serialized equilibrium, None if unset."""
+    equilibrium = IDSFactory().new("equilibrium")
+    equilibrium.deserialize(data)
+    r0 = float(equilibrium.vacuum_toroidal_field.r0)
+    return r0 if valid_r0(r0) else None
+
+
+def rebase_vacuum_field(data: Any, r0_ref: float) -> Any:
+    """Re-express a serialized equilibrium's vacuum toroidal field at `r0_ref`.
+
+    TORAX writes `vacuum_toroidal_field.b0` at r0 = its own R_major, while NICE evo_rd
+    reads b0 and imposes f = b0 * (its own r0) at the plasma boundary, ignoring the
+    IDS's r0. Every TORAX -> NICE pass then multiplied the vacuum f by
+    r0_NICE / R_major. Rescaling b0 to r0_ref keeps f = r0 * b0 unchanged.
+    """
+    equilibrium = IDSFactory().new("equilibrium")
+    equilibrium.deserialize(data)
+    vtf = equilibrium.vacuum_toroidal_field
+    r0 = float(vtf.r0)
+    if not valid_r0(r0) or len(vtf.b0) == 0 or r0 == r0_ref:
+        return data
+    vtf.b0 = np.asarray(vtf.b0) * (r0 / r0_ref)
+    vtf.r0 = r0_ref
+    return equilibrium.serialize()
 
 
 def role_ports(role: str) -> list[str]:
@@ -187,6 +220,9 @@ class Peer:
         self.out_ports = out_ports
         self.caches: dict[str, DataCache] = {label: DataCache() for label in in_ports}
         self.primary_label = next(iter(in_ports))
+        # This peer's reference radius, from the first equilibrium it sent: the
+        # equilibria sent to it are re-expressed there.
+        self.r0: Optional[float] = None
 
         if resume_from_state:
             for label, cache_state in resume_from_state["caches"].items():
@@ -197,6 +233,7 @@ class Peer:
             self.rcvd = resume_from_state["rcvd"]
             self.to_send = resume_from_state["to_send"]
             self.next = resume_from_state["next"]
+            self.r0 = resume_from_state.get("r0")
         else:
             for label, port in self.in_ports.items():
                 msg = self.instance.receive(port)
@@ -205,6 +242,9 @@ class Peer:
                     self.rcvd = msg.timestamp
                     self.to_send = msg.timestamp
                     self.next = msg.next_timestamp
+                if label == "equilibrium":
+                    self.r0 = equilibrium_r0(msg.data)
+                    logger.info("peer on %s: reference radius r0 = %s m", port, self.r0)
 
     def done(self) -> bool:
         """Return whether we are done commmunicating with this peer."""
@@ -271,6 +311,8 @@ class Peer:
         next_timestamp = None if done else self.next
         for label, port in self.out_ports.items():
             t, data = peer.caches[label].get_data(self.to_send)
+            if label == "equilibrium" and self.r0 is not None:
+                data = rebase_vacuum_field(data, self.r0)
             self.instance.send(port, Message(t, next_timestamp, data))
         self.to_send = None if done else self.next
 
@@ -289,6 +331,7 @@ class Peer:
             "rcvd": self.rcvd,
             "to_send": self.to_send,
             "next": self.next,
+            "r0": self.r0,
         }
 
 
