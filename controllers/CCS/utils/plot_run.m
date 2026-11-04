@@ -24,6 +24,22 @@ vtf_signals = {
 };
 psi_signals = {'psi_b', [ts 'global_quantities&psi_boundary']};
 eq_signals = [eq_signals; vtf_signals; psi_signals];
+% NICE and TORAX profiles against psi and global quantities, compared in the TORAX workflows
+prof_signals = {
+    'psi_1d', [ts 'profiles_1d&psi']
+    'p_1d', [ts 'profiles_1d&pressure']
+    'q_1d', [ts 'profiles_1d&q']
+    'j_1d', [ts 'profiles_1d&j_phi']
+};
+gq_signals = {
+    'beta_pol', [ts 'global_quantities&beta_pol']
+    'li_3', [ts 'global_quantities&li_3']
+};
+tcp_signals = {
+    'v_loop', '/core_profiles/global_quantities&v_loop'
+    'beta_pol', '/core_profiles/global_quantities&beta_pol'
+    'li_3', '/core_profiles/global_quantities&li_3'
+};
 
 pfa_signals = {
     'coil_current', '/pf_active/coil[]&current&data'
@@ -55,16 +71,21 @@ for i = 1:numel(run_dirs)
     plant_dir = first_folder(rd, {'out_plant', 'out_nice', 'nice_out'});
     ctrl_dir  = first_folder(rd, {'out_controller', 'controller_out'});
     ref_dir   = first_folder(fullfile(R(i).case_dir, 'preprocess'), {'initial_state', 'dina_in', 'in'});
-    R(i).eq   = read_h5_signals(fullfile(plant_dir, 'equilibrium.h5'), '/equilibrium/time', eq_signals);
-    R(i).tx   = struct();                      % TORAX's equilibrium, in the TORAX workflows only
-    if isfile(fullfile(rd, 'out_torax', 'equilibrium.h5'))
-        R(i).tx = read_h5_signals(fullfile(rd, 'out_torax', 'equilibrium.h5'), '/equilibrium/time', ...
-            [vtf_signals; psi_signals]);
+    has_torax = isfile(fullfile(rd, 'out_torax', 'equilibrium.h5'));
+    nice_signals = eq_signals;
+    if has_torax
+        nice_signals = [eq_signals; prof_signals; gq_signals];
     end
-    R(i).tcp  = struct();                      % TORAX's loop voltage
+    R(i).eq   = read_h5_signals(fullfile(plant_dir, 'equilibrium.h5'), '/equilibrium/time', nice_signals);
+    R(i).tx   = struct();                      % TORAX's equilibrium, in the TORAX workflows only
+    if has_torax
+        R(i).tx = read_h5_signals(fullfile(rd, 'out_torax', 'equilibrium.h5'), '/equilibrium/time', ...
+            [vtf_signals; psi_signals; prof_signals]);
+    end
+    R(i).tcp  = struct();                      % TORAX's loop voltage, beta_pol and li_3
     if isfile(fullfile(rd, 'out_torax', 'core_profiles.h5'))
         R(i).tcp = read_h5_signals(fullfile(rd, 'out_torax', 'core_profiles.h5'), '/core_profiles/time', ...
-            {'v_loop', '/core_profiles/global_quantities&v_loop'});
+            tcp_signals);
     end
     R(i).pfa  = read_h5_signals(fullfile(plant_dir, 'pf_active.h5'), '/pf_active/time', pfa_signals);       % measured coil currents
     R(i).ppas = struct();
@@ -205,6 +226,24 @@ xlim(t_lim); grid on
 title('z of the plant'); xlabel('t [s]'); ylabel('z [mm]');
 legend({R.label}, 'Location', 'best');
 
+% ===== R of the plant: boundary geometric axis and magnetic axis =====
+% Without RZIp nothing holds R: it follows the radial force balance (beta_pol, li_3) and
+% the coil currents.
+if all(arrayfun(@(r) isfield(r.eq, 'rgeo') && isfield(r.eq, 'rmag'), R))
+    figure('Name', 'R');
+    tiledlayout(2, 1, 'TileSpacing', 'compact');
+    ax = [nexttile, nexttile];
+    hold(ax, 'on');
+    for i = 1:numel(R)
+        plot(ax(1), R(i).eq.time, per_time(R(i).eq.rgeo, R(i).eq.time), 'Color', colors(i,:));
+        plot(ax(2), R(i).eq.time, per_time(R(i).eq.rmag, R(i).eq.time), 'Color', colors(i,:));
+    end
+    xlim(ax, t_lim); grid(ax, 'on');
+    title(ax(1), 'R of the boundary geometric axis'); ylabel(ax(1), 'R_{geo} [m]');
+    title(ax(2), 'R of the magnetic axis'); ylabel(ax(2), 'R_{axis} [m]'); xlabel(ax(2), 't [s]');
+    legend(ax(1), {R.label}, 'Location', 'best');
+end
+
 % ===== Plasma current of the plant (equilibrium of out_plant / out_nice) =====
 figure('Name', 'Ip');
 hold on
@@ -275,7 +314,95 @@ for i = 1:numel(R)
     legend(ax(1), {'NICE', 'TORAX'}, 'Location', 'best');
 end
 
+% ===== Pressure and beta_pol of NICE and TORAX, one figure per run =====
+% NICE evo_rd takes p(psi_N) from TORAX's equilibrium at every step: the two profiles must
+% coincide (NICE/TORAX = 1), and so must beta_pol. The local NICE develop (fc720054)
+% interpolates it as ratio*p(j) + p(j-1), which gives NICE about 1.5 times TORAX's pressure.
+n_prof = 4;                                    % profiles shown, spread over the run
+cmap = parula(n_prof + 1);                     % one colour per time, without the last (yellow)
+for i = 1:numel(R)
+    e = R(i).eq;
+    x = R(i).tx;
+    if ~isfield(e, 'p_1d') || ~isfield(x, 'p_1d')
+        continue
+    end
+    t_show = e.time(round(linspace(1, numel(e.time), n_prof)));
+    figure('Name', ['p, beta_pol ' R(i).label]);
+    tiledlayout(1, 3, 'TileSpacing', 'compact');
+    ax = [nexttile, nexttile, nexttile];
+    hold(ax, 'on');
+    h_t = gobjects(n_prof, 1);
+    for k = 1:n_prof
+        [xn, pn] = profile_at(e, 'p_1d', t_show(k));
+        [xt, pt] = profile_at(x, 'p_1d', t_show(k));
+        if numel(xn) < 2 || numel(xt) < 2
+            continue
+        end
+        h_t(k) = plot(ax(1), xn, pn / 1e3, '-', 'Color', cmap(k,:), 'LineWidth', 2);
+        plot(ax(1), xt, pt / 1e3, '--', 'Color', cmap(k,:));
+        w = xn <= 0.95;                        % TORAX's p goes to 0 at the edge
+        plot(ax(2), xn(w), pn(w) ./ interp1(xt, pt, xn(w)), 'Color', cmap(k,:));
+    end
+    yline(ax(2), 1, 'k--');
+    if isfield(e, 'beta_pol')
+        plot(ax(3), e.time, per_time(e.beta_pol, e.time), 'Color', c_nice, 'LineWidth', 2);
+    end
+    if isfield(R(i).tcp, 'beta_pol')
+        plot(ax(3), R(i).tcp.time, per_time(R(i).tcp.beta_pol, R(i).tcp.time), 'Color', c_torax);
+    end
+    grid(ax, 'on'); xlim(ax(3), t_lim);
+    title(ax(1), ['p: NICE solid, TORAX dashed, ' R(i).label]);
+    xlabel(ax(1), '\psi_N'); ylabel(ax(1), 'p [kPa]');
+    shown = isgraphics(h_t);
+    if any(shown)
+        legend(ax(1), h_t(shown), compose('t = %.3f s', t_show(shown)), 'Location', 'best');
+    end
+    title(ax(2), 'p_{NICE} / p_{TORAX}'); xlabel(ax(2), '\psi_N');
+    title(ax(3), '\beta_{pol}'); xlabel(ax(3), 't [s]');
+    legend(ax(3), {'NICE', 'TORAX'}, 'Location', 'best');
+end
 
+% ===== q, j_phi and li_3 of NICE and TORAX, one figure per run =====
+% These follow psi. With TORAX's evolve_current False its psi is prescribed (the
+% inverse_convergence trajectory) and is not NICE's: a difference here comes from that
+% choice, not from the coupling. Absolute values, as the codes can differ in sign.
+for i = 1:numel(R)
+    e = R(i).eq;
+    x = R(i).tx;
+    if ~isfield(e, 'q_1d') || ~isfield(x, 'q_1d')
+        continue
+    end
+    t_show = e.time(round(linspace(1, numel(e.time), n_prof)));
+    figure('Name', ['q, j, li ' R(i).label]);
+    tiledlayout(1, 3, 'TileSpacing', 'compact');
+    ax = [nexttile, nexttile, nexttile];
+    hold(ax, 'on');
+    h_t = gobjects(n_prof, 1);
+    for k = 1:n_prof
+        [xn, qn] = profile_at(e, 'q_1d', t_show(k));
+        [xt, qt] = profile_at(x, 'q_1d', t_show(k));
+        h_t(k) = plot(ax(1), xn, abs(qn), '-', 'Color', cmap(k,:), 'LineWidth', 2);
+        plot(ax(1), xt, abs(qt), '--', 'Color', cmap(k,:));
+        if isfield(e, 'j_1d') && isfield(x, 'j_1d')
+            [xn, jn] = profile_at(e, 'j_1d', t_show(k));
+            [xt, jt] = profile_at(x, 'j_1d', t_show(k));
+            plot(ax(2), xn, abs(jn) / 1e6, '-', 'Color', cmap(k,:), 'LineWidth', 2);
+            plot(ax(2), xt, abs(jt) / 1e6, '--', 'Color', cmap(k,:));
+        end
+    end
+    if isfield(e, 'li_3')
+        plot(ax(3), e.time, per_time(e.li_3, e.time), 'Color', c_nice, 'LineWidth', 2);
+    end
+    if isfield(R(i).tcp, 'li_3')
+        plot(ax(3), R(i).tcp.time, per_time(R(i).tcp.li_3, R(i).tcp.time), 'Color', c_torax);
+    end
+    grid(ax, 'on'); xlim(ax(3), t_lim);
+    title(ax(1), ['|q|: NICE solid, TORAX dashed, ' R(i).label]); xlabel(ax(1), '\psi_N');
+    legend(ax(1), h_t, compose('t = %.3f s', t_show), 'Location', 'best');
+    title(ax(2), '|j_\phi| [MA/m^2]'); xlabel(ax(2), '\psi_N');
+    title(ax(3), 'l_{i,3}'); xlabel(ax(3), 't [s]');
+    legend(ax(3), {'NICE', 'TORAX'}, 'Location', 'best');
+end
 
 % ===== Local functions (must stay at the end of the script) =====
 
@@ -354,6 +481,22 @@ function d = first_folder(root, names)
             return
         end
     end
+end
+
+function [psin, v] = profile_at(s, name, t)
+    % profile `name` of the slice of s nearest to t, against the normalized poloidal flux
+    [~, k] = min(abs(s.time - t));
+    psi = s.psi_1d(k, :);
+    v = s.(name)(k, :);
+    ok = isfinite(psi) & isfinite(v) & psi > -1e40 & v > -1e40;
+    psi = psi(ok);
+    v = v(ok);
+    if numel(psi) < 2
+        psin = [];
+        v = [];
+        return
+    end
+    psin = (psi - psi(1)) / (psi(end) - psi(1));
 end
 
 function v = per_time(v, t)

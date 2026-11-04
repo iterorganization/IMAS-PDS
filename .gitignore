@@ -33,3 +33,4 @@ cases/*/
 .claude
 .vscode/
 slurm-*.out
+*.asv
