@@ -34,3 +34,4 @@ cases/*/
 .vscode/
 slurm-*.out
 *.asv
+lin/

@@ -4,8 +4,11 @@ settings:
   recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in"
   source.t_min: 84.31759781205469
   source.t_max: 130.0
-  source.dt: 1
+  #source.dt: 1
   torax.python_config_module: ${PDS_REPO}/cases/overrides/evolutive_controller_105073_config_torax.py
+  # evolve_current is False in the config: TORAX's psi is NICE's, not the inverse's
+  # (workflows/utils/torax_psi_from_equilibrium.py)
+  torax.psi_from_equilibrium: True
 
   torax.t_final: 87.0
   nice_evo_rd.t_end: 87.0

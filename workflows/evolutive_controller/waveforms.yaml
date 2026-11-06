@@ -6,8 +6,8 @@
 #   core_profiles fields come from it so they share one radial grid; it has no
 #   j_non_inductive, so NICE evo_rd falls back to j_bootstrap, same as on every later step.
 # - `nice` is that run's NICE coil currents.
-# core_sources (ECRH) and coil voltages stay on DINA `input`: inverse_convergence never
-# writes either to disk.
+# The EC power (DINA's, as summary.heating_current_drive.power_ec) and coil voltages stay on
+# DINA `input`: inverse_convergence never writes either to disk.
 globals:
   dd_version: 4.0.0
   imports:
@@ -76,10 +76,10 @@ targets:
     - {ref: eq}
   equilibrium/time_slice/boundary/outline/z:
     - {ref: eq}
-  core_sources/*:
-    - {ref: input}
   core_sources/source(1)/identifier/name:
     - {value: ec}
+  core_sources/source(1)/global_quantities/power:
+    - {ref: input, path: summary/heating_current_drive/power_ec/value, interp: linear}
   pf_active/coil(*)/current/data:
     - {ref: nice}
   pf_active/coil(*)/voltage/data:

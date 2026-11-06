@@ -167,7 +167,9 @@ programs:
       unset PYTHONPATH
       source $PDS_REPO/local_installs/TORAX-MUSCLE3/venv/bin/activate
       export IMAS_VERSION=4.0.0 JAX_COMPILATION_CACHE_DIR=$PDS_REPO/local_installs/tmp/jax_cache JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
-      exec python -u -m torax_muscle3.torax_actor "$@"
+      # the stock actor plus the `psi_from_equilibrium` setting (off by default): TORAX's
+      # psi then follows the received equilibrium (workflows/utils/torax_psi_from_equilibrium.py)
+      exec python -u "$PDS_REPO/workflows/utils/torax_psi_from_equilibrium.py" "$@"
 
   # METIS is always driven through MATLAB's pyenv()/py.* bridge and a module-installed
   # IMAS-AL-Matlab -- there is no repo-local build of it, so this is identical to

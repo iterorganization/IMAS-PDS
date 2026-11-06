@@ -2,7 +2,9 @@ close all
 clc
 clear
 
-run_dir = '/home/ITER/centong/Desktop/PDSs/IMAS-PDS-torax/cases/runs/evolutive_controller_105073_20261104_110915';
+run_dir = {'/home/ITER/centong/Desktop/PDSs/IMAS-PDS-torax/cases/runs/evolutive_controller_105073_20261104_143737',
+'/home/ITER/centong/Desktop/PDSs/IMAS-PDS-torax/cases/runs/evolutive_controller_105073_20261104_163447',
+'/home/ITER/centong/Desktop/PDSs/IMAS-PDS-torax/cases/runs/evolutive_controller_105073_20261104_171620'};
 
 plot_rms = true;
 t_rms    = 0.1;
@@ -28,6 +30,7 @@ eq_signals = [eq_signals; vtf_signals; psi_signals];
 prof_signals = {
     'psi_1d', [ts 'profiles_1d&psi']
     'p_1d', [ts 'profiles_1d&pressure']
+    'dp_1d', [ts 'profiles_1d&dpressure_dpsi']
     'q_1d', [ts 'profiles_1d&q']
     'j_1d', [ts 'profiles_1d&j_phi']
 };
@@ -326,10 +329,12 @@ for i = 1:numel(R)
     if ~isfield(e, 'p_1d') || ~isfield(x, 'p_1d')
         continue
     end
+    % the first slice included: there NICE interpolates the F_INIT equilibrium (101 points)
+    % onto the F_INIT core_profiles grid, unrelated grids, so the bug gives a jagged profile
     t_show = e.time(round(linspace(1, numel(e.time), n_prof)));
     figure('Name', ['p, beta_pol ' R(i).label]);
-    tiledlayout(1, 3, 'TileSpacing', 'compact');
-    ax = [nexttile, nexttile, nexttile];
+    tiledlayout(1, 4, 'TileSpacing', 'compact');
+    ax = [nexttile, nexttile, nexttile, nexttile];
     hold(ax, 'on');
     h_t = gobjects(n_prof, 1);
     for k = 1:n_prof
@@ -360,6 +365,17 @@ for i = 1:numel(R)
     title(ax(2), 'p_{NICE} / p_{TORAX}'); xlabel(ax(2), '\psi_N');
     title(ax(3), '\beta_{pol}'); xlabel(ax(3), 't [s]');
     legend(ax(3), {'NICE', 'TORAX'}, 'Location', 'best');
+    % p' = dp/dpsi at the same times as p: both codes in Wb with psi growing outwards
+    if isfield(e, 'dp_1d') && isfield(x, 'dp_1d')
+        for k = 1:n_prof
+            [xn, dpn] = profile_at(e, 'dp_1d', t_show(k));
+            [xt, dpt] = profile_at(x, 'dp_1d', t_show(k));
+            plot(ax(4), xn, dpn / 1e3, '-', 'Color', cmap(k,:), 'LineWidth', 2);
+            plot(ax(4), xt, dpt / 1e3, '--', 'Color', cmap(k,:));
+        end
+        title(ax(4), 'p'': NICE solid, TORAX dashed'); xlabel(ax(4), '\psi_N');
+        ylabel(ax(4), 'dp/d\psi [kPa/Wb]');
+    end
 end
 
 % ===== q, j_phi and li_3 of NICE and TORAX, one figure per run =====
@@ -372,7 +388,8 @@ for i = 1:numel(R)
     if ~isfield(e, 'q_1d') || ~isfield(x, 'q_1d')
         continue
     end
-    t_show = e.time(round(linspace(1, numel(e.time), n_prof)));
+    % from the second slice: the first comes from the F_INIT profiles, not from TORAX's
+    t_show = e.time(round(linspace(min(2, numel(e.time)), numel(e.time), n_prof)));
     figure('Name', ['q, j, li ' R(i).label]);
     tiledlayout(1, 3, 'TileSpacing', 'compact');
     ax = [nexttile, nexttile, nexttile];

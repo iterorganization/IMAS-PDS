@@ -10,22 +10,26 @@ t_initial/t_final below are placeholders that the actor overwrites at run time f
 received equilibrium.
 """
 
+import json
+from pathlib import Path
+
 import numpy as np
 
 rhon = np.linspace(0, 1, 25)
 fixed_dt = 0.01
+
+# EC deposition shape, impurity ratios and radiation multiplier from the shot's DINA run,
+# written into the case by preprocess.sh (see preprocessing/dina/torax_params.py).
+DINA = json.loads(Path("${CASE_DIR}/preprocess/torax_params.json").read_text())
 
 CONFIG = {
     "profile_conditions": {},
     "plasma_composition": {
         "main_ion": {"H": 1},
         "impurity": {
-            "species": {
-                "Ne": None,
-            },
-            "impurity_mode": "n_e_ratios_Z_eff",
+            "species": DINA["impurities"],
+            "impurity_mode": "n_e_ratios",
         },
-        "Z_eff": 1.1,
     },
     "numerics": {
         "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
@@ -52,16 +56,26 @@ CONFIG = {
         },
     },
     "sources": {
-        # Physics-based: self-consistent transport, not taken from DINA.
         "ohmic": {},
         "fusion": {},
         "ei_exchange": {},
-        "bremsstrahlung": {"mode": "ZERO"},
+        "bremsstrahlung": {},
         "impurity_radiation": {
-            "model_name": "P_in_scaled_flat_profile",
-            "fraction_P_heating": 0.3,
+            "model_name": "mavrin_fit",
+            "radiation_multiplier": DINA["radiation_multiplier"],
         },
-        # Actuators: 'ecrh' added dynamically by receive_core_sources() above.
+        "cyclotron_radiation": {},
+        # DINA's EC deposition shape, scaled by the actor to the EC power waveform on
+        # core_sources_in_f. No ECCD: DINA's EC drives no current.
+        "ecrh": {
+            "extra_prescribed_power_density": {
+                0.0: (
+                    np.array(DINA["ec_deposition"]["rho"]),
+                    np.array(DINA["ec_deposition"]["profile"]),
+                )
+            },
+            "current_drive_efficiency": 0.0,
+        },
     },
     "transport": {
         "model_name": "bohm-gyrobohm",

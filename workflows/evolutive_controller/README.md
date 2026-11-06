@@ -11,15 +11,14 @@ workflow has TORAX and NICE step forward together: each internal step, TORAX evo
 current/temperature and hands `equilibrium` + `core_profiles` to `nice_evo_rd`, which
 returns the updated `equilibrium` for TORAX's next geometry. TORAX computes its own ohmic
 heating and impurity radiation self-consistently from its evolving profiles (see
-`config_torax.py`) rather than importing them from DINA; only the ECRH actuator trace is
-imported, via `waveform_editor.core_sources_out -> torax.core_sources_in_f` (same mechanism
-`inverse_convergence` uses on its own imported `core_sources`).
+`config_torax.py`) rather than importing them from DINA; only the EC power is imported, via
+`waveform_editor.core_sources_out -> torax.core_sources_in_f`, as in `inverse_convergence`.
 
 **F_INIT bootstrap**: `source` reads a NICE-*reconstructed* equilibrium (not raw DINA -- see
 Assumptions) from a completed `inverse_convergence` run's `_out_nice`. The `waveform_editor` passes that equilibrium through whole (an `equilibrium/*: {ref: eq}`
 wildcard import in `waveforms.yaml`, so every field survives, not just hand-picked ones) and
 overlays it with that same run's converged TORAX core_profiles and NICE coil currents, plus
-the static machine description, ECRH trace and coil voltages from this scenario's DINA data
+the static machine description, EC power and coil voltages from this scenario's DINA data
 (inverse_convergence never writes those), into one assembled F_INIT message for `torax`,
 `nice_evo_rd`, and `magnetic_controller`. `preprocess.sh` (run by `pds-create-case`) copies
 the TORAX core_profiles into the case, dropping TORAX's repeated axis grid point: its psiN
@@ -81,11 +80,6 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
   once `torax` finishes at `t_final` and `nice_evo_rd` has no stopping condition of its own, the
   coupled loop livelocks instead of terminating -- this is what `105084/settings.ymmsl` sets it
   for.
-- `config_torax.py` assumes DINA's raw `core_sources` labels exactly one entry as ECRH: for
-  105084 it has 15 source entries all with an empty `identifier.name`, and `waveforms.yaml`
-  relabels only `source(1)` to `'ec'`, so TORAX's `sources_from_IMAS()` picks up exactly `ecrh`
-  and nothing else (see the comment in `config_torax.py`). Re-check this for any other shot
-  before trusting its self-consistent ohmic/radiation numbers.
 - `magnetic_controller`'s MATLAB script points `pyenv()` explicitly at
   `$PDS_REPO/local_installs/IMAS-MUSCLE3/venv/bin/python` rather than resolving Python via `PATH`
   (`which python`): PATH can resolve to an unrelated Python with its own muscle3 install,
@@ -101,7 +95,7 @@ the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, 
 - A completed `inverse_convergence` run for the same shot *before* `pds-create-case`: its
   `out_nice` seeds the F_INIT equilibrium and coil currents, its `out_torax` the core_profiles
   (frozen into the case by `preprocess.sh`, so rebuild the case after rerunning it).
-- DINA-preprocessed scenario data supplying the static machine description, the ECRH trace,
+- DINA-preprocessed scenario data supplying the static machine description, the EC power,
   and `pf_active` coil `voltage.data` (the
   static machine description's per-coil `voltage.data` is empty, so `waveforms.yaml` sources it
   from DINA's raw `pf_active` instead).

@@ -26,6 +26,8 @@ imports:
 - from lib.easybuild_programs import implementation waveform_editor
 - from lib.local_programs import implementation torax
 - from lib.local_programs import implementation nice_inv
+#- from lib.easybuild_programs import implementation torax
+#- from lib.easybuild_programs import implementation nice_inv
 - from lib.easybuild_programs import implementation psi_anchor
 
 models:

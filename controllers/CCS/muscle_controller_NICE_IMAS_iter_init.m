@@ -165,6 +165,11 @@ if instance.reuse_instance()
 
     obj3 = pcssp_VS_obj();
     obj3.init;
+
+    S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
+    obj3.update_nominal_param_value('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+    fprintf('VS gains from FC016_Config_VS.mat (KZ_VS1 = %g)\n', S.Config_VS.Gains.KZ_VS1);
+    
     obj3.setup;
 
     obj4 = shapeIp_CCS_obj();
