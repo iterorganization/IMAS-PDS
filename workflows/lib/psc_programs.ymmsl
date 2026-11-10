@@ -1,0 +1,46 @@
+ymmsl_version: v0.2
+
+# PSC-4 (2026-11-06): the magnetic_controller actor with the real PSC in the loop. Identical to
+# lib.local_programs magnetic_controller except: PCS_PATH / SCDDS_COREPATH point at the PDS local
+# dependency local_installs/pcs-nightly (pcs master + pcssp-nightly merge_IGZ_PSC, installed by
+# pds_setup.sh with INSTALL_PCS_NIGHTLY=true; tested with pcs aa217bc and pcssp-nightly ebf3ee0),
+# a private MATLAB TMPDIR per run, and the glue
+# controllers/CCS/muscle_controller_NICE_IMAS_iter_init_psc.m (settings psc_enabled, psc_config_dir).
+# Import: - from lib.psc_programs import implementation magnetic_controller_psc
+
+programs:
+  magnetic_controller_psc:
+    script: |
+      #!/bin/bash
+      repo="$PDS_REPO"
+      module purge
+      export PDS_REPO="$repo"
+      module load PCS/2026.08-pds
+      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      unset PYTHONPATH
+      export PCS_PATH=$PDS_REPO/local_installs/pcs-nightly
+      export CONTROLLER_PATH=$PDS_REPO/controllers/CCS
+      export SCDDS_COREPATH=$PCS_PATH/pcssp/scdds
+      # private MATLAB tempdir per run (scdds_core_paths warns on a shared tempdir); short path:
+      # MATLAB 2025b aborts at start-up with "the TEMPDIR name is too long" for $RUN_DIR/... (seen 2026-11-06)
+      export TMPDIR=/scratch/users/$USER/mt/$(basename "$RUN_DIR" | md5sum | cut -c1-10); mkdir -p $TMPDIR
+      # run() the controller by full path, not by name: NICE's own
+      # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
+      # below) ships its own, much older, different-port-signature
+      # muscle_controller_NICE_IMAS_iter_init.m, which shadows CONTROLLER_PATH's
+      # despite being added to the path first -- confirmed on every NICE
+      # install, local and EasyBuild alike, and not fixable by removing that
+      # directory from the path (it also holds the Simulink .slx models the
+      # real controller loads by name).
+      # try/catch + exit(1): a bare error inside -batch (especially one thrown from deep
+      # inside the py.* bridge, e.g. libmuscle's Instance() registration) can otherwise
+      # surface as a silent `exit code 0, never registered` with zero output -- indistinguishable
+      # from the script just not running. getReport() forces the real stack trace into
+      # stdout/stderr and exit(1) makes muscle3 report it as an actual crash instead.
+      #
+      # The whole try/catch/end MUST be one physical line: -batch feeds its argument to
+      # the parser more like sequential REPL input than a script file, so a newline
+      # anywhere between `try` and `end` fails immediately with "This statement is
+      # incomplete" (confirmed live) -- unlike the plain semicolon-separated statements
+      # above, which parse fine across multiple lines.
+      exec matlab -batch "try; pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init_psc.m')); catch ME; disp(getReport(ME)); exit(1); end"

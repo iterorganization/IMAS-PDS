@@ -1,0 +1,15 @@
+ymmsl_version: v0.2
+# PSC-5 run D_eof (generated for preprocessing/psps/psc_run/psc5_evolutive.sh): designer pulse_schedule IDS
+# (generated into the case folder by psc5_evolutive.sh from the variant YAML with the converter --ids; sent
+# once to pulse_schedule_in_f; logged by the glue, not used for Ipl_ref) and the four PSC files written by
+# make_psc_variants.py (converter --cut-at 84.317598 --psc-config).
+# ${PDS_REPO} = repo root, ${CASE_DIR} = case folder. psc5_evolutive.sh expands both with
+# envsubst '${PDS_REPO} ${CASE_DIR}' into the case folder (as bin/pds-create-case does); muscle_manager itself
+# does not expand them, so for a direct bin/pds-run-case call run:
+# envsubst '${PDS_REPO} ${CASE_DIR}' < this_file > expanded.ymmsl first (with CASE_DIR exported).
+settings:
+  ps_source.source_uri: "imas:hdf5?path=${CASE_DIR}/pulse_schedule_ids/ids"
+  ps_source.iterative: False
+  ps_source.dd_version: "4.0.0"
+  magnetic_controller.psc_enabled: 1
+  magnetic_controller.psc_config_dir: "${PDS_REPO}/cases/input/psc/D_eof/psc_config_ip_105073_psc_D_eof"

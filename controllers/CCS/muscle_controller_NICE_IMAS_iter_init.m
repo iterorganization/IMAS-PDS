@@ -34,7 +34,7 @@ py.logging.basicConfig( ...
 % Ports need to match the MUSCLE3 yaml description on the other side
 logger.info("Starting Simulink actor")
 ports = py.dict();
-ports{py.getattr(@py.ymmsl.Operator,"F_INIT")} = py.list({"equilibrium_in_f", "pf_active_in_f"});
+ports{py.getattr(@py.ymmsl.Operator,"F_INIT")} = py.list({"equilibrium_in_f", "pf_active_in_f", "pulse_schedule_in_f"});
 ports{py.getattr(@py.ymmsl.Operator,"S")} = py.list({"equilibrium_in_s", "pf_active_in_s"});
 ports{py.getattr(@py.ymmsl.Operator,"O_I")} = py.list({"pf_active_out_i"});
 
@@ -64,6 +64,30 @@ if instance.reuse_instance()
     msg_pfa = instance.receive("pf_active_in_f");
     pfa_serial=uint8(msg_pfa.data);
     pf_active = imas_deserialize(pfa_serial, 'pf_active');
+
+    % Optional designer Ip reference: pulse_schedule IDS on pulse_schedule_in_f
+    % (DD 4: flux_control/ip/reference, IMAS sign, time base flux_control/time or,
+    % for a homogeneous-time IDS, /time). Used for Ipl_ref below only when the port is
+    % connected and the reference is filled; otherwise Ipl_ref tracks the F_INIT
+    % equilibrium Ip exactly as before.
+    ps_ip_ref = [];
+    ps_ip_time = [];
+    if instance.is_connected("pulse_schedule_in_f")
+        msg_ps = instance.receive("pulse_schedule_in_f");
+        pulse_schedule = imas_deserialize(uint8(msg_ps.data), 'pulse_schedule');
+        ps_ip_ref = pulse_schedule.flux_control.ip.reference;
+        ps_ip_time = pulse_schedule.flux_control.time;
+        if isempty(ps_ip_time)
+            ps_ip_time = pulse_schedule.time;
+        end
+        if isempty(ps_ip_ref) || all(ps_ip_ref == -9.0e40)
+            logger.info('pulse_schedule_in_f: no flux_control/ip/reference, Ipl_ref from the equilibrium');
+            ps_ip_ref = [];
+        else
+            logger.info(sprintf('pulse_schedule_in_f: Ipl_ref from flux_control/ip/reference (%d samples, %.4f to %.4f s, %.6g to %.6g A)', ...
+                numel(ps_ip_ref), ps_ip_time(1), ps_ip_time(end), min(ps_ip_ref), max(ps_ip_ref)));
+        end
+    end
 
     t_start = equilibrium.time(1);
     t_max = equilibrium.time(end);
@@ -116,6 +140,10 @@ if instance.reuse_instance()
     end
 
     Ipl_ref =  timeseries(ip_ref,equilibrium.time);
+    if ~isempty(ps_ip_ref)
+        % Same signed (IMAS, Ip < 0) frame as the equilibrium branch above.
+        Ipl_ref = timeseries(ps_ip_ref(:)', ps_ip_time(:)');
+    end
     Rpl_ref = timeseries(rpl_ref,equilibrium.time);
     Zpl_ref = timeseries(zpl_ref,equilibrium.time);
     Gaps_ref = timeseries(gaps_ref, equilibrium.time);

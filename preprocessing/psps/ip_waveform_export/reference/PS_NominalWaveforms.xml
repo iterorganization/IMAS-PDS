@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SCHEDULE
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.ipp.mpg.de/2016/Schema/Schedule.xsd"
+  name="Nominal Waveforms Schedule"
+  comment="Pulse schedule generated from the NominalWaveforms struct in the MATLAB base workspace">
+
+  <DECLARATIONS>
+  <PARAMETERS>
+      <PARAMETER name="RampdownRate" type="double" value="2"/>
+    </PARAMETERS>
+    <OUTPUTS>
+      <!-- SIGNAL default values are assumed as zero if not specified -->
+      <SIGNAL name="CSPF_curr_ref" signal_type="Amplitude" type="double" dimension="11"
+        comment="Nominal CSPF_curr_ref waveform" value="(0,0,0,0,0,0,0,0,0,0,0)"/>
+      <SIGNAL name="CSPF_volt_cmd_FF" signal_type="Amplitude" type="double" dimension="11"
+        comment="Nominal CSPF_volt_cmd_FF waveform" value="(0,0,0,0,0,0,0,0,0,0,0)"/>
+      <SIGNAL name="Gaps_ref" signal_type="Amplitude" type="double" dimension="62"
+        comment="Nominal Gaps_ref waveform" value="(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)"/>
+      <SIGNAL name="Ipl_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal Ipl_ref waveform" value="0"/>
+      <SIGNAL name="dPsi_ref" signal_type="Amplitude" type="double" dimension="62"
+        comment="Nominal dPsi_ref waveform" value="(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)"/>
+      <SIGNAL name="RXP_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal RXP_ref waveform" value="0"/>
+      <SIGNAL name="ZXP_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal ZXP_ref waveform" value="0"/>
+      <SIGNAL name="RXPup_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal RXPup_ref waveform" value="0"/>
+      <SIGNAL name="ZXPup_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal ZXPup_ref waveform" value="0"/>
+      <SIGNAL name="Rpl_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal Rpl_ref waveform" value="0"/>
+      <SIGNAL name="Zpl_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal Zpl_ref waveform" value="0"/>
+      <SIGNAL name="dsep_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal dsep_ref waveform" value="0"/>
+      <SIGNAL name="Zpl_dot_ref" signal_type="Amplitude" type="double" dimension="1"
+        comment="Nominal Zpl_dot_ref waveform" value="0"/>
+      <SIGNAL name="SN_Res" signal_type="Amplitude" type="double" dimension="7"
+        comment="Nominal SN_Res waveform" value="(0,0,0,0,0,0,0)"/>
+      <SIGNAL name="RfluxCTRpts" signal_type="Amplitude" type="double" dimension="7"
+        comment="Nominal RfluxCTRpts waveform" value="(0,0,0,0,0,0,0)"/>
+      <SIGNAL name="ZfluxCTRpts" signal_type="Amplitude" type="double" dimension="7"
+        comment="Nominal ZfluxCTRpts waveform" value="(0,0,0,0,0,0,0)"/>
+    </OUTPUTS>
+  </DECLARATIONS>
+  <SEGMENTS>
+    <!-- Ramp-up of the plasma pulse, 0-10s -->
+    <SEGMENT name="ramp-up" id="0" wd_time="10" wd_target="flat-top">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="CSPF_curr_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[34750.56, 31182.46, 20073.16, 32354.71, 27590.13, 22524.94, 722.1102, -4064.803, -2810.8, -6646.394, 19767.12]"/>
+                <POINT time="5.0" value="[34750.56, 31182.46, 20073.16, 32354.71, 27590.13, 22524.94, 722.1102, -4064.803, -2810.8, -6646.394, 19767.12]"/>
+                <POINT time="10.0" value="[34750.56, 31182.46, 20073.16, 32354.71, 27590.13, 22524.94, 722.1102, -4064.803, -2810.8, -6646.394, 19767.12]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="CSPF_volt_cmd_FF">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="10.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Gaps_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.25792225, 0.070895999, 0.0013711498, 0.039581288, 0.26505458, 0.0, 0.0, 1.4707236, 1.3901359, 1.243593, 0.8699918, 0.59013914, 0.46947925, 0.40480912, 0.25477797, 0.23438654, 0.20103734, 0.30495525, 0.40556652, 0.61809348, 0.0, 0.65044868, 0.0, 0.0, 0.0, 0.0, 0.45813645, 0.64788166, 0.0, 0.0, 0.21100651, 0.48681677, 1.2953243, 0.0047378756, 0.67640545, 0.41518984, 0.25569911, 0.14586378, 0.06998831, 0.02239602, 0.0012500619, 0.0063860467, 0.040316812, 0.11412473, 0.26557091, 0.64478952, 1.1712101, 0.69630623, 0.53104312, 0.41945757, 0.40354913, 0.29128143, 0.20037015, 0.17904135, 0.21158693, 0.30693027, 0.30123178, 0.40443976, 1.4695696, -0.18899968, 0.0, 0.40619797]"/>
+                <POINT time="5.0" value="[0.25792225, 0.070895999, 0.0013711498, 0.039581288, 0.26505458, 0.0, 0.0, 1.4707236, 1.3901359, 1.243593, 0.8699918, 0.59013914, 0.46947925, 0.40480912, 0.25477797, 0.23438654, 0.20103734, 0.30495525, 0.40556652, 0.61809348, 0.0, 0.65044868, 0.0, 0.0, 0.0, 0.0, 0.45813645, 0.64788166, 0.0, 0.0, 0.21100651, 0.48681677, 1.2953243, 0.0047378756, 0.67640545, 0.41518984, 0.25569911, 0.14586378, 0.06998831, 0.02239602, 0.0012500619, 0.0063860467, 0.040316812, 0.11412473, 0.26557091, 0.64478952, 1.1712101, 0.69630623, 0.53104312, 0.41945757, 0.40354913, 0.29128143, 0.20037015, 0.17904135, 0.21158693, 0.30693027, 0.30123178, 0.40443976, 1.4695696, -0.18899968, 0.0, 0.40619797]"/>
+                <POINT time="10.0" value="[0.25792225, 0.070895999, 0.0013711498, 0.039581288, 0.26505458, 0.0, 0.0, 1.4707236, 1.3901359, 1.243593, 0.8699918, 0.59013914, 0.46947925, 0.40480912, 0.25477797, 0.23438654, 0.20103734, 0.30495525, 0.40556652, 0.61809348, 0.0, 0.65044868, 0.0, 0.0, 0.0, 0.0, 0.45813645, 0.64788166, 0.0, 0.0, 0.21100651, 0.48681677, 1.2953243, 0.0047378756, 0.67640545, 0.41518984, 0.25569911, 0.14586378, 0.06998831, 0.02239602, 0.0012500619, 0.0063860467, 0.040316812, 0.11412473, 0.26557091, 0.64478952, 1.1712101, 0.69630623, 0.53104312, 0.41945757, 0.40354913, 0.29128143, 0.20037015, 0.17904135, 0.21158693, 0.30693027, 0.30123178, 0.40443976, 1.4695696, -0.18899968, 0.0, 0.40619797]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Ipl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="3033875.0"/>
+                <POINT time="5.0" value="3533875.0"/>
+                <POINT time="10.0" value="4033875.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="dPsi_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="10.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RXP_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZXP_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RXPup_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZXPup_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Rpl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="6.1075346"/>
+                <POINT time="10.0" value="6.1075346"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Zpl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.32332869"/>
+                <POINT time="10.0" value="0.32332869"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="dsep_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Zpl_dot_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="10.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="SN_Res">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="10.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RfluxCTRpts">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[4.362071, 4.1486759, 5.1894636, 7.0161489, 8.137644, 7.0624581, 4.1053]"/>
+                <POINT time="10.0" value="[4.362071, 4.1486759, 5.1894636, 7.0161489, 8.137644, 7.0624581, 4.1053]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZfluxCTRpts">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[-1.5, 1.5492, 3.2382093, 2.6846939, 0.62839253, -2.0424846, 0.6039]"/>
+                <POINT time="10.0" value="[-1.5, 1.5492, 3.2382093, 2.6846939, 0.62839253, -2.0424846, 0.6039]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- Flat-top of the plasma pulse, 10s onward -->
+    <SEGMENT name="flat-top" id="1" wd_time="90" wd_target="STOP">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="CSPF_curr_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[34750.56, 31182.46, 20073.16, 32354.71, 27590.13, 22524.94, 722.1102, -4064.803, -2810.8, -6646.394, 19767.12]"/>
+                <POINT time="90.0" value="[34750.56, 31182.46, 20073.16, 32354.71, 27590.13, 22524.94, 722.1102, -4064.803, -2810.8, -6646.394, 19767.12]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="CSPF_volt_cmd_FF">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="90.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Gaps_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.25792225, 0.070895999, 0.0013711498, 0.039581288, 0.26505458, 0.0, 0.0, 1.4707236, 1.3901359, 1.243593, 0.8699918, 0.59013914, 0.46947925, 0.40480912, 0.25477797, 0.23438654, 0.20103734, 0.30495525, 0.40556652, 0.61809348, 0.0, 0.65044868, 0.0, 0.0, 0.0, 0.0, 0.45813645, 0.64788166, 0.0, 0.0, 0.21100651, 0.48681677, 1.2953243, 0.0047378756, 0.67640545, 0.41518984, 0.25569911, 0.14586378, 0.06998831, 0.02239602, 0.0012500619, 0.0063860467, 0.040316812, 0.11412473, 0.26557091, 0.64478952, 1.1712101, 0.69630623, 0.53104312, 0.41945757, 0.40354913, 0.29128143, 0.20037015, 0.17904135, 0.21158693, 0.30693027, 0.30123178, 0.40443976, 1.4695696, -0.18899968, 0.0, 0.40619797]"/>
+                <POINT time="90.0" value="[0.25792225, 0.070895999, 0.0013711498, 0.039581288, 0.26505458, 0.0, 0.0, 1.4707236, 1.3901359, 1.243593, 0.8699918, 0.59013914, 0.46947925, 0.40480912, 0.25477797, 0.23438654, 0.20103734, 0.30495525, 0.40556652, 0.61809348, 0.0, 0.65044868, 0.0, 0.0, 0.0, 0.0, 0.45813645, 0.64788166, 0.0, 0.0, 0.21100651, 0.48681677, 1.2953243, 0.0047378756, 0.67640545, 0.41518984, 0.25569911, 0.14586378, 0.06998831, 0.02239602, 0.0012500619, 0.0063860467, 0.040316812, 0.11412473, 0.26557091, 0.64478952, 1.1712101, 0.69630623, 0.53104312, 0.41945757, 0.40354913, 0.29128143, 0.20037015, 0.17904135, 0.21158693, 0.30693027, 0.30123178, 0.40443976, 1.4695696, -0.18899968, 0.0, 0.40619797]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Ipl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="4033875.0"/>
+                <POINT time="90.0" value="4033875.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="dPsi_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="90.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RXP_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZXP_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RXPup_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZXPup_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Rpl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="6.1075346"/>
+                <POINT time="90.0" value="6.1075346"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Zpl_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.32332869"/>
+                <POINT time="90.0" value="0.32332869"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="dsep_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <EXIT_RULE is="last"/>
+            <ENTRY_RULE is="Step"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="Zpl_dot_ref">
+            <EXECUTION_RULE is="Linear"/>
+            <EXIT_RULE is="last"/>
+            <ENTRY_RULE is="Step"/>
+            <REFERENCE>
+                <POINT time="0.0" value="0.0"/>
+                <POINT time="90.0" value="0.0"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="SN_Res">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+                <POINT time="90.0" value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="RfluxCTRpts">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[4.362071, 4.1486759, 5.1894636, 7.0161489, 8.137644, 7.0624581, 4.1053]"/>
+                <POINT time="90.0" value="[4.362071, 4.1486759, 5.1894636, 7.0161489, 8.137644, 7.0624581, 4.1053]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="ZfluxCTRpts">
+            <EXECUTION_RULE is="Linear"/>
+            <ENTRY_RULE is="Step"/>
+            <EXIT_RULE is="last"/>
+            <REFERENCE>
+                <POINT time="0.0" value="[-1.5, 1.5492, 3.2382093, 2.6846939, 0.62839253, -2.0424846, 0.6039]"/>
+                <POINT time="90.0" value="[-1.5, 1.5492, 3.2382093, 2.6846939, 0.62839253, -2.0424846, 0.6039]"/>
+            </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <SEGMENT name="STOP" id="99">
+    </SEGMENT>
+  </SEGMENTS>
+</SCHEDULE>

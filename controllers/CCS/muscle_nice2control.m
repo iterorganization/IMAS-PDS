@@ -4,6 +4,9 @@ global z_cur
 % Vertical velocity given by the plant (current_centre.velocity_z), read by
 % controller_input_preprocess; NaN when not available: Zdot is then the derivative of zpl
 global zdot_meas
+% PSC-4: boundary.geometric_axis.z of the last accepted measurement, read by psc_zgeo_get.m
+% for the PSC input z_meas (pcssp_controller_and_ps_psc.slx only; unused by the original wrapper)
+global psc_zgeo
 
 % retrieve instance object from base ws
 instance = evalin('base','instance');
@@ -136,6 +139,7 @@ else
             zpl = gq.magnetic_axis.z;
     end
     last_zdot_meas = zdot_meas;
+    psc_zgeo = equilibrium.time_slice{1}.boundary.geometric_axis.z;
 
     for ii=1:length(pf_active.coil)
        coil=struct(pf_active.coil{ii});

@@ -1,0 +1,69 @@
+# Ip reference with segment structure, Waveform-Editor style (format 0) + PROPOSED
+# segments/signals blocks (see ../README.md).
+#
+# VALUES ARE ILLUSTRATIVE: a plausible ITER 15 MA inductive pulse shape (ramp-up,
+# flat-top, ramp-down) with the 105073 pulse length in mind. They are NOT the DINA
+# 105073 data and must not be used as a physics reference.
+#
+# Sign (decision D11): convention minus_ip = the values are -Ip, i.e. POSITIVE for
+# ITER, as edited by the Session Leader. The IDS export writes the IMAS sign (< 0).
+# Time (decision D10): s, t = 0 at the plasma initiation. Units: s, A.
+globals:
+  dd_version: 4.0.0
+  pulse: 105073
+  name: ip_105073_like_with_exceptions
+  comment: "Illustrative Ip reference for the P3 export prototype (not DINA 105073 data)"
+  convention: minus_ip            # default for the designer file; 'imas' = IMAS sign
+  time_origin: plasma_initiation  # only implemented value (reserved: control_handover_T0, dina)
+  time_offset_s: 0.0              # added to absolute times at export (IDS)
+
+references:
+  pulse_schedule/flux_control/ip/reference:
+    - {time: [0, 2.5, 12.5, 28.5, 60, 70, 190, 210, 250, 270],
+       value: [0, 0.5e6, 3.0e6, 7.5e6, 14.0e6, 15.0e6, 15.0e6, 12.0e6, 5.0e6, 1.5e6]}
+
+# PROPOSAL: segment chain, absolute times in s. Identifiers as on pcs@add-AM
+# PS_NominalWaveforms.xml (decision D8): first segment ramp-up id 0, then 1, 2, ...;
+# STOP id = --stop-id (99 here, 65535 in the IPP D15 strawman convention); no
+# separate init segment. wd_target defaults to the next segment name.
+segments:
+  - {name: ramp-up, id: 0, start: 0.0, end: 70.0}
+  - {name: flat-top, id: 1, end: 195.0}
+  - {name: ramp-down, id: 2, end: 270.0}
+  - {name: STOP, id: 99}
+
+# PROPOSAL: IDS path -> PCS signal name (this is also the default).
+signals:
+  pulse_schedule/flux_control/ip/reference: Ipl_ref
+
+# ---------------------------------------------------------------------------
+# PROPOSAL / ILLUSTRATIVE (decision D9 example): the Ip reference modified by the
+# PSC. Used only by --refgen-eh-example. Nothing here is an agreed design.
+#
+# Story: the operating point changes after the loss of a heating source, so the
+# Ip target is scaled down to 0.8 of the nominal as a precaution (physically Ip
+# is driven by the CS/PF circuits; heating does not drive Ip). 'heating_loss' is
+# a HYPOTHETICAL blackboard signal. 'glb_ps__ip_too_high' is the TC01 monitoring
+# output (pcs@add-AM PSC_config/PSCGlobalMonConfig.xml:17-19: Ip > 15e6), which
+# TC01 declares but no behaviour tree consumes.
+# Patterns: pcssp@PSC-FWHL generic/psc/Tests/assets/PS_FWHLEH.xml l.184-201
+# (soft EH segment 20, "silence,offset"/"silence,scale") and segments 41/51 (EH
+# terminations); BTreeFWHL.xml (priority structure). Copies in ../reference/.
+exceptions:
+  status: PROPOSAL / ILLUSTRATIVE
+  soft:
+    - name: ip_reduce_on_heating_loss
+      id: 20
+      trigger: "{heating_loss} == 1"   # Precondition that starts the overlay
+      release: "{heating_loss} == 0"   # RefGen action condition: back to nominal
+      type_addition: "silence,scale"   # RefGen: Value = base * scale (+ offset)
+      scale: 0.8                       # Ipl_ref scaled to 0.8 of the nominal
+      transition_s: 10.0               # scale 1.0 -> 0.8 over 10 s
+      wd_time: 30.0                    # not released within 30 s -> escalate
+      wd_target: ip_termination        # ... to the hard exception
+  hard:
+    - name: ip_termination
+      id: 41
+      sudden_trigger: "{glb_ps__ip_too_high} == 1"   # sudden hard EH (AssignValue)
+      ramp_to_zero_s: 60.0             # Ipl_ref from the nominal maximum to 0
+      wd_target: STOP

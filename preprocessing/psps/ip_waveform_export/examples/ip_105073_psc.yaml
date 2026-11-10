@@ -1,0 +1,112 @@
+# PSC-3 designer file (PROPOSAL): the P2c/P2e "+3 %" Ip edit of pulse 105073 plus the PROPOSED
+# blocks psc:, events: and exception_handling: from which export_psc_config writes the four PSC
+# mask files (PSCIntConfig.xml, PSCGlobalMonConfig.xml, BTree.xml, PS.xml).
+# Plan: the PSC-in-the-loop plan (the study notes, kept outside this repository); decisions D16-D20 of 2026-11-06:
+#   D17 exceptions in priority order: (1) Ip too high 15.25 MA -> hard termination,
+#       (2) end of flux (CS current headroom) -> ramp-down, (3) 2 cm vertical excursion ->
+#       soft hold-and-resume; D19 constant controller modes (no mode signal in the schedule);
+#   D20 cut the schedule at 84.3176 s: run the converter with --cut-at 84.317598.
+# Waveform and time origin: as examples/ip_105073_p2c_edited.yaml (values = -Ip, A; t = 0 at the
+# plasma initiation = DINA time, ASSUMPTION of D10, UNVERIFIED).
+# Frames: thresholds and exception values are in the frame of the PSC signal (Ip: positive PCS
+# frame = -Ip_IMAS); SI units.
+globals:
+  dd_version: 4.0.0
+  pulse: 105073
+  name: ip_105073_psc
+  comment: "PSC-3: P2e +3 % Ip edit with the D17 exceptions"
+  convention: minus_ip
+  time_origin: plasma_initiation
+  time_offset_s: 0.0
+
+references:
+  pulse_schedule/flux_control/ip/reference:
+    - {time: [79.217598, 84.317598, 84.400000, 84.900000, 89.717598, 94.817598],
+       value: [15073164.9, 15063153.9, 15063024.3, 15514105.1, 15506300.7, 15546974.0]}
+
+segments:
+  - {name: flat-top, id: 0, start: 79.217598, end: 94.817598}
+  - {name: STOP, id: 99}
+
+signals:
+  pulse_schedule/flux_control/ip/reference: Ipl_ref
+
+psc:
+  supervisor_name: PSC
+  inputs:   # PSC In bus (all Pcssignal: .value/.quality/.activity); to be filled by the PDS glue (PSC-4)
+    - {name: ip_ip__meas, description: "measured plasma current, PCS frame = -Ip_IMAS (NICE global_quantities.ip)"}
+    - {name: plasma_exist, signal: plasma_state__exist_diag, description: "There is plasma"}
+    - {name: z_meas, description: "plasma vertical position, m (NICE boundary geometric_axis.z, glue)"}
+    - {name: cs_margin, description: "CS current headroom min over CS coils of (45 kA - |I_CS|), A per turn (glue)"}
+  run_plasma_ip_min: 1.0e5            # SCENARIO glb_ps__run_plasma, as TC01
+  references:                         # constant schedule signals in every nominal segment (item 5)
+    CSPF_curr_ref:
+      description: "References for CSPF coil currents [CS3U, CS2U, CS1, CS2L, CS3L, PF1..PF6]"
+      source: >-
+        inverse_convergence 105073 out_nice pf_active.h5, slice t = 84.317598 s (IMAS-PDS-fork-nicefix
+        cases/runs/inverse_convergence_105073, job 1305841), coil[].current.data per turn, IMAS sign as
+        passed by the fork glue (muscle_controller_NICE_IMAS_iter_init.m:96-99,150); CS1 = CS1U (= CS1L,
+        series); 14 -> 11 mapping of the fork wrapper UNVERIFIED
+      value: [-22641.9, 9138.67, 34636.7, 6133.53, -36878.3, -22814.2, 30093.8, 19427.2, 39971.8, 10977.5, -20003.6]
+    Rpl_ref:
+      description: "Reference for R plasma position, m"
+      source: "same inverse slice, equilibrium time_slice[].boundary.geometric_axis.r"
+      value: 6.20162885
+    Zpl_ref:
+      description: "Reference for Z plasma position, m"
+      source: "same inverse slice, equilibrium time_slice[].boundary.geometric_axis.z"
+      value: 0.24869786
+
+events:
+  ip_too_high:
+    description: "plasma current above 15.25 MA (D17 (1); TC01 has the same flag at 15e6)"
+    signal: ip_ip__meas
+    op: ">"
+    threshold: 15.25e6
+    debounce: 0.0
+  end_of_flux:
+    description: "CS current headroom below the margin (D17 (2)); PLACEHOLDER 8.0 kA, CS3L starts at 8.12 kA"
+    signal: cs_margin
+    op: "<"
+    threshold: 8.0e3
+    latch: true                       # end of flux does not come back
+    debounce: 0.0
+  z_excursion:
+    description: "vertical excursion above 2 cm (D17 (3)), released below 1 cm"
+    signal: z_meas
+    op: ">"
+    reference: 0.261                  # P2e NICE Z at the window start (WN-P2e section 5), not Zpl_ref (0.2487)
+    threshold: 0.02
+    release_threshold: 0.01
+    debounce: 0.0
+
+exception_handling:
+  hard_sudden:                        # [1] highest priority
+    - {event: ip_too_high, target: ip_termination}
+  soft:                               # [2] overlays in Parallel with the nominal segments
+    - name: eof_rampdown
+      id: 21
+      event: end_of_flux
+      signal: Ipl_ref
+      type_addition: silence,replace
+      entry_rule: Linear
+      points: {time: [0.0, 2.0], value: [15.06e6, 14.06e6]}   # -1 MA over 2 s, PCS frame
+      wd_time: 3.0
+      wd_target: eof_termination       # starts from the ramp-down end value, see hard: below
+    - name: z_hold
+      id: 22
+      event: z_excursion
+      signal: Ipl_ref
+      type_addition: silence,replace
+      entry_rule: Step
+      hold: true                      # no trajectory -> RefGen holds the last value
+      recovery: true                  # condition {glb_ps__z_excursion} == 0 removes the overlay
+      wd_time: 2.0
+      wd_target: ip_termination
+  hard:                               # [3]
+    # a trajectory is absolute: the Linear entry blends from the frozen last output over 0.5 s
+    # (SignalGenClass.m:51), so each termination starts from the value expected at its entry
+    # (MATLAB dry run 2026-11-06: one shared segment from 15.25 MA made Ipl_ref rise after the
+    # end-of-flux ramp-down)
+    - {name: ip_termination, id: 41, from_value: 15.25e6, to_value: 0.0, ramp_s: 2.0, hold_s: 0.5, wd_target: STOP}
+    - {name: eof_termination, id: 42, from_value: 14.06e6, to_value: 0.0, ramp_s: 2.0, hold_s: 0.5, wd_target: STOP}

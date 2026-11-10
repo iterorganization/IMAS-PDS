@@ -9,6 +9,7 @@
 # https://gitlab.eufus.psnc.pl/g2jfa/metis/-/tree/master/doc
 # https://gitlab.inria.fr/blfauger/nice/-/wikis/home
 # https://torax.readthedocs.io/en/latest/installation.html
+# git.iter.org/pcs/pcs and git.iter.org/pcs/pcssp-nightly (ITER access; PSC on branch merge_IGZ_PSC)
 
 INSTALL_PDS="true"
 INSTALL_IMAS_MUSCLE3="false"
@@ -19,6 +20,7 @@ INSTALL_NICE="true"
 INSTALL_TORAX="true"
 INSTALL_CHEASE="false"
 INSTALL_PCS="true"
+INSTALL_PCS_NIGHTLY="false"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
@@ -29,6 +31,11 @@ BRANCH_NICE='develop'
 BRANCH_TORAX='develop'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
+BRANCH_PCS_NIGHTLY_PCS='master'
+BRANCH_PCSSP_NIGHTLY='merge_IGZ_PSC'
+# tested reference for the PSC-in-the-loop controller (pcs + pcssp-nightly); set empty to follow the branch tips
+PIN_PCS_NIGHTLY_PCS='aa217bc'
+PIN_PCSSP_NIGHTLY='ebf3ee0'
 
 is_sourced() {
   [[ "${BASH_SOURCE[0]}" != "$0" ]]
@@ -152,6 +159,21 @@ CURR_INSTALL='START'
     echo "############## FINISHED PCS ##############"
   else
     echo "Skipping PCS"
+  fi
+
+  # SET UP PCS-NIGHTLY (PSC)
+  CURR_INSTALL='PCS-NIGHTLY'
+  PCS_URL="ssh://git@git.iter.org/pcs/pcs.git"
+  PCSSP_NIGHTLY_URL="ssh://git@git.iter.org/pcs/pcssp-nightly.git"
+  if [ "$INSTALL_PCS_NIGHTLY" = "true" ] \
+    && [ ! -d "pcs-nightly" ] \
+    && git ls-remote "$PCS_URL" &>/dev/null \
+    && git ls-remote "$PCSSP_NIGHTLY_URL" &>/dev/null; then
+    echo "############## INSTALLING PCS-NIGHTLY (PSC) ##############"
+    bash ../setup_files/setup_pcs_nightly.sh "$PCS_URL" "$BRANCH_PCS_NIGHTLY_PCS" "$PCSSP_NIGHTLY_URL" "$BRANCH_PCSSP_NIGHTLY" "$PIN_PCS_NIGHTLY_PCS" "$PIN_PCSSP_NIGHTLY"
+    echo "############## FINISHED PCS-NIGHTLY ##############"
+  else
+    echo "Skipping PCS-NIGHTLY"
   fi
 
   # SET UP CHEASE

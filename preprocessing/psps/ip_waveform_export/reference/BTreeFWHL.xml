@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+      <Fallback name="FallbackNomEH" Reactive="1">
+        <Fallback name="FallHrdEHListSudden" Reactive="1">
+          <Precondition name="FwhlHrdEH3" condition="{fwhl_alarm.value} == 3">
+            <ForceFailure>
+              <Sequence>
+                <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+                <Action ID="AssignValue" name="AssignFWHLTerm" source="41" target="{current_segment}"/>
+              </Sequence>
+            </ForceFailure>
+          </Precondition>
+        </Fallback>
+        <Parallel name="ParSegNom" threshold="1" mainTask = "1">
+          <Fallback name="FallNomSegList" Reactive="1">
+            <Precondition name="PrecondInit" condition="{current_segment} == 0">
+              <SubTree ID="SubTreeSegInit"/>
+            </Precondition>
+            <Precondition name="PrecondPulse" condition="{current_segment} == 1">
+              <SubTree ID="SubTreeSegPulse"/>
+            </Precondition>
+            <Precondition name="PrecondPulseEnd" condition="{current_segment} == 10">
+              <SubTree ID="SubTreeSegPulseEnd"/>
+            </Precondition>
+            <Precondition name="PrecondPulseStop" condition="{current_segment} == 65535">
+              <SubTree ID="SubTreeSegStop"/>
+            </Precondition>
+          </Fallback>
+          <Parallel name="ParSftEHList" threshold="1" mainTask = "-1">
+            <Precondition name="FwhlSftEHGap" condition="{fwhl_alarm.value} == 1">
+              <SubTree ID="SubTreeFwhlSftEHGap"/>
+            </Precondition>
+            <!-- In this subtree the gap modification should not be done -->
+            <Precondition name="FwhlSftEHHeatNoGap" condition="{glb_fwhl__mag_gapErr} == 1">
+              <SubTree ID="SubTreeFwhlSftEHHeatNoGap"/>
+            </Precondition>
+            <!-- Add the condition of gap error in a nicer way, for instance in global monitoring with debouncer -->
+            <Precondition name="FwhlSftEHHeat" condition="{fwhl_alarm.value} == 2">
+              <SubTree ID="SubTreeFwhlSftEHHeat"/>
+            </Precondition>
+            <Precondition name="TeLowSftEH" condition="{glb_plasma__lowTe} == 1">
+              <SubTree ID="SubTreeTeLowSftEH"/>
+            </Precondition>
+          </Parallel>
+        </Parallel>
+        <Fallback name="FallHrdEHList" Reactive="1">
+          <Precondition name="FwhlHrdEH" condition="{current_segment} == 25">
+            <SubTree ID="SubTreeFwhlHrdEH"/>
+          </Precondition>
+          <Precondition name="TeLowHrdEH" condition="{current_segment} == 31">
+            <SubTree ID="SubTreeTeLowHrdEH"/>
+          </Precondition>
+          <Precondition name="EHTerm1" condition="{current_segment} == 41">
+            <SubTree ID="SubTreeEHTerm1"/>
+          </Precondition>
+          <Precondition name="EHTerm2" condition="{current_segment} == 51">
+            <SubTree ID="SubTreeEHTerm2"/>
+          </Precondition>
+        </Fallback>
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeSegInit" segmentID='0'>
+      <Fallback name="FallSegInit" Reactive="1">
+        <Action ID="RefGen" name="PathSegInit" signal='all' segmentID='0' typeAddition='replace' wd_time="1" wd_target="1"/>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignInit" source="1" target="{current_segment}"/>
+          </Sequence>
+        </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeSegPulse" segmentID='1'>       <!-- segmentID = 1 -->
+      <Fallback name="FallSegPulse" Reactive="1">
+        <Action ID="RefGen" name="PathSegPulse" signal='all' segmentID='1' typeAddition='replace' wd_time="7" wd_target="10"/>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignPulse" source="10" target="{current_segment}"/>
+        </Sequence>
+      </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeSegPulseEnd" segmentID='10'>    <!-- segmentID = 10 -->
+      <Fallback name="FallSegEnd" Reactive="1">
+        <Action ID="RefGen" name="PathSegEnd" signal='all' segmentID='10' typeAddition='replace'  wd_time="1.7" wd_target="65535"/>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignEnd" source="65535" target="{current_segment}"/>
+        </Sequence>
+      </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeSegStop"  segmentID='65535'>        <!-- segmentID = 65535 -->
+      <Action ID="RefGen" name="PathSegStop" signal='all' segmentID='65535' entryRule='Linear' typeAddition='replace'  wd_time="30" wd_target="65535"/>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeFwhlSftEHGap"  segmentID='20'>      <!-- segmentID = 20 -->
+      <Fallback name="FallFwhlSftEHGap" Reactive="1">
+        <Sequence>
+            <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+            <Action ID="AssignValue" name="AssignMODFwhlSftEHGap" source="20" target="{last_mod_segment}"/-->
+            <Parallel mainTask = "1">
+              <Action ID="RefGen" name='PathFwhlSftEHGap1' signal='mag_gapRef' segmentID='20' entryRule='Linear' typeAddition='silence,offset' condition='{fwhl_alarm.value} == 0'  wd_time="1" wd_target="25"/>
+              <Action ID="RefGen" name='PathFwhlSftEHGap2' signal='mag_cntrlMdRef' segmentID='20' entryRule='Step' typeAddition='silence,replace' condition='{fwhl_alarm.value} == 0'  wd_time="1" wd_target="25"/>
+            </Parallel>
+            <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+            <Action ID="AssignValue" name="AssignMODFwhlSftEHGap" source="0" target="{last_mod_segment}"/-->
+        </Sequence>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignFwhlSftEHGap" source="25" target="{current_segment}"/>
+          </Sequence>
+        </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeFwhlSftEHHeatNoGap"  segmentID='21'>      <!-- segmentID = 21 -->
+      <Fallback name="FallFwhlSftEHHeatNoGap" Reactive="1">
+        <Sequence>
+          <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+          <Action ID="AssignValue" name="AssignMODFwhlSftEHHeatNoGap" source="21" target="{last_mod_segment}"/-->
+          <Parallel mainTask = "1">
+            <Action ID="RefGen" name='PathFwhlSftEHHeat1' signal='heat_ffRef' segmentID='21' entryRule='Linear' typeAddition='silence,replace' condition='{fwhl_alarm.value} &lt; 2 or {mag_gapErr.value} == 0'  wd_time="1" wd_target="25"/>
+            <Action ID="RefGen" name='PathFwhlSftEHHeat2' signal='heat_cntrlMdRef' segmentID='21' entryRule='Step' typeAddition='silence,replace' condition='{fwhl_alarm.value} &lt; 2 or {mag_gapErr.value} == 0'  wd_time="1" wd_target="25"/>
+          </Parallel>
+          <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+          <Action ID="AssignValue" name="AssignMODFwhlSftEHHeatNoGap" source="0" target="{last_mod_segment}"/-->
+        </Sequence>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignFwhlSftEHHeatNoGap" source="25" target="{current_segment}"/>
+          </Sequence>
+        </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <BehaviorTree ID="SubTreeFwhlSftEHHeat"  segmentID='21'>      <!-- segmentID = 22 -->
+      <Fallback name="FallFwhlSftEHHeat" Reactive="1">
+        <Sequence>
+          <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+          <Action ID="AssignValue" name="AssignMODFwhlSftEHHeat" source="21" target="{last_mod_segment}"/-->
+          <Parallel mainTask = "1">
+            <Action ID="RefGen" name='PathFwhlSftEHHeat1' signal='heat_ffRef' segmentID='21' entryRule='Linear' typeAddition='silence,replace' condition='{glb_fwhl__NoAlarm} or {mag_gapErr.value} == 0'  wd_time="1" wd_target="25"/>
+            <Action ID="RefGen" name='PathFwhlSftEHHeat2' signal='heat_cntrlMdRef' segmentID='21' entryRule='Step' typeAddition='silence,replace' condition='{glb_fwhl__NoAlarm} or {mag_gapErr.value} == 0'  wd_time="1" wd_target="25"/>
+         </Parallel>
+         <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+         <Action ID="AssignValue" name="AssignMODFwhlSftEHHeat" source="0" target="{last_mod_segment}"/-->
+        </Sequence>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignFwhlSftEHHeat" source="25" target="{current_segment}"/>
+          </Sequence>
+        </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeTeLowSftEH"  segmentID='30'>     <!-- segmentID = 30 -->
+      <Fallback name="FallTeLowSftEH" Reactive="1">
+        <!-- The conditions should be done with a hysteresis or a debouncer, not raw, it would create too much noise -->
+        <Sequence>
+          <Parallel mainTask = "1">
+            <Action ID="RefGen" name='PathTeLowSftEH1' signal='heat_ffRef' segmentID='30' entryRule='Linear' typeAddition='silence,replace' condition='{plasma_te.value} &gt; 50000'  wd_time="1" wd_target="31"/>
+            <Action ID="RefGen" name='PathTeLowSftEH2' signal='heat_cntrlMdRef' segmentID='30' entryRule='Step' typeAddition='silence,replace' condition='{plasma_te.value} &gt; 50000'  wd_time="1" wd_target="31"/>
+         </Parallel>
+            <!--Action ID="AssignValue" source="{last_mod_segment}" target="{old_mod_segment}"/>
+            <Action ID="AssignValue" name="AssignMODTeLowSftEHp" source="30" target="{last_mod_segment}"/-->
+        </Sequence>
+        <!--ForceFailure>
+          <Sequence>
+            <Action ID="AssignValue" name="WdAssignTeLowSftEHOld" source="{current_segment}" target="{old_current_segment}"/>
+            <Action ID="AssignValue" name="WdAssignTeLowSftEH" source="31" target="{current_segment}"/>
+          </Sequence>
+        </ForceFailure-->
+      </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeFwhlHrdEH"  segmentID='25'>      <!-- segmentID = 25 -->
+      <Sequence name="SeqFwhlHrdEH">
+        <Fallback name="FallFwhlHrdEH" Reactive="1">
+          <Action ID="RefGen" name="PathFwhlHrdEH" signal='all' segmentID='25' entryRule='Linear' typeAddition='silence,replace' condition='{fwhl_alarm.value} &lt; 1'  wd_time="1" wd_target="41"/>
+          <!--ForceFailure>
+            <Sequence>
+              <Action ID="AssignValue" name="WdAssignFwhlHrdEHOld" source="{current_segment}" target="{old_current_segment}"/>
+              <Action ID="AssignValue" name="WdAssignFwhlHrdEH" source="41" target="{current_segment}"/>
+            </Sequence>
+          </ForceFailure-->
+        </Fallback>
+        <!--ForceFailure>
+          <Action ID="AssignValue" name="CondAssignFwhlHrdEH" source="{old_current_segment}" target="{current_segment}"/>
+        </ForceFailure-->
+      </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeTeLowHrdEH"  segmentID='31'>     <!-- segmentID = 31 -->
+      <Sequence name="SeqTeLowHrdEH">
+        <Fallback name="FallTeLowHrdEH" Reactive="1">
+          <Action ID="RefGen" name="PathTeLowHrdEH" signal='all' segmentID='31' entryRule='Linear' typeAddition='silence,replace' condition='{plasma_te.value} &gt; 400000'  wd_time="1" wd_target="51"/>
+          <!--ForceFailure>
+            <Sequence>
+              <Action ID="AssignValue" name="WdAssignTeLowHrdEHOld" source="{current_segment}" target="{old_current_segment}"/>
+              <Action ID="AssignValue" name="WdAssignTeLowHrdEH" source="51" target="{current_segment}"/>
+            </Sequence>
+          </ForceFailure-->
+        </Fallback>
+        <!--ForceFailure>
+          <Action ID="AssignValue" name="CondAssignTeLowHrdEH" source="{old_current_segment}" target="{current_segment}"/>
+        </ForceFailure-->
+      </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeEHTerm1"  segmentID='41'>        <!-- segmentID = 41 -->
+      <Sequence name="SeqEHTerm1">
+        <Fallback name="FallEHTerm1" Reactive="1">
+          <Action ID="RefGen" name="PathEHTerm1" signal='all' segmentID='41' entryRule='Linear' typeAddition='replace' wd_time="1" wd_target="65535"/>
+          <!--ForceFailure>
+            <Action ID="AssignValue" name="WdAssignEHTerm1" source="65535" target="{current_segment}"/>
+          </ForceFailure-->
+        </Fallback>
+      </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="SubTreeEHTerm2"  segmentID='51'>        <!-- segmentID = 51 -->
+      <Sequence name="SeqEHTerm2">
+        <Fallback name="FallEHTerm2" Reactive="1">
+          <Action ID="RefGen" name="PathEHTerm2" signal='all' segmentID='51' entryRule='Linear' typeAddition='replace' wd_time="0.7" wd_target="65535"/>
+          <!--ForceFailure>
+            <Action ID="AssignValue" name="WdAssignEHTerm2" source="65535" target="{current_segment}"/>
+          </ForceFailure-->
+        </Fallback>
+      </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="AssignValue">
+            <input_port name="source"/>
+            <input_port name="target"/>
+        </Action>
+        <Condition ID="Comparison">
+            <input_port name="operand_1"/>
+            <input_port name="operand_2"/>
+            <input_port name="operator"/>
+        </Condition>
+        <SubTree ID="SubTreeSegInit"/>
+        <SubTree ID="SubTreeSegPulse"/>
+        <SubTree ID="SubTreeSegPulseEnd"/>
+        <SubTree ID="SubTreeSegStop"/>
+        <SubTree ID="SubTreeFwhlSftEHGap"/>
+        <SubTree ID="SubTreeFwhlSftEHHeatNoGap"/>
+        <SubTree ID="SubTreeFwhlSftEHHeat"/>
+        <SubTree ID="SubTreeTeLowSftEH"/>
+        <SubTree ID="SubTreeFwhlHrdEH"/>
+        <SubTree ID="SubTreeTeLowHrdEH"/>
+        <SubTree ID="SubTreeEHTerm1"/>
+        <SubTree ID="SubTreeEHTerm2"/>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
