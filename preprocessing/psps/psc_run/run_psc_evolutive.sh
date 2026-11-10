@@ -10,7 +10,7 @@
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=24 --mem=96G
 #SBATCH -o cases/runs/psc5_logs/psc5_evo_%x_%j.log
 # The -o path is relative to the submission directory: submit from the repo root,
-#   cd <repo> && mkdir -p cases/runs/psc5_logs && VARIANT=A_nom sbatch preprocessing/psps/psc_run/psc5_evolutive.sh
+#   cd <repo> && mkdir -p cases/runs/psc5_logs && VARIANT=A_nom sbatch preprocessing/psps/psc_run/run_psc_evolutive.sh
 # or from elsewhere with `sbatch --chdir=<repo> ...`. The case overrides
 # cases/overrides/evolutive_controller_105073_psc_*.ymmsl hold ${PDS_REPO} (repo root) and ${CASE_DIR} (case
 # folder) placeholders: they are expanded below (envsubst, as bin/pds-create-case does) into the case folder

@@ -16,7 +16,7 @@ Neither file is consumed by any tool: the run consumed the converter YAML throug
 WIDTH characters and at most MAX_LINES lines (the segments file may use up to MAX_LINES_SEG, reported when it does).
 Self-checks after writing: yaml.safe_load round trip, the limits, key order, and Ip values == -(YAML values).
 
-Run:  python3 -I make_psc5_two_file_set.py [all | A_nom | B_edit | C_zhold | D_eof] [--inputs DIR] [--out-dir DIR]
+Run:  python3 -I make_psc_two_file_set.py [all | A_nom | B_edit | C_zhold | D_eof] [--inputs DIR] [--out-dir DIR]
 (needs PyYAML; --inputs defaults to <repo>/cases/input/psc, --out-dir to <inputs>/<V>/psps_like)
 """
 

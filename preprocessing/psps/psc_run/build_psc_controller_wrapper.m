@@ -1,4 +1,4 @@
-function psc4_build_wrapper(ccs, cfgdir)
+function build_psc_controller_wrapper(ccs, cfgdir)
 % PSC-4: build controllers/CCS/pcssp_controller_and_ps_psc.slx, a COPY of the student's fork
 % wrapper pcssp_controller_and_ps.slx (left untouched), with the real PSC in the Ip path:
 %   - Ip_FromWS (FromWorkspace Ipl_ref, SID 2149) and its line to Goto8 <Ip_ref> (SID 2180) deleted;
