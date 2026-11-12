@@ -139,8 +139,11 @@ Trust the CI column: those five combinations run end to end on every integration
 Input data requirements
 -----------------------
 
-All workflows need DDv4 input. Their ``preprocess.sh`` converts the DINA data at case
-creation (see ``preprocessing/``).
+All workflows need DDv4 input that meets the requirements below. Preparing this input is not
+the task of PDS: it expects ready-to-use IMAS data. Preprocessing tools are nonetheless
+provided for some specific cases, namely DINA runs, the ITER machine description, METIS input
+and inverse_convergence output (see ``preprocessing/``). For the shots in
+``preprocessing/dina/shots``, each workflow's ``preprocess.sh`` runs them at case creation.
 
 Anything running NICE also needs:
 
