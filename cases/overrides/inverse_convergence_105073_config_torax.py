@@ -18,7 +18,12 @@ fixed_dt = 0.3
 DINA = json.loads(Path("${CASE_DIR}/preprocess/torax_params.json").read_text())
 
 CONFIG = {
-    "profile_conditions": {},
+    "profile_conditions": {
+        "I_p_source": "geometry",
+        "psi_source": "profile_conditions",
+        # placeholder, overwritten by the actor with the psi of the received core_profiles
+        "psi": {0.0: {0.0: 0.0, 1.0: 1.0}},
+    },
     "plasma_composition": {
         "main_ion": {"H": 1},
         "impurity": {
@@ -27,20 +32,15 @@ CONFIG = {
         },
     },
     "numerics": {
-        "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
-        "t_final": 1.0,  # overwritten by the actor from the received equilibrium /time
-        "exact_t_final": True,
-        "fixed_dt": fixed_dt,
-        "adaptive_dt": False,
-        "resistivity_multiplier": 1,
         "evolve_current": True,
         "evolve_ion_heat": True,
         "evolve_electron_heat": True,
         "evolve_density": False,
     },
-    # circular geometry is only for testing and prototyping
+    # placeholder replaced by the received equilibrium (I_p_source rejects circular)
     "geometry": {
-        "geometry_type": "circular",
+        "model_name": "chease",
+        "geometry_file": "iterhybrid.mat2cols",
         "n_rho": 50,
     },
     "pedestal": {},
@@ -73,39 +73,55 @@ CONFIG = {
         },
     },
     "transport": {
-        "model_name": "bohm-gyrobohm",
-        # Default BgB coefficients under-transport this scenario (flattop W_th
-        # +40% vs DINA) and, with no critical-gradient feedback, nothing pulls
-        # Te back during ramp-down where DINA's confinement collapses with Ip.
-        # Time-dependent calibration against the 105073 DINA trace: x1.8 through
-        # flattop, ramped to x4 in the t=140-205s ramp-down.
-        "chi_e_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
-        "chi_i_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
-        "chi_e_gyrobohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
-        "chi_i_gyrobohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
-        # set inner core transport coefficients (ad-hoc MHD/EM transport)
-        "apply_inner_patch": True,
-        "D_e_inner": 0.1,
-        "V_e_inner": 0.0,
-        "chi_i_inner": 1.5,
-        "chi_e_inner": 1.5,
-        "rho_inner": 0.15,  # radius below which patch transport is applied
-        # set outer core transport coefficients (L-mode near edge region)
-        "apply_outer_patch": True,
-        "D_e_outer": 0.2,
-        "V_e_outer": -0.3,
-        "chi_i_outer": 2.0,
-        "chi_e_outer": 2.0,
-        "rho_outer": 0.93,  # radius above which patch transport is applied
+        "core_transport_models": {
+            "bohm_gyrobohm": {
+                "model_name": "bohm_gyrobohm",
+                # Default BgB coefficients under-transport this scenario (flattop W_th
+                # +40% vs DINA) and, with no critical-gradient feedback, nothing pulls
+                # Te back during ramp-down where DINA's confinement collapses with Ip.
+                # Time-dependent calibration against the 105073 DINA trace: x1.8 through
+                # flattop, ramped to x4 in the t=140-205s ramp-down.
+                "chi_e_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
+                "chi_i_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
+                "chi_e_gyrobohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
+                "chi_i_gyrobohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
+                "rho_min": 0.15,
+                "rho_max": 0.93,
+            },
+            # inner core transport coefficients (ad-hoc MHD/EM transport)
+            "inner_patch": {
+                "model_name": "prescribed",
+                "D_e": 0.1,
+                "V_e": 0.0,
+                "chi_i": 1.5,
+                "chi_e": 1.5,
+                "rho_max": 0.15,
+            },
+            # outer core transport coefficients (L-mode near edge region)
+            "outer_patch": {
+                "model_name": "prescribed",
+                "D_e": 0.2,
+                "V_e": -0.3,
+                "chi_i": 2.0,
+                "chi_e": 2.0,
+                "rho_min": 0.93,
+                "rho_max": 1.0,
+            },
+        },
     },
     "solver": {
         "solver_type": "newton_raphson",
-        "use_predictor_corrector": True,
-        "n_corrector_steps": 10,
+        "use_fixed_point": True,
+        "n_fixed_point_iterations": 10,
         "use_pereverzev": True,
     },
     "time_step_calculator": {
         "calculator_type": "fixed",
+        "dt": fixed_dt,
+        "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
+        "t_final": 1.0,  # overwritten by the actor from the received equilibrium /time
+        "exact_t_final": True,
+        "allow_backtracking": False,
     },
     "neoclassical": {
         "bootstrap_current": {"model_name": "sauter"},

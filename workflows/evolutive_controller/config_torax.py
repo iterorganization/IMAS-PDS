@@ -6,8 +6,11 @@ deposited by the actor's receive_core_sources() with the ecrh
 extra_prescribed_power_density shape below -- see torax_muscle3/torax_actor.py. Every other
 source is TORAX's own.
 
-t_initial/t_final below are placeholders that the actor overwrites at run time from the
-received equilibrium.
+NICE evo_rd owns psi: TORAX does not evolve the current and takes psi and I_p from the
+equilibrium NICE sends each step (initial psi from the F_INIT equilibrium).
+
+t_initial/t_final and the chease geometry below are placeholders that the actor overwrites
+at run time from the received equilibrium (the psi sources reject circular geometry).
 """
 
 import json
@@ -23,7 +26,10 @@ fixed_dt = 0.01
 DINA = json.loads(Path("${CASE_DIR}/preprocess/torax_params.json").read_text())
 
 CONFIG = {
-    "profile_conditions": {},
+    "profile_conditions": {
+        "I_p_source": "geometry",
+        "psi_source": "geometry",
+    },
     "plasma_composition": {
         "main_ion": {"H": 1},
         "impurity": {
@@ -32,29 +38,17 @@ CONFIG = {
         },
     },
     "numerics": {
-        "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
-        "t_final": 1.0,  # overwritten by the actor from the received equilibrium /time
-        "exact_t_final": True,
-        "fixed_dt": fixed_dt,
-        "adaptive_dt": False,
-        "resistivity_multiplier": 1,
-        "evolve_current": True,
+        "evolve_current": False,
         "evolve_ion_heat": True,
         "evolve_electron_heat": True,
         "evolve_density": False,
     },
-    # circular geometry is only for testing and prototyping
     "geometry": {
-        "geometry_type": "circular",
+        "model_name": "chease",
+        "geometry_file": "iterhybrid.mat2cols",
         "n_rho": 50,
     },
     "pedestal": {},
-    "mhd": {
-        "sawtooth": {
-            "trigger_model": {"model_name": "simple"},
-            "redistribution_model": {"model_name": "simple"},
-        },
-    },
     "sources": {
         "ohmic": {},
         "fusion": {},
@@ -78,30 +72,42 @@ CONFIG = {
         },
     },
     "transport": {
-        "model_name": "qlknn",
-        # set inner core transport coefficients (ad-hoc MHD/EM transport)
-        "apply_inner_patch": True,
-        "D_e_inner": 0.1,
-        "V_e_inner": 0.0,
-        "chi_i_inner": 1.5,
-        "chi_e_inner": 1.5,
-        "rho_inner": 0.15,  # radius below which patch transport is applied
-        # set outer core transport coefficients (L-mode near edge region)
-        "apply_outer_patch": True,
-        "D_e_outer": 0.2,
-        "V_e_outer": -0.3,
-        "chi_i_outer": 2.0,
-        "chi_e_outer": 2.0,
-        "rho_outer": 0.93,  # radius above which patch transport is applied
+        "core_transport_models": {
+            "qlknn": {"model_name": "qlknn", "rho_min": 0.15, "rho_max": 0.93},
+            # inner core transport coefficients (ad-hoc MHD/EM transport)
+            "inner_patch": {
+                "model_name": "prescribed",
+                "D_e": 0.1,
+                "V_e": 0.0,
+                "chi_i": 1.5,
+                "chi_e": 1.5,
+                "rho_max": 0.15,
+            },
+            # outer core transport coefficients (L-mode near edge region)
+            "outer_patch": {
+                "model_name": "prescribed",
+                "D_e": 0.2,
+                "V_e": -0.3,
+                "chi_i": 2.0,
+                "chi_e": 2.0,
+                "rho_min": 0.93,
+                "rho_max": 1.0,
+            },
+        },
     },
     "solver": {
         "solver_type": "newton_raphson",
-        "use_predictor_corrector": True,
-        "n_corrector_steps": 10,
+        "use_fixed_point": True,
+        "n_fixed_point_iterations": 10,
         "use_pereverzev": True,
     },
     "time_step_calculator": {
         "calculator_type": "fixed",
+        "dt": fixed_dt,
+        "t_initial": 0.0,  # overwritten by the actor from the received equilibrium /time
+        "t_final": 1.0,  # overwritten by the actor from the received equilibrium /time
+        "exact_t_final": True,
+        "allow_backtracking": False,
     },
     "neoclassical": {
         "bootstrap_current": {"model_name": "sauter"},
