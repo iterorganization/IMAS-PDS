@@ -211,6 +211,8 @@ class Plotter(BasePlotter):
         timeslices (e.g. on switching occurrence, or a recorder rebuild in
         ``muscle3_dashboard.recorder.zarr_recorder._combine``).
         """
+        if self._state is None:
+            return
         equilibrium = self._state.data.get("equilibrium")
         times = (
             tuple(equilibrium.time.values.tolist()) if equilibrium is not None else ()

@@ -1,7 +1,9 @@
 # preprocessing
 
-Turns a shot's sources into workflow input. Each workflow's `preprocess.sh` calls these once,
-at `pds-create-case`, and writes the result into `$CASE_DIR/preprocess/`.
+Preprocessing is not the task of PDS: workflows expect ready-to-use IMAS (DD4) input. The
+tools here are provided for some specific cases only, to turn a shot's sources into workflow
+input. Each workflow's `preprocess.sh` calls these once, at `pds-create-case`, and writes the
+result into `$CASE_DIR/preprocess/`.
 
 Sorted by data source:
 
