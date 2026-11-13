@@ -346,7 +346,12 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEnt
     for ax in axes.flatten():
         ax.set_xlabel(r"$\rho_{N,tor}$")
 
-    fig1.suptitle(f"{args.shot_nr} equilibrium")
+    fig1.suptitle(
+        f"{args.shot_nr} Equilibrium\n"
+        f"t[{time_idx}]={time_val}s, $t=[{round(to_timebase[0], 1)},"
+        f" {round(to_timebase[-1], 1)}]$",
+    )
+
     fig2.suptitle(
         f"{args.shot_nr} gyrokinetic profiles\n"
         f"t[{time_idx}]={time_val}s, $t=[{round(to_timebase[0], 1)},"
