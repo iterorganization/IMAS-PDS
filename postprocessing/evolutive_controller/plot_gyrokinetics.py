@@ -337,10 +337,10 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
     ax_tite0.plot(to_rho_tor_norm, tite0)
     ax_tite0.set_ylabel(r"$\frac{T_{i,0}}{T_e}$ [-]")
 
-    ax_nustar.plot(to_rho_tor_norm, tite0)
-    ax_nustar.set_ylabel(r"$\nu^*$ [-]")
+    ax_nustar.plot(to_rho_tor_norm, logNustar)
+    ax_nustar.set_ylabel(r"$\log_{10}(\nu^*$) [-]")
 
-    ax_zeff.plot(to_rho_tor_norm, tite0)
+    ax_zeff.plot(to_rho_tor_norm, zeff)
     ax_zeff.set_ylabel(r"$Z_{eff}$ [-]")
 
     for ax in axes.flatten():
