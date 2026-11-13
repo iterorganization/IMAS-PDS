@@ -26,7 +26,7 @@ BRANCH_MUSCLE3_DASHBOARD='main'
 BRANCH_WAVEFORM_EDITOR='main'
 BRANCH_METIS='muscle3_develop'
 BRANCH_NICE='develop'
-BRANCH_TORAX='develop'
+BRANCH_TORAX='feature/nice_owns_psi'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
 
