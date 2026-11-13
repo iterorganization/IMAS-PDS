@@ -100,10 +100,14 @@ def main():
     """Plot evolutive_controller reference-vs-NICE validation figures"""
     args = handle_args()
     dbs = {
-        "dina": DBEntry(f"imas:hdf5?path={args.dina_path}", "r"),
-        "reconstruction": DBEntry(f"imas:hdf5?path={args.reconstruction_path}", "r"),
-        "nice": DBEntry(f"imas:hdf5?path={args.nice_path}", "r"),
-        "torax": DBEntry(f"imas:hdf5?path={args.torax_path}", "r"),
+        key: DBEntry(f"imas:hdf5?path={path}", "r")
+        for key, path in {
+            "dina": args.dina_path,
+            "reconstruction": args.reconstruction_path,
+            "nice": args.nice_path,
+            "torax": args.torax_path,
+        }.items()
+        if path is not None
     }
 
     rz_ip_plot(args, dbs)
