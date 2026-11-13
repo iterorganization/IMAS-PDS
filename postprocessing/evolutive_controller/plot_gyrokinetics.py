@@ -275,11 +275,11 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEnt
 
     # If this is workflow evolutive_controller, we have:
     # *
-    fig1, ax1 = plt.subplots(figsize=(12, 12))
-    (_li1,) = ax1.plot(rr, zz)
-    ax1.scatter(rga, zma)
-    ax1.set_box_aspect(1)
-    ax1.plot((min(rr), max(rr)), (zma, zma))
+    fig1, ax_eq = plt.subplots(figsize=(12, 12))
+    (_li1,) = ax_eq.plot(rr, zz)
+    ax_eq.scatter(rga, zma)
+    ax_eq.set_box_aspect(1)
+    ax_eq.plot((min(rr), max(rr)), (zma, zma))
 
     fig2, axes = plt.subplots(4, 3, figsize=(12, 12))
     (
@@ -351,11 +351,11 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEnt
 
     subname = "magnetic_equilibrium"
     path = f"{args.output_dir}/{subname}_{args.shot_nr}.png"
-    # fig1.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig1.tight_layout()
+    ax_eq.set_aspect(1)
     fig1.savefig(path)
 
-    subname = "kinetic_sensitivities"
+    subname = "gyrokinetic_sensitivities"
     path = f"{args.output_dir}/{subname}_{args.shot_nr}.png"
     # fig2.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig2.tight_layout()
