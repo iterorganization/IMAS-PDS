@@ -1,11 +1,10 @@
 import argparse
-from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
-from imas import DBEntry, IDSToplevel, DBEntry
-from imas.ids_primitive import IDSNumericArray
+from imas import DBEntry, IDSToplevel
 from imas.ids_defs import CLOSEST_INTERP
+from imas.ids_primitive import IDSNumericArray
 
 PLOT_KWARGS = {"marker": "."}
 
@@ -155,7 +154,7 @@ def find_nearest(array, value, reverse=False):
     return idx
 
 
-def gyrokinetic_transport_plots(args: argparse.Namespace, dbs: Dict[str, DBEntry]):
+def gyrokinetic_transport_plots(args: argparse.Namespace, dbs: dict[str, DBEntry]):
     """Plot gyrokinetically important IDS output data from multiple sources"""
     # pf_active_plots_dina_nice(args, dbs)
     # equilibrium_plots_dina_nice(args, dbs)
@@ -167,14 +166,14 @@ def gyrokinetic_transport_plots(args: argparse.Namespace, dbs: Dict[str, DBEntry
     plot_timeslice(-1, args, dbs)
 
 
-def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEntry]):
+def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEntry]):
     print(f"Plotting timeslice t_{{idx}}={time_idx}")
 
     if "nice" in dbs:
         print("NICE data found, plotting...")
         ni: DBEntry = dbs["nice"]
         print("Getting NICE equilibrium...")
-        ni_eq: IDSToplevel = ni.get("equilibrium", lazy=True)
+        _ni_eq: IDSToplevel = ni.get("equilibrium", lazy=True)
         # ni_timebase: IDSNumericArray = ni_eq.time
         # ni_pf_act: IDSToplevel = ni.get("pf_active")
         # assert all(ni_timebase == ni_pf_act.time)
@@ -227,9 +226,6 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
         dTi0 = np.gradient(Ti0)
         dne = np.gradient(ne)
         dTe = np.gradient(Te)
-        Ati = 1
-        An = 1
-        Ate = 1
 
         # Eq is on another timebase
         print("Getting TORAX equilibrium...")
@@ -267,11 +263,11 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
 
     if "dina" in dbs:
         print("DINA data found, plotting...")
-        di = dbs["dina"]
+        _di = dbs["dina"]
 
     if "metis" in dbs:
         print("Metis data found, plotting...")
-        me = dbs["metis"]
+        _me = dbs["metis"]
 
     # If this is workflow inverse_convergence, we have:
     #   * NICE: equilibrium and pf_active
@@ -280,7 +276,7 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: Dict[str, DBEnt
     # If this is workflow evolutive_controller, we have:
     # *
     fig1, ax1 = plt.subplots(figsize=(12, 12))
-    (li1,) = ax1.plot(rr, zz)
+    (_li1,) = ax1.plot(rr, zz)
     ax1.scatter(rga, zma)
     ax1.set_box_aspect(1)
     ax1.plot((min(rr), max(rr)), (zma, zma))
