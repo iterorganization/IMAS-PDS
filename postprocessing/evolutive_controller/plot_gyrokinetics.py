@@ -163,8 +163,12 @@ def gyrokinetic_transport_plots(args: argparse.Namespace, dbs: dict[str, DBEntry
 
     # If this is workflow prescribed_transport, we have:
     #   * NICE: equilibrium and pf_active
-    plot_timeslice(-1, args, dbs)
+    plot_timeslices([0, -1], args, dbs)
 
+
+def plot_timeslices(time_idxs: list[int], args: argparse.Namespace, dbs: dict[str, DBEntry]):
+    for time_idx in time_idxs:
+        plot_timeslice(time_idx, args, dbs)
 
 def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEntry]):
     print(f"Plotting timeslice t_{{idx}}={time_idx}")
@@ -350,13 +354,13 @@ def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEnt
     )
 
     subname = "magnetic_equilibrium"
-    path = f"{args.output_dir}/{subname}_{args.shot_nr}.png"
+    path = f"{args.output_dir}/{subname}_{args.shot_nr}_idx={time_idx}.png"
     fig1.tight_layout()
     ax_eq.set_aspect(1)
     fig1.savefig(path)
 
     subname = "gyrokinetic_sensitivities"
-    path = f"{args.output_dir}/{subname}_{args.shot_nr}.png"
+    path = f"{args.output_dir}/{subname}_{args.shot_nr}_idx={time_idx}.png"
     # fig2.tight_layout(rect=(0, 0.03, 1, 0.95))
     fig2.tight_layout()
     fig2.savefig(path)
