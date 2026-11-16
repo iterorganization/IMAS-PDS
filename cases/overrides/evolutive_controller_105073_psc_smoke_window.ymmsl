@@ -1,0 +1,5 @@
+ymmsl_version: v0.2
+# PSC-4 smoke run: 0.2 s window (84.3176 -> 84.52 s)
+settings:
+  torax.t_final: 84.52
+  nice_evo_rd.t_end: 84.52

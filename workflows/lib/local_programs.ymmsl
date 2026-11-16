@@ -233,6 +233,25 @@ programs:
       # above, which parse fine across multiple lines.
       exec matlab -batch "try; pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
 
+  # The same controller with the PSC (settings psc_enabled: 1, psc_config_dir): PCS from
+  # local_installs/pcs-nightly (pcs + pcssp-nightly merge_IGZ_PSC, pds_setup.sh with
+  # INSTALL_PCS_NIGHTLY=true), where the PSC lives. Private MATLAB tempdir per run: MATLAB 2025b
+  # aborts with "the TEMPDIR name is too long" for $RUN_DIR/... (Mireille Schneider, 2026-11-06).
+  magnetic_controller_psc:
+    script: |
+      #!/bin/bash
+      repo="$PDS_REPO"
+      module purge
+      export PDS_REPO="$repo"
+      module load PCS/2026.08-pds
+      module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
+      unset PYTHONPATH
+      export PCS_PATH=$PDS_REPO/local_installs/pcs-nightly
+      export CONTROLLER_PATH=$PDS_REPO/controllers/CCS
+      export SCDDS_COREPATH=$PCS_PATH/pcssp/scdds
+      export TMPDIR=/scratch/users/$USER/mt/$(basename "$RUN_DIR" | md5sum | cut -c1-10); mkdir -p $TMPDIR
+      exec matlab -batch "try; pyenv('Version','$EBROOTPCS/muscle3_venv/bin/python','ExecutionMode','InProcess'); addpath(getenv('PCS_PATH')); run('$PDS_REPO/local_installs/nice/runmatlab/initNice4matlab.m'); pcssp_pcs_add_paths; comparisons.ExternalSCMLink.setupGitConfig(); addpath(getenv('CONTROLLER_PATH')); run(fullfile(getenv('CONTROLLER_PATH'),'muscle_controller_NICE_IMAS_iter_init.m')); catch ME; disp(getReport(ME)); exit(1); end"
+
   diagnostics:
     modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
     executable: python

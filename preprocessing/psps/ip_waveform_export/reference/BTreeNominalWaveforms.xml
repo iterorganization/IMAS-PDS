@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <!-- Basic behaviour tree scheduling the nominal-waveform segments        -->
+    <!-- defined in PS_NominalWaveforms.xml: ramp-up (0-10s) then flat-top.   -->
+    <!-- Both transitions here are purely time based, driven by the wd_time/ -->
+    <!-- wd_target watchdog on each segment's RefGen action.                 -->
+    <BehaviorTree ID="BehaviorTree">
+      <Fallback name="FallBackTop" Reactive="1">
+        <Fallback name="FallbackNominal" Reactive="1">
+          <!-- init segment-->
+          <!--<SubTree ID="SubTreeInit"/> -->
+          <!-- ramp-up segment -->
+          <SubTree ID="SubTreeRampUp"/>
+          <!-- flat-top segment -->
+          <SubTree ID="SubTreeFlatTop"/>
+          <!-- terminal STOP segment -->
+          <SubTree ID="SubTreeNominalStop"/>
+        </Fallback>
+      </Fallback>
+    </BehaviorTree>
+
+    <!-- Pulse init segment -->
+    <!--<BehaviorTree ID="SubTreeInit" segmentID='0'>
+        <Precondition name="precondInit" condition="{current_segment} == 0">
+            <Action ID="RefGen" name="PathSegInit" signal='all' segmentID='0' typeAddition='replace' wd_time="0.001" wd_target="1"/>
+        </Precondition>
+    </BehaviorTree> -->
+
+    <!--<Ramp-up: 0-10s, then hand off to flat-top -->
+    <BehaviorTree ID="SubTreeRampUp" segmentID='0'>
+        <Precondition name="precondRampUp" condition="{current_segment} == 0">
+                    <!--<Sequence> -->
+                        <!--<Action ID="RefGen" name="PathRampUp" signal='all' segmentID='1' typeAddition='replace' condition="{SegmentTime} &gt; 10" wd_time="20" wd_target="99"/>
+                        <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+                        <Action ID="AssignValue" name="AssignFlatTop" source="2" target="{current_segment}"/> -->
+                        <Action ID="RefGen" name="PathRampUp" signal='all' segmentID='0' typeAddition='replace' wd_time="10" wd_target="1"/>
+                   <!-- </Sequence> -->
+            
+        </Precondition>
+    </BehaviorTree>
+    <!-- Flat-top: 10s onward, then hand off to STOP -->
+    <BehaviorTree ID="SubTreeFlatTop" segmentID='1'>
+        <Precondition name="precondFlatTop" condition="{current_segment} == 1">
+                    <!--<Sequence> -->
+                        <!--<Action ID="RefGen" name="PathFlatTop" signal='all' segmentID='2' typeAddition='replace' condition="{SegmentTime} &gt; 90" wd_time="95" wd_target="99"/>
+                        <Action ID="AssignValue" source="{current_segment}" target="{old_current_segment}"/>
+                        <Action ID="AssignValue" name="AssignNominalTermination" source="99" target="{current_segment}"/> -->
+                        <Action ID="RefGen" name="PathFlatTop" signal='all' segmentID='1' typeAddition='replace' wd_time="90" wd_target="99"/>
+                    <!-- </Sequence> -->
+        </Precondition>
+    </BehaviorTree>
+    <!-- Terminal STOP segment (self-loop, matches SEGMENT id="99" in PS_NominalWaveforms.xml) -->
+    <BehaviorTree ID="SubTreeNominalStop" segmentID='99'>
+        <Precondition name="precondNominalStop" condition="{current_segment} == 99">
+            <Action ID="RefGen" name="PathNominalStop" signal='all' segmentID='99' typeAddition='replace' wd_time="5" wd_target="99"/>
+        </Precondition>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="AssignValue">
+            <input_port name="source"/>
+            <input_port name="target"/>
+        </Action>
+        <SubTree ID="SubTreeInit"/>
+        <SubTree ID="SubTreeRampUp"/>
+        <SubTree ID="SubTreeFlatTop"/>
+        <SubTree ID="SubTreeNominalStop"/>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>

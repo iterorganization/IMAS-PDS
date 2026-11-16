@@ -1,0 +1,38 @@
+# P2c designer file (converter format 0 + PROPOSED segments block, see
+# preprocessing/psps/ip_waveform_export/README.md): ONE source for the PSPS-side exports
+# (RefGen XML, PSPS JSON) and the PDS evolutive_controller run (pulse_schedule IDS ->
+# ps_source -> magnetic_controller.pulse_schedule_in_f -> Ipl_ref).
+#
+# Content = the P2b "edited" waveform (cases/overrides/evolutive_controller_105073_ip_reference_edited.yaml,
+# IMAS sign) rewritten in the designer convention: values = -Ip (positive), A.
+# Vertices: inverse_convergence out_nice equilibrium Ip at its native slices; edit: |Ip| ramped
+# from 15.063 MA at 84.40 s to 1.03 x nominal = 15.514 MA at 84.90 s, then held (+3 %).
+#
+# Time (D10): t = 0 at the plasma initiation. ASSUMPTION (UNVERIFIED): the DINA 105073 time
+# axis used by PDS has its t = 0 at the plasma initiation (first preprocessed slice 5.9176 s
+# already carries |Ip| = 2.49 MA, consistent with a ramp-up that started near t = 0). With
+# that assumption time_offset_s = 0 and the exported IDS times are the DINA/PDS times:
+#   t_IDS = t_design + time_offset_s = t_design + 0.0 s
+# (the run window 84.3176-85.3 s is inside the flat-top segment 79.2176-94.8176 s).
+globals:
+  dd_version: 4.0.0
+  pulse: 105073
+  name: ip_105073_p2c_edited
+  comment: "P2c: P2b +3 % Ip edit (84.40-84.90 s) on the inverse_convergence 105073 Ip"
+  convention: minus_ip
+  time_origin: plasma_initiation
+  time_offset_s: 0.0
+
+references:
+  pulse_schedule/flux_control/ip/reference:
+    - {time: [79.217598, 84.317598, 84.400000, 84.900000, 89.717598, 94.817598],
+       value: [15073164.9, 15063153.9, 15063024.3, 15514105.1, 15506300.7, 15546974.0]}
+
+# PROPOSAL: one timed segment covering the waveform, then STOP (ids as on pcs@add-AM, D8).
+# The simulated window is a slice of the flat-top; ramp-up/ramp-down are not designed here.
+segments:
+  - {name: flat-top, id: 0, start: 79.217598, end: 94.817598}
+  - {name: STOP, id: 99}
+
+signals:
+  pulse_schedule/flux_control/ip/reference: Ipl_ref

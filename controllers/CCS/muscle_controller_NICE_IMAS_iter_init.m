@@ -6,6 +6,8 @@
 % 2. builds the references and the parameters read by the Simulink model (base workspace);
 % 3. inits the PCSSP modules and runs pcssp_controller_and_ps, which exchanges with NICE at
 %    every step through muscle_nice2control / muscle_control2nice.
+% With the setting psc_enabled = 1 the PSC block of the model (pulse supervision, pcssp-nightly)
+% gets its configuration from psc_config_dir and the model runs from t = 0, the PSC's clock.
 
 fprintf('Controller Initialization\n')
 
@@ -61,6 +63,12 @@ if instance.reuse_instance()
     zdot_disturbance = double(instance.get_setting('zdot_disturbance', pyargs('default', 0)));  % noise on zdot (controller_input_preprocess)
     zdot_filter = double(instance.get_setting('zdot_filter', pyargs('default', 0)));            % low pass on zdot
     nice_signs = double(instance.get_setting('nice_signs', pyargs('default', 1)));              % 1 with NICE evo_rd: voltages sent with the opposite sign
+    psc_enabled = double(instance.get_setting('psc_enabled', pyargs('default', 0)));            % 1: Ipl_ref from the PSC (program magnetic_controller_psc)
+    if psc_enabled
+        psc_config_dir = char(instance.get_setting('psc_config_dir'));                          % folder with the four PSC files
+    end
+    % the PSC counts its time from 0: with the PSC the model runs from 0 = t_start
+    t_offset = psc_enabled * t_start;   % plasma time = Simulink time + t_offset (also read by log_row)
 
     %% controlled gaps and isoflux control points
     GAP_LIST = [3 8 15 21 25 48];   % the gaps used by shapeIp_CCS (nonzero columns of its Proj)
@@ -151,15 +159,16 @@ if instance.reuse_instance()
         dpsi_ref(1:n_ctr, :) = psi_pts_ref - psixp_ref;
     end
 
-    % read by the From Workspace blocks of the model
-    Ipl_ref = timeseries(ip_ref, equilibrium.time);
-    Rpl_ref = timeseries(rpl_ref, equilibrium.time);
-    Zpl_ref = timeseries(zpl_ref, equilibrium.time);
-    Rxp_ref = timeseries(rxp_ref, equilibrium.time);
-    Zxp_ref = timeseries(zxp_ref, equilibrium.time);
-    Gaps_ref = timeseries(gaps_ref, equilibrium.time);
-    dPsi_ref = timeseries(dpsi_ref, equilibrium.time);
-    CSPF_curr_ref = timeseries(reference_current, equilibrium.time);
+    % read by the From Workspace blocks of the model, on the Simulink time
+    t_ref = equilibrium.time - t_offset;
+    Ipl_ref = timeseries(ip_ref, t_ref);
+    Rpl_ref = timeseries(rpl_ref, t_ref);
+    Zpl_ref = timeseries(zpl_ref, t_ref);
+    Rxp_ref = timeseries(rxp_ref, t_ref);
+    Zxp_ref = timeseries(zxp_ref, t_ref);
+    Gaps_ref = timeseries(gaps_ref, t_ref);
+    dPsi_ref = timeseries(dpsi_ref, t_ref);
+    CSPF_curr_ref = timeseries(reference_current, t_ref);
 
     %% fixed controller parameters (Constant blocks of the model)
     schedulingVar_KCURR = 0;
@@ -201,6 +210,11 @@ if instance.reuse_instance()
     obj6.init;
     obj6.setup;
 
+    if psc_enabled
+        % pcssp-nightly framework: the RZIp wrapper needs 'configurationSettings' in the base workspace
+        SCDconf_setConf('pcssp_Simulation', 'configurations_container_pcssp.sldd');
+    end
+
     % data dictionary of the top model: links the modules' dictionaries and the base workspace
     top_dd_file = fullfile(fileparts(which('pcssp_controller_and_ps.slx')), 'pcssp_controller_and_ps.sldd');
     if isfile(top_dd_file)
@@ -220,12 +234,24 @@ if instance.reuse_instance()
         saveChanges(top_dd);
     end
     close(top_dd);
+    if psc_enabled
+        set_param(0, 'ErrorIfLoadNewModel', 'off');   % pcssp-nightly PSC.slx is saved by a newer MATLAB
+    end
     load_system('pcssp_controller_and_ps');
     set_param('pcssp_controller_and_ps', 'DataDictionary', 'pcssp_controller_and_ps.sldd');
+    if psc_enabled
+        % the PSC block (Subsystem Reference to PSC) gets its four files
+        psc_blk = find_system('pcssp_controller_and_ps', 'LookUnderMasks', 'all', 'ReferencedSubsystem', 'PSC');
+        if isempty(psc_blk)
+            error('psc_enabled = 1 but the model has no PSC block (Subsystem Reference to PSC)');
+        end
+        psc_setup_block(psc_blk{1}, psc_config_dir);
+        logger.info(sprintf('PSC configured from %s', psc_config_dir));
+    end
 
     %% simulation
     in = Simulink.SimulationInput('pcssp_controller_and_ps');
-    in = in.setModelParameter('StartTime', num2str(t_start), 'StopTime', num2str(t_max));
+    in = in.setModelParameter('StartTime', num2str(t_start - t_offset), 'StopTime', num2str(t_max - t_offset));
     in = in.setModelParameter('SaveOutput', 'on');
 
     if DEBUG_LOG
@@ -257,6 +283,11 @@ if instance.reuse_instance()
             'zxp', 1;
             'rxp_ref', 1;
             'zxp_ref', 1;
+            'psc_segment', 1;
+            'psc_ip_too_high', 1;
+            'psc_end_of_flux', 1;
+            'psc_z_excursion', 1;
+
             };
         h = {'t'};
         for k = 1:size(sig,1)

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SCHEDULE
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.ipp.mpg.de/2016/Schema/Schedule.xsd"
+  name="Template Schedule"
+  comment="Schedule for PCSSP TimeSeries Generator">
+
+  <DECLARATIONS>
+    <PARAMETERS>
+      <PARAMETER name="RampdownRate" type="double" value="2"/>
+    </PARAMETERS>
+    <INPUTS>
+      <SIGNAL name="fwhl_dGap" signal_type="Amplitude" type="double" dimension="1"
+        comment="FF heating command" value="0"/>
+      <SIGNAL name="fwhl_dPow" signal_type="Amplitude" type="double" dimension="1"
+        comment="FF heating command" value="0"/>
+    </INPUTS>
+    <OUTPUTS>
+      <!-- SIGNAL default values are assumed as zero if not specified -->
+      <SIGNAL name="heat_ffRef" signal_type="Amplitude" type="double" dimension="1"
+        comment="FF heating command" value="0"/>
+      <SIGNAL name="heat_betaRef" signal_type="Amplitude" type="double" dimension="1"
+        comment="Beta reference" value="0"/>
+      <SIGNAL name="heat_cntrlMdRef" signal_type="Amplitude" type="double" dimension="1"
+        comment="Control mode for the heating controller, 0: FF beta cntrl, 1: FB beta cntrl" value="0"/>
+      <SIGNAL name="mag_gapRef" signal_type="Amplitude" type="double" dimension="5"
+        comment="five gap reference" value="(0,0,0,0,0)"/>
+      <SIGNAL name="mag_cntrlMdRef" signal_type="Amplitude" type="double" dimension="1"
+        comment="Control mode for the magnetic shape controller, 0: isoflux, 1: gap control" value="0"/>
+      <SIGNAL name="mag_csCurrentRef" signal_type="Amplitude" type="double" dimension="1"
+          comment="CS current reference" value="0"/>
+    </OUTPUTS>
+  </DECLARATIONS>
+  <SEGMENTS>
+    <SEGMENT name="Init" id="0"  wd_time="1" wd_target="Pulse">
+      <SUPERVISION>
+          <CONTROL program="Watchdog" type="COND_GOTO" startTime="4" targetSegment="Pulse"/>
+      </SUPERVISION>
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_gapRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="[1, 1, 1, 1, 1]"/>
+            <POINT time="0.5" value="[0.5, 0.5, 0.5, 0.5, 0.5]"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0.0" value="0.0"/>
+            <POINT time="1.0" value="800000.0"/>
+            <POINT time="4.0" value="2000000.0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="0"/>
+            <POINT time="1" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_csCurrentRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0.0" value="24e3"/>
+            <POINT time="4.0" value="-10e3"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <SEGMENT name="Pulse" id="1" wd_time="7" wd_target="PulseEnd">
+      <SUPERVISION>
+          <CONTROL program="Watchdog" type="COND_GOTO" startTime="4" targetSegment="PulseEnd"/>
+          <CONTROL program="Fault" type="COND_GOTO" targetSegment="PulseEnd"/>
+          <CONTROL program="Range" type="COND_GOTO" targetSegment="PulseEnd"/>
+          <CONTROL program="Complex" type="COND_GOTO" targetSegment="PulseEnd"/>
+      </SUPERVISION>
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_gapRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="[0.5, 0.5, 0.5, 0.5, 0.5]"/>
+            <POINT time="2" value="[0.5, 1.5, 2.5, 2, 1]"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="2"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_betaRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="0.01"/>
+            <POINT time="2" value="0.005"/>
+            <POINT time="4" value="0.01"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="2"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_csCurrentRef">
+          <ENTRY_RULE is="Linear"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="-10e3"/>
+            <POINT time="6" value="-41e3"/>
+            <POINT time="8" value="-20e3"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <SEGMENT name="PulseEnd" id="10" wd_time="1.7" wd_target="STOP">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_csCurrentRef">
+          <ENTRY_RULE is="Linear"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="-20e3"/>
+            <POINT time="9" value="-10e3"/>
+            <POINT time="10" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <FUNCTION code="{mag_csCurrentRef}*(-1000)"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_gapRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="[0.5, 1.5, 2.5, 2, 1]"/>
+            <POINT time="2" value="[0, 0, 0, 0, 0]"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <SEGMENT name="STOP" id="65">
+    </SEGMENT>
+    <!-- decorator for FWHL level 1 -->
+    <SEGMENT name="FwhlSftEHGap" id="20" wd_time="4" wd_target="FwhlSftEHGHeat1">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_gapRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <FUNCTION code="{fwhl_dGap.value}"/>
+            <!--FUNCTION code="{glb_fwhl__gapReq} + {fwhl_dGap.value}"/-->
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="mag_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="FwhlSftEHGHeat" id="21" wd_time="4" wd_target="FwhlHrdEH">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <FUNCTION code="{glb_fwhl__heatReq} + {fwhl_dPow.value}"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 0 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="TeLowSftEH" id="30" wd_time="4" wd_target="TeLowHrdEH">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <!-- TODO: ff heat command an increase over the last heat command-->
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <FUNCTION code="{glb_fwhl__heatReq}*1.10"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 1 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="FwhlHrdEH" id="25" wd_time="4" wd_target="EHTerm1">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="5e5"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 0 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="TeLowHrdEH" id="31" wd_time="4" wd_target="EHTerm2">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <POINT time="0" value="3e6"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 0 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="EHTerm1" id="41" wd_time="1.7" wd_target="STOP">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_csCurrentRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="-20e3"/>
+            <POINT time="2" value="-10e3"/>
+            <POINT time="4" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <FUNCTION code="{mag_csCurrentRef}*(-100)"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 0 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+    <!-- -->
+    <SEGMENT name="EHTerm2" id="51" wd_time="1.7" wd_target="STOP">
+      <SIGNAL_TRAJECTORIES>
+        <SIGNAL_TRAJECTORY name="mag_csCurrentRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Linear"/>
+          <REFERENCE>
+            <POINT time="0" value="-20e3"/>
+            <POINT time="2" value="-10e3"/>
+            <POINT time="3" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_ffRef">
+          <ENTRY_RULE is="None"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <FUNCTION code="{mag_csCurrentRef}*(-100)"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+        <SIGNAL_TRAJECTORY name="heat_cntrlMdRef">
+          <ENTRY_RULE is="Step"/>
+          <EXIT_RULE is="Last"/>
+          <EXECUTION_RULE is="Step"/>
+          <REFERENCE>
+            <!-- the control mode 0 corresponds to FF for this prototype -->
+            <POINT time="0" value="0"/>
+          </REFERENCE>
+        </SIGNAL_TRAJECTORY>
+      </SIGNAL_TRAJECTORIES>
+    </SEGMENT>
+  </SEGMENTS>
+</SCHEDULE>
