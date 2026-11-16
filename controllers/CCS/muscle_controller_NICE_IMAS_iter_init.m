@@ -6,8 +6,9 @@
 % 2. builds the references and the parameters read by the Simulink model (base workspace);
 % 3. inits the PCSSP modules and runs pcssp_controller_and_ps, which exchanges with NICE at
 %    every step through muscle_nice2control / muscle_control2nice.
+% The model runs from t = 0, on NICE's steps: plasma time = Simulink time + t_start.
 % With the setting psc_enabled = 1 the PSC block of the model (pulse supervision, pcssp-nightly)
-% gets its configuration from psc_config_dir and the model runs from t = 0, the PSC's clock.
+% gets its configuration from psc_config_dir.
 
 fprintf('Controller Initialization\n')
 
@@ -48,7 +49,7 @@ if instance.reuse_instance()
     msg_pfa = instance.receive("pf_active_in_f");
     pf_active = imas_deserialize(uint8(msg_pfa.data), 'pf_active');
 
-    t_start = equilibrium.time(1);
+    t_start = equilibrium.time(1);   % Simulink time 0 (also read by log_row)
     t_max = equilibrium.time(end);
 
     %% settings (magnetic_controller.* in the ymmsl)
@@ -67,8 +68,6 @@ if instance.reuse_instance()
     if psc_enabled
         psc_config_dir = char(instance.get_setting('psc_config_dir'));                          % folder with the four PSC files
     end
-    % the PSC counts its time from 0: with the PSC the model runs from 0 = t_start
-    t_offset = psc_enabled * t_start;   % plasma time = Simulink time + t_offset (also read by log_row)
 
     %% controlled gaps and isoflux control points
     GAP_LIST = [3 8 15 21 25 48];   % the gaps used by shapeIp_CCS (nonzero columns of its Proj)
@@ -160,7 +159,7 @@ if instance.reuse_instance()
     end
 
     % read by the From Workspace blocks of the model, on the Simulink time
-    t_ref = equilibrium.time - t_offset;
+    t_ref = equilibrium.time - t_start;
     Ipl_ref = timeseries(ip_ref, t_ref);
     Rpl_ref = timeseries(rpl_ref, t_ref);
     Zpl_ref = timeseries(zpl_ref, t_ref);
@@ -194,7 +193,8 @@ if instance.reuse_instance()
     obj3.init;
     % VS gains from FC016 instead of the module's defaults
     S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
-    obj3.update_nominal_param_value('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+    % pcssp-nightly scdds: update_nominal_param_value calls a missing ddHdl.updateValue
+    obj3.ddHdl.replaceOrCreateEntry('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
     fprintf('VS gains from FC016_Config_VS.mat (KZ_VS1 = %g)\n', S.Config_VS.Gains.KZ_VS1);
     obj3.setup;
 
@@ -247,7 +247,7 @@ if instance.reuse_instance()
 
     %% simulation
     in = Simulink.SimulationInput('pcssp_controller_and_ps');
-    in = in.setModelParameter('StartTime', num2str(t_start - t_offset), 'StopTime', num2str(t_max - t_offset));
+    in = in.setModelParameter('StartTime', '0', 'StopTime', num2str(t_max - t_start, 12));
     in = in.setModelParameter('SaveOutput', 'on');
 
     if DEBUG_LOG
