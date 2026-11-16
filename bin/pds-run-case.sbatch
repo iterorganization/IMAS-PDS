@@ -78,6 +78,10 @@ RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
 
+for f in postprocess.sh; do
+  [[ -f "$CASE_DIR/$f" ]] && cp "$CASE_DIR/$f" "$RUN_DIR/$f"
+done
+
 stack=()
 for f in workflow.ymmsl workflow_settings.ymmsl scenario_settings.ymmsl preprocess_settings.ymmsl; do
   [[ -f "$CASE_DIR/$f" ]] && stack+=("$CASE_DIR/$f")
@@ -100,7 +104,7 @@ unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
 rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
-POSTPROCESS="$CASE_DIR/postprocess.sh"
+POSTPROCESS="$RUN_DIR/postprocess.sh"
 if [[ -x "$POSTPROCESS" ]]; then
   [[ -f "$CASE_DIR/case.env" ]] && source "$CASE_DIR/case.env"
   export SHOT
