@@ -191,9 +191,14 @@ if instance.reuse_instance()
 
     obj3 = pcssp_VS_obj();
     obj3.init;
-    % VS gains from FC016 instead of the module's defaults
+
     S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
-    % pcssp-nightly scdds: update_nominal_param_value calls a missing ddHdl.updateValue
+    fp = ccs_vs_fp(obj3, S.Config_VS);
+    if isprop(obj3,'ddHdl') && ~isempty(obj3.ddHdl) && ismethod(obj3.ddHdl,'updateField')
+        obj3.ddHdl.updateField('VS_fp', fp);
+    else 
+        obj3.update_nominal_param_value('VS_fp', fp);
+    end
     obj3.ddHdl.replaceOrCreateEntry('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
     fprintf('VS gains from FC016_Config_VS.mat (KZ_VS1 = %g)\n', S.Config_VS.Gains.KZ_VS1);
     obj3.setup;

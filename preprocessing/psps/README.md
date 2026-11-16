@@ -29,7 +29,7 @@ four files of `psc_config_dir` and runs the model from t = 0, the PSC's clock.
   `magnetic_controller_psc` (`workflows/lib/local_programs.ymmsl`).
 - `run_psc_evolutive.sh`: Slurm job that builds the case `cases/evolutive_controller_105073_psc_<V>`
   (workflow from `make_psc_workflow.py`, case override expanded with envsubst) and runs it with
-  `bin/pds-run-case.sbatch`; `VARIANT=A_nom|B_edit|C_zhold|D_eof|SMOKE`.
+  `bin/pds-run-case.sbatch`; `VARIANT=A_nom|B_edit|C_zhold|D_eof`.
 - `make_psc_two_file_set.py [V] [--out-dir DIR]`: writes the two-file designer equivalent
   (`<V>_waveforms.yaml` in the Waveform-Editor format, `<V>_segments.yaml` segment chain) of a
   variant's converter YAML. Default output `cases/input/psc/<V>/psps_like/`.
@@ -45,8 +45,8 @@ create `cases/runs/psc5_logs` first), or use `sbatch --chdir`.
 - `cases/input/psc/<V>/`: the PSC configuration of each variant (converter YAML, refgen XML,
   `psc_config_ip_105073_psc_<V>/` with the four PSC files). The z excursion is measured on
   z_meas = zpl against Zpl_ref at the window start (0.5934 m, current centre).
-- `cases/overrides/evolutive_controller_105073_psc_*.ymmsl`: the case overrides (variants A-D
-  and the 0.2 s smoke window). Paths are written with the `${PDS_REPO}` placeholder, expanded by
+- `cases/overrides/evolutive_controller_105073_psc_*.ymmsl`: the case overrides (variants A-D).
+  Paths are written with the `${PDS_REPO}` placeholder, expanded by
   `run_psc_evolutive.sh` (`envsubst`, as `bin/pds-create-case` does): muscle_manager does not
   expand it, so expand the file first when passing it to `bin/pds-run-case` by hand.
 - The PSC signals go in the run's `simulink_log.csv` once they are wired to the logger Mux

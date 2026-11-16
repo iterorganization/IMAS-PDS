@@ -2,7 +2,7 @@
 # PSC-5: evolutive_controller 105073 with the real PSC in the controller actor (program
 # magnetic_controller_psc in workflows/lib/local_programs.ymmsl: the usual init and model, with the
 # PSC added by the init when psc_enabled = 1). The case settings otherwise.
-# VARIANT = A_nom | B_edit | C_zhold | D_eof | SMOKE (A_nom, 0.2 s).
+# VARIANT = A_nom | B_edit | C_zhold | D_eof.
 # MATLAB controller inits serialised with a mkdir lock (as p2e_evolutive.sh).
 #SBATCH -J psc5_evo
 #SBATCH --partition=all
@@ -32,7 +32,6 @@ T="$PDS_REPO/preprocessing/psps/psc_run"
 C=cases/evolutive_controller_105073_psc_$V
 rm -rf "$C"; cp -a cases/evolutive_controller_105073 "$C"
 case $V in
-  SMOKE) OVS=(evolutive_controller_105073_psc_A_nom.ymmsl evolutive_controller_105073_psc_smoke_window.ymmsl) ;;
   A_nom|B_edit|C_zhold|D_eof) OVS=(evolutive_controller_105073_psc_$V.ymmsl) ;;
   *) echo "unknown VARIANT $V"; exit 1 ;;
 esac
