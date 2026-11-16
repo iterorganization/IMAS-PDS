@@ -209,9 +209,10 @@ programs:
       module load PCS/2026.08-pds
       module load IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1
       unset PYTHONPATH
-      export PCS_PATH=$PDS_REPO/local_installs/pcs
+      export PCS_PATH=$PDS_REPO/local_installs/pcs-nightly
       export CONTROLLER_PATH=$PDS_REPO/controllers/CCS
-      export SCDDS_COREPATH=$PDS_REPO/local_installs/pcs/pcssp/scdds
+      export SCDDS_COREPATH=$PCS_PATH/pcssp/scdds
+      export TMPDIR=/scratch/users/$USER/mt/$(basename "$RUN_DIR" | md5sum | cut -c1-10); mkdir -p $TMPDIR
       # run() the controller by full path, not by name: NICE's own
       # runmatlab/muscle3/matlab_iter/ (added to the path by initNice4matlab.m
       # below) ships its own, much older, different-port-signature

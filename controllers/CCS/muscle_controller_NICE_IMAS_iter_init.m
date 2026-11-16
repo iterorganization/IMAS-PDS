@@ -63,7 +63,7 @@ if instance.reuse_instance()
     zdot_disturbance = double(instance.get_setting('zdot_disturbance', pyargs('default', 0)));  % noise on zdot (controller_input_preprocess)
     zdot_filter = double(instance.get_setting('zdot_filter', pyargs('default', 0)));            % low pass on zdot
     nice_signs = double(instance.get_setting('nice_signs', pyargs('default', 1)));              % 1 with NICE evo_rd: voltages sent with the opposite sign
-    psc_enabled = double(instance.get_setting('psc_enabled', pyargs('default', 0)));            % 1: Ipl_ref from the PSC (program magnetic_controller_psc)
+    psc_enabled = double(instance.get_setting('psc_enabled', pyargs('default', 0)));            % 1: Ipl_ref from the PSC
     if psc_enabled
         psc_config_dir = char(instance.get_setting('psc_config_dir'));                          % folder with the four PSC files
     end
@@ -210,10 +210,8 @@ if instance.reuse_instance()
     obj6.init;
     obj6.setup;
 
-    if psc_enabled
-        % pcssp-nightly framework: the RZIp wrapper needs 'configurationSettings' in the base workspace
-        SCDconf_setConf('pcssp_Simulation', 'configurations_container_pcssp.sldd');
-    end
+    % pcssp-nightly framework: the RZIp wrapper needs 'configurationSettings' in the base workspace
+    SCDconf_setConf('pcssp_Simulation', 'configurations_container_pcssp.sldd');
 
     % data dictionary of the top model: links the modules' dictionaries and the base workspace
     top_dd_file = fullfile(fileparts(which('pcssp_controller_and_ps.slx')), 'pcssp_controller_and_ps.sldd');
@@ -234,9 +232,7 @@ if instance.reuse_instance()
         saveChanges(top_dd);
     end
     close(top_dd);
-    if psc_enabled
-        set_param(0, 'ErrorIfLoadNewModel', 'off');   % pcssp-nightly PSC.slx is saved by a newer MATLAB
-    end
+    set_param(0, 'ErrorIfLoadNewModel', 'off');   % pcssp-nightly PSC.slx (in the model) is saved by a newer MATLAB
     load_system('pcssp_controller_and_ps');
     set_param('pcssp_controller_and_ps', 'DataDictionary', 'pcssp_controller_and_ps.sldd');
     if psc_enabled
