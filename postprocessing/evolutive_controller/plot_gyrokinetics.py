@@ -166,9 +166,12 @@ def gyrokinetic_transport_plots(args: argparse.Namespace, dbs: dict[str, DBEntry
     plot_timeslices([0, -1], args, dbs)
 
 
-def plot_timeslices(time_idxs: list[int], args: argparse.Namespace, dbs: dict[str, DBEntry]):
+def plot_timeslices(
+    time_idxs: list[int], args: argparse.Namespace, dbs: dict[str, DBEntry]
+):
     for time_idx in time_idxs:
         plot_timeslice(time_idx, args, dbs)
+
 
 def plot_timeslice(time_idx: int, args: argparse.Namespace, dbs: dict[str, DBEntry]):
     print(f"Plotting timeslice t_{{idx}}={time_idx}")
