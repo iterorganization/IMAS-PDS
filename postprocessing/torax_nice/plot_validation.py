@@ -54,7 +54,7 @@ RECOMPUTED_0D = {"beta_pol", "beta_tor"}
 # numpy>=2.0 renamed trapz to trapezoid; the getattr short-circuits before ever
 # touching np.trapz on those versions, so this is safe despite the stub not
 # declaring `trapz` for the numpy version actually installed here.
-_trapz = getattr(np, "trapezoid", None) or np.trapz  # ty: ignore[unresolved-attribute]
+_trapz = getattr(np, "trapezoid", None) or np.trapz  # ty: ignore[missing-attribute]
 
 
 def recomputed_beta(eq, which):
