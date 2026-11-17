@@ -8,8 +8,13 @@ feedback loop.
 
 Unlike `inverse_convergence` or `prescribed_transport`, this
 workflow has TORAX and NICE step forward together: each internal step, TORAX evolves
-current/temperature and hands `equilibrium` + `core_profiles` to `nice_evo_rd`, which
-returns the updated `equilibrium` for TORAX's next geometry. TORAX computes its own ohmic
+temperature and hands `equilibrium` + `core_profiles` to `nice_evo_rd`, which does the
+resistive diffusion and returns the updated `equilibrium` for TORAX's next geometry. NICE
+owns psi: TORAX runs with `evolve_current: False` and takes psi and I_p from that
+equilibrium (`profile_conditions` `psi_source`/`I_p_source: geometry`), never from the
+inverse_convergence core_profiles. This needs TORAX >= 2.0.0 (per-step `psi_source`),
+and TORAX's sawtooth model is off since it only redistributes when TORAX evolves the
+current. TORAX computes its own ohmic
 heating and impurity radiation self-consistently from its evolving profiles (see
 `config_torax.py`) rather than importing them from DINA; only the EC power is imported, via
 `waveform_editor.core_sources_out -> torax.core_sources_in_f`, as in `inverse_convergence`.
