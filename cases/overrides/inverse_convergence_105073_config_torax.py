@@ -1,9 +1,9 @@
 """Scenario-specific TORAX config for 105073 (inverse_convergence loop).
 
 Same structure as the shared config_torax.py, but with Bohm-gyroBohm transport
-calibrated onto this scenario's DINA trace: the chi-multiplier time knots (x1.8 through
-flattop, ramped to x4 over the t=140-205s ramp-down where DINA's confinement collapses
-with Ip)."""
+calibrated so TORAX's W_th(t) matches this scenario's DINA W_th time series: the
+chi-multiplier time knots (x1.8 through flattop, ramped to x4 over the t=140-205s
+ramp-down where DINA's confinement collapses with Ip)."""
 
 import json
 from pathlib import Path
@@ -79,8 +79,9 @@ CONFIG = {
                 # Default BgB coefficients under-transport this scenario (flattop W_th
                 # +40% vs DINA) and, with no critical-gradient feedback, nothing pulls
                 # Te back during ramp-down where DINA's confinement collapses with Ip.
-                # Time-dependent calibration against the 105073 DINA trace: x1.8 through
-                # flattop, ramped to x4 in the t=140-205s ramp-down.
+                # Time-dependent calibration so TORAX's W_th(t) matches DINA's 105073
+                # W_th time series (within 1%): x1.8 through flattop, ramped to x4 in
+                # the t=140-205s ramp-down.
                 "chi_e_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
                 "chi_i_bohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
                 "chi_e_gyrobohm_multiplier": {0: 1.8, 140: 1.8, 175: 4.0, 205: 4.0},
