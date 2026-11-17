@@ -139,7 +139,7 @@ Trust the CI column: those five combinations run end to end on every integration
 Input data requirements
 -----------------------
 
-All workflows need DDv4 input that meets the requirements below. Preparing this input is not
+All workflows need Data Dictionary v4 compatible input that meets the requirements below. Preparing this input is not
 the task of PDS: it expects ready-to-use IMAS data. Preprocessing tools are nonetheless
 provided for some specific cases, namely DINA runs, the ITER machine description, METIS input
 and inverse_convergence output (see ``preprocessing/``). For the shots in
