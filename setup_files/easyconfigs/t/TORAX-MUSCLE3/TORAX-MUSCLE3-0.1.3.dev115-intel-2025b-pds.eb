@@ -1,14 +1,16 @@
 easyblock = 'PythonPackage'
 
 name = 'TORAX-MUSCLE3'
-version = '0.1.3'
+version = '0.1.3.dev115'
 versionsuffix = '-pds'
 
-local_commit = 'b4311d3b8cc202cf122109b205fa44f1031e1c36'
+local_commit = '935213c5b3076cbe519182f053d39c23e18cc9bb'
 
 homepage = 'https://github.com/iterorganization/TORAX-MUSCLE3'
 description = """MUSCLE3 actor wrapper around TORAX, a differentiable tokamak
-core transport simulator, for use in IMAS coupled workflows."""
+core transport simulator, for use in IMAS coupled workflows.
+Built against TORAX 2.0.0 (pinned by TORAX-MUSCLE3's pyproject.toml to a fork
+commit carrying the vacuum r0/B0 and JIT-retrace fixes on top of 2.0.0)."""
 
 toolchain = {'name': 'intel', 'version': '2025b'}
 
@@ -51,6 +53,7 @@ sanity_check_paths = {
 
 sanity_check_commands = [
     "python -c 'import jax, torax, libmuscle'",
+    "python -c 'import torax; assert torax.__version_info__[:2] == (2, 0), torax.__version__'",
     "python -c 'import libmuscle; assert libmuscle.__version__ == \"0.10.0\", libmuscle.__version__'",
     "python -c 'import torax_muscle3.torax_actor'",
 ]
