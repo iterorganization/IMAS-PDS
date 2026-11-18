@@ -257,9 +257,6 @@ def _drop_recorders(model):
 
     Recorders are passive taps: they hang off existing conduits to record traffic
     without taking part in the coupling, so they are noise on a coupling diagram.
-    Dropping them also sidesteps ymmsl's timeline checker, which reads their S ports
-    (their only supported operator) as the receiving half of a call/release pair and
-    rejects every conduit feeding them.
     """
     taps = {
         name
