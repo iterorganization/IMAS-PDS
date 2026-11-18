@@ -1,8 +1,12 @@
 easyblock = 'PythonBundle'
 
 name = 'ymmsl2svg'
-version = '0.1.0'
+version = '0.1.dev54'
 versionsuffix = '-pds'
+
+local_commit = 'a0541ace2714e3efef879093229b25630c8ef9d4'
+# feature/timelines: the only ymmsl with TimelineTree that libmuscle 0.10 still accepts
+local_ymmsl_commit = 'ad60da5d950d1604b3257b171a59dc05fa73b04c'
 
 homepage = 'https://github.com/DaanVanVugt/ymmsl2svg'
 description = """Renders a yMMSL configuration as an SVG graph. Used by
@@ -17,7 +21,7 @@ builddependencies = [
 dependencies = [
     ('Python', '3.13.5'),
     ('MUSCLE3', '0.10.0'),
-    ('IMAS-MUSCLE3', '1.0.0', '-pds'),
+    ('IMAS-MUSCLE3', '1.0.1.dev133', '-pds'),
 ]
 
 exts_list = [
@@ -27,9 +31,9 @@ exts_list = [
             'git_config': {
                 'url': 'https://github.com/multiscale',
                 'repo_name': 'ymmsl-python',
-                'commit': 'feature/timelines',
+                'commit': local_ymmsl_commit,
             },
-            'filename': 'ymmsl-python-timelines.tar.gz',
+            'filename': 'ymmsl-python-%s.tar.gz' % local_ymmsl_commit[:10],
         }],
         'checksums': [None],
     }),
@@ -43,10 +47,11 @@ exts_list = [
             'git_config': {
                 'url': 'https://github.com/DaanVanVugt',
                 'repo_name': 'ymmsl2svg',
-                'commit': 'feat/conduit-hover-labels',
+                'commit': local_commit,
             },
-            'filename': 'ymmsl2svg-conduit-hover-labels.tar.gz',
+            'filename': 'ymmsl2svg-%s.tar.gz' % local_commit[:10],
         }],
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
         'checksums': [None],
     }),
 ]
@@ -56,6 +61,8 @@ sanity_pip_check = False
 sanity_check_commands = [
     "python -c 'from ymmsl.v0_2 import TimelineTree'",
     "python -c 'from ymmsl2svg.main import configuration2svg'",
+    "python -c 'from ymmsl2svg.settings import settings; settings.disable_port_icons()'",
+    "python -c 'import muscle3_dashboard.components.ymmsl_graph as g; assert g.configuration2svg, \"dashboard graph disabled\"'",
 
     "python -c 'import libmuscle, muscle3, imas_muscle3.actors.source_component'",
 ]

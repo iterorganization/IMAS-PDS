@@ -21,7 +21,7 @@ fi
 . venv/bin/activate
 "$UV" pip install -e .
 echo "  muscle3 version: $("$UV" pip show muscle3 | grep '^Version')"
-"$UV" pip install "ymmsl2svg @ git+https://github.com/DaanVanVugt/ymmsl2svg.git@feat/conduit-hover-labels"
+"$UV" pip install "ymmsl2svg @ git+https://github.com/DaanVanVugt/ymmsl2svg.git@a0541ace2714e3efef879093229b25630c8ef9d4"
 echo "  muscle3-dashboard version: $("$UV" pip show muscle3-dashboard | grep '^Version')"
 deactivate
 module purge

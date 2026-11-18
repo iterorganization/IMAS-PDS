@@ -31,8 +31,8 @@ models:
       sink_equilibrium:       {description: sink -- NICE evolutive outputs, implementation: sink_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
       sink_transport:      {description: sink -- TORAX outputs, implementation: sink_component, ports: {f_init: [equilibrium_in, core_profiles_in]}}
       sink_control: {description: sink -- controller outputs, implementation: sink_component, ports: {f_init: [pf_active_in]}}
-      recorder_equilibrium:  {description: distill recorder (NICE evo_rd outputs), implementation: recorder_component, ports: {s: [equilibrium_in, pf_active_in]}}
-      recorder_transport: {description: distill recorder (TORAX per-step outputs), implementation: recorder_component, ports: {s: [equilibrium_in, core_profiles_in]}}
+      recorder_equilibrium:  {description: distill recorder (NICE evo_rd outputs), implementation: recorder_component, ports: {f_init: [equilibrium_in, pf_active_in]}}
+      recorder_transport: {description: distill recorder (TORAX per-step outputs), implementation: recorder_component, ports: {f_init: [equilibrium_in, core_profiles_in]}}
       temporal_coupler: {description: temporal coupler between torax and nice_evo_rd equilibrium feedback loop (also carries torax's core_profiles onward to nice_evo_rd), implementation: temporal_coupler, ports: {s: [a_in_equilibrium, a_in_core_profiles, b_in_equilibrium], o_i: [a_out_equilibrium, b_out_equilibrium, b_out_core_profiles]}}
     conduits:
       source.equilibrium_out: waveform_editor.equilibrium_in
