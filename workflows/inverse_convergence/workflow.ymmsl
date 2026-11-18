@@ -55,7 +55,7 @@ models:
       recorder_equilibrium:
         description: distill recorder (NICE inverse outputs)
         implementation: recorder_component
-        ports: {s: [equilibrium_in, pf_active_in]}
+        ports: {f_init: [equilibrium_in, pf_active_in]}
     conduits:
       equilibrium_in: psi_anchor.equilibrium_in
       psi_anchor.equilibrium_out: nice.equilibrium_in
@@ -145,7 +145,7 @@ models:
         description: distill recorder (TORAX per-step outputs)
         implementation: recorder_component
         optional: true
-        ports: {s: [equilibrium_in, core_profiles_in]}
+        ports: {f_init: [equilibrium_in, core_profiles_in]}
 
       validator:
         description: imas-validator on the converged coil currents

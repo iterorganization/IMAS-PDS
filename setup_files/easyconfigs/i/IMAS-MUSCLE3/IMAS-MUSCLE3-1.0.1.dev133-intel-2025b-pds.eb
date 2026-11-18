@@ -1,11 +1,11 @@
 easyblock = 'PythonBundle'
 
 name = 'IMAS-MUSCLE3'
-version = '1.0.0'
+version = '1.0.1.dev133'
 versionsuffix = '-pds'
 
-local_commit = '3dee3689b7c624ae094d547e822781c827412850'
-local_dashboard_commit = 'e3a8e91c40b4451edb5060e9c8bba05608537c5a'
+local_commit = 'fe5ab24250f4222c9d3f1867d51b9426c6d7d270'
+local_dashboard_commit = '2346d2c72e62230928d0c496b11c6760e4b83482'
 
 description = """IMAS helper actors for working with IMAS data in MUSCLE3"""
 homepage = "https://imas-muscle3.readthedocs.io"
@@ -113,7 +113,7 @@ exts_list = [
     ('zarr', '3.3.0', {
         'checksums': ['cd0c8cf738b4bb4807815bc1255acad5bdf1a7b7264b606c5a1bc0d0392a306b'],
     }),
-    ('muscle3-dashboard', '2026.08.28', {
+    ('muscle3-dashboard', '2026.11.18', {
         'modulename': 'muscle3_dashboard',
         'sources': [{
             'git_config': {
@@ -157,6 +157,7 @@ sanity_check_commands = [
     "python -c 'import imas_muscle3.actors.sink_source_component'",
     "python -c 'import imas_muscle3.actors.olc_component'",
     "python -c 'import imas_muscle3.actors.recorder_component'",
+    "python -c 'import inspect, muscle3_dashboard.recorder.actor as a; assert \"record_interval\" in inspect.getsource(a)'",
     "python -c 'import imas_muscle3.actors.accumulator_component'",
     "python -c 'import imas_muscle3.actors.iterator_component'",
     "python -c 'import imas_muscle3.actors.passthrough_component'",

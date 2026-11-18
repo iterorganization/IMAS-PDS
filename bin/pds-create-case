@@ -154,7 +154,6 @@ WS_KEYS=""; OVERRIDE_KEYS=""
 
 printf 'WF_NAME=%s\nSHOT=%s\n' "$WF_NAME" "$SHOT" > "$CASE_DIR/case.env"
 
-[[ -f "$WF/postprocess.sh" ]] && cp "$WF/postprocess.sh" "$CASE_DIR/postprocess.sh" && chmod +x "$CASE_DIR/postprocess.sh"
 [[ -f "$WF/env.sh" ]] && cp "$WF/env.sh" "$CASE_DIR/env.sh"
 
 PREPROCESS="$WF/preprocess.sh"
@@ -174,6 +173,13 @@ if [[ -x "$PREPROCESS" ]]; then
   fi
   : "${IMAS_VERSION:?pds-create-case: IMAS_VERSION not set and could not load PDS automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
   "$PREPROCESS"
+fi
+
+POSTPROCESS="$PDS_REPO/postprocessing/$WF_NAME/postprocess.sh"
+echo $POSTPROCESS
+if [[ -x "$POSTPROCESS" ]]; then
+    cp $POSTPROCESS "$CASE_DIR/postprocess.sh"
+    chmod +x "$CASE_DIR/postprocess.sh"
 fi
 
 echo "A new case has been created in the following directory:"

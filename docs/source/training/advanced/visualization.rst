@@ -27,6 +27,14 @@ settings like any other configuration you met in :ref:`training/configuring`:
 
     equilibrium.recorder_equilibrium.config: .../visualization/nice_inv.py
 
+Recording every time step of a long run takes time. A recorder's ``record_interval``
+setting only records a message once that much simulation time has passed since the last
+recorded one, e.g. the evolutive workflow records every 0.1 s instead of every 0.01 s step:
+
+.. code-block:: yaml
+
+    recorder_transport.record_interval: 0.1
+
 The available visualization scripts can be found in the ``visualization`` directory in the PDS repository.
 As a start, take a look at the ``nice_inv.py`` file, take a look at the different classes.
 

@@ -12,7 +12,7 @@ settings:
   # Scenario: `source` reads the NICE-reconstructed equilibrium from a completed
   # inverse_convergence case run for the same shot (see bin/pds-create-case /
   # bin/pds-run-case.sbatch's cases/runs/<case> convention); waveform_editor.waveforms
-  # assembles the rest (machine description, core_profiles, ECRH) from preprocess.sh.
+  # assembles the rest (machine description, core_profiles, EC power) from preprocess.sh.
   # source: https://imas-muscle3.readthedocs.io/en/latest/actor_source.html#available-settings
   source.source_uri: "imas:hdf5?path=${PDS_REPO}/cases/runs/inverse_convergence_${SHOT}/out_nice"
   source.iterative: False
@@ -44,4 +44,7 @@ settings:
   recorder_equilibrium.config: ${PDS_REPO}/visualization/nice_inv.py
   recorder_equilibrium.md: "wall=imas:hdf5?path=${CASE_DIR}/preprocess/in_md pf_active=imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
   recorder_transport.config: ${PDS_REPO}/visualization/kinetic_profiles.py
+  # Record every 0.1 s instead of every 0.01 s step: ~10x less recording overhead.
+  recorder_equilibrium.record_interval: 0.1
+  recorder_transport.record_interval: 0.1
   muscle_remote_log_level: 'INFO'

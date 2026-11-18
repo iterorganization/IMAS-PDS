@@ -21,7 +21,7 @@ programs:
   # break the import rather than fix a conflict (there is no venv numpy to protect).
   # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/utils/temporal_coupler.py
   temporal_coupler:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
@@ -135,7 +135,7 @@ programs:
   # Docs: https://torax-muscle3.readthedocs.io/en/latest/usage.html
   torax:
     base_env: clean
-    modules: TORAX-MUSCLE3/0.1.3-intel-2025b-pds
+    modules: TORAX-MUSCLE3/0.1.3.dev115-intel-2025b-pds
     env:
       IMAS_VERSION: "4.0.0"
       JAX_COMPILATION_CACHE_DIR: $PDS_REPO/tmp/jax_cache
@@ -147,17 +147,17 @@ programs:
   # temporal_coupler above.
   # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/outer_convergence_loop.py
   loop:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/outer_convergence_loop.py
 
   # Docs: https://github.com/iterorganization/IMAS-PDS/blob/master/workflows/lib/actors/nice_load_balancer.py
   load_balancer:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/nice_load_balancer.py
 
   psi_anchor:
-    modules: IMAS-MUSCLE3/1.0.0-intel-2025b-pds
+    modules: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds
     executable: python
     args: -u $PDS_REPO/workflows/lib/actors/psi_anchor.py

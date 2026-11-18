@@ -44,15 +44,15 @@ EB_OPTS=(--robot="$PWD")
 
 declare -A LOCAL_EC=(
   [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-1.0.0.dev69-intel-2025b-pds.eb
-  [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb
+  [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.1.dev133-intel-2025b-pds.eb
   [Waveform-Editor]=w/Waveform-Editor/Waveform-Editor-0.3.2.dev154-intel-2025b-pds.eb
   [NICE]=n/NICE/NICE-3.0.0.dev446-intel-2025b-pds.eb
   [CHEASE]=c/CHEASE/CHEASE-2026.08-intel-2025b-pds.eb
-  [TORAX-MUSCLE3]=t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.3-intel-2025b-pds.eb
+  [TORAX-MUSCLE3]=t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.3.dev115-intel-2025b-pds.eb
   [METIS-IRFM]=m/METIS-IRFM/METIS-IRFM-2026.08-pds.eb
   [PCS]=p/PCS/PCS-2026.08-pds.eb
-  [ymmsl2svg]=y/ymmsl2svg/ymmsl2svg-0.1.0-intel-2025b-pds.eb
-  [PDS]=p/PDS/PDS-1.0.eb
+  [ymmsl2svg]=y/ymmsl2svg/ymmsl2svg-0.1.dev54-intel-2025b-pds.eb
+  [PDS]=p/PDS/PDS-1.1.eb
 )
 BUILD_ORDER=(IMAS-Validator IMAS-MUSCLE3 Waveform-Editor NICE CHEASE TORAX-MUSCLE3 METIS-IRFM PCS ymmsl2svg PDS)
 

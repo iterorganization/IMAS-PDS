@@ -58,10 +58,10 @@ if [[ -z "${MANAGER:-}" ]]; then
     if [[ -f "$LMOD_INIT" ]]; then
       source "$LMOD_INIT"
       module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
+      module load IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds 2>/dev/null || true
     fi
   fi
-  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
   MANAGER="$(command -v muscle_manager)"
   : "${MANAGER:?$0: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi
@@ -77,6 +77,10 @@ export PYTHON
 RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
+
+for f in postprocess.sh; do
+  [[ -f "$CASE_DIR/$f" ]] && cp "$CASE_DIR/$f" "$RUN_DIR/$f"
+done
 
 stack=()
 for f in workflow.ymmsl workflow_settings.ymmsl scenario_settings.ymmsl preprocess_settings.ymmsl; do
@@ -100,7 +104,7 @@ unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
 rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
-POSTPROCESS="$CASE_DIR/postprocess.sh"
+POSTPROCESS="$RUN_DIR/postprocess.sh"
 if [[ -x "$POSTPROCESS" ]]; then
   [[ -f "$CASE_DIR/case.env" ]] && source "$CASE_DIR/case.env"
   export SHOT
