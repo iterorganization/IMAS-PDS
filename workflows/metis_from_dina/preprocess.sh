@@ -33,7 +33,7 @@ imas convert "$SOURCE_URI" "$IMAS_VERSION" "imas:hdf5?path=$OUT/dina_update_in"
 # METIS-IRFM's dependency on and the load hard-fails (set -e kills the script here).
 _PDS_REPO="$PDS_REPO"
 module purge
-module --ignore_cache load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
+module --ignore_cache load METIS-IRFM/2026.11-pds IMAS-AL-Matlab/5.4.0-intel-2023b-DD-4.0.0
 export PDS_REPO="$_PDS_REPO"
 
 export metis_dina_source="imas:hdf5?path=$OUT/dina_update_in"

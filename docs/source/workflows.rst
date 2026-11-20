@@ -15,6 +15,7 @@ scenario you pair it with when you create a case. See :ref:`running_cases`.
    workflow_pages/metis_from_dina
    workflow_pages/metis_nice_inverse
    workflow_pages/evolutive_controller
+   workflow_pages/metis_nice_evol
 
 The workflows
 -------------
@@ -62,6 +63,13 @@ The workflows
       Forward, not inverse: TORAX and NICE step in lockstep while a PCSSP controller
       closes the coil-current loop.
 
+   .. grid-item-card:: METIS evolutive co-simulation under magnetic control
+      :link: case-metis-nice-evol
+      :link-type: ref
+
+      As above with METIS in place of TORAX, bootstrapped straight from DINA. Not yet
+      run end to end.
+
 Choosing one
 ------------
 
@@ -97,9 +105,13 @@ Choosing one
      - METIS + NICE inverse
      - none
      - As above, then fit coil currents to the equilibrium METIS produced.
+   * - ``metis_nice_evol_from_dina``
+     - METIS + NICE evolutive + PCSSP
+     - lockstep in time
+     - As ``evolutive_controller``, with METIS transport and a DINA bootstrap.
 
 Two caveats. ``evolutive_controller`` bootstraps from a completed
-``inverse_convergence`` run **for the same shot**, so run that first. The two METIS
+``inverse_convergence`` run **for the same shot**, so run that first. The three METIS
 workflows build their own input from raw DINA at case-creation time, which makes
 ``pds-create-case`` noticeably slower for them.
 
@@ -132,6 +144,9 @@ beyond the workflow's generic settings. So the two lists are worth separating:
    * - ``metis_nice_inverse_from_dina``
      - ``105084``
      - ``105073``, ``105078``, ``105084``, ``105092``, ``105099``
+   * - ``metis_nice_evol_from_dina``
+     - *(none)*
+     - ``105073``, ``105084``
 
 Trust the CI column: those five combinations run end to end on every integration build
 (``ci/run_test_workflows.sh``). Others may work and are simply not covered.
