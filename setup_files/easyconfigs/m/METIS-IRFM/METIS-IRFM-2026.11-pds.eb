@@ -1,7 +1,7 @@
 easyblock = 'Tarball'
 
 name = 'METIS-IRFM'
-version = '2026.08'
+version = '2026.11'
 versionsuffix = '-pds'
 
 homepage = 'https://git.iter.org/projects/SCEN/repos/metis'
@@ -16,13 +16,17 @@ dependencies = [
     ('MATLAB', '2023b-r5', '', ('GCCcore', '13.2.0')),
 ]
 
+# Head of METIS's `develop` branch as of 2026-11-16 (includes the metis4muscle3
+# init-turn O_I fix that metis_nice_evol_from_dina needs).
+local_commit = '3758ad265c6c0984581a95ab5636bbbcd08b7923'
+
 sources = [{
     'git_config': {
         'url': 'ssh://git@git.iter.org/scen',
         'repo_name': 'metis',
-        'commit': 'muscle3_develop',
+        'commit': local_commit,
     },
-    'filename': 'metis-%(version)s.tar.gz',
+    'filename': 'metis-%%(version)s-%s.tar.gz' % local_commit[:8],
 }]
 checksums = [None]
 

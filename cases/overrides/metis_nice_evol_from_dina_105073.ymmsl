@@ -3,3 +3,8 @@ ymmsl_version: v0.2
 settings:
   source_nice.t_min: 2.4
   source_metis.t_min: 2.4
+  # The run starts at t=5.9176 (first viable preprocessed DINA slice) and ends before
+  # t=5.9436, where METIS's core Te jumps 5 -> 15 keV in one 2 ms step and NICE's Newton
+  # solve first fails (NICE dev510 aborts a few steps later).
+  nice_evo_rd.t_end: 5.94
+  metis.metis_clock_time_stop: 5.94

@@ -136,9 +136,8 @@ the static checker doesn't validate operator pairing across conduits.
 
 Same as `metis_nice_inverse_from_dina`: this shot's raw DINA source and standard machine
 description (`preprocessing/dina/shots/<shot>.env`, `preprocessing/machine_description/`).
-Every component runs from the PDS modules except `metis`, which runs the METIS `develop`
-checkout in `local_installs/metis` (`setup_files/setup_metis.sh`): the shared METIS-IRFM
-module predates the init-only fix described above.
+Every component runs from the PDS modules. `metis` needs METIS-IRFM/2026.11-pds or newer:
+METIS-IRFM/2026.08-pds predates the init-only fix described above.
 
 ## Output
 
