@@ -338,3 +338,60 @@ byte-for-byte check of each file are in `reference/third_party/PROVENANCE.md`.
     start at 0 (`PSCSysObj.m:66-70` defaults; a Simulink start at 84.3176 s gives a first dt of 84.3 s);
     the end_of_flux threshold is a PLACEHOLDER (PSC-1); the `CSPF_curr_ref[11]` order/frame against the
     fork wrapper is UNVERIFIED; debounce is not representable in the PSC global monitoring.
+
+## Predicting the PSC reference for given event times (`predict_psc_waveform.py`) — PROPOSAL
+
+`ip_waveform_export/predict_psc_waveform.py` answers "which `Ipl_ref` does the PSC send to KCURR if these
+events fire at these times?" without MATLAB. It replays, one 1 ms PSC tick at a time, the behaviour tree and the
+reference generator of pcssp-nightly `merge_IGZ_PSC` ebf3ee0 (`src/psc/`, unmerged line) on the four files that
+`--psc-config` writes (generated in memory from the YAML) or on an existing `psc_config_*` folder. It is a Python
+port of the deciding classes; the module docstring lists every rule with its MATLAB file and lines (tick order
+`PSCSysObj.m:125-150` / `PSCClass.m:90-114`; BT node classes `+BT/+BASICS`; `RefGenClass.m:67-138`;
+`PathHandler.m`; `SignalGenClass.m` stack, composition l.437 and entry blend l.457-472 with `maxTransitionTime`
+0.5 s and the 5 % stop test; `trajGenClass.m:97-182`; rule strings `RefGenerator.m:144-171`; sample time 0.001 s
+from `PSC.slx` block PSCMatSys SID 554).
+
+```bash
+python3 -m ip_waveform_export.predict_psc_waveform --yaml DESIGN.yaml --cut-at 115.817598 \
+    --event end_of_flux=119.6 --event z_excursion=131.4:until=132.0 \
+    [--events-yaml EVENTS.yaml] [--psc-config-dir DIR] [--t-end T] \
+    --out-csv pred.csv [--png pred.png] [--reference-log RUN/simulink_log.csv --events-from-log]
+```
+
+* Times are designer times (s); PSC clock `t_psc = t - t0`, `t0` = `--cut-at` or the first segment start.
+  An event is a flag `glb_ps__<event>` = 1 from `t_on` until `until` (or the end); repeat `--event` for a flag
+  that toggles. `EVENTS.yaml`: `events: {end_of_flux: 119.6, z_excursion: [{at: 130.65, until: 130.77}, {at: 131.0}]}`.
+* CSV: `time_s, t_psc_s, Ipl_ref_A` (positive PCS frame, = -Ip_IMAS), `segment_id, segment_name`
+  (`current_segment` after the tick), `active_path` (top of the `Ipl_ref` stack that produced the value),
+  `overlays` (soft overlays in the stack, `(offset)` / `(scale)` modifiers).
+* PNG (11.7 in wide, text >= 14 pt): designed nominal vs predicted, event markers; with `--reference-log` also the
+  run's `Ip_ref` column (`= -Ipl_ref`, Gain SID 2690 of `pcssp_controller_and_ps_mcls.slx`) and the difference.
+  `--events-from-log` takes the event intervals from the run's `psc_<event>` columns.
+* Importable: `predict(design, events, t_end=None, psc_config_dir=None, t0=None, dt=0.001)` -> `Prediction`
+  (arrays + `write_csv`); `simulate(...)` for hand-made PS/BTree trees; `compare(...)`, `plot(...)`.
+
+Behaviours it reproduces because the code has them (they are not tool choices): an overlay does not change
+`current_segment`; a `silence` overlay advances only the stack element directly below it; at a watchdog tick the
+path is removed before the outputs are generated, so the element below is emitted for one tick (D28) and the next
+segment blends from that value; a hard `replace` overwrites only the top of the stack, so deeper paths survive and
+reappear when the hard path ends (a STOP without a trajectory then holds them: F_story v1, 15.08 MA after STOP);
+a recovered overlay is removed 5 ticks after its flag drops (idle reset, the condition is never evaluated because
+the precondition fails first); a re-triggered hold overlay of the same segment is `reactivate`d and holds the
+value captured at its first activation; the 5 % stop test only fires for positive targets (PCS-frame Ip is
+positive, a negative signal always blends the full 0.5 s).
+
+Validation (2026-11-21): run `cases/runs/evolutive_controller_105073_psc_mcls_story_20261116_131529` (F_story v1,
+PSC files of the pre-run copy of `cases/input/psc/F_story/psc_config_mcls`, events from its log: end_of_flux
+119.554598 s, z_excursion 130.652598-130.771598 / 131.005598-131.330598 / 131.375598- s, ip_too_high never):
+segment changes predicted at the same ticks (41 at 133.376598 s, STOP at 137.877598 s) and max |predicted - run|
+= 0.05 A over the whole window (the 9 significant digits of `simulink_log.csv`), in every phase (nominal, eof
+overlay, z_hold, ip_termination, STOP).
+
+Not reproduced: the global-monitoring scripts (events are inputs, so feedback such as "the termination keeps Ip
+low, ip_too_high stays silent" is not predicted), expression (FUNCTION) trajectories, anonymous RefGen commands,
+`AssignValue` with fields or indices, `freezeTraj`. `BTreeClass.tickroot` (`BTreeClass.m:105-108`) calls
+`RefGenObj.execute()` without a time step; the tool assumes one RefGen step per tick as the run shows (UNVERIFIED
+why the extra call has no effect). The Simulink time grid `t_k = k * 0.001` is derived; it reproduces the run's
+watchdog ticks exactly (float accumulation of `LocalTime` included). Tests: `tests/test_predict_psc_waveform.py`
+(nominal only, soft overlay, hard segment by watchdog and STOP, sudden hard event, v1 STOP hold, scale overlay and
+idle reset, 5 % test sign, trajectory rules, event inputs, CLI).
