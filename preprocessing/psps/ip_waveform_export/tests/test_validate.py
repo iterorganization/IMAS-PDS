@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pytest
-
 from ip_waveform_export import IpWaveform, PulseDesign, Segment, load_design
 from ip_waveform_export.validate import (
     DEFAULT_LIMITS,
@@ -21,7 +21,10 @@ CLI = TOOL / "ip_waveform_export.py"
 
 
 def _design(values, segs=None):
-    wf = IpWaveform(time=[0.0, 10.0, 20.0, 60.0, 80.0], value=values)
+    wf = IpWaveform(
+        time=np.array([0.0, 10.0, 20.0, 60.0, 80.0]),
+        value=np.asarray(values, dtype=float),
+    )
     segs = segs or [
         Segment("ramp-up", 0, 0.0, 20.0, "flat-top"),
         Segment("flat-top", 1, 20.0, 60.0, "ramp-down"),

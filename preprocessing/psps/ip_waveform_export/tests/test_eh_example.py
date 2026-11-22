@@ -7,11 +7,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from psxml_rules import parse_psxml, reconstruct
-
 from ip_waveform_export import ValidationError, load_design
 from ip_waveform_export.export_refgen_eh_example import write_eh_example
 from ip_waveform_export.export_refgen_xml import IMAS_TO_PCS_IP_SIGN
+from psxml_rules import parse_psxml, reconstruct, req
 
 TOOL = Path(__file__).resolve().parent.parent
 EH_EXAMPLE = TOOL / "examples" / "ip_105073_like_with_exceptions.yaml"
@@ -82,7 +81,7 @@ def test_eh_btree_well_formed_with_expected_nodes(outputs):
         "FallHrdEHList",
     ]
 
-    sudden = top[0].find("Precondition")
+    sudden = req(top[0].find("Precondition"))
     assert sudden.get("condition") == "{glb_ps__ip_too_high} == 1"
     assigns = sudden.findall(".//Action[@ID='AssignValue']")
     assert (
@@ -90,15 +89,15 @@ def test_eh_btree_well_formed_with_expected_nodes(outputs):
         and assigns[-1].get("target") == "{current_segment}"
     )
 
-    nominal = top[1].find("Fallback")
+    nominal = req(top[1].find("Fallback"))
     conds = [p.get("condition") for p in nominal.findall("Precondition")]
     assert conds == [f"{{current_segment}} == {i}" for i in (0, 1, 2, 99)]
-    soft_pre = top[1].find("Parallel/Precondition")
+    soft_pre = req(top[1].find("Parallel/Precondition"))
     assert soft_pre.get("condition") == "{heating_loss} == 1"
 
     # every SubTree referenced is defined and listed in TreeNodesModel
     refs = {s.get("ID") for s in main.iter("SubTree")}
-    model = {s.get("ID") for s in root.find("TreeNodesModel").findall("SubTree")}
+    model = {s.get("ID") for s in req(root.find("TreeNodesModel")).findall("SubTree")}
     assert refs == set(trees) == model
 
     actions = {

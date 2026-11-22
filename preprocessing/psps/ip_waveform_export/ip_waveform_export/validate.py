@@ -116,7 +116,7 @@ def check(design: PulseDesign, limits: Limits | None = None) -> list[Violation]:
     if t.ndim != 1 or t.size != v.size or t.size < 2:
         return out
     if limits.ip_abs_max is not None:
-        for ti, vi in zip(t, v):
+        for ti, vi in zip(t, v, strict=False):
             if abs(vi) > limits.ip_abs_max:
                 out.append(
                     Violation(

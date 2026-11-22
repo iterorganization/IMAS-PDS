@@ -119,7 +119,7 @@ def build_ids(design: PulseDesign, dd_version: str | None = None):
 
     if _node(ps, "event") is not None:
         ps.event.resize(len(design.segments))
-        for ev, seg in zip(ps.event, design.segments):
+        for ev, seg in zip(ps.event, design.segments, strict=False):
             _set(ev, "type/name", EVENT_TYPE_NAME)
             _set(ev, "type/description", EVENT_TYPE_DESCRIPTION)
             _set(ev, "identifier", f"segment:{seg.id}:{seg.name}")

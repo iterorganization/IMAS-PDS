@@ -30,14 +30,18 @@ Behaviour-tree structure (reactive Fallback ``FallbackNomEH``, priority = child
 order, re-evaluated every tick):
 
 [1] ``FallHrdEHListSudden``: per ``exception_handling.hard_sudden`` entry a
-    Precondition ``{glb_ps__<event>} == 1`` (guarded so that it fires once, not
-    while the target or STOP is active) -> ForceFailure(Sequence(AssignValue
-    current -> old, AssignValue <hard id> -> current_segment)), as FWHL
-    ``FwhlHrdEH3``.
+    Precondition ``{glb_ps__<event>} == 1 and <a nominal segment is active>``
+    (F_story v2, 2026-11-16: a sudden hard event only leaves the NOMINAL schedule;
+    once a hard chain runs, its watchdogs govern, so a latched event cannot pull
+    the PSC back from a later hard segment of its own chain, and two latched
+    events cannot ping-pong) -> ForceFailure(Sequence(AssignValue current -> old,
+    AssignValue <hard id> -> current_segment)), as FWHL ``FwhlHrdEH3``.
 [2] ``ParSegNom`` (Parallel, mainTask 1): ``FallNomSegList`` (Precondition
     ``{current_segment} == id`` -> RefGen ``signal='all'``
     ``typeAddition='replace'`` with ``wd_time`` = segment duration and
-    ``wd_target`` = next id; STOP self-loop ``wd_time 5`` as add-AM) in Parallel
+    ``wd_target`` = next id; STOP self-loop ``wd_time 5`` as add-AM, with
+    ``entryRule='Step'`` and an explicit zero trajectory of the waveform signal in
+    PS.xml, see below) in Parallel
     with ``ParSftEHList`` (Parallel, mainTask -1): per soft overlay a
     Precondition ``{glb_ps__<event>} == 1 and <a nominal segment is active>``
     -> RefGen on one signal with ``typeAddition`` ``silence,replace`` (or another
@@ -45,8 +49,25 @@ order, re-evaluated every tick):
     ``condition='{glb_ps__<event>} == 0'`` (path status 2 -> overlay removed,
     ``PathHandler.m:126-136``) and watchdog ``wd_target`` = a hard segment.
 [3] ``FallHrdEHList``: per hard segment a Precondition ``{current_segment} == id``
-    -> RefGen ``signal='all'`` ``entryRule='Linear'`` ``typeAddition='replace'``
-    (FWHL ``PathEHTerm1``), ``wd_target`` = STOP.
+    -> RefGen ``signal='all'`` ``entryRule`` = the segment's ``entry_rule``
+    (default ``Linear``, FWHL ``PathEHTerm1``) ``typeAddition='replace'``,
+    ``wd_target`` = STOP or another hard segment (chain, no cycle).
+
+STOP reference (F_story v2, 2026-11-16): the STOP segment of PS.xml carries an
+explicit trajectory 0 of the waveform signal (``Ipl_ref``) with ``ENTRY_RULE
+Step``, and its BT action has ``entryRule='Step'``. Without it the STOP path has
+no trajectory, ``SignalGenClass.load`` holds ``obj.lastValue``
+(``SignalGenClass.m``, branch "The signal is not defined in this segment"), and in
+run F_story v1 (job 1319834) that value was the re-exposed segment-0 base (Ipl_ref
+15.08 MA after STOP at 137.88 s, ``simulink_log.csv``). The other outputs keep
+hold-last in STOP.
+
+Entry rule (D27, F_story v2): the BT entry rule applies to EVERY signal of a
+``signal='all'`` action (``SignalGenClass.load`` takes ``newTrajDef.entryRule``
+of the action; a Linear entry blends discrete fields such as
+``force_control_mode`` over 0.5 s). A hard segment with ``entry_rule: Step``
+needs a start value equal to the end value of the hard segment whose watchdog
+leads to it (checked), so that the step causes no jump of the waveform.
 
 Only the behaviour-tree ``wd_time`` / ``wd_target`` are read by the PSC
 (``parsePSXML.m:249-250`` stores only name and id of a SEGMENT); the schedule
@@ -94,6 +115,8 @@ NOMINAL_RULES = (
     ("ENTRY_RULE", "Step"),
     ("EXIT_RULE", "last"),
 )
+#: Explicit zero reference of the waveform signal in STOP (F_story v2, 2026-11-16).
+STOP_RULES = NOMINAL_RULES
 #: Accepted by RefGenerator.validateTransitionType (RefGenerator.m:186-226).
 TYPE_ADDITIONS = (
     "silence,replace",
@@ -206,6 +229,7 @@ class HardSegment:
     ramp_s: float
     hold_s: float
     wd_target: str = STOP_NAME
+    entry_rule: str = "Linear"
 
     @property
     def wd_time(self) -> float:
@@ -375,6 +399,7 @@ def parse_psc(design: PulseDesign) -> PscSpec:
                     ramp_s=_num(h["ramp_s"], f"{h['name']}: ramp_s", p),
                     hold_s=_num(h.get("hold_s", 0.0), f"{h['name']}: hold_s", p),
                     wd_target=str(h.get("wd_target", STOP_NAME)),
+                    entry_rule=str(h.get("entry_rule", "Linear")),
                 )
             )
         except (KeyError, TypeError) as err:
@@ -451,14 +476,37 @@ def parse_psc(design: PulseDesign) -> PscSpec:
             )
         if s.points and (
             s.points[0][0] != 0.0
-            or any(b[0] <= a[0] for a, b in zip(s.points, s.points[1:]))
+            or any(b[0] <= a[0] for a, b in zip(s.points, s.points[1:], strict=False))
         ):
             p.append(f"{s.name}: points.time must start at 0 and increase")
+    by_hard = {h.name: h for h in hard}
     for h in hard:
         if not h.ramp_s > 0 or h.hold_s < 0:
             p.append(f"{h.name}: need ramp_s > 0 and hold_s >= 0")
-        if h.wd_target != STOP_NAME:
-            p.append(f"{h.name}: wd_target must be {STOP_NAME!r}")
+        if h.entry_rule not in ("Step", "Linear"):
+            p.append(f"{h.name}: entry_rule must be Step or Linear")
+        if h.wd_target not in hard_names | {STOP_NAME} or h.wd_target == h.name:
+            p.append(
+                f"{h.name}: wd_target {h.wd_target!r} must be {STOP_NAME!r} or another hard segment"
+            )
+            continue
+        seen, cur = {h.name}, h  # the chain of hard watchdogs must end in STOP
+        while cur.wd_target != STOP_NAME and cur.wd_target in by_hard:
+            cur = by_hard[cur.wd_target]
+            if cur.name in seen:
+                p.append(f"{h.name}: the hard watchdog chain loops ({sorted(seen)})")
+                break
+            seen.add(cur.name)
+        nxt = by_hard.get(h.wd_target)
+        if (
+            nxt is not None
+            and nxt.entry_rule == "Step"
+            and not math.isclose(nxt.from_value, h.to_value, rel_tol=0, abs_tol=1e-6)
+        ):
+            p.append(
+                f"{nxt.name}: entry_rule Step after {h.name} needs from_value "
+                f"{h.to_value:g} (= the end value of {h.name}), got {nxt.from_value:g}"
+            )
     if not hard:
         p.append(
             "exception_handling: at least one 'hard' segment (termination) expected"
@@ -622,7 +670,7 @@ def _vec(values) -> str:
     return "[" + ", ".join(fmt_float(v) for v in values) + "]"
 
 
-def build_schedule(design: PulseDesign, spec: PscSpec) -> ET.ElementTree:
+def build_schedule(design: PulseDesign, spec: PscSpec) -> ET.ElementTree[ET.Element]:
     tree = build_tree(design)
     root = tree.getroot()
     root.set(
@@ -630,6 +678,7 @@ def build_schedule(design: PulseDesign, spec: PscSpec) -> ET.ElementTree:
         f"{PROPOSAL}: {root.get('comment')}; plus constant references and exception segments",
     )
     outputs = root.find("DECLARATIONS/OUTPUTS")
+    assert outputs is not None  # written by build_tree
     for r in spec.refs:
         dflt = "0" if r.dimension == 1 else "(" + ",".join(["0"] * r.dimension) + ")"
         outputs.append(ET.Comment(f" {r.name}: constant, source: {r.source} "))
@@ -646,16 +695,31 @@ def build_schedule(design: PulseDesign, spec: PscSpec) -> ET.ElementTree:
             },
         )
     segs = root.find("SEGMENTS")
+    assert segs is not None  # written by build_tree
     by_name = {s.name: s for s in design.segments}
+    sig = design.waveform.signal_name
     for seg_el in segs.findall("SEGMENT"):
-        seg = by_name[seg_el.get("name")]
+        seg = by_name[seg_el.get("name", "")]
         if seg.is_stop:
+            segs.insert(
+                list(segs).index(seg_el),
+                ET.Comment(
+                    f" {PROPOSAL} STOP: explicit {sig} = 0 with a Step entry (F_story v2), so that the "
+                    "STOP path never holds a re-exposed base value; other outputs hold their last value "
+                ),
+            )
+            _trajectory(
+                ET.SubElement(seg_el, "SIGNAL_TRAJECTORIES"),
+                sig,
+                [(0.0, 0.0), (STOP_WD_TIME, 0.0)],
+                STOP_RULES,
+            )
             continue
         trajs = seg_el.find("SIGNAL_TRAJECTORIES")
+        assert trajs is not None  # every timed segment has one (build_tree)
         for r in spec.refs:
             v = fmt_float(r.value[0]) if r.dimension == 1 else _vec(r.value)
             _trajectory(trajs, r.name, [(0.0, v), (seg.duration, v)], NOMINAL_RULES)
-    sig = design.waveform.signal_name
     for s in spec.soft:
         what = (
             "HOLD: no trajectory for the signal in this segment -> the last value is held "
@@ -687,7 +751,11 @@ def build_schedule(design: PulseDesign, spec: PscSpec) -> ET.ElementTree:
             ET.Comment(
                 f" {PROPOSAL} HARD exception {h.name}: {sig} {h.from_value:g} -> {h.to_value:g} (PCS frame) over "
                 f"{h.ramp_s:g} s, held {h.hold_s:g} s, then {h.wd_target}; other outputs hold their last value; "
-                "the BT entry rule Linear blends from the frozen last output over 0.5 s (SignalGenClass.m:51) "
+                + (
+                    "BT entry rule Step: every signal of the segment steps to its trajectory (no blend) "
+                    if h.entry_rule == "Step"
+                    else "the BT entry rule Linear blends every signal over 0.5 s (SignalGenClass.m:51) "
+                )
             )
         )
         el = ET.SubElement(
@@ -735,8 +803,9 @@ def build_btree(design: PulseDesign, spec: PscSpec) -> ET.Element:
     ids = {s.name: s.id for s in design.segments} | {h.name: h.id for h in spec.hard}
     ev = {e.name: e for e in spec.events}
     stop_id = design.stop_id
+    timed_nominal = design.timed_segments
     nominal_active = " or ".join(
-        f"{{current_segment}} == {s.id}" for s in design.timed_segments
+        f"{{current_segment}} == {s.id}" for s in timed_nominal
     )
 
     root = ET.Element("root", {"main_tree_to_execute": "BehaviorTree"})
@@ -756,10 +825,11 @@ def build_btree(design: PulseDesign, spec: PscSpec) -> ET.Element:
     )
     for s in spec.sudden:
         tid = ids[s.target]
-        cond = (
-            f"{{{ev[s.event].output}}} == 1 and {{current_segment}} != {tid} "
-            f"and {{current_segment}} != {stop_id}"
-        )
+        # only from the nominal schedule (excludes the target, every hard segment and STOP)
+        cond = f"{{{ev[s.event].output}}} == 1 and ({nominal_active})"
+        assert tid not in {t.id for t in timed_nominal} and stop_id not in {
+            t.id for t in timed_nominal
+        }
         pre = ET.SubElement(
             sudden,
             "Precondition",
@@ -837,6 +907,7 @@ def build_btree(design: PulseDesign, spec: PscSpec) -> ET.Element:
                 "replace",
                 STOP_WD_TIME,
                 s.id,
+                entry="Step",
             )
         else:
             nxt = design.segments[i + 1]
@@ -877,7 +948,7 @@ def build_btree(design: PulseDesign, spec: PscSpec) -> ET.Element:
             "replace",
             h.wd_time,
             ids[h.wd_target],
-            entry="Linear",
+            entry=h.entry_rule,
         )
 
     model = ET.SubElement(root, "TreeNodesModel")

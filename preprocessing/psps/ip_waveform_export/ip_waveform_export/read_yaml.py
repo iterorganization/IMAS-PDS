@@ -31,6 +31,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 from .model import (
@@ -128,7 +129,7 @@ def _to_imas(path: str, t: list[float], v: list[float], conv: str) -> list[float
     """Convert the YAML values to the IMAS sign; check the minus_ip sign rule."""
     if conv != CONVENTION_MINUS_IP:
         return v
-    bad = [(ti, vi) for ti, vi in zip(t, v) if vi < 0]
+    bad = [(ti, vi) for ti, vi in zip(t, v, strict=False) if vi < 0]
     if bad:
         shown = ", ".join(f"t={ti:g} s: {vi:g}" for ti, vi in bad[:5])
         more = f" (+{len(bad) - 5} more)" if len(bad) > 5 else ""
@@ -208,7 +209,7 @@ def _parse_segments(raw, stop_id: int) -> list[Segment]:
         prev_end = end
     # default wd_target = next segment name (STOP keeps None)
     filled = []
-    for a, b in zip(out, [*out[1:], None]):
+    for a, b in zip(out, [*out[1:], None], strict=False):
         if a.wd_target is None and b is not None:
             a = Segment(a.name, a.id, a.start, a.end, b.name)
         filled.append(a)
@@ -252,7 +253,12 @@ def load_design(
     t, v, entry_conv = _parse_tendency(ids_path, entry)
     conv = _resolve_convention(ids_path, entry_conv, glob.get("convention"))
     v = _to_imas(ids_path, t, v, conv)
-    wf = IpWaveform(time=t, value=v, ids_path=ids_path, signal_name=str(signal_name))
+    wf = IpWaveform(
+        time=np.asarray(t, dtype=float),
+        value=np.asarray(v, dtype=float),
+        ids_path=ids_path,
+        signal_name=str(signal_name),
+    )
     origin, offset = _time_origin(glob)
     exceptions = doc.get("exceptions")
     if exceptions is not None and not isinstance(exceptions, dict):

@@ -4,8 +4,17 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import TypeVar
 
 import numpy as np
+
+T = TypeVar("T")
+
+
+def req(x: T | None) -> T:
+    """Narrow an optional XML lookup (find/get) that the file under test must contain."""
+    assert x is not None
+    return x
 
 
 def parse_psxml(path: Path) -> dict:
@@ -24,15 +33,17 @@ def parse_psxml(path: Path) -> dict:
     decl = root.find("DECLARATIONS")
     params = decl.find("PARAMETERS") if decl is not None else None
     outputs = (
-        {s.get("name"): dict(s.attrib) for s in decl.find("OUTPUTS")}
+        {s.get("name"): dict(s.attrib) for s in req(decl.find("OUTPUTS"))}
         if decl is not None
         else {}
     )
     params_values = (
-        {p.get("name"): p.get("value") for p in params} if params is not None else {}
+        {req(p.get("name")): req(p.get("value")) for p in params}
+        if params is not None
+        else {}
     )
     segments = []
-    for seg in root.find("SEGMENTS"):
+    for seg in req(root.find("SEGMENTS")):
         attrib = dict(seg.attrib)
         trajs = {}
         for child in seg:
@@ -68,7 +79,7 @@ def parse_psxml(path: Path) -> dict:
                         for p in pts:
                             assert set(p.attrib) == {"time", "value"}
                             dim = int(outputs[name].get("dimension", "1"))
-                            raw = p.get("value")
+                            raw = p.attrib["value"]
                             if dim == 1:
                                 value = float(raw)  # str2double
                             elif "," in raw:
@@ -77,7 +88,7 @@ def parse_psxml(path: Path) -> dict:
                                 ]
                             else:  # parser fills with the declared default value
                                 value = [float(outputs[name]["value"])] * dim
-                            vals.append((float(p.get("time")), value))
+                            vals.append((float(p.attrib["time"]), value))
                         rec["points"] = vals
                     elif el.tag in ("ENTRY_RULE", "EXECUTION_RULE", "EXIT_RULE"):
                         assert len(el.attrib) == 1
@@ -96,8 +107,8 @@ def reconstruct(parsed: dict, signal: str) -> tuple[np.ndarray, np.ndarray]:
     while seg is not None and seg["attrib"]["name"] not in seen:
         seen.add(seg["attrib"]["name"])
         tr = seg["trajectories"].get(signal)
-        if tr is None:
-            break
+        if tr is None or "wd_time" not in seg["attrib"]:
+            break  # no trajectory, or the terminal STOP (explicit 0 since F_story v2, no watchdog)
         for t, v in tr["points"]:
             ts.append(t0 + t)
             vs.append(v)

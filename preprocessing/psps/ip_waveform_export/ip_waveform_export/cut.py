@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
+from typing import Any
 
 import numpy as np
 
@@ -58,7 +59,7 @@ def cut_design(design: PulseDesign, t_cut: float) -> PulseDesign:
         )
     kept: list[Segment] = []
     dropped: list[str] = []
-    first_info = None
+    first_info: dict[str, Any] | None = None
     for seg in design.segments:
         if seg.is_stop:
             kept.append(seg)

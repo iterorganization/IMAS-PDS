@@ -22,6 +22,7 @@ from __future__ import annotations
 import math
 import warnings
 from dataclasses import dataclass, field
+from itertools import pairwise
 
 import numpy as np
 
@@ -229,7 +230,7 @@ def validate(design: PulseDesign) -> None:
         elif not s.duration > TIME_TOL:
             p.append(f"segment {s.name!r}: duration must be > 0 (got {s.duration})")
 
-    for a, b in zip(segs[:-1], segs[1:]):
+    for a, b in pairwise(segs):
         if not _close(a.end, b.start):
             p.append(
                 f"segments {a.name!r} and {b.name!r} are not contiguous ({a.end} != {b.start})"

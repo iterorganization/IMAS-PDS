@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from ip_waveform_export import ValidationError, load_design
 
 TOOL = Path(__file__).resolve().parent.parent

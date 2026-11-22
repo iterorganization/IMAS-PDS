@@ -175,7 +175,7 @@ def _trajectory(parent: ET.Element, signal: str, points) -> None:
         ET.SubElement(ref, "POINT", {"time": fmt_float(t), "value": fmt_float(v)})
 
 
-def build_eh_schedule(design: PulseDesign) -> ET.ElementTree:
+def build_eh_schedule(design: PulseDesign) -> ET.ElementTree[ET.Element]:
     soft, hard = parse_exceptions(design)
     tree = build_tree(design)
     root = tree.getroot()
@@ -189,6 +189,7 @@ def build_eh_schedule(design: PulseDesign) -> ET.ElementTree:
     )
     sig = design.waveform.signal_name
     segs = root.find("SEGMENTS")
+    assert segs is not None  # written by build_tree
     for s in soft:
         segs.append(
             ET.Comment(
@@ -354,6 +355,7 @@ def build_btree(design: PulseDesign) -> ET.Element:
                 s.id,
             )
         else:
+            assert s.wd_target is not None  # validate(): timed segments have a target
             _action(
                 bt,
                 f"PathSeg{camel(s.name)}",

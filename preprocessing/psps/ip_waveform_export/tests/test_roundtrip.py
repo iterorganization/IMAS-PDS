@@ -8,8 +8,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from psxml_rules import parse_psxml, reconstruct
-
 from ip_waveform_export import (
     IpWaveform,
     PulseDesign,
@@ -19,6 +17,7 @@ from ip_waveform_export import (
 )
 from ip_waveform_export.export_psps_json import build_dataset, write_psps_json
 from ip_waveform_export.export_refgen_xml import IMAS_TO_PCS_IP_SIGN, write_refgen_xml
+from psxml_rules import parse_psxml, reconstruct, req
 
 HERE = Path(__file__).resolve().parent
 TOOL = HERE.parent
@@ -30,8 +29,8 @@ EXAMPLE = TOOL / "examples" / "ip_105073_like.yaml"
 def synthetic(stop_id: int = 99) -> PulseDesign:
     """Segment boundaries fall inside linear slopes (cuts are interpolated)."""
     wf = IpWaveform(
-        time=[0.0, 2.0, 7.3, 20.0, 31.1, 40.0],
-        value=[0.0, -1e5, -2.2e6, -5e6, -5e6, -0.3e6],
+        time=np.array([0.0, 2.0, 7.3, 20.0, 31.1, 40.0]),
+        value=np.array([0.0, -1e5, -2.2e6, -5e6, -5e6, -0.3e6]),
     )
     segs = [  # D8 identifiers: ramp-up 0, then 1, 2, STOP
         Segment("ramp-up", 0, 0.0, 13.37, "flat-top"),
@@ -110,13 +109,13 @@ def test_xml_segment_attributes(design, tmp_path):
     gen = ET.parse(write_refgen_xml(design, tmp_path / "s.xml")).getroot()
     segs = list(gen.iter("SEGMENT"))
     assert [s.get("name") for s in segs] == [s.name for s in design.segments]
-    for el, seg in zip(segs[:-1], design.segments[:-1]):
-        assert float(el.get("wd_time")) == pytest.approx(seg.duration, abs=1e-12)
+    for el, seg in zip(segs[:-1], design.segments[:-1], strict=False):
+        assert float(req(el.get("wd_time"))) == pytest.approx(seg.duration, abs=1e-12)
         assert el.get("wd_target") == seg.wd_target
         pts = el.findall(".//POINT")
-        assert float(pts[0].get("time")) == 0.0
-        assert float(pts[-1].get("time")) == pytest.approx(seg.duration, abs=1e-12)
-        assert all(float(p.get("value")) >= 0.0 for p in pts)  # positive PCS frame
+        assert float(req(pts[0].get("time"))) == 0.0
+        assert float(req(pts[-1].get("time"))) == pytest.approx(seg.duration, abs=1e-12)
+        assert all(float(req(p.get("value"))) >= 0.0 for p in pts)  # PCS frame > 0
     params = {p.get("name"): p.get("value") for p in gen.iter("PARAMETER")}
     assert params == {"ImasToPcsIpSign": "-1"}
 
@@ -136,7 +135,7 @@ def test_parser_reconstructs_absolute_waveform(design, tmp_path):
     assert t[0] == pytest.approx(wf.time[0], abs=1e-9)
     assert t[-1] == pytest.approx(wf.time[-1], abs=1e-9)
     # every original vertex is reproduced
-    for tv, iv in zip(wf.time, wf.value):
+    for tv, iv in zip(wf.time, wf.value, strict=False):
         k = np.argmin(np.abs(t - tv))
         assert abs(t[k] - tv) <= 1e-9
         assert abs(v[k] - IMAS_TO_PCS_IP_SIGN * iv) <= 1e-9 * max(
@@ -160,7 +159,7 @@ def test_psps_json_sanity(design, tmp_path):
     assert set(ps) == {"name", "id", "segments"}
     assert [s["name"] for s in ps["segments"]] == [s.name for s in design.segments]
     ts, vs = [], []
-    for js, seg in zip(ps["segments"], design.segments):
+    for js, seg in zip(ps["segments"], design.segments, strict=False):
         assert set(js) == {"name", "id", "duration", "setpoints"}
         assert js["id"] == seg.id and js["duration"] == pytest.approx(seg.duration)
         if seg.is_stop:
@@ -217,7 +216,9 @@ def test_validation_rules():
     with pytest.raises(ValidationError):  # STOP id 99 but 65535 required
         _with(base, stop_id=65535).validate()
     synthetic(stop_id=65535)  # IPP D15 convention accepted when configured
-    wf = IpWaveform(time=[0.0, 1.0, 1.0, 40.0], value=[0, -1, -2, -3])
+    wf = IpWaveform(
+        time=np.array([0.0, 1.0, 1.0, 40.0]), value=np.array([0.0, -1.0, -2.0, -3.0])
+    )
     with pytest.raises(ValidationError):
         PulseDesign(waveform=wf, segments=base, name="x").validate()
 
