@@ -22,7 +22,7 @@ from ip_waveform_export.export_refgen_xml import IMAS_TO_PCS_IP_SIGN, write_refg
 
 HERE = Path(__file__).resolve().parent
 TOOL = HERE.parent
-REF_XML = TOOL / "reference" / "PS_NominalWaveforms.xml"
+REF_XML = TOOL / "reference" / "third_party" / "PS_NominalWaveforms.xml"
 EXAMPLE = TOOL / "examples" / "ip_105073_like.yaml"
 
 

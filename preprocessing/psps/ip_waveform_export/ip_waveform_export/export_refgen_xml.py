@@ -2,8 +2,8 @@
 
 Reference format: pcs@bb29ad6 (branch add-AM)
 ``top-models/magnetic-control/CREATE_TC_01/PSC_config/PS_NominalWaveforms.xml``
-(copy in ``reference/``); reading rules: pcssp-nightly@ebf3ee0
-``src/psc/+REFGEN/+MODEL/parsePSXML.m`` (copy in ``reference/``).
+(copy in ``reference/third_party/``); reading rules: pcssp-nightly@ebf3ee0
+``src/psc/+REFGEN/+MODEL/parsePSXML.m`` (copy in ``reference/third_party/``).
 
 Mapping:
 

@@ -1,8 +1,0 @@
-ymmsl_version: v0.2
-# PSC run A_nom for preprocessing/psps/psc_run/run_psc_evolutive.sh: the four PSC files written by
-# make_psc_variants.py (converter --cut-at 84.317598 --psc-config).
-# ${PDS_REPO} is expanded by run_psc_evolutive.sh with envsubst (as bin/pds-create-case does); for a
-# direct bin/pds-run-case call run envsubst '${PDS_REPO}' < this_file > expanded.ymmsl first.
-settings:
-  magnetic_controller.psc_enabled: 1
-  magnetic_controller.psc_config_dir: "${PDS_REPO}/cases/input/psc/A_nom/psc_config_ip_105073_psc_A_nom"

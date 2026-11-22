@@ -15,7 +15,7 @@ from ip_waveform_export.export_refgen_xml import IMAS_TO_PCS_IP_SIGN
 
 TOOL = Path(__file__).resolve().parent.parent
 EH_EXAMPLE = TOOL / "examples" / "ip_105073_like_with_exceptions.yaml"
-REF = TOOL / "reference"
+REF = TOOL / "reference" / "third_party"
 
 
 @pytest.fixture

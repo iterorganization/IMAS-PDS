@@ -51,7 +51,7 @@ format today (adding segments to the 1D editor is phase P4 of the plan).
 
 ### Segment identifiers (D8)
 
-As on `pcs@add-AM` `reference/PS_NominalWaveforms.xml`: the first segment ("ramp-up") has id 0,
+As on `pcs@add-AM` `PS_NominalWaveforms.xml` (copy in `reference/third_party/`): the first segment ("ramp-up") has id 0,
 the following nominal segments 1, 2, ..., the terminal STOP segment id 99; there is no separate
 "init" segment. The example is ramp-up 0, flat-top 1, ramp-down 2, STOP 99. `--stop-id 65535`
 (or `globals.stop_id`) selects the IPP D15 strawman convention. **This convention may change
@@ -293,7 +293,10 @@ monitoring scripts, every `{name}` in scripts and BT conditions declared in the 
 `.value` exactly for inputs, BT priority order and BT = schedule watchdogs, invalid blocks, debounce
 warning, CLI, IDS offset metadata).
 
-## Reference files (`reference/`)
+## Reference files (`reference/third_party/`)
+
+Copies of ITER PCS / PCSSP files used by the tests; repository, branch, commit, original path and the
+byte-for-byte check of each file are in `reference/third_party/PROVENANCE.md`.
 
 | File | Source |
 |---|---|
