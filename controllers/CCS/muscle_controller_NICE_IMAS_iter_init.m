@@ -6,8 +6,9 @@
 % 2. builds the references and the parameters read by the Simulink model (base workspace);
 % 3. inits the PCSSP modules and runs pcssp_controller_and_ps, which exchanges with NICE at
 %    every step through muscle_nice2control / muscle_control2nice.
+% The model runs from t = 0, on NICE's steps: plasma time = Simulink time + t_start.
 % With the setting psc_enabled = 1 the PSC block of the model (pulse supervision, pcssp-nightly)
-% gets its configuration from psc_config_dir and the model runs from t = 0, the PSC's clock.
+% gets its configuration from psc_config_dir.
 % With the setting mcls_enabled = 1 (requires psc_enabled = 1) the model pcssp_controller_and_ps_mcls runs instead:
 % the same model plus the MCLS (Magnetic Control Local Supervisor) block, whose outputs drive the mode inputs of
 % KCURR, RZIp and VS (and of ShapeIp when mcls_shape_enable = 1); mode table from the YAML file mcls_config
@@ -52,7 +53,7 @@ if instance.reuse_instance()
     msg_pfa = instance.receive("pf_active_in_f");
     pf_active = imas_deserialize(uint8(msg_pfa.data), 'pf_active');
 
-    t_start = equilibrium.time(1);
+    t_start = equilibrium.time(1);   % Simulink time 0 (also read by log_row)
     t_max = equilibrium.time(end);
 
     %% settings (magnetic_controller.* in the ymmsl)
@@ -71,8 +72,7 @@ if instance.reuse_instance()
     if psc_enabled
         psc_config_dir = char(instance.get_setting('psc_config_dir'));                          % folder with the four PSC files
     end
-    % the PSC counts its time from 0: with the PSC the model runs from 0 = t_start
-    t_offset = psc_enabled * t_start;   % plasma time = Simulink time + t_offset (also read by log_row)
+    t_offset = t_start;   % alias read by mcls_log_row.m and the MCLS block's clock constant (MCLS_clock_offset)
     mcls_enabled = double(instance.get_setting('mcls_enabled', pyargs('default', 0)));          % 1: MCLS in the model
     controller_model = 'pcssp_controller_and_ps';
     if mcls_enabled
@@ -181,7 +181,7 @@ if instance.reuse_instance()
     end
 
     % read by the From Workspace blocks of the model, on the Simulink time
-    t_ref = equilibrium.time - t_offset;
+    t_ref = equilibrium.time - t_start;
     Ipl_ref = timeseries(ip_ref, t_ref);
     Rpl_ref = timeseries(rpl_ref, t_ref);
     Zpl_ref = timeseries(zpl_ref, t_ref);
@@ -215,12 +215,13 @@ if instance.reuse_instance()
     obj3.init;
     % VS gains from FC016 instead of the module's defaults
     S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
-    if mcls_enabled && isprop(obj3, 'ddHdl') && ~isempty(obj3.ddHdl) && ismethod(obj3.ddHdl, 'updateField')
+    fp = ccs_vs_fp(obj3, S.Config_VS);
+    if isprop(obj3, 'ddHdl') && ~isempty(obj3.ddHdl) && ismethod(obj3.ddHdl, 'updateField')
         % scdds-core 6b7e482 (pcssp-nightly merge_IGZ_PSC): update_nominal_param_value calls ddHdl.updateValue,
         % absent from SCDDSclass_ddHdl (renamed updateField, SCDDSclass_ddHdl.m:189-230; SCDDSclass_algo.m:1023-1026)
-        obj3.ddHdl.updateField('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+        obj3.ddHdl.updateField('VS_fp', fp);
     else
-        obj3.update_nominal_param_value('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+        obj3.update_nominal_param_value('VS_fp', fp);
     end
     fprintf('VS gains from FC016_Config_VS.mat (KZ_VS1 = %g)\n', S.Config_VS.Gains.KZ_VS1);
     obj3.setup;
@@ -288,7 +289,7 @@ if instance.reuse_instance()
 
     %% simulation
     in = Simulink.SimulationInput(controller_model);
-    in = in.setModelParameter('StartTime', num2str(t_start - t_offset), 'StopTime', num2str(t_max - t_offset));
+    in = in.setModelParameter('StartTime', '0', 'StopTime', num2str(t_max - t_start, 12));
     in = in.setModelParameter('SaveOutput', 'on');
 
     if DEBUG_LOG
