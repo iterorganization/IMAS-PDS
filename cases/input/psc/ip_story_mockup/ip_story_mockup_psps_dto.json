@@ -1,0 +1,2117 @@
+[
+  {
+    "encoding": "psps-dto/v1.0/JSON"
+  },
+  {
+    "type": "struct",
+    "value": {
+      "component_type": {
+        "type": "string",
+        "value": "pulse_schedule"
+      },
+      "properties": {
+        "type": "struct",
+        "value": {
+          "id": {
+            "type": "string",
+            "value": "67d9cc4c-a22c-5ca7-839c-74c04c74d3bb",
+            "constraints": {
+              "id": true
+            }
+          },
+          "name": {
+            "type": "string",
+            "value": "ip_105073_psc_F_story"
+          },
+          "description": {
+            "type": "string",
+            "value": "PDS export of ip_105073_psc_F_story (pulse 105073); see the _psps_dto_extended.json companion"
+          },
+          "author": {
+            "type": "string",
+            "value": ""
+          },
+          "state": {
+            "type": "string",
+            "value": "New",
+            "constraints": {
+              "choice": [
+                "Unknown",
+                "New",
+                "Revised",
+                "Submitted",
+                "Rework",
+                "Cancelled",
+                "Approved",
+                "Ready"
+              ],
+              "transition": [
+                {
+                  "from": "Approved",
+                  "to": "Ready"
+                },
+                {
+                  "from": "Approved",
+                  "to": "Submitted"
+                },
+                {
+                  "from": "New",
+                  "to": "Revised"
+                },
+                {
+                  "from": "Ready",
+                  "to": "Approved"
+                },
+                {
+                  "from": "Revised",
+                  "to": "New"
+                },
+                {
+                  "from": "Revised",
+                  "to": "Submitted"
+                },
+                {
+                  "from": "Rework",
+                  "to": "Revised"
+                },
+                {
+                  "from": "Submitted",
+                  "to": "Approved"
+                },
+                {
+                  "from": "Submitted",
+                  "to": "Cancelled"
+                },
+                {
+                  "from": "Submitted",
+                  "to": "Rework"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Approved"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Cancelled"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "New"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Ready"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Revised"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Rework"
+                },
+                {
+                  "from": "Unknown",
+                  "to": "Submitted"
+                }
+              ]
+            }
+          },
+          "software_version": {
+            "type": "list",
+            "value": [
+              {
+                "type": "struct",
+                "value": {
+                  "software": {
+                    "type": "string",
+                    "value": "pds-export_psps_dto"
+                  },
+                  "version": {
+                    "type": "string",
+                    "value": "0.1.0"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "segments": {
+        "type": "struct",
+        "value": {
+          "e9d43f02-95f4-5928-a4a0-33a8a83e5dc6": {
+            "type": "struct",
+            "value": {
+              "properties": {
+                "type": "struct",
+                "value": {
+                  "id": {
+                    "type": "string",
+                    "value": "e9d43f02-95f4-5928-a4a0-33a8a83e5dc6",
+                    "constraints": {
+                      "id": true
+                    }
+                  },
+                  "name": {
+                    "type": "string",
+                    "value": "flattop_rampdown"
+                  },
+                  "duration": {
+                    "type": "float64",
+                    "value": 60.6,
+                    "constraints": {
+                      "range": {
+                        "min": 0,
+                        "max": 100000
+                      }
+                    }
+                  }
+                }
+              },
+              "setpoints": {
+                "type": "struct",
+                "value": {
+                  "f3f0abc6-bff5-5cfe-94f8-3f208ec93905": {
+                    "type": "struct",
+                    "value": {
+                      "properties": {
+                        "type": "struct",
+                        "value": {
+                          "id": {
+                            "type": "string",
+                            "value": "f3f0abc6-bff5-5cfe-94f8-3f208ec93905",
+                            "constraints": {
+                              "id": true
+                            }
+                          },
+                          "name": {
+                            "type": "string",
+                            "value": "Magnetics Controller Setpoint"
+                          },
+                          "value": {
+                            "type": "struct",
+                            "value": {
+                              "id": {
+                                "type": "string",
+                                "value": "controller-magnetics-1"
+                              },
+                              "name": {
+                                "type": "string",
+                                "value": "Magnetics Controller"
+                              },
+                              "type": {
+                                "type": "string",
+                                "value": "magnetics"
+                              },
+                              "scheme": {
+                                "type": "string",
+                                "value": "current"
+                              },
+                              "shape_control": {
+                                "type": "struct",
+                                "value": {
+                                  "1": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "1"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "RZIp"
+                                      },
+                                      "parameters": {
+                                        "type": "struct",
+                                        "value": {
+                                          "rcentroid": {
+                                            "type": "struct",
+                                            "value": {
+                                              "xValues": {
+                                                "type": "array",
+                                                "element_type": "float32",
+                                                "value": [
+                                                  0.0,
+                                                  60.599998474121094
+                                                ],
+                                                "display": {
+                                                  "units": "s"
+                                                }
+                                              },
+                                              "yValues": {
+                                                "type": "array",
+                                                "element_type": "float32",
+                                                "value": [
+                                                  6.1645002365112305,
+                                                  6.1645002365112305
+                                                ],
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "zcentroid": {
+                                            "type": "struct",
+                                            "value": {
+                                              "xValues": {
+                                                "type": "array",
+                                                "element_type": "float32",
+                                                "value": [
+                                                  0.0,
+                                                  60.599998474121094
+                                                ],
+                                                "display": {
+                                                  "units": "s"
+                                                }
+                                              },
+                                              "yValues": {
+                                                "type": "array",
+                                                "element_type": "float32",
+                                                "value": [
+                                                  0.5812000036239624,
+                                                  0.5812000036239624
+                                                ],
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "2": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "2"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Isoflux"
+                                      },
+                                      "parameters": {
+                                        "type": "struct",
+                                        "value": {
+                                          "refpoint": {
+                                            "type": "struct",
+                                            "value": {
+                                              "r": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "z": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "points": {
+                                            "type": "list",
+                                            "value": [
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "r": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "z": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "point01"
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "3": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "3"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Isoflux XP"
+                                      },
+                                      "parameters": {
+                                        "type": "struct",
+                                        "value": {
+                                          "refpoint": {
+                                            "type": "struct",
+                                            "value": {
+                                              "r": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "z": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "points": {
+                                            "type": "list",
+                                            "value": [
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "r": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "z": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "point01"
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          "xp": {
+                                            "type": "struct",
+                                            "value": {
+                                              "r": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "z": {
+                                                "type": "struct",
+                                                "value": {
+                                                  "xValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      60.599998474121094
+                                                    ],
+                                                    "display": {
+                                                      "units": "s"
+                                                    }
+                                                  },
+                                                  "yValues": {
+                                                    "type": "array",
+                                                    "element_type": "float32",
+                                                    "value": [
+                                                      0.0,
+                                                      0.0
+                                                    ],
+                                                    "display": {
+                                                      "units": "m"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "4": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "4"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Gaps"
+                                      },
+                                      "parameters": {
+                                        "type": "struct",
+                                        "value": {
+                                          "gaps": {
+                                            "type": "list",
+                                            "value": [
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap01"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap02"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap03"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap04"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap05"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "type": "struct",
+                                                "value": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "value": "gap06"
+                                                  },
+                                                  "waveform": {
+                                                    "type": "struct",
+                                                    "value": {
+                                                      "xValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          60.599998474121094
+                                                        ],
+                                                        "display": {
+                                                          "units": "s"
+                                                        }
+                                                      },
+                                                      "yValues": {
+                                                        "type": "array",
+                                                        "element_type": "float32",
+                                                        "value": [
+                                                          0.0,
+                                                          0.0
+                                                        ],
+                                                        "display": {
+                                                          "units": "m"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "ip_control": {
+                                "type": "struct",
+                                "value": {
+                                  "1": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "1"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Integrated CS/PF"
+                                      }
+                                    }
+                                  },
+                                  "2": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "2"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Integrated Shape"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "vs_control": {
+                                "type": "struct",
+                                "value": {
+                                  "1": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "1"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "Off"
+                                      }
+                                    }
+                                  },
+                                  "2": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "2"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "VS1"
+                                      }
+                                    }
+                                  },
+                                  "3": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "3"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "VS3"
+                                      }
+                                    }
+                                  },
+                                  "4": {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "4"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "VS1+VS3"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "waveforms_by_circuit": {
+                                "type": "struct",
+                                "value": {
+                                  "cs3u": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          18058.5,
+                                          18058.5
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "cs2u": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -15961.400390625,
+                                          -15961.400390625
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "cs1": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -39720.30078125,
+                                          -39720.30078125
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "cs2l": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -11650.5,
+                                          -11650.5
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "cs3l": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          35025.19921875,
+                                          35025.19921875
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "pf1": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          21028.69921875,
+                                          21028.69921875
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "pf2": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -32264.099609375,
+                                          -32264.099609375
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "pf3": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -18254.19921875,
+                                          -18254.19921875
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "pf4": {
+                                    "type": "struct",
+                                    "value": {
+                                      "xValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          0.0,
+                                          60.599998474121094
+                                        ],
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "yValues": {
+                                        "type": "array",
+                                        "element_type": "float32",
+                                        "value": [
+                                          -44261.8984375,
+                                          -44261.8984375
+                                        ],
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "modes": {
+                                "type": "list",
+                                "value": [
+                                  {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "mode-flattop-gaps"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "flattop_gaps"
+                                      },
+                                      "t0s": {
+                                        "type": "float32",
+                                        "value": 0.0,
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "t0f": {
+                                        "type": "float32",
+                                        "value": 60.599998474121094,
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "ip0s": {
+                                        "type": "int32",
+                                        "value": 13500000,
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      },
+                                      "ip0f": {
+                                        "type": "int32",
+                                        "value": 20000000,
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      },
+                                      "overlapping_modes": {
+                                        "type": "array",
+                                        "element_type": "int32",
+                                        "value": []
+                                      },
+                                      "overlapping_modes_priority": {
+                                        "type": "array",
+                                        "element_type": "int32",
+                                        "value": []
+                                      },
+                                      "shape_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "4"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "Gaps"
+                                          }
+                                        }
+                                      },
+                                      "ip_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "1"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "Integrated CS/PF"
+                                          }
+                                        }
+                                      },
+                                      "vs_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "4"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "VS1+VS3"
+                                          }
+                                        }
+                                      },
+                                      "transition_conditions": {
+                                        "type": "struct",
+                                        "value": {
+                                          "transition_conditions_diverted": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "transition_conditions_control_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "transition_conditions_xp_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "control_conditions": {
+                                        "type": "struct",
+                                        "value": {
+                                          "control_conditions_xp_up_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "control_conditions_dsep_min": {
+                                            "type": "float32",
+                                            "value": 0.0
+                                          },
+                                          "control_conditions_vs3_failure_management": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "control_conditions_vs3_kicks": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "alarms": {
+                                        "type": "struct",
+                                        "value": {
+                                          "maximum_time": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "s"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "ip_less_than_min_ip": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "ip_more_than_min_ip": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_ip_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_rpl_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_zpl_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_gap_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_flux_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "wb"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_cs_pf_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "snu": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "vs1_mc_allocator_mode": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "scp_ip_scaling": {
+                                        "type": "string",
+                                        "value": "off",
+                                        "constraints": {
+                                          "choice": [
+                                            "off",
+                                            "ip_nominal",
+                                            "ip_measured"
+                                          ]
+                                        }
+                                      },
+                                      "vs_ip_scaling": {
+                                        "type": "string",
+                                        "value": "off",
+                                        "constraints": {
+                                          "choice": [
+                                            "off",
+                                            "ip_nominal",
+                                            "ip_measured"
+                                          ]
+                                        }
+                                      },
+                                      "ref_smooth": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "current_limit_avoidance": {
+                                        "type": "bool",
+                                        "value": false
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "struct",
+                                    "value": {
+                                      "id": {
+                                        "type": "string",
+                                        "value": "mode-rampdown-position"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "value": "rampdown_position"
+                                      },
+                                      "t0s": {
+                                        "type": "float32",
+                                        "value": 0.0,
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "t0f": {
+                                        "type": "float32",
+                                        "value": 60.599998474121094,
+                                        "display": {
+                                          "units": "s"
+                                        }
+                                      },
+                                      "ip0s": {
+                                        "type": "int32",
+                                        "value": 0,
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      },
+                                      "ip0f": {
+                                        "type": "int32",
+                                        "value": 13500000,
+                                        "display": {
+                                          "units": "A"
+                                        }
+                                      },
+                                      "overlapping_modes": {
+                                        "type": "array",
+                                        "element_type": "int32",
+                                        "value": []
+                                      },
+                                      "overlapping_modes_priority": {
+                                        "type": "array",
+                                        "element_type": "int32",
+                                        "value": []
+                                      },
+                                      "shape_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "0"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "none"
+                                          }
+                                        }
+                                      },
+                                      "ip_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "1"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "Integrated CS/PF"
+                                          }
+                                        }
+                                      },
+                                      "vs_control_ref": {
+                                        "type": "struct",
+                                        "value": {
+                                          "id": {
+                                            "type": "string",
+                                            "value": "4"
+                                          },
+                                          "name": {
+                                            "type": "string",
+                                            "value": "VS1+VS3"
+                                          }
+                                        }
+                                      },
+                                      "transition_conditions": {
+                                        "type": "struct",
+                                        "value": {
+                                          "transition_conditions_diverted": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "transition_conditions_control_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "transition_conditions_xp_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "control_conditions": {
+                                        "type": "struct",
+                                        "value": {
+                                          "control_conditions_xp_up_in_box": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "control_conditions_dsep_min": {
+                                            "type": "float32",
+                                            "value": 0.0
+                                          },
+                                          "control_conditions_vs3_failure_management": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          },
+                                          "control_conditions_vs3_kicks": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "r": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "z": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dr": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              },
+                                              "dz": {
+                                                "type": "float32",
+                                                "value": 0.0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "alarms": {
+                                        "type": "struct",
+                                        "value": {
+                                          "maximum_time": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "s"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "ip_less_than_min_ip": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "ip_more_than_min_ip": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_ip_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_rpl_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_zpl_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_gap_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "m"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_flux_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "wb"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "max_cs_pf_ctrl_error": {
+                                            "type": "struct",
+                                            "value": {
+                                              "enabled": {
+                                                "type": "bool",
+                                                "value": false
+                                              },
+                                              "threshold": {
+                                                "type": "float32",
+                                                "value": 0.0,
+                                                "display": {
+                                                  "units": "a"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "snu": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "vs1_mc_allocator_mode": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "scp_ip_scaling": {
+                                        "type": "string",
+                                        "value": "off",
+                                        "constraints": {
+                                          "choice": [
+                                            "off",
+                                            "ip_nominal",
+                                            "ip_measured"
+                                          ]
+                                        }
+                                      },
+                                      "vs_ip_scaling": {
+                                        "type": "string",
+                                        "value": "off",
+                                        "constraints": {
+                                          "choice": [
+                                            "off",
+                                            "ip_nominal",
+                                            "ip_measured"
+                                          ]
+                                        }
+                                      },
+                                      "ref_smooth": {
+                                        "type": "bool",
+                                        "value": false
+                                      },
+                                      "current_limit_avoidance": {
+                                        "type": "bool",
+                                        "value": false
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "enabled": {
+                            "type": "bool",
+                            "value": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

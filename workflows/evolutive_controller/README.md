@@ -55,6 +55,36 @@ sbatch bin/pds-run-case.sbatch cases/evolutive_controller_105084
 the case folder; `pds-run-case.sbatch` runs that folder under `muscle_manager`, writing to
 `cases/runs/<case>`.
 
+## PSC and MCLS case (ip_story_mockup)
+
+`run_psc_cases.sh` runs 105073 with the Pulse Supervision Controller (PSC) and the MCLS (Magnetic Control Local
+Supervisor) in the controller actor, for the case `ip_story_mockup` (scenario story, `cases/input/psc/ip_story_mockup/`,
+README there). It copies `cases/evolutive_controller_105073` to `cases/evolutive_controller_105073_ip_story_mockup`,
+expands the override `cases/overrides/evolutive_controller_105073_ip_story_mockup.ymmsl` (`${PDS_REPO}`, `${CASE_DIR}`)
+into it, switches `magnetic_controller` to the program `magnetic_controller_psc` with `make_psc_workflow.py`, and runs
+`bin/pds-run-case.sbatch` under an init lock (one MATLAB controller init at a time).
+
+Window 115.817598 -> 138.0 s (22.2 s of plasma, ~2.5 h of wall time). The run ends at a fixed time shortly after the
+PSC STOP of the reference run (137.88 s) because the controller cannot end the coupled run itself, and the results
+after 131.46 s (plasma lost by an upward VDE in the reference run) are not physical: see the case README, section
+"End of the run".
+
+Options: `VARIANT=ip_story_mockup` (the only one); `SHORT_WINDOW=1` = smoke check on 115.817598 -> 116.02 s (window
+written into the case folder `cases/evolutive_controller_105073_ip_story_mockup_smoke`); `DRY_RUN=1` builds the case
+folder and prints the expanded overrides without running; `RUN_TIMEOUT` (s, default 10800, 5100 with `SHORT_WINDOW=1`).
+The case needs the model `controllers/CCS/pcssp_controller_and_ps_mcls.slx` (built by
+`controllers/CCS/mcls/model_build/build_mcls_controller.sh`) and the PCS framework with the PSC in
+`local_installs/pcs-with-pcssp-nightly` (`pds_setup.sh` with `INSTALL_PCSSP_NIGHTLY=true`). From the repository root:
+
+```bash
+mkdir -p cases/runs/psc_logs
+DRY_RUN=1 VARIANT=ip_story_mockup bash workflows/evolutive_controller/run_psc_cases.sh
+sbatch --time=01:30:00 --chdir=$PWD --export=ALL,PDS_REPO=$PWD,VARIANT=ip_story_mockup,SHORT_WINDOW=1 workflows/evolutive_controller/run_psc_cases.sh
+sbatch --time=03:30:00 --chdir=$PWD --export=ALL,PDS_REPO=$PWD,VARIANT=ip_story_mockup workflows/evolutive_controller/run_psc_cases.sh
+```
+
+More in `preprocessing/psps/README.md` and `cases/input/psc/ip_story_mockup/README.md`.
+
 ## Assumptions
 
 - `source` cannot read raw DINA equilibrium here: TORAX's `geometry_type: imas` builder needs

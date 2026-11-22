@@ -1,0 +1,37 @@
+ymmsl_version: v0.2
+# ip_story_mockup: scenario story 105073 (cases/input/psc/ip_story_mockup/README.md): one closed-loop pulse of 105073 in
+# which the PSC pulse schedule exercises several events, segment changes and MCLS mode changes at physical times
+# (end_of_flux on the CS1 headroom -> soft eof_rampdown (21) -> automatic MCM1 flattop_gaps -> MCM2 rampdown_position
+# when |Ip| < 13.5 MA -> watchdog -> hard eof_termination (42) forcing MCM3 termination -> STOP; z_excursion armed,
+# ip_too_high silent). Every number is ours (study values). Same settings as the reference run of 2026-11-16 (README.md
+# of the case folder) except the end of the run (138.0 s instead of 176.5 s) and the paths (PSC files and mode table in
+# the case folder, mode table as YAML); the MCLS is selected with mcls_enabled: 1 in the standard controller program
+# (magnetic_controller_psc, workflows/lib/local_programs.ymmsl). Gap shape control (mode 4) dispatched by the MCLS
+# (mcls_shape_enable 1).
+#
+# Window 115.817598 s (PSC clock 0) -> 138.0 s; the case's base scenario_settings.ymmsl sets t_min 84.3176 / t_max 130
+# / t_end 87, overridden here:
+# - source.t_min selects the warm-start slice: the IMAS-MUSCLE3/1.0.0-intel-2025b-pds source sends
+#   db_entry.get_sample(t_min, t_max) (data_sink_source.py:406-409; the case has no source.dt), i.e. the stored
+#   slices in [t_min, t_max]; 115.81759781205439 s is the inverse slice 20 of cases/runs/inverse_convergence_105073, so
+#   the first received slice, hence the controller glue's t_start = Simulink/PSC clock 0
+#   (muscle_controller_NICE_IMAS_iter_init.m, t_start = equilibrium.time(1)), is the converter cut time.
+# - source.t_max 187.0 (unchanged) includes the slices up to 186.92 s, so the Simulink StopTime (last received slice
+#   - t_start = 71.1 s) stays beyond t_end - t_start (22.18 s): NICE's last message at t_end (no next_timestamp) stops
+#   the controller (controllers/CCS/muscle_nice2control.m stop_signal), not the StopTime.
+# - torax.t_final / nice_evo_rd.t_end = 138.0 s: shortly after the PSC STOP of the reference run (137.88 s; plasma lost
+#   by an upward VDE at 131.45 s, results not physical from 131.46 s). Why a fixed end and not a stop at the PSC STOP:
+#   README.md of the case folder, section End of the run.
+# No ps_source actor (Ipl_ref comes from the PSC). ${PDS_REPO} expanded by workflows/evolutive_controller/run_psc_cases.sh
+# (envsubst, as bin/pds-create-case does); for a direct bin/pds-run-case call expand it first.
+settings:
+  source.t_min: 115.81759781205439
+  source.t_max: 187.0
+  torax.t_final: 138.0
+  nice_evo_rd.t_end: 138.0
+  magnetic_controller.psc_enabled: 1
+  magnetic_controller.psc_config_dir: "${PDS_REPO}/cases/input/psc/ip_story_mockup/psc_config"
+  magnetic_controller.mcls_enabled: 1
+  magnetic_controller.mcls_config: "${PDS_REPO}/cases/input/psc/ip_story_mockup/mcls_table.yaml"
+  magnetic_controller.mcls_shape_enable: 1
+  magnetic_controller.shape_control: 4

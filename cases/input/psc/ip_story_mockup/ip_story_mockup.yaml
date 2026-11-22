@@ -1,0 +1,252 @@
+# Designer Ip waveform of the scenario story 105073 (README.md of this folder): one closed-loop pulse of ITER 105073
+# (evolutive_controller) in which the PSC pulse schedule exercises, at physical times, several events, segment changes
+# and MCLS mode changes. Written by hand on 2026-11-16 from the earlier end-of-flux case of the PSC study (designer
+# file ip_105073_psc_E_eof_phys.yaml, 2026-11-15) and the results of its full run (trip at 130.58 s with threshold
+# 2.5 kA, CS headroom 5.27 kA at 115.8 s and 4.6 kA at 121.5 s, Ipl_ref jump at the hard-segment entry, 0.61 MA/s
+# exhausting the CS1 headroom, Z drift in termination, NICE abort at 149.53 s; note
+# docs/psps/work_notes/psc7_E_eof_phys_full_run_2026-11-15.md in the PDS main repository).
+# Window 115.8-176.4 s (PSC clock 0 = designer 115.817598 s = first NICE inverse slice at or after 115 s; the
+# controller glue takes that slice time as t_start). The nominal design carries the DINA ramp-down (from ~147.7 s at
+# 0.21 MA/s) in the waveform, extended with the inverse slices 171.0 and 176.4 s so that a late trip still ends inside
+# the window. Coil-current feed-forward stays off; the controller modes change through the MCLS: MCM1 flattop_gaps ->
+# MCM2 rampdown_position automatically when |Ip| < 13.5 MA, MCM3 termination forced by the PSC force field in the hard
+# segments 41 / 42 (mode table mcls_table.yaml of this folder; force field added by
+# preprocessing/psps/make_mcls_psc_config.py).
+# EVERY threshold, rate, window and watchdog time below is OURS (chosen for this study from the DINA data and earlier
+# runs), not an ITER operational value. The globals name/comment below are kept as generated on 2026-11-16 (the
+# generated file names and the schedule name in psc_config/PS.xml derive from them).
+# Converter call (preprocessing/psps/ip_waveform_export, the converter version of 2026-11-16 is archived with the
+# reference run, see README.md):
+#   --yaml this file --out-dir <dir> --cut-at 115.817598 --psc-config --refgen --psps-dto --ids
+# then: preprocessing/psps/make_mcls_psc_config.py <dir>/psc_config_ip_105073_psc_F_story <dir>/psc_config_mcls
+#         --force eof_termination=3 --force ip_termination=3        (result: psc_config/ of this folder)
+# Frames: Ip values in the positive PCS frame (= -Ip_IMAS), SI units; event thresholds in the frame of the
+# PSC signal (cs_margin in A per turn, z_meas in m = NICE global_quantities.current_centre.z on this branch; its reference 0.5812 m
+# = current centre of the inverse run of 2026-11-16, job 1319725, slice 115.817598 s).
+globals:
+  dd_version: 4.0.0
+  pulse: 105073
+  name: ip_105073_psc_F_story
+  comment: 'PSC-8 case F_story: end of flux at ~122 s (threshold 4.5 kA), overlay ramp-down 0.21 MA/s, MCLS MCM1->MCM2 at 13.5 MA, hard termination 0.4 MA/s forced to MCM3, window 115.8-176.4 s'
+  convention: minus_ip
+  time_origin: plasma_initiation
+  time_offset_s: 0.0
+references:
+  # |Ip| of the NICE inverse slices of cases/runs/inverse_convergence_105073/out_nice (37 slices, the trace
+  # the evolutive_controller source reads; read again on 2026-11-16 with h5py from
+  # pds-other-version/IMAS-PDS-fork-nicefix/cases/runs/inverse_convergence_105073/out_nice/equilibrium.h5,
+  # datasets time and time_slice[]&global_quantities&ip), i.e. the DINA Ip as reconstructed by the inverse
+  # run; the vertex at 147.7 s is ours (DINA ramp-down start, derived from the 160-slice inverse run:
+  # 146.818 s 15.083 MA, 148.318 s 14.960 MA).
+  pulse_schedule/flux_control/ip/reference:
+  - time:
+    - 110.717598    # inverse_convergence_105073 NICE slice (before the cut; the converter interpolates at 115.817598)
+    - 115.817598    # inverse_convergence_105073 NICE slice = window start, PSC clock 0
+    - 121.217598    # inverse_convergence_105073 NICE slice (DINA |Ip| maximum 15.12 MA at 121.1 s)
+    - 126.317598    # inverse_convergence_105073 NICE slice
+    - 131.717598    # inverse_convergence_105073 NICE slice
+    - 136.817598    # inverse_convergence_105073 NICE slice
+    - 142.217598    # inverse_convergence_105073 NICE slice
+    - 147.7         # ours: DINA ramp-down start (derived), flat-top value held until here
+    - 150.017598    # inverse_convergence_105073 NICE slice (ramp-down)
+    - 155.417598    # inverse_convergence_105073 NICE slice (ramp-down)
+    - 160.517598    # inverse_convergence_105073 NICE slice (ramp-down)
+    - 165.917598    # inverse_convergence_105073 NICE slice (ramp-down; design end of case E)
+    - 171.017598    # inverse_convergence_105073 NICE slice (ramp-down; added for F_story)
+    - 176.417598    # inverse_convergence_105073 NICE slice (ramp-down; design end; allows T_END up to 176.4 s)
+    value:
+    - 15080878.1
+    - 15077667.7
+    - 15122556.6
+    - 15092485.1
+    - 15080775.5
+    - 15071426.4
+    - 15064035.9
+    - 15064035.9
+    - 14581213.9
+    - 13473357.8
+    - 12338299.8
+    - 11225010.7
+    - 10095102.2
+    - 8970517.5
+segments:
+# One nominal segment on purpose, as in the earlier end-of-flux case: the nominal ramp-down lives in the waveform,
+# so that no nominal segment change happens while the end-of-flux overlay is active (a PSC path never exercised in
+# the earlier runs, and a segment change deletes all RefGen paths). After the cut the
+# segment starts at 115.817598 s (watchdog 60.6 s -> STOP at 176.4 s if no event fires).
+- name: flattop_rampdown
+  id: 0
+  start: 110.717598
+  end: 176.417598
+  # MCLS activation windows of the modes of this segment (PROPOSAL format of 105073_segments.yaml, read by the
+  # psps-dto exporter only; the PSC files ignore it): t in designer time (s), ip = |Ip| in A (PCS frame, SI as
+  # everything in this file). The executed table (mcls_table.yaml of this folder) has no time gating: both windows span the
+  # whole segment and the Ip windows alone select MCM1 (|Ip| >= 13.5 MA) or MCM2 (below, no return).
+  modes:
+    flattop_gaps: {t: [115.817598, 176.417598], ip: [13500000.0, 20000000.0]}
+    rampdown_position: {t: [115.817598, 176.417598], ip: [0.0, 13500000.0]}
+- name: STOP
+  id: 99
+signals:
+  pulse_schedule/flux_control/ip/reference: Ipl_ref
+# MCLS mode library (PROPOSAL format of docs/psps/presentation_dataset/105073_segments.yaml, read by the psps-dto
+# exporter; catalogue ids of the psps-dto mock: shape_ip gaps = 4, ip kcurr = "Integrated CS/PF" = 1, vs vs1_vs3 =
+# "VS1+VS3" = 4; shape_ip none -> id "0"). The executed table is mcls_table.yaml of this folder (MCM index,
+# SCIpScaling, VSIpScaling, NextEnabledModes); the keys
+# mcm / scip_scaling / vsip_scaling / forced_in document it and are not read by the exporter. All values OURS.
+modes:
+  flattop_gaps: {mcm: 1, shape_ip: gaps, ip: kcurr, vs: vs1_vs3, snu: off, cla: off, scip_scaling: 1, vsip_scaling: 1,
+                 references: [plasma_current, gaps]}
+  rampdown_position: {mcm: 2, shape_ip: none, ip: kcurr, vs: vs1_vs3, snu: off, cla: off, scip_scaling: 1, vsip_scaling: 1,
+                      references: [plasma_current]}
+  termination: {mcm: 3, shape_ip: none, ip: kcurr, vs: vs1_vs3, snu: off, cla: off, scip_scaling: 2, vsip_scaling: 1,
+                references: [plasma_current], forced_in: [ip_termination, eof_termination]}
+psc:
+  supervisor_name: PSC
+  inputs:
+  - name: ip_ip__meas
+    description: measured plasma current, PCS frame = -Ip_IMAS (NICE global_quantities.ip)
+  - name: plasma_exist
+    signal: plasma_state__exist_diag
+    description: There is plasma
+  - name: z_meas
+    description: plasma vertical position, m (NICE global_quantities.current_centre.z on the student's
+      branch, controllers/CCS/muscle_nice2control.m:79-89 zpl = cc.z; E used the boundary geometric axis)
+  - name: cs_margin
+    description: CS current headroom min over CS coils of (45 kA - |I_CS|), A per
+      turn (glue)
+  run_plasma_ip_min: 1.0e5
+  references:
+    CSPF_curr_ref:
+      description: References for CSPF coil currents [CS3U, CS2U, CS1, CS2L, CS3L,
+        PF1..PF6]
+      source: inverse_convergence 105073 out_nice pf_active.h5, slice t = 115.817598 s
+        (IMAS-PDS-fork-nicefix cases/runs/inverse_convergence_105073, 37 slices), coil[].current.data
+        per turn (554 turns per CS module), IMAS sign as passed by the fork glue
+        (muscle_controller_NICE_IMAS_iter_init.m:96-99,150); CS1 = CS1U (= CS1L, series);
+        constant only - the converter writes constant references, while the wrapper's From Workspace
+        CSPF_curr_ref follows the whole inverse trace over the window (PSC output not wired); same
+        values as case E (not re-read for the student's branch inverse run, which is still running)
+      value:
+      - -18058.5
+      - 15961.4
+      - 39720.3
+      - 11650.5
+      - -35025.2
+      - -21028.7
+      - 32264.1
+      - 18254.2
+      - 44261.9
+      - 6140.2
+      - -14740.9
+    Rpl_ref:
+      description: Reference for R plasma position, m
+      source: student's inverse run cases/runs/inverse_convergence_105073 (worktree pds-student, 2026-11-16,
+        job 1319725, NICE develop 3fc04ac9, 37 slices), out_nice/equilibrium.h5 dataset
+        time_slice[]&global_quantities&current_centre&r, slice index 20 = 115.817598 s (6.164513 m; the
+        position measurement on this branch is the current centre, muscle_nice2control.m:79-89; case E used
+        the geometric axis 6.20478566 m); PSC output not wired, so the value is informative only
+      value: 6.1645
+    Zpl_ref:
+      description: Reference for Z plasma position, m
+      source: same run and slice, dataset time_slice[]&global_quantities&current_centre&z = 0.581241 m (= the
+        z_excursion reference below; case E used the geometric axis 0.23575692 m); PSC output not wired
+      value: 0.5812
+events:
+  ip_too_high:
+    description: 'plasma current above 15.5 MA (ours; nominal maximum 15.12 MA at 121.2 s in DINA,
+      run-A KCURR overshoot <= 0.03 MA: armed, expected silent)'
+    signal: ip_ip__meas
+    op: '>'
+    threshold: 15.5e6
+    debounce: 0.0
+  end_of_flux:
+    description: 'CS current headroom below 4.5 kA (ours, early on purpose: in run E the headroom fell from
+      5.27 kA at 115.8 s to 4.6 kA at 121.5 s (about 0.12 kA/s) and to 2.5 kA at 130.58 s, so 4.5 kA fires at
+      about 122 s, 25 s before the DINA ramp-down start and leaving the whole termination inside the window);
+      release 4.7 kA (hysteresis, moot under the latch); no debounce (not representable in the PSC global
+      monitoring anyway)'
+    signal: cs_margin
+    op: <
+    threshold: 4500.0
+    release_threshold: 4700.0
+    latch: true
+    debounce: 0.0
+  z_excursion:
+    description: 'current-centre Z more than 8 cm away from its reference (ours: run E showed a 4 cm
+      geometric-axis excursion at the hard-segment entry and a 12 cm drift during the 0.61 MA/s termination;
+      8 cm is meant to stay silent during the overlay ramp-down and to catch a termination drift); release
+      4 cm (hysteresis), no latch so that z_hold can recover; reference = current-centre Z of the
+      student''s inverse run at 115.817598 s (job 1319725, see Zpl_ref). NOTE: the design current centre of
+      that run falls with the nominal ramp-down (0.604 m at 136.8 s, 0.510 m at 155.4 s, 0.446 m at 160.5 s,
+      0.306 m at 176.4 s), so if the plasma follows the wrapper''s time-based Z reference the event is
+      expected to fire around 157-160 s (during segment 42): part of the story'
+    signal: z_meas
+    op: '>'
+    reference: 0.5812
+    threshold: 0.08
+    release_threshold: 0.04
+    debounce: 0.0
+exception_handling:
+  hard_sudden:
+  - event: ip_too_high
+    target: ip_termination
+  soft:
+  - name: eof_rampdown
+    id: 21
+    event: end_of_flux
+    signal: Ipl_ref
+    type_addition: silence,replace
+    entry_rule: Linear
+    # -3.15 MA over 15 s = 0.21 MA/s, the DINA ramp-down rate (as in E); start value = the nominal 15.07-15.12 MA
+    # around 122 s where the event is expected; |Ip| crosses the MCLS window edge 13.5 MA about 7.5 s after the
+    # trip (reference; NICE Ip lags by ~0.06 MA = 0.3 s) -> MCM1 flattop_gaps -> MCM2 rampdown_position; watchdog
+    # 15 s (ours) -> hard segment 42 at trip + 15 s with Ipl_ref 11.92 MA
+    points:
+      time:
+      - 0.0
+      - 15.0
+      value:
+      - 15.07e6
+      - 11.92e6
+    wd_time: 15.0
+    wd_target: eof_termination
+  - name: z_hold
+    id: 22
+    event: z_excursion
+    signal: Ipl_ref
+    type_addition: silence,replace
+    entry_rule: Step
+    hold: true
+    recovery: true
+    wd_time: 2.0
+    wd_target: ip_termination
+  hard:
+  # ip_termination: 8.0 MA -> 0 over 4 s = 2 MA/s (ours), held 0.5 s, watchdog 4.5 s -> STOP. The from_value is a
+  # design constant (the hard segment can be entered at any Ip): a jump of Ipl_ref at the entry is EXPECTED
+  # (the Linear entry blends from the base schedule value, not from the last emitted reference; the earlier run
+  # showed +3.1 MA for 0.45 s at the entry of segment 42). MCLS forced to MCM3 here (force_control_mode 3).
+  - name: ip_termination
+    id: 41
+    mode: termination
+    action: 'MCLS forced to MCM3 termination (force_control_mode 3, make_mcls_psc_config.py); Ip 8 -> 0 MA at 2 MA/s'
+    from_value: 8.0e6
+    to_value: 0.0
+    ramp_s: 4.0
+    hold_s: 0.5
+    wd_target: STOP
+  # eof_termination: 11.92 MA -> 0 over 29.8 s = 0.4 MA/s (ours, slower than the 0.61 MA/s of E that exhausted
+  # the CS1 headroom 2.7 s after the entry, faster than the 0.25 MA/s variant E2 of the plan), held 0.5 s,
+  # watchdog 30.3 s -> STOP; from_value = the overlay end value (after a watchdog escalation the entry blend
+  # does not join the trajectory; the jump 11.92 -> ~15.06 MA is expected at the entry).
+  # MCLS forced to MCM3 here (force_control_mode 3; the Linear entry rule blends the discrete force field over
+  # about 0.5 s: MCM1 for ~0.17 s, MCM2 for ~0.17 s, then MCM3).
+  - name: eof_termination
+    id: 42
+    mode: termination
+    action: 'MCLS forced to MCM3 termination (force_control_mode 3, make_mcls_psc_config.py); Ip 11.92 -> 0 MA at 0.4 MA/s'
+    from_value: 11.92e6
+    to_value: 0.0
+    ramp_s: 29.8
+    hold_s: 0.5
+    wd_target: STOP

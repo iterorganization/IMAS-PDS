@@ -22,8 +22,22 @@ init gives it the four files of `psc_config_dir` and runs the model from t = 0, 
 - `make_mcls_psc_config.py`: adds the `force_control_mode` output (MCLS forced mode per segment)
   to a set of PSC files written by the converter (used for `cases/input/psc/ip_story_mockup/`).
 
+The run is launched with `workflows/evolutive_controller/run_psc_cases.sh`
+(`VARIANT=ip_story_mockup`, `SHORT_WINDOW=1` for the 0.2 s smoke check, `DRY_RUN=1` to only
+build the case folder); see the section "PSC and MCLS case (ip_story_mockup)" of
+`workflows/evolutive_controller/README.md`.
+
 ## Inputs and outputs in the repository
 
+- `cases/input/psc/ip_story_mockup/`: the PSC + MCLS case (designer YAML, refgen XML,
+  `psc_config/` with the four PSC files, `ids/`, MCLS mode table, README). The z excursion is
+  measured on z_meas = NICE `global_quantities.current_centre.z` (README of the case).
+- `cases/overrides/evolutive_controller_105073_ip_story_mockup.ymmsl`: the case override
+  (window 115.817598 -> 138.0 s, PSC, MCLS). Paths are written with the
+  `${PDS_REPO}` placeholder, expanded by `run_psc_cases.sh` (`envsubst`, as
+  `bin/pds-create-case` does): muscle_manager does not expand it, so expand the file first when
+  passing it to `bin/pds-run-case` by hand. The 0.2 s smoke window (`SHORT_WINDOW=1`) is
+  written by the launcher.
 - The PSC signals go in the run's `simulink_log.csv` once they are wired to the logger Mux
   (with their names in the init's `sig` list).
 

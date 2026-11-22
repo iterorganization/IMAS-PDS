@@ -1,6 +1,7 @@
-"""Derive the case workflow.ymmsl of the PSC cases from workflows/evolutive_controller/workflow.ymmsl:
+"""Derive the case workflow.ymmsl of the PSC (and PSC + MCLS) cases from workflows/evolutive_controller/workflow.ymmsl:
 magnetic_controller keeps its name, ports and conduits; only its implementation becomes
 magnetic_controller_psc (workflows/lib/local_programs.ymmsl), imported next to the original.
+Called by workflows/evolutive_controller/run_psc_cases.sh.
 usage: python make_psc_workflow.py <workflow.ymmsl in> <workflow.ymmsl out>
 """
 
