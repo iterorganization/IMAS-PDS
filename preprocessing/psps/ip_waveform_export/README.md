@@ -12,6 +12,7 @@ YAML file (format 0), and exports it three ways:
 | 3 | PSPS "WF" dataset JSON | `export_psps_json.py` | **BEST-GUESS**: structure inferred from slides (IDM 97XLXP slide 10, IDM ATPUWU 2024 demo); to be replaced by the PCS v1.1 dataset schema from pulseconfig.iter.org |
 | – | validation (P5 seed) | `validate.py`, `--validate` | structure rules + limits from a YAML file with **PLACEHOLDER** values |
 | – | exception-handling example (D9) | `export_refgen_eh_example.py`, `--refgen-eh-example` | **PROPOSAL / ILLUSTRATIVE** (superseded for the PSC by PSC-3) |
+| 5 | PSPS DTO `psps-dto/v1.0/JSON`, strict + extended | `export_psps_dto.py`, `--psps-dto` | **implemented PSPS exchange format** (schema of the qualification-server mock of 2026-11-09, mock content); the mapping of PDS content into it is a **PROPOSAL** |
 | 4 | PSC configuration: interface, global monitoring, behaviour tree, schedule (PSC-3) | `export_psc_config.py`, `--psc-config` | **PROPOSAL**; formats of `pcs@add-AM` TC01 + `BTreeFWHL.xml`; loaded by the PSC's own parsers and objects in MATLAB (2026-11-06) |
 | – | D20 window cut | `cut.py`, `--cut-at T` | applies to every export |
 
@@ -122,6 +123,48 @@ as in the reference.
 {"ip_reference": {"x": [...], "y": [...]}}}]}, "_note", "_status": "BEST-GUESS", "_sign_note",
 "_conventions"}`. STOP is listed with duration 0 and no set-point. The 2024 demo also had
 `segment_id` and `modulation_gate` set-points; they are not written.
+
+**PSPS DTO** (`<name>_psps_dto.json` + `<name>_psps_dto_extended.json`, `--psps-dto`, 2026-11-10).
+Schema oracle: `docs/psps/From_PSPS_GUI_JSON/PCS Mock Pulse Schedule.json` of the PDS docs (saved from
+`pulseconfig-qual.iter.org/pcs`, LMS 2.8.0). The STRICT file has exactly the mock's paths, node types,
+`element_type`, `display.units` and constraints (state choice/transitions, duration range, scaling
+choices), plus display units on the mode windows `t0s`/`t0f` ("s") and `ip0s`/`ip0f` ("A"); one segment
+per PDS nominal segment, each with one "Magnetics Controller Setpoint" (shape catalogue RZIp / Isoflux /
+Isoflux XP / Gaps, Ip and VS catalogues, nine `waveforms_by_circuit` cs3u ... pf4, MCLS modes). Ids are
+`uuid5` of fixed names (reruns identical); state `New`. Decisions: `xValues` and `t0s`/`t0f` relative to
+the segment start (derived from the mock), `ip0s`/`ip0f` in A (+|Ip|), coil currents = conductor current
+in A per circuit in the PCS sign (negated with respect to the design values), Ip > 0. No empty
+containers: the PSPS GUI rejects empty arrays, empty `points` lists, an empty `modes` list and an empty
+`setpoints` object (verified 2026-11-13). Every segment therefore has one Magnetics setpoint and at least
+one mode; a missing waveform is a 2-point zero placeholder, a missing point list one zero point, a segment
+without MCLS mode gets the placeholder mode `default`; each case is listed in `properties.unfilled`.
+The EXTENDED file (proposal) is the same typed document (`{type, value, ...}` nodes, UUID-keyed segments)
+plus what the schema cannot hold, placed where it belongs: the Ip reference per segment under
+`ip_control.<id>.parameters.ip` of every ip_control entry its modes use (id "0" added for feed-forward),
+`waveforms_by_circuit.pf5`/`pf6`, per segment `order`, `role` (nominal / exception / stop), `successor`,
+`exit` (type, event, watchdog_s, watchdog_target, blend_s) and `pcs_segment_id`, the exception and STOP
+segments as additional segments (`kind`, `overlay_of`, `action`, one Magnetics setpoint each: the
+exception's Ip trajectory when the design gives one, placeholders otherwise, the modes of the last nominal
+segment), `properties.events`, `properties.conventions`, `properties.unfilled` (every strict
+field written with a placeholder, with the reason), `properties.pds_additional` (gaps and other waveforms
+without a slot per segment, scalars such as gap geometry, KCURR settings when given, editable-by roles,
+MCLS field map) and `properties.extensions` (every added path pattern). `strip_extensions(extended)` gives
+the strict file node for node (tested). Every `list` node holds struct nodes only (the GUI rejects a
+list of string or array nodes, verified 2026-11-13): extension paths as `[{path}]`, string lists as
+`[{item}]`/`[{field}]`, matrices as `[{row}]`; and all elements of a list carry the same keys in the same
+order (the GUI rejects `events` with `release_threshold` on one element only, verified 2026-11-13, series
+8; the writer raises on a mixed list, and every event carries `release_threshold`, `= threshold` when the
+design gives no hysteresis, a zero `threshold` for a named predicate and a zero `box` when another event
+has one, each listed in `properties.unfilled`). Every struct key contains only letters, digits, `_` and
+`-` (the GUI rejects other characters, verified 2026-11-13; the writer raises on any other key, so the
+former `mcls_field_map` keys `t0s / t0f` etc. became `t0s_or_t0f`, `..._any`,
+`overlapping_modes_priority`). The CODAC PSPS parser (`parse-psps-file`, psps-dto 1.4.0, `presentation_value_parser.cpp:381-397`, checked 2026-11-16) also requires every list to be non-empty and its elements to have ONE type, array lengths and struct member names/types included; the writer raises otherwise, and `pds_additional.waveforms_without_slot`/`scalars_without_slot` are therefore structs keyed `<segment>__<quantity>`/`<quantity>` (each member the former list element unchanged). No IMAS path or wording in either file. Two input routes:
+`design_from_pulse_design` (this CLI, converter YAML: Ip, segments, constant `psc.references`,
+`events`/`exception_handling`, no modes) and `design_from_two_file_paths` (the two-file set
+`<name>_waveforms.yaml` + `<name>_segments.yaml`, with modes; also, from this folder,
+`python3 -m ip_waveform_export.export_psps_dto --waveforms W --segments S --out-dir D`). Tests:
+`tests/test_psps_dto.py` (conformity with the mock, skipped without it; `$PSPS_DTO_ORACLE` overrides its
+path; extended = strict + extensions, typed nodes, no IMAS wording).
 
 **pulse_schedule IDS** (`<out-dir>/ids`, HDF5) (D12). The DD version is selectable with
 `--dd-version` (else `globals.dd_version`, else 4.0.0, the version PDS uses). The Ip node is
@@ -265,7 +308,7 @@ the fork glue) must be checked against the fork wrapper (14-wide input today) in
 ```bash
 cd preprocessing/psps/ip_waveform_export
 python3 ip_waveform_export.py --yaml examples/ip_105073_like.yaml --out-dir /scratch/users/$USER/ipwf_out \
-    [--refgen] [--psps-json] [--ids [--dd-version 4.0.0]] [--stop-id 99]   # no flag = --refgen --psps-json
+    [--refgen] [--psps-json] [--psps-dto] [--ids [--dd-version 4.0.0]] [--stop-id 99]   # no flag = --refgen --psps-json
 python3 ip_waveform_export.py --yaml examples/ip_105073_like.yaml --validate [--limits limits/ip_limits_example.yaml]
 python3 ip_waveform_export.py --yaml examples/ip_105073_like_with_exceptions.yaml --out-dir ... --refgen-eh-example
 python3 ip_waveform_export.py --yaml examples/ip_105073_psc.yaml --out-dir ... --cut-at 84.317598 \
@@ -338,6 +381,42 @@ byte-for-byte check of each file are in `reference/third_party/PROVENANCE.md`.
     start at 0 (`PSCSysObj.m:66-70` defaults; a Simulink start at 84.3176 s gives a first dt of 84.3 s);
     the end_of_flux threshold is a PLACEHOLDER (PSC-1); the `CSPF_curr_ref[11]` order/frame against the
     fork wrapper is UNVERIFIED; debounce is not representable in the PSC global monitoring.
+
+## Compact YAML reading view of psps-dto files (`psps_dto_compact.py`)
+
+A lossless, human-readable view of any `psps-dto/v1.0/JSON` file (the PSPS qualification-server
+export or the PDS exports of `export_psps_dto.py`). It is a **reading view, not a PSPS format**: the
+PSPS reads and writes only the JSON; convert back before handing a file to the PSPS. The file has
+three top-level keys, in this order:
+
+- `pulse:` the content. Every typed node `{type, value, ...}` is replaced by its value (structs become
+  mappings, lists/arrays sequences, original key order kept). float32 values are written as the
+  shortest decimal that reads back to the same float32 (`15.6` instead of `15.600000381469727`;
+  restored with `float(np.float32(x))`); a value in a float32 field that is not an exact float32 is
+  written unchanged. Catalogues (`shape_control`, `ip_control`, `vs_control`) identical in every
+  setpoint (two setpoints or more) are written once under `pulse.catalogues` and replaced in each
+  setpoint by `shared`. A `waveforms_by_circuit` whose circuits all share one `xValues` is written as
+  `{t: [...], <circuit>: [...yValues...]}` (not applied when a circuit is named `t`). Segment and
+  setpoint UUID keys carry a `# segment <name>` / `# setpoint <name>` comment.
+- `units:` informational table of the display units per generic path (ignored when reading).
+- `_schema:` what was removed, for the round trip: the document header, the node attributes
+  (type, element_type, display, constraints, key order) once per generic path (UUID keys -> `*`,
+  list indices -> `[]`) plus per-path exceptions, the paths of nodes that could not be unwrapped
+  (kept verbatim in typed form inside `pulse:`), the float32 paths holding non-float32 values, the
+  shared catalogues, the collapsed waveforms and the byte layout of the source JSON.
+
+```bash
+python3 -m ip_waveform_export.psps_dto_compact to-yaml IN.json [OUT.yaml]   # default <stem>.compact.yaml
+python3 -m ip_waveform_export.psps_dto_compact to-json IN.yaml [OUT.json]   # default <stem>.json
+```
+
+`to-yaml` runs the round trip itself (in memory and through the YAML text, compared with
+`json.dumps` and `==`, and byte for byte when the source layout is recognised) and writes nothing,
+exit code 1, when it is not exact. `to-json` regenerates the source bytes when the layout was
+recognised (indent, ensure_ascii, trailing newline, one-line numeric arrays of the extended files),
+else writes indent 2. Tests: `tests/test_psps_dto_compact.py` (in-test DTOs from `build_dto` and a
+hand-written fixture; the PSPS mock and the D_eof / 105073 exports of the pds docs repository when
+present, `PSPS_DTO_ORACLE` / `PSPS_DOCS_DIR` override the paths).
 
 ## Predicting the PSC reference for given event times (`predict_psc_waveform.py`) — PROPOSAL
 

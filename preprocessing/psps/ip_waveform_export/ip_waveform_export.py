@@ -2,7 +2,7 @@
 """CLI: export a designer's Ip reference (Waveform-Editor-style YAML) three ways.
 
     python3 ip_waveform_export.py --yaml examples/ip_105073_like.yaml --out-dir out \
-        [--refgen] [--psps-json] [--ids [--dd-version 4.0.0]] [--stop-id 99] \
+        [--refgen] [--psps-json] [--psps-dto] [--ids [--dd-version 4.0.0]] [--stop-id 99] \
         [--refgen-eh-example] [--psc-config] [--cut-at T] \
         [--validate [--limits limits/ip_limits_example.yaml]]
 
@@ -14,8 +14,11 @@ examples/ip_105073_like_with_exceptions.yaml. --psc-config (PROPOSAL, PSC-3)
 writes the four PSC mask files into <out-dir>/psc_config_<name>/ from the
 'psc:', 'events:' and 'exception_handling:' blocks (examples/ip_105073_psc.yaml).
 --cut-at T (D20) starts the schedule at designer time T (PSC clock t = 0) for
-every export. With --validate, exports are written only when no violation is
-found.
+every export. --psps-dto writes <name>_psps_dto.json in the implemented PSPS
+exchange format psps-dto/v1.0/JSON (schema of the 2026-11-09 qualification-server
+mock) and <name>_psps_dto_extended.json (the same typed document plus what that
+schema cannot hold, listed in its properties.extensions). With
+--validate, exports are written only when no violation is found.
 
 Exit codes: 0 ok, 2 invalid input, 3 IMAS unavailable, 4 validation violations.
 """
@@ -55,6 +58,11 @@ def main(argv: list[str] | None = None) -> int:
         "--psps-json",
         action="store_true",
         help="write <name>_psps_wf.json (BEST-GUESS)",
+    )
+    ap.add_argument(
+        "--psps-dto",
+        action="store_true",
+        help="write <name>_psps_dto.json (psps-dto/v1.0/JSON) + <name>_psps_dto_extended.json",
     )
     ap.add_argument(
         "--ids",
@@ -103,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     exports = (
         args.refgen
         or args.psps_json
+        or args.psps_dto
         or args.ids
         or args.refgen_eh_example
         or args.psc_config
@@ -170,6 +179,15 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "PSPS JSON  :", write_psps_json(design, out / f"{design.name}_psps_wf.json")
         )
+    if args.psps_dto:
+        from ip_waveform_export.export_psps_dto import (
+            design_from_pulse_design,
+            write_psps_dto,
+        )
+
+        dto_design = design_from_pulse_design(design, {args.yaml: "converter YAML"})
+        for p in write_psps_dto(dto_design, out):
+            print("PSPS DTO   :", p)
     if args.ids:
         try:
             from ip_waveform_export.export_pulse_schedule_ids import (
