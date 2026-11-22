@@ -10,15 +10,15 @@ format status GUESS):
 _header, pulse, name, datasets.PCS.{WF, segments, moduleGroups.CTRL_Magnetic.PARAM}.
 
 Every block carries a `_status`: "real" (taken from a run file), "guess" (structure only), "placeholder".
-The KCURR gains come from the pcs-nightly checkout's KCURR_PFPO1_load_gains_tp.m ($PCS_PATH, default
-<repo>/local_installs/pcs-nightly installed by pds_setup.sh with INSTALL_PCS_NIGHTLY=true) (the file the
+The KCURR gains come from the pcs + pcssp-nightly checkout's KCURR_PFPO1_load_gains_tp.m ($PCS_PATH, default
+<repo>/local_installs/pcs-with-pcssp-nightly installed by pds_setup.sh with INSTALL_PCSSP_NIGHTLY=true) (the file the
 run's glue loads through pcssp_KCURR_PFPO1_obj.m); otherwise the presentation placeholders are written. Since
 2026-11-09 the selected gain set (*_Ip, IpControlMode = 1; VERIFIED by static reading of the module's Stateflow
 charts) is explicit: KCURR_PFPO1_Gains.selected / .Ip, the unused noIp set under ._not_selected.
 Nothing consumes these JSON files.
 
 Run:  python3 -I make_psc_psps_dataset.py      (needs PyYAML; standard library otherwise)
-      PCS_PATH=<other pcs-nightly checkout> python3 -I make_psc_psps_dataset.py   to override the default
+      PCS_PATH=<other pcs + pcssp-nightly checkout> python3 -I make_psc_psps_dataset.py   to override the default
 Options: --inputs <folder> (default <repo>/cases/input/psc), --out-dir <folder> (default <inputs>/<V>/psps_like),
          --gains <KCURR_PFPO1_load_gains_tp.m> (default $PCS_PATH/modules/KCURR_PFPO1/KCURR_PFPO1_load_gains_tp.m)
 """
@@ -37,8 +37,8 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]                                      # <repo>/preprocessing/psps/psc_run -> <repo>
 INPUTS = REPO / "cases" / "input" / "psc"                   # one sub-folder per variant
 OVERRIDES = REPO / "cases" / "overrides"
-# KCURR module files of the pcs-nightly checkout, relative to $PCS_PATH (default PCS_NIGHTLY_DEFAULT)
-PCS_NIGHTLY_DEFAULT = REPO / "local_installs" / "pcs-nightly"  # installed by pds_setup.sh, INSTALL_PCS_NIGHTLY
+# KCURR module files of the pcs + pcssp-nightly checkout, relative to $PCS_PATH (default PCS_NIGHTLY_DEFAULT)
+PCS_NIGHTLY_DEFAULT = REPO / "local_installs" / "pcs-with-pcssp-nightly"  # installed by pds_setup.sh, INSTALL_PCSSP_NIGHTLY
 GAINS_REL = "modules/KCURR_PFPO1/KCURR_PFPO1_load_gains_tp.m"
 TP_REL = "modules/KCURR_PFPO1/KCURR_PFPO1_ext/KCURR_PFPO1_load_tp.m"
 SCHED_REL = "modules/KCURR_PFPO1/KCURR_PFPO1_load_scheduling_fp.m"
@@ -167,7 +167,7 @@ def gains_block(gains_m, tp_m, sched_m):
             "gains_file": str(gains_m),
             "loaded_by": "pcssp_KCURR_PFPO1_obj.m: obj.addtunparamstruct('KCURR_PFPO1_Gains', @KCURR_PFPO1_load_gains_tp); "
                          "obj.init/setup called by the run glue muscle_controller_NICE_IMAS_iter_init_psc.m:210-212",
-            "framework_copy": "$PCS_PATH checkout (local_installs/pcs-nightly) = pcs aa217bc (git.iter.org/pcs/pcs, 2026-08-17) + "
+            "framework_copy": "$PCS_PATH checkout (local_installs/pcs-with-pcssp-nightly) = pcs aa217bc (git.iter.org/pcs/pcs, 2026-08-17) + "
                               "pcssp-nightly@merge_IGZ_PSC ebf3ee0 src/psc (D18)",
             "module": "pcssp_KCURR_PFPO1 (settiming 0, 0.002, 10); the KCURR_PFPO1_ext variant (external gains) was NOT used: "
                       "its gains loader is commented out in pcssp_KCURR_ext_obj.m",
@@ -441,8 +441,8 @@ def main():
     inputs = Path(args.inputs)
     framework = Path(os.environ.get("PCS_PATH") or PCS_NIGHTLY_DEFAULT)
     if not (framework / "pcssp" / "src" / "psc").is_dir():
-        sys.exit(f"pcs-nightly not installed ({framework}/pcssp/src/psc missing): run pds_setup.sh with "
-                 "INSTALL_PCS_NIGHTLY=true, or export PCS_PATH to a pcs + pcssp-nightly checkout")
+        sys.exit(f"pcs-with-pcssp-nightly not installed ({framework}/pcssp/src/psc missing): run pds_setup.sh with "
+                 "INSTALL_PCSSP_NIGHTLY=true, or export PCS_PATH to a pcs + pcssp-nightly checkout")
     gains_m = Path(args.gains) if args.gains else framework / GAINS_REL
     param = gains_block(gains_m, framework / TP_REL, framework / SCHED_REL)
     print("PARAM status:", param["_status"])

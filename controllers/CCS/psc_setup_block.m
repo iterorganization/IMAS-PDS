@@ -2,7 +2,7 @@ function psc_setup_block(blk, cfgdir)
 % Gives the PSC block blk (Subsystem Reference to PSC) the four files of the folder cfgdir and
 % runs the PSC's own mask set-up: buses PSC_In/Out/Int_Bus and PSCObj in the base workspace.
 % Called by the controller init with psc_enabled = 1; also usable from the command window
-% (pcs-nightly on the path) to have the buses when editing the model.
+% (local_installs/pcs-with-pcssp-nightly on the path) to have the buses when editing the model.
 files = {'PSCIntConfig.xml', 'PSCGlobalMonConfig.xml', 'BTree.xml', 'PS.xml'};
 [~, B] = PcsSignal(1, "value", "");
 assignin('base', 'Pcssignal', B{1});

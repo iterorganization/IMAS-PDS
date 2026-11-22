@@ -54,23 +54,26 @@ create `cases/runs/psc5_logs` first), or use `sbatch --chdir`.
 
 ## Dependencies
 
-- `local_installs/pcs-nightly`: the PCS framework with the Pulse Supervision Controller, a PDS
-  local dependency installed by `pds_setup.sh` with `INSTALL_PCS_NIGHTLY="true"`
-  (`setup_files/setup_pcs_nightly.sh`): `pcs` (`ssh://git@git.iter.org/pcs/pcs.git`, branch
-  `master`) with `pcssp-nightly` (`ssh://git@git.iter.org/pcs/pcssp-nightly.git`, branch
-  `merge_IGZ_PSC`, the only line carrying the PSC `src/psc/PSC.slx`) cloned under its `pcssp/`
+- `local_installs/pcs-with-pcssp-nightly`: the PCS framework with the Pulse Supervision
+  Controller, a PDS local dependency installed by `pds_setup.sh` with
+  `INSTALL_PCSSP_NIGHTLY="true"` (`setup_files/setup_pcs_with_pcssp_nightly.sh`). It is not a
+  repository of its own: a clone of `pcs` (`ssh://git@git.iter.org/pcs/pcs.git`, branch
+  `master`) with a clone of `pcssp-nightly` (`ssh://git@git.iter.org/pcs/pcssp-nightly.git`,
+  branch `merge_IGZ_PSC`, the only line carrying the PSC `src/psc/PSC.slx`) under its `pcssp/`
   and the `scdds` submodule initialised. Both need SSH access to git.iter.org. `pds_setup.sh`
-  pins the tested reference, pcs `aa217bc` and pcssp-nightly `ebf3ee0` (`PIN_PCS_NIGHTLY_PCS`,
-  `PIN_PCSSP_NIGHTLY`; set empty to follow the branch tips). Used by `make_psc_psps_dataset.py`
-  and the program `magnetic_controller_psc` in `workflows/lib/local_programs.ymmsl`.
+  pins the tested reference, pcs `aa217bc` and pcssp-nightly `ebf3ee0`
+  (`PIN_PCS_FOR_PCSSP_NIGHTLY`, `PIN_PCSSP_NIGHTLY`; set empty to follow the branch tips). Used
+  by `make_psc_psps_dataset.py` and the programs `magnetic_controller` /
+  `magnetic_controller_psc` in `workflows/lib/local_programs.ymmsl`. Its former name
+  `local_installs/pcs-nightly` may exist as a compatibility symlink for older run directories.
 - MATLAB chain from the PDS modules: `PCS/2026.08-pds` (MATLAB with the muscle3 venv) and
   `IMAS-MATLAB/5.6.0-intel-2025b-DD-4.1.1`, loaded by the controller program.
 - `imas-python` (PDS module) for the pulse_schedule IDS export of the converter (`--ids`).
 
 ## Environment
 
-- `PCS_PATH`: pcs + pcssp-nightly checkout; `local_installs/pcs-nightly` in
-  `make_psc_psps_dataset.py` and the program `magnetic_controller_psc`.
+- `PCS_PATH`: pcs + pcssp-nightly checkout; `local_installs/pcs-with-pcssp-nightly` in
+  `make_psc_psps_dataset.py` and the controller programs (resolved with `readlink -f` there).
 - `PDS_REPO`: repo root; derived by the scripts when not exported.
 - Site paths kept as such: `/work/projects/pds/modules/all` (modules) and
   `/scratch/users/$USER` (scratch work folders of the Slurm jobs).

@@ -20,7 +20,7 @@ INSTALL_NICE="true"
 INSTALL_TORAX="true"
 INSTALL_CHEASE="false"
 INSTALL_PCS="true"
-INSTALL_PCS_NIGHTLY="false"
+INSTALL_PCSSP_NIGHTLY="false"
 
 BRANCH_PDS='master'
 BRANCH_IMAS_MUSCLE3='develop'
@@ -31,10 +31,10 @@ BRANCH_NICE='develop'
 BRANCH_TORAX='feature/nice_owns_psi'
 BRANCH_CHEASE='feature/muscle3'
 BRANCH_PCS='master'
-BRANCH_PCS_NIGHTLY_PCS='master'
+BRANCH_PCS_FOR_PCSSP_NIGHTLY='master'
 BRANCH_PCSSP_NIGHTLY='merge_IGZ_PSC'
 # tested reference for the PSC-in-the-loop controller (pcs + pcssp-nightly); set empty to follow the branch tips
-PIN_PCS_NIGHTLY_PCS='aa217bc'
+PIN_PCS_FOR_PCSSP_NIGHTLY='aa217bc'
 PIN_PCSSP_NIGHTLY='ebf3ee0'
 
 is_sourced() {
@@ -161,19 +161,19 @@ CURR_INSTALL='START'
     echo "Skipping PCS"
   fi
 
-  # SET UP PCS-NIGHTLY (PSC)
-  CURR_INSTALL='PCS-NIGHTLY'
+  # SET UP PCS WITH PCSSP-NIGHTLY (PSC): local_installs/pcs-with-pcssp-nightly
+  CURR_INSTALL='PCS-WITH-PCSSP-NIGHTLY'
   PCS_URL="ssh://git@git.iter.org/pcs/pcs.git"
   PCSSP_NIGHTLY_URL="ssh://git@git.iter.org/pcs/pcssp-nightly.git"
-  if [ "$INSTALL_PCS_NIGHTLY" = "true" ] \
-    && [ ! -d "pcs-nightly" ] \
+  if [ "$INSTALL_PCSSP_NIGHTLY" = "true" ] \
+    && [ ! -d "pcs-with-pcssp-nightly" ] \
     && git ls-remote "$PCS_URL" &>/dev/null \
     && git ls-remote "$PCSSP_NIGHTLY_URL" &>/dev/null; then
-    echo "############## INSTALLING PCS-NIGHTLY (PSC) ##############"
-    bash ../setup_files/setup_pcs_nightly.sh "$PCS_URL" "$BRANCH_PCS_NIGHTLY_PCS" "$PCSSP_NIGHTLY_URL" "$BRANCH_PCSSP_NIGHTLY" "$PIN_PCS_NIGHTLY_PCS" "$PIN_PCSSP_NIGHTLY"
-    echo "############## FINISHED PCS-NIGHTLY ##############"
+    echo "############## INSTALLING PCS WITH PCSSP-NIGHTLY (PSC) ##############"
+    bash ../setup_files/setup_pcs_with_pcssp_nightly.sh "$PCS_URL" "$BRANCH_PCS_FOR_PCSSP_NIGHTLY" "$PCSSP_NIGHTLY_URL" "$BRANCH_PCSSP_NIGHTLY" "$PIN_PCS_FOR_PCSSP_NIGHTLY" "$PIN_PCSSP_NIGHTLY"
+    echo "############## FINISHED PCS WITH PCSSP-NIGHTLY ##############"
   else
-    echo "Skipping PCS-NIGHTLY"
+    echo "Skipping PCS WITH PCSSP-NIGHTLY"
   fi
 
   # SET UP CHEASE
