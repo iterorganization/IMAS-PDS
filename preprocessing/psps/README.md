@@ -19,6 +19,9 @@ The controller is the usual one (`controllers/CCS/muscle_controller_NICE_IMAS_it
 giving Ipl_ref, with z_meas = zpl, the current centre); with the setting `psc_enabled: 1` the
 init gives it the four files of `psc_config_dir` and runs the model from t = 0, the PSC's clock.
 
+- `make_mcls_psc_config.py`: adds the `force_control_mode` output (MCLS forced mode per segment)
+  to a set of PSC files written by the converter (used for `cases/input/psc/ip_story_mockup/`).
+
 ## Inputs and outputs in the repository
 
 - The PSC signals go in the run's `simulink_log.csv` once they are wired to the logger Mux
@@ -35,7 +38,7 @@ init gives it the four files of `psc_config_dir` and runs the model from t = 0, 
   and the `scdds` submodule initialised. Both need SSH access to git.iter.org. `pds_setup.sh`
   pins the tested reference, pcs `aa217bc` and pcssp-nightly `ebf3ee0`
   (`PIN_PCS_FOR_PCSSP_NIGHTLY`, `PIN_PCSSP_NIGHTLY`; set empty to follow the branch tips). Used
-  by the programs `magnetic_controller` /
+  by the MCLS model build and the programs `magnetic_controller` /
   `magnetic_controller_psc` in `workflows/lib/local_programs.ymmsl`. Its former name
   `local_installs/pcs-nightly` may exist as a compatibility symlink for older run directories.
 - MATLAB chain from the PDS modules: `PCS/2026.08-pds` (MATLAB with the muscle3 venv) and
@@ -45,7 +48,7 @@ init gives it the four files of `psc_config_dir` and runs the model from t = 0, 
 ## Environment
 
 - `PCS_PATH`: pcs + pcssp-nightly checkout; `local_installs/pcs-with-pcssp-nightly` (resolved
-  with `readlink -f`) in the controller programs.
+  with `readlink -f`) in the MCLS build and the controller programs.
 - `PDS_REPO`: repo root; derived by the scripts when not exported.
 - Site paths kept as such: `/work/projects/pds/modules/all` (modules) and
   `/scratch/users/$USER` (scratch work folders of the Slurm jobs).

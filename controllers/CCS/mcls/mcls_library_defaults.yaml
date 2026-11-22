@@ -1,0 +1,898 @@
+# MCLS library defaults for PDS, exported from a MATLAB .mat file by controllers/CCS/mcls/tools/mat_to_yaml_mcls.py
+# (do not edit by hand; re-export instead). Encoding: see the docstring of that tool. Read in MATLAB by
+# controllers/CCS/mcls/mcls_load_table.m. Provenance: controllers/CCS/mcls/third_party/PROVENANCE.md.
+format: pds-mcls-matlab-yaml-1
+source: pcssp-iter@8b30ca4b (ssh://git@git.iter.org/pcs/pcssp-iter.git, branch develop, 2025-11-10) device_lib/MCLS/MCLS_publicConfiguration/Config_MCLS.mat,
+  byte-identical to the blob of that commit (checked 2026-11-21)
+variables:
+  configMCLS:
+    matlab_class: struct
+    size: [1, 1]
+    fields: [MCMode, StartingMode, FilenameforDiary, TsMCLS, MCModeFieldstruct, EnablingConditions, AlarmsStructure]
+    data:
+    - MCMode:
+        matlab_class: struct
+        size: [1, 6]
+        fields: [Name, CCSVCSmodes, time0intervals, time0intervalf, timemax, Ip0intervals, Ip0intervalf, Ipmin, Ipmax, NextEnabledModes,
+          SNUControl, EnablingConditions, AlarmsEnabled, MaxCurrContrError, ReferenceSmoothTransition, VSControlMode, ShapeIpControlMode,
+          IpControlMode, MaxIplContrError, MaxRplContrError, MaxZplContrError, BoxForCentroid, MaxFluxContrError, BoxForXP,
+          CurrentLimitAvoidance, MaxGapContrError, FWHLProtectionControl, EnablingFWHLProtectionControl, VS3Kicks, VS3KicksEnablingConditions,
+          HLTransitionControl, LHTransitionControl, EmergencyShutDownPolicy]
+        data:
+        - Name: Only Feedforward
+          CCSVCSmodes: 1
+          time0intervals: 0
+          time0intervalf: 1
+          timemax: 5
+          Ip0intervals: 0
+          Ip0intervalf: 700000
+          Ipmin: 0
+          Ipmax: 2000000
+          NextEnabledModes:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, 4, 3, 2]
+          SNUControl: 1
+          EnablingConditions: 1
+          AlarmsEnabled: 9
+          MaxCurrContrError: 200
+          ReferenceSmoothTransition: 0
+          VSControlMode: 0
+          ShapeIpControlMode: 0
+          IpControlMode: 0
+          MaxIplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxRplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxZplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxFluxContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForXP:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          CurrentLimitAvoidance:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxGapContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          FWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingFWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3Kicks:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3KicksEnablingConditions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          HLTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          LHTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EmergencyShutDownPolicy:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - Name: Early rampup
+          CCSVCSmodes: 1
+          time0intervals: 1.5
+          time0intervalf: 1.8
+          timemax: 10
+          Ip0intervals: 500000
+          Ip0intervalf: 1000000
+          Ipmin: 500000
+          Ipmax: 3500000
+          NextEnabledModes:
+            matlab_class: double
+            size: [1, 3]
+            data: [5, 4, 3]
+          SNUControl: 1
+          EnablingConditions: 1
+          AlarmsEnabled:
+            matlab_class: double
+            size: [1, 6]
+            data: [1, 2, 3, 4, 5, 6]
+          MaxCurrContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          ReferenceSmoothTransition: 1
+          VSControlMode: 3
+          ShapeIpControlMode: 1
+          IpControlMode: 1
+          MaxIplContrError: 300000
+          MaxRplContrError: 0.2
+          MaxZplContrError: 0.2
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 4]
+            data: [6, 0.2, 1, 1]
+          MaxFluxContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForXP:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          CurrentLimitAvoidance:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxGapContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          FWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingFWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3Kicks:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3KicksEnablingConditions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          HLTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          LHTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EmergencyShutDownPolicy:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - Name: Rampup Limiter Isoflux
+          CCSVCSmodes: 1
+          time0intervals: 4
+          time0intervalf: 6
+          timemax: 15
+          Ip0intervals: 2000000
+          Ip0intervalf: 2500000
+          Ipmin: 500000
+          Ipmax: 4000000
+          NextEnabledModes:
+            matlab_class: double
+            size: [1, 2]
+            data: [5, 4]
+          SNUControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingConditions: 1
+          AlarmsEnabled:
+            matlab_class: double
+            size: [1, 5]
+            data: [1, 2, 3, 4, 8]
+          MaxCurrContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          ReferenceSmoothTransition: 1
+          VSControlMode: 3
+          ShapeIpControlMode: 2
+          IpControlMode: 1
+          MaxIplContrError: 300000
+          MaxRplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxZplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxFluxContrError: 1
+          BoxForXP:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          CurrentLimitAvoidance:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxGapContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          FWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingFWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3Kicks:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3KicksEnablingConditions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          HLTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          LHTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EmergencyShutDownPolicy:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - Name: Rampup Limiter Isoflux XPF
+          CCSVCSmodes: 1
+          time0intervals: 4
+          time0intervalf: 6
+          timemax: 18
+          Ip0intervals: 2500000
+          Ip0intervalf: 4000000
+          Ipmin: 2000000
+          Ipmax: 5500000
+          NextEnabledModes: 5
+          SNUControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingConditions: 2
+          AlarmsEnabled:
+            matlab_class: double
+            size: [1, 5]
+            data: [1, 2, 3, 4, 8]
+          MaxCurrContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          ReferenceSmoothTransition: 1
+          VSControlMode: 1
+          ShapeIpControlMode: 3
+          IpControlMode: 1
+          MaxIplContrError: 300000
+          MaxRplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxZplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxFluxContrError: 1
+          BoxForXP:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, -3, 1.1, 1.1]
+          CurrentLimitAvoidance:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxGapContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          FWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingFWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3Kicks:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3KicksEnablingConditions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          HLTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          LHTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EmergencyShutDownPolicy:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - Name: Rampup Gap Control
+          CCSVCSmodes: 1
+          time0intervals: 6
+          time0intervalf: 20
+          timemax: 18
+          Ip0intervals: 3500000
+          Ip0intervalf: 15000000
+          Ipmin: 2000000
+          Ipmax: 15000000
+          NextEnabledModes: 6
+          SNUControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingConditions:
+            matlab_class: double
+            size: [1, 4]
+            data: [1, 2, 3, 6]
+          AlarmsEnabled:
+            matlab_class: double
+            size: [1, 5]
+            data: [1, 2, 3, 4, 7]
+          MaxCurrContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          ReferenceSmoothTransition: 1
+          VSControlMode: 1
+          ShapeIpControlMode: 4
+          IpControlMode: 1
+          MaxIplContrError: 300000
+          MaxRplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxZplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 4]
+            data: [6, 0.2, 1, 1]
+          MaxFluxContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForXP:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, -3, 1.1, 1.1]
+          CurrentLimitAvoidance: 1
+          MaxGapContrError: 0.2
+          FWHLProtectionControl: 1
+          EnablingFWHLProtectionControl: 9
+          VS3Kicks: 1
+          VS3KicksEnablingConditions: 12
+          HLTransitionControl: 1
+          LHTransitionControl: 1
+          EmergencyShutDownPolicy: 1
+        - Name: Flattop Six Gaps Control
+          CCSVCSmodes: 1
+          time0intervals: 50
+          time0intervalf: 100
+          timemax: 1000
+          Ip0intervals: 12000000
+          Ip0intervalf: 17000000
+          Ipmin: 10000000
+          Ipmax: 17000000
+          NextEnabledModes: 6
+          SNUControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingConditions:
+            matlab_class: double
+            size: [1, 4]
+            data: [1, 2, 3, 6]
+          AlarmsEnabled:
+            matlab_class: double
+            size: [1, 5]
+            data: [1, 2, 3, 4, 7]
+          MaxCurrContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          ReferenceSmoothTransition: 1
+          VSControlMode: 1
+          ShapeIpControlMode: 4
+          IpControlMode: 1
+          MaxIplContrError: 300000
+          MaxRplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          MaxZplContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForCentroid:
+            matlab_class: double
+            size: [1, 4]
+            data: [6, 0.2, 1, 1]
+          MaxFluxContrError:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          BoxForXP:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, -3, 1.1, 1.1]
+          CurrentLimitAvoidance: 1
+          MaxGapContrError: 0.2
+          FWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EnablingFWHLProtectionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          VS3Kicks: 1
+          VS3KicksEnablingConditions: 12
+          HLTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          LHTransitionControl:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+          EmergencyShutDownPolicy:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+      StartingMode: 1
+      FilenameforDiary: Magnetic Control Settings.txt
+      TsMCLS: 0.1
+      MCModeFieldstruct:
+        matlab_class: struct
+        size: [1, 42]
+        fields: [namefield, String2diary, type, default, stroptions]
+        data:
+        - namefield: Name
+          String2diary: 'Name '
+          type: String
+          default: To be defined
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: time0intervals
+          String2diary: 'Starting [s] time >= '
+          type: Real
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: time0intervalf
+          String2diary: 'Starting [s] time <= '
+          type: Real
+          default: 100000
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: timemax
+          String2diary: 'Time [s] must not exceed '
+          type: Real
+          default: 100000
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: Ip0intervals
+          String2diary: 'Starting [A] Ip >= '
+          type: Real
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: Ip0intervalf
+          String2diary: 'Starting [A] Ip <= '
+          type: Real
+          default: 100000000
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: Ipmin
+          String2diary: 'Minimum Ip [A] '
+          type: Real
+          default: 0
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: Ipmax
+          String2diary: 'Maximum Ip [A] '
+          type: Real
+          default: 100000000
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: NextEnabledModes
+          String2diary: 'Next Enabled Modes '
+          type: Integer array
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: EnablingConditions
+          String2diary: 'EnablingConditions '
+          type: Integer array
+          default:
+            matlab_class: double
+            size: [1, 12]
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: CCSVCSmodes
+          String2diary: 'Current or Voltage Control Mode '
+          type: Logical
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Current control scheme (0), Voltage control scheme (1)]
+        - namefield: VSControlMode
+          String2diary: 'VS Control Mode '
+          type: Integer
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: cell
+            size: [4, 1]
+            data: [Off (0), VS1 (1), VS3 (2), VS1+VS3 (3)]
+        - namefield: ShapeIpControlMode
+          String2diary: 'Shape Ip Control Mode '
+          type: Integer
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: cell
+            size: [6, 1]
+            data: [Off (0), Position Control Rpl and Zpl (1), Isoflux Shape Control (2), Isoflux Shape Control with Xpoint
+                (3), Gap Control (4), Only CSPF Currents (5)]
+        - namefield: IpControlMode
+          String2diary: 'Plasma Current Control Mode '
+          type: Logical
+          default:
+            matlab_class: double
+            size: [1, 1]
+            data: [NaN]
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: SCIpScaling
+          String2diary: 'Ip Scaling Mode in ShapeIp Control '
+          type: Integer
+          default: 1
+          stroptions:
+            matlab_class: cell
+            size: [3, 1]
+            data: [Off (0), On with nominal Ip (1), On with estimated Ip (2)]
+        - namefield: VSIpScaling
+          String2diary: 'Ip Scaling Mode in VS Control '
+          type: Integer
+          default: 1
+          stroptions:
+            matlab_class: cell
+            size: [3, 1]
+            data: [Off (0), On with nominal Ip (1), On with estimated Ip (2)]
+        - namefield: ReferenceSmoothTransition
+          String2diary: 'Reference Signals Smooth Transition '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: CurrentLimitAvoidance
+          String2diary: 'Current Limit Avoidance '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: SNUControl
+          String2diary: 'SNU Control '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: VS3Kicks
+          String2diary: 'VS3 Kicks '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: VS3KicksEnablingConditions
+          String2diary: VS3 Kicks Enabling Conditions
+          type: Integer array
+          default: 12
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: HLTransitionControl
+          String2diary: 'HL Transition Control '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: EnablingHLTransitionControl
+          String2diary: 'Enabling Conditions HL Transition Control '
+          type: Integer array
+          default:
+            matlab_class: double
+            size: [1, 3]
+            data: [3, 6, 7]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: LHTransitionControl
+          String2diary: 'LH Transition Control '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: EnablingLHTransitionControl
+          String2diary: 'Enabling Conditions for LH Transition Control '
+          type: Integer array
+          default:
+            matlab_class: double
+            size: [1, 2]
+            data: [3, 8]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: FWHLProtectionControl
+          String2diary: 'FWHL Protection Control '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: EnablingFWHLProtectionControl
+          String2diary: 'Enabling Conditions for FWHL Protection Control '
+          type: Integer array
+          default: 9
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: VS3FailureManagControl
+          String2diary: 'VS3 Failure Management Control '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: EnablingVS3FailureManagControl
+          String2diary: 'Enabling Conditions VS3 Failure Management Control '
+          type: Integer array
+          default: 11
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: EmergencyShutDownPolicy
+          String2diary: 'Emergency Shut Down Policy '
+          type: Logical
+          default: 0
+          stroptions:
+            matlab_class: cell
+            size: [2, 1]
+            data: [Off (0), On (1)]
+        - namefield: EnablingEmergencyShutDownPolicy
+          String2diary: 'Enabling Conditions for Emergency Shut Down Policy '
+          type: Integer array
+          default: 10
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: BoxForXP
+          String2diary: 'Box for XP [R Z DR DZ ] [m] '
+          type: Real
+          default:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, -3, 1, 1]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: BoxForCentroid
+          String2diary: 'Box for Centroid [R Z DR DZ ] [m] '
+          type: Real
+          default:
+            matlab_class: double
+            size: [1, 4]
+            data: [6, 0, 10, 10]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: BoxForXPUP
+          String2diary: 'Box for XPUP [R Z DR DZ ] [m] '
+          type: Real
+          default:
+            matlab_class: double
+            size: [1, 4]
+            data: [5, 3, 2, 2]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: dsepmin
+          String2diary: 'dsepmin [m] '
+          type: Real
+          default: 0.05
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: AlarmsEnabled
+          String2diary: 'Alarms Enabled '
+          type: Integer array
+          default:
+            matlab_class: double
+            size: [1, 9]
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxIplContrError
+          String2diary: 'Max Ipl Control Error [A] '
+          type: Real
+          default: 1000000
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxRplContrError
+          String2diary: 'Max Rpl Control Error [m] '
+          type: Real
+          default: 0.5
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxZplContrError
+          String2diary: 'Max Zpl Control Error [m] '
+          type: Real
+          default: 0.5
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxGapContrError
+          String2diary: 'Max Gap Control Error [m] '
+          type: Real
+          default: 0.5
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxFluxContrError
+          String2diary: 'Max Flux Control Error [Wb] '
+          type: Real
+          default: 1
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+        - namefield: MaxCurrContrError
+          String2diary: 'Max Current Control Error [A] '
+          type: Real
+          default: 500
+          stroptions:
+            matlab_class: double
+            size: [1, 0]
+            data: []
+      EnablingConditions:
+        matlab_class: struct
+        size: [1, 12]
+        fields: [Name]
+        data:
+        - {Name: isCentroidinbox}
+        - {Name: isXPinbox}
+        - {Name: isdiverted}
+        - {Name: isXPUPinbox}
+        - {Name: dsepLTdsepmin}
+        - {Name: isHmode}
+        - {Name: H to L transition control policy triggered}
+        - {Name: L to H transition control policy triggered}
+        - {Name: First Wall Heat Load Protection triggered}
+        - {Name: VS3 Failure detected}
+        - {Name: Emergency Shut Down Policies triggered}
+        - {Name: VS3 healthy}
+      AlarmsStructure:
+        matlab_class: struct
+        size: [1, 9]
+        fields: [Name]
+        data:
+        - {Name: Time interval limitation exceeded for the actual control Mode}
+        - {Name: Ip minimum limitation exceeded for the actual control Mode}
+        - {Name: Ip maximum limitation exceeded for the actual control Mode}
+        - {Name: abs(Iplerror) > ErrIplmax}
+        - {Name: abs(Rplerror) > ErrRplmax}
+        - {Name: abs(Zplerror) > ErrZplmax}
+        - {Name: max(abs(Gaperror)) > ErrGapmax}
+        - {Name: max(abs(Fluxerror)) > ErrFluxmax}
+        - {Name: max(abs(Currerror)) > ErrCurmax}

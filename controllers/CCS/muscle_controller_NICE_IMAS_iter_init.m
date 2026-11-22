@@ -8,6 +8,10 @@
 %    every step through muscle_nice2control / muscle_control2nice.
 % With the setting psc_enabled = 1 the PSC block of the model (pulse supervision, pcssp-nightly)
 % gets its configuration from psc_config_dir and the model runs from t = 0, the PSC's clock.
+% With the setting mcls_enabled = 1 (requires psc_enabled = 1) the model pcssp_controller_and_ps_mcls runs instead:
+% the same model plus the MCLS (Magnetic Control Local Supervisor) block, whose outputs drive the mode inputs of
+% KCURR, RZIp and VS (and of ShapeIp when mcls_shape_enable = 1); mode table from the YAML file mcls_config
+% (controllers/CCS/mcls/mcls_load_table.m), log RUN_DIR/mcls_log.csv. With mcls_enabled = 0 nothing changes.
 
 fprintf('Controller Initialization\n')
 
@@ -69,6 +73,23 @@ if instance.reuse_instance()
     end
     % the PSC counts its time from 0: with the PSC the model runs from 0 = t_start
     t_offset = psc_enabled * t_start;   % plasma time = Simulink time + t_offset (also read by log_row)
+    mcls_enabled = double(instance.get_setting('mcls_enabled', pyargs('default', 0)));          % 1: MCLS in the model
+    controller_model = 'pcssp_controller_and_ps';
+    if mcls_enabled
+        % MCLS: model with the MCLS block, mode table (four Parameter data of the block, base workspace)
+        if ~psc_enabled
+            error('muscle_controller_NICE_IMAS_iter_init:mcls', 'mcls_enabled = 1 needs psc_enabled = 1 (the MCLS takes ForceControlMode from the PSC bus)');
+        end
+        controller_model = 'pcssp_controller_and_ps_mcls';
+        mcls_dir = fullfile(getenv('CONTROLLER_PATH'), 'mcls');
+        addpath(mcls_dir, fullfile(mcls_dir, 'third_party'));
+        mcls_config = char(instance.get_setting('mcls_config'));                                % mode-table YAML (required)
+        mcls_shape_enable = double(instance.get_setting('mcls_shape_enable', pyargs('default', 0)));   % 1: ShapeIp modes from the MCLS
+        [MCMode, StartingMode, NAlarms, NEnablingConditions, mcls_info] = mcls_load_table(mcls_config, ...
+            fullfile(mcls_dir, 'mcls_library_defaults.yaml'), fullfile(getenv('RUN_DIR'), 'mcls_diary.txt'));
+        logger.info(sprintf('MCLS table %s: %d mode(s) [%s], StartingMode %d, shape guard enable %d; model %s', ...
+            mcls_config, numel(MCMode), strjoin(strtrim(mcls_info.MCModeNames), ', '), StartingMode, mcls_shape_enable, controller_model));
+    end
 
     %% controlled gaps and isoflux control points
     GAP_LIST = [3 8 15 21 25 48];   % the gaps used by shapeIp_CCS (nonzero columns of its Proj)
@@ -194,7 +215,13 @@ if instance.reuse_instance()
     obj3.init;
     % VS gains from FC016 instead of the module's defaults
     S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
-    obj3.update_nominal_param_value('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+    if mcls_enabled && isprop(obj3, 'ddHdl') && ~isempty(obj3.ddHdl) && ismethod(obj3.ddHdl, 'updateField')
+        % scdds-core 6b7e482 (pcssp-nightly merge_IGZ_PSC): update_nominal_param_value calls ddHdl.updateValue,
+        % absent from SCDDSclass_ddHdl (renamed updateField, SCDDSclass_ddHdl.m:189-230; SCDDSclass_algo.m:1023-1026)
+        obj3.ddHdl.updateField('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+    else
+        obj3.update_nominal_param_value('VS_fp', ccs_vs_fp(obj3, S.Config_VS));
+    end
     fprintf('VS gains from FC016_Config_VS.mat (KZ_VS1 = %g)\n', S.Config_VS.Gains.KZ_VS1);
     obj3.setup;
 
@@ -214,7 +241,7 @@ if instance.reuse_instance()
     SCDconf_setConf('pcssp_Simulation', 'configurations_container_pcssp.sldd');
 
     % data dictionary of the top model: links the modules' dictionaries and the base workspace
-    top_dd_file = fullfile(fileparts(which('pcssp_controller_and_ps.slx')), 'pcssp_controller_and_ps.sldd');
+    top_dd_file = fullfile(fileparts(which([controller_model '.slx'])), [controller_model '.sldd']);
     if isfile(top_dd_file)
         top_dd = Simulink.data.dictionary.open(top_dd_file);
     else
@@ -233,20 +260,34 @@ if instance.reuse_instance()
     end
     close(top_dd);
     set_param(0, 'ErrorIfLoadNewModel', 'off');   % pcssp-nightly PSC.slx (in the model) is saved by a newer MATLAB
-    load_system('pcssp_controller_and_ps');
-    set_param('pcssp_controller_and_ps', 'DataDictionary', 'pcssp_controller_and_ps.sldd');
+    load_system(controller_model);
+    set_param(controller_model, 'DataDictionary', [controller_model '.sldd']);
     if psc_enabled
         % the PSC block (Subsystem Reference to PSC) gets its four files
-        psc_blk = find_system('pcssp_controller_and_ps', 'LookUnderMasks', 'all', 'ReferencedSubsystem', 'PSC');
+        psc_blk = find_system(controller_model, 'LookUnderMasks', 'all', 'ReferencedSubsystem', 'PSC');
         if isempty(psc_blk)
             error('psc_enabled = 1 but the model has no PSC block (Subsystem Reference to PSC)');
         end
         psc_setup_block(psc_blk{1}, psc_config_dir);
         logger.info(sprintf('PSC configured from %s', psc_config_dir));
     end
+    if mcls_enabled
+        % MCLS log (mcls_log_row.m; columns = MCLS_mux order of the model, then the NAlarms alarms and the
+        % NEnablingConditions enabling conditions)
+        mcls_csv = fullfile(getenv('RUN_DIR'), 'mcls_log.csv');
+        if exist(mcls_csv, 'file'), delete(mcls_csv); end
+        f = fopen(mcls_csv, 'w');
+        hdr = {'t_abs','t_sim','ControlModeIndex','ShapeIpControlMode','IpControlMode','VSControlMode','SCIpScaling', ...
+            'VSIpScaling','SNUControl','CurrentLimitAvoidance','VS3_kick_volt_on','RefSmoothTrans','HL_contr_on', ...
+            'LH_contr_on','FWHLP_contr_on','EmShutDown_contr_on','ForceControlMode','Ipl_est_pcs','mcls_time'};
+        for k = 1:NAlarms, hdr{end+1} = sprintf('alarm_%d', k); end %#ok<AGROW>
+        for k = 1:NEnablingConditions, hdr{end+1} = sprintf('cond_%d', k); end %#ok<AGROW>
+        fprintf(f, '%s\n', strjoin(hdr, ','));
+        fclose(f);
+    end
 
     %% simulation
-    in = Simulink.SimulationInput('pcssp_controller_and_ps');
+    in = Simulink.SimulationInput(controller_model);
     in = in.setModelParameter('StartTime', num2str(t_start - t_offset), 'StopTime', num2str(t_max - t_offset));
     in = in.setModelParameter('SaveOutput', 'on');
 
@@ -301,7 +342,7 @@ if instance.reuse_instance()
     fprintf('Start closed loop\n')
     tic;
     logs = sim(in);
-    close_system('pcssp_controller_and_ps', 0);
+    close_system(controller_model, 0);
     simulation_time = toc;
     plasma_duration = t_max - t_start;
     fprintf(['\nControl over! ' num2str(simulation_time) 's of simulation for ' num2str(plasma_duration) 's of plasma.\n']);

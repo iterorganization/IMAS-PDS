@@ -1,0 +1,84 @@
+# MCLS mode table of the scenario story 105073 (README.md of this folder). Input specification: only the fields set
+# by the author; controllers/CCS/mcls/mcls_load_table.m completes every mode with the library defaults
+# (controllers/CCS/mcls/mcls_library_defaults.yaml) as the library block mask does (third_party/ReadMCmode.m).
+# Values: the table executed in the reference run of 2026-11-16 (former setup script of the story, Ip edge 13.5 MA).
+# Every number is a study value, not an ITER operational value.
+#
+#   MCM1 flattop_gaps       VS1+VS3, KCURR closes Ip, gap shape control (4); Ip window [13.5, 20] MA; next [1 2]
+#   MCM2 rampdown_position  VS1+VS3, KCURR, shape control off; Ip window [0, 13.5] MA; next [2] (no return to MCM1)
+#   MCM3 termination        VS1+VS3, KCURR, shape off, SCIpScaling 2; windows wide; next [3]; reached only through the
+#                           PSC force field (ForceControlMode = 3 in the hard segments 41 ip_termination and
+#                           42 eof_termination of psc_config/PS.xml)
+# Transition rule of the block (third_party/MCLS.m, VERIFIED by reading): a non-zero ForceControlMode sets the mode
+# every tick (lines 19-23); the self-transition is always allowed (line 28) and NextEnabledModes adds the other
+# columns (56-58); the time and Ip windows of the TARGET mode gate each column, the self-transition included (59-62);
+# no enabling condition is listed, so all are true (125-134); a change needs another true column (142); among
+# several, the first in the actual mode's NextEnabledModes wins (150-153). Hence MCM1 -> MCM2 on the first tick with
+# |Ip| < 13.5 MA, MCM2 never returns to MCM1, MCM3 only by force. Each mode lists itself first so that the priority
+# index of lines 150-153 stays aligned. Time windows are wide: the block time is the pulse time.
+# Units: time in s, currents in A (PCS frame, positive). Integers without exponent (YAML 1.1 reads "1e6" as a string).
+StartingMode: 1
+modes:
+  - Name: flattop_gaps
+    CCSVCSmodes: 0
+    VSControlMode: 3
+    IpControlMode: 1
+    ShapeIpControlMode: 4
+    time0intervals: -1000000
+    time0intervalf: 1000000
+    timemax: 1000000
+    Ip0intervals: 13500000
+    Ip0intervalf: 20000000
+    Ipmin: 0
+    Ipmax: 20000000
+    NextEnabledModes: [1, 2]
+    SNUControl: 0
+    EnablingConditions: []
+    AlarmsEnabled: []
+    MaxCurrContrError: 1000000
+    ReferenceSmoothTransition: 0
+    VS1MCAllocatorMode: 0
+    SCIpScaling: 1
+    VSIpScaling: 1
+  - Name: rampdown_position
+    CCSVCSmodes: 0
+    VSControlMode: 3
+    IpControlMode: 1
+    ShapeIpControlMode: 0
+    time0intervals: -1000000
+    time0intervalf: 1000000
+    timemax: 1000000
+    Ip0intervals: 0
+    Ip0intervalf: 13500000
+    Ipmin: 0
+    Ipmax: 20000000
+    NextEnabledModes: [2]
+    SNUControl: 0
+    EnablingConditions: []
+    AlarmsEnabled: []
+    MaxCurrContrError: 1000000
+    ReferenceSmoothTransition: 0
+    VS1MCAllocatorMode: 0
+    SCIpScaling: 1
+    VSIpScaling: 1
+  - Name: termination
+    CCSVCSmodes: 0
+    VSControlMode: 3
+    IpControlMode: 1
+    ShapeIpControlMode: 0
+    time0intervals: -1000000
+    time0intervalf: 1000000
+    timemax: 1000000
+    Ip0intervals: 0
+    Ip0intervalf: 20000000
+    Ipmin: 0
+    Ipmax: 20000000
+    NextEnabledModes: [3]
+    SNUControl: 0
+    EnablingConditions: []
+    AlarmsEnabled: []
+    MaxCurrContrError: 1000000
+    ReferenceSmoothTransition: 0
+    VS1MCAllocatorMode: 0
+    SCIpScaling: 2
+    VSIpScaling: 1
