@@ -1,0 +1,25 @@
+ymmsl_version: v0.2
+# isoflux_xp_rz: isoflux_xp_refxp (shape_control 3, xp_flux_at_ref 1) with the radial/vertical position controller RZIp on, window 16.2176 -> 20.2176 s on the dense trace
+# cases/inverse_convergence_105073_dense: without RZIp the evolutive plant drifts outward and becomes outboard-limited
+# within 1.6-1.9 s (runs isoflux_off_long / isoflux_xp_long of 2026-11-22). @TRACE_RUN@ substituted by run_isoflux_cases.sh
+settings:
+  source.source_uri: "imas:hdf5?path=@TRACE_RUN@/out_nice"
+  source.t_min: 16.2
+  source.t_max: 30.0
+  torax.t_final: 20.2176
+  nice_evo_rd.t_end: 20.2176
+  diagnostics.current_centre_area_weighted: true
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 1
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.shape_control: 3 # 2 isoflux limiter, 3 isoflux X-point, 4 gaps
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.isoflux_flux_scale: 1
+  magnetic_controller.xp_flux_at_ref: 1
+
+  nice_evo_rd.dt: 0.001

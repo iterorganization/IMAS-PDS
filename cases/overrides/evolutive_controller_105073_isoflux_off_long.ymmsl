@@ -1,0 +1,24 @@
+ymmsl_version: v0.2
+# isoflux_off_long: 10 s reference without shape control (shape_control 0) for isoflux_xp_long, window 16.2176 -> 26.2176 s
+# on the dense inverse trace cases/inverse_convergence_105073_dense (slices from 11.1 s, 0.5 s apart from 16 to 27 s, area-weighted current centre).
+# @TRACE_RUN@ = the stamped run directory of the trace, substituted by workflows/evolutive_controller/run_isoflux_cases.sh
+settings:
+  source.source_uri: "imas:hdf5?path=@TRACE_RUN@/out_nice"
+  source.t_min: 16.2
+  source.t_max: 30.0
+  torax.t_final: 26.2176
+  nice_evo_rd.t_end: 26.2176
+  diagnostics.current_centre_area_weighted: true
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 0
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.shape_control: 0 # 2 isoflux limiter, 3 isoflux X-point, 4 gaps
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.isoflux_flux_scale: 1
+
+  nice_evo_rd.dt: 0.001

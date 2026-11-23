@@ -1,0 +1,26 @@
+ymmsl_version: v0.2
+# isoflux_xp: first closed-loop isoflux X-point control test (shape_control 3) on 105073 with the standard
+# magnetic_controller program (no PSC, no MCLS). Window 16.217598 s (inverse slice 2 of
+# cases/runs/inverse_convergence_105073, the source's first slice = controller t_start) -> 20.2176 s (4 s);
+# source.t_max 30.0 keeps the slices up to 26.72 s so NICE's last message, not the Simulink StopTime, ends the run.
+# Control points RR3/ZZ3 of the pcs XPT02 case (controllers/CCS/muscle_controller_NICE_IMAS_iter_init.m); the
+# reference flux is the measured psi_xp. SC_Ip_scaling default 1: shape action scaled with Ip_ref/IpNom;
+# isoflux_flux_scale 1: fluxes unscaled. Launcher: workflows/evolutive_controller/run_isoflux_cases.sh.
+settings:
+  source.t_min: 16.217597812055136
+  source.t_max: 30.0
+  torax.t_final: 20.2176
+  nice_evo_rd.t_end: 20.2176
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 0
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.shape_control: 3 # 2 isoflux limiter, 3 isoflux X-point, 4 gaps
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.isoflux_flux_scale: 1
+
+  nice_evo_rd.dt: 0.001

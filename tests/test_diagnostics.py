@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "workflows/lib/actors"))
-from diagnostics import CurrentCentre
+from diagnostics import CurrentCentre  # ty: ignore[unresolved-import]
 
 
 def test_area_weighted_centre_is_not_the_node_mean():

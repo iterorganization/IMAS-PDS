@@ -1,0 +1,33 @@
+ymmsl_version: v0.2
+# isoflux_lim_off: reference of the isoflux_lim case without shape control (shape_control 0) on 105073 with the standard
+# magnetic_controller program (no PSC, no MCLS). Source: the limiter inverse trace cases/runs/inverse_convergence_105073_limiter_20261122_100415
+# (18 slices 6.2176-16.3176 s, 0.6 s apart; limited up to 10.4176 s, diverted from 11.0176 s). Window 7.417598 s
+# (slice 3 of the trace, the source's first slice = controller t_start) -> 10.4176 s (3 s, limited throughout);
+# source.t_max 12.5 keeps the slices up to 12.2176 s so the references are defined over the window (the X-point
+# references, unused in mode 2, are filled from the first diverted slice 11.0176 s: no NaN reaches a From Workspace
+# block) and NICE's last message, not the Simulink StopTime, ends the run.
+# Control points RR2/ZZ2: the first six RR3/ZZ3 points + the touch point (4.1, 0.75) as 7th, which Gains_isoflux.Proj
+# (non-zero columns 1-6) does not use; the reference flux is global_quantities.psi_boundary (init and
+# muscle_nice2control.m). SC_Ip_scaling default 1: command scaled with Ip_ref/IpNom (Gains_isoflux IpNom 3.03 MA vs
+# |Ip| 2.8 MA at 7.4 s); isoflux_flux_scale 1: fluxes unscaled. Initial core_profiles and coil currents: the limiter
+# trace's (config/evolutive_controller_105073_limiter_waveforms.yaml). Launcher: workflows/evolutive_controller/run_isoflux_cases.sh.
+settings:
+  source.source_uri: "imas:hdf5?path=/home/ITER/schneim/public/git/pds-student/cases/runs/inverse_convergence_105073_limiter_20261122_100415/out_nice"
+  source.t_min: 7.417597812055123
+  source.t_max: 12.5
+  torax.t_final: 10.4176
+  nice_evo_rd.t_end: 10.4176
+  waveform_editor.waveforms: /home/ITER/schneim/public/git/pds-student/cases/evolutive_controller_105073/config/evolutive_controller_105073_limiter_waveforms.yaml
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 0
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.shape_control: 0 # 2 isoflux limiter, 3 isoflux X-point, 4 gaps
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.isoflux_flux_scale: 1
+
+  nice_evo_rd.dt: 0.001

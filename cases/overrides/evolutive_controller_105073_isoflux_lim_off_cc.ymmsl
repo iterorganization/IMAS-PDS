@@ -1,0 +1,25 @@
+ymmsl_version: v0.2
+# isoflux_lim_off_cc: isoflux_lim_off (shape_control 0, limited plasma, window 7.4176 -> 10.4176 s) on a rerun of the limiter
+# inverse cases/inverse_convergence_105073_limiter with the area-weighted current centre in both the trace and the plant.
+# @TRACE_RUN@ = the stamped run directory of the trace, substituted by workflows/evolutive_controller/run_isoflux_cases.sh
+settings:
+  source.source_uri: "imas:hdf5?path=@TRACE_RUN@/out_nice"
+  source.t_min: 7.4
+  source.t_max: 12.5
+  torax.t_final: 10.4176
+  nice_evo_rd.t_end: 10.4176
+  waveform_editor.waveforms: /home/ITER/schneim/public/git/pds-student/cases/evolutive_controller_105073/config/evolutive_controller_105073_limiter_waveforms.yaml
+  diagnostics.current_centre_area_weighted: true
+
+  magnetic_controller.KCURR: 1
+  magnetic_controller.control_Ip: 1
+  magnetic_controller.RZIp: 0
+  magnetic_controller.VS: 1
+  magnetic_controller.VS_control_mode: 3  #{'Off (0)'; 'VS1 (1)'; 'VS3 (2)'; 'VS1+VS3 (3)'}
+  magnetic_controller.PSModel: 1
+  magnetic_controller.shape_control: 0 # 2 isoflux limiter, 3 isoflux X-point, 4 gaps
+  magnetic_controller.in_out_msg_dt: 0.001
+  magnetic_controller.nice_signs: 1
+  magnetic_controller.isoflux_flux_scale: 1
+
+  nice_evo_rd.dt: 0.001
