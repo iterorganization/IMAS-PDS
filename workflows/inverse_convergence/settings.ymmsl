@@ -40,6 +40,10 @@ settings:
   transport.torax.python_config_module: ${PDS_REPO}/workflows/inverse_convergence/config_torax.py
   transport.torax.output_all_timeslices: True
   transport.torax.fixed_dt: 0.3
+  # diagnostics (workflows/lib/actors/diagnostics.py): True recomputes global_quantities.current_centre
+  # area-weighted on NICE's mesh (NICE's node mean depends on the mesh); the evolutive_controller run
+  # reading this trace as its references must use the same value.
+  diagnostics.current_centre_area_weighted: False
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.

@@ -29,6 +29,10 @@ settings:
   nice_evo_rd.t_interval: 0.01
   nice_evo_rd.dt: 0.01
   nice_evo_rd.xml_path: ${PDS_REPO}/workflows/evolutive_controller/config_nice.xml
+  # diagnostics (workflows/lib/actors/diagnostics.py): True recomputes global_quantities.current_centre
+  # area-weighted on NICE's mesh (NICE's node mean depends on the mesh: 16 cm between the inverse and the
+  # evolutive meshes in the limiter phase of 105073); the reference trace must use the same value.
+  diagnostics.current_centre_area_weighted: False
 
   # Output. `../../../` climbs out of the instance's own work directory, so the entries
   # land next to the run's logs in <run_dir>/ rather than under instances/.

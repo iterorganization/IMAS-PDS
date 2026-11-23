@@ -6,7 +6,9 @@ equilibrium it forwards:
 - the vertical velocity of the current centre, by backward difference
   (time_slice[:].global_quantities.current_centre.velocity_z);
 - the X-point moved from NICE's mesh node to the saddle of a local quadratic fit of psi
-  (time_slice[:].contour_tree.node with critical_type 1).
+  (time_slice[:].contour_tree.node with critical_type 1);
+- with the setting current_centre_area_weighted, the current centre recomputed area-weighted
+  on the mesh (time_slice[:].global_quantities.current_centre.r/z).
 """
 import logging
 from pathlib import Path
@@ -26,14 +28,15 @@ GAP_FILE = Path(__file__).with_name("gaps.json")
 GAP_LENGTH = 2.0     # [m] searched along each line, longer than any gap
 N_SAMPLES = 1001     # points per segment to search on to find gap value
 
-def psi_on_mesh(ts) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
-    """r, z of NICE's mesh nodes and psi on them, None if the slice has no mesh data."""
+def on_mesh(ts, field: str) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    """r, z of NICE's mesh nodes and `field` (psi, j_phi) on them, None if the slice has no mesh data."""
     if len(ts.ggd) == 0:
         return None
     ggd = ts.ggd[0]
-    if len(ggd.r) == 0 or len(ggd.z) == 0 or len(ggd.psi) == 0:
+    values = getattr(ggd, field)
+    if len(ggd.r) == 0 or len(ggd.z) == 0 or len(values) == 0:
         return None
-    return np.asarray(ggd.r[0].values), np.asarray(ggd.z[0].values), np.asarray(ggd.psi[0].values)
+    return np.asarray(ggd.r[0].values), np.asarray(ggd.z[0].values), np.asarray(values[0].values)
 
 
 def fit_quadratic_xpoint(ts, r: np.ndarray, z: np.ndarray, psi: np.ndarray) -> None:
@@ -105,6 +108,31 @@ class GapLines:
                 gap.value = gaps[k]
 
 
+class CurrentCentre:
+    """Area-weighted current centre: sum over the Delaunay triangles of the mesh of
+    area * mean nodal j_phi * centroid. NICE's global_quantities.current_centre is a plain
+    j_phi-weighted mean of the nodes, which depends on the mesh (16 cm between the 7340-node
+    inverse and the 10776-node evolutive meshes in the limiter phase of 105073)."""
+
+    def __init__(self) -> None:
+        self.key = None
+
+    def __call__(
+        self, r: np.ndarray, z: np.ndarray, j: np.ndarray
+    ) -> tuple[float, float]:
+        key = (len(r), r[0], z[0], r[-1], z[-1])
+        if key != self.key:  # the mesh is the same at every step
+            self.key = key
+            tri = self.tri = Delaunay(np.column_stack([r, z])).simplices
+            self.area = 0.5 * np.abs(
+                (r[tri[:, 1]] - r[tri[:, 0]]) * (z[tri[:, 2]] - z[tri[:, 0]])
+                - (r[tri[:, 2]] - r[tri[:, 0]]) * (z[tri[:, 1]] - z[tri[:, 0]])
+            )
+            self.r_c, self.z_c = r[tri].mean(axis=1), z[tri].mean(axis=1)
+        w = self.area * j[self.tri].mean(axis=1)
+        return float(w @ self.r_c / w.sum()), float(w @ self.z_c / w.sum())
+
+
 class BackwardDifference:
     """Time derivative of a sampled signal, (x_k - x_k-1) / (t_k - t_k-1); 0 until the
     second sample."""
@@ -122,25 +150,36 @@ class BackwardDifference:
         return self.derivative
 
 
-def add_diagnostics(data: bytes, gap_lines: GapLines, zdot: BackwardDifference) -> bytes:
-    """Serialized equilibrium -> the same equilibrium with gaps, current-centre velocity and
-    the refined X-point."""
+def add_diagnostics(
+    data: bytes,
+    gap_lines: GapLines,
+    zdot: BackwardDifference,
+    centre: CurrentCentre | None = None,
+) -> bytes:
+    """Serialized equilibrium -> the same equilibrium with gaps, current-centre velocity,
+    the refined X-point and, with centre, the area-weighted current centre."""
     equilibrium = IDSFactory().new("equilibrium")
     equilibrium.deserialize(data)
     output_flag = equilibrium.code.output_flag
     for i, ts in enumerate(equilibrium.time_slice):
-        mesh = psi_on_mesh(ts)
+        mesh = on_mesh(ts, "psi")
         psi_b = float(ts.boundary.psi)
         if mesh is not None and abs(psi_b) < 1e30:   # NaN and empty (-9e40) fail this test
             r, z, psi = mesh
             gap_lines.write(ts, gap_lines.gaps(r, z, psi - psi_b))
             fit_quadratic_xpoint(ts, r, z, psi)
 
+        rejected = i < len(output_flag) and output_flag[i] < 0
+        if centre is not None and not rejected:
+            mesh_j = on_mesh(ts, "j_phi")
+            if mesh_j is not None and np.isfinite(mesh_j[2]).all() and mesh_j[2].any():
+                cc = ts.global_quantities.current_centre
+                cc.r, cc.z = centre(*mesh_j)
+
         # velocity_z is written whenever the current centre is: 0 at the first step, and the
         # last one at a step NICE rejected (output_flag < 0), which repeats the previous state
         z_centre = float(ts.global_quantities.current_centre.z)
         if abs(z_centre) < 1e30:
-            rejected = i < len(output_flag) and output_flag[i] < 0
             if not rejected:
                 zdot.update(float(ts.time), z_centre)
             ts.global_quantities.current_centre.velocity_z = zdot.derivative
@@ -159,12 +198,17 @@ def main() -> None:
     pass_pf_active = instance.is_connected("pf_active_in")   # forwarded unchanged
     gap_lines = GapLines()
     zdot = BackwardDifference()
+    centre = (
+        CurrentCentre()
+        if instance.get_setting("current_centre_area_weighted", "bool", default=False)
+        else None
+    )
     logger.info("diagnostics: %d gap lines from %s", len(gap_lines.r_wall), GAP_FILE.name)
 
     while instance.reuse_instance():
         msg = instance.receive("equilibrium_in")
         pf_active = instance.receive("pf_active_in") if pass_pf_active else None
-        data = add_diagnostics(msg.data, gap_lines, zdot)
+        data = add_diagnostics(msg.data, gap_lines, zdot, centre)
         instance.send("equilibrium_out", Message(msg.timestamp, msg.next_timestamp, data))
         if pf_active is not None:
             instance.send("pf_active_out", pf_active)
