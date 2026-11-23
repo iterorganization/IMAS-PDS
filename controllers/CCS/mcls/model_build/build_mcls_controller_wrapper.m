@@ -320,7 +320,7 @@ w('Rpl_ref', timeseries([6.1264 6.1264], t)); w('Zpl_ref', timeseries([0.5934 0.
 w('Rxp_ref', timeseries([5.12 5.12], t)); w('Zxp_ref', timeseries([-3.30 -3.30], t));
 w('Gaps_ref', timeseries(zeros(62, 2), t)); w('dPsi_ref', timeseries(zeros(62, 2), t)); w('CSPF_curr_ref', timeseries(zeros(2, 14), t));
 w('enable_KCURR', 1); w('IpControlMode_KCURR', 1); w('schedulingVar_KCURR', 0);
-w('enable_RZIp', 0); w('IpControlMode_RZIp', 0); w('enable_VS', 1); w('VSControlMode', 3);
+w('enable_RZIp', 0); w('IpControlMode_RZIp', 0); w('RZIp_R_sign', 1); w('RZIp_Z_sign', 1); w('enable_VS', 1); w('VSControlMode', 3);
 w('VSIpScaling', 1); w('SchedulingVar_ShapeContr', 3); w('ShapeIpControlMode', 4); w('SCIpScaling', 1);
 w('IpControlMode', 0); w('AllocatorMode', 1); w('usePSModel', 1); w('in_out_dt', 0.001);
 w('zdot_disturbance', 0); w('zdot_filter', 0); w('nice_signs', 1); w('DEBUG_LOG', false);

@@ -199,13 +199,16 @@ if instance.reuse_instance()
     %% fixed controller parameters (Constant blocks of the model)
     schedulingVar_KCURR = 0;
     IpControlMode_RZIp = 0;         % schedulingVar_RZIp = [t, li3, elongation] comes from the measurements
+    % sign of the R and Z errors fed to RZIp_CCS (designed for Ip > 0): R flipped when Ip < 0 (IMAS), Z not flipped by default
+    RZIp_R_sign = double(instance.get_setting('RZIp_R_sign', pyargs('default', sign(mean(ip_ref)) + (mean(ip_ref) == 0))));
+    RZIp_Z_sign = double(instance.get_setting('RZIp_Z_sign', pyargs('default', 1)));
     VSIpScaling = 1;                % VS action scaled with: 1 nominal Ip, 2 estimated Ip
     SchedulingVar_ShapeContr = VSControlMode;   % gain region of shapeIp_CCS (its two regions are identical today)
     SCIpScaling = 1;                % shape action scaled with: 0 nominal Ip, 1 Ip_ref, 2 Ip_est
     xp_flux_at_ref = double(instance.get_setting('xp_flux_at_ref', pyargs('default', 0)));   % 1: mode 3 psi_xp at the reference X-point (muscle_nice2control.m)
     IpControlMode = 0;              % Ip control inside the CCS: 0 off, 1 with KCURR, 2 with the shape controller
     AllocatorMode = 1;
-    save(fullfile(getenv('RUN_DIR'), 'isoflux_refs.mat'), 'RfluxCTRpts', 'ZfluxCTRpts', 'dpsi_ref', 'rxp_ref', 'zxp_ref', 't_ref', 't_start', 'flux_scale', 'xp_flux_at_ref');
+    save(fullfile(getenv('RUN_DIR'), 'isoflux_refs.mat'), 'RfluxCTRpts', 'ZfluxCTRpts', 'dpsi_ref', 'rxp_ref', 'zxp_ref', 't_ref', 't_start', 'flux_scale', 'xp_flux_at_ref', 'RZIp_R_sign', 'RZIp_Z_sign');
     % isoflux_log.csv: one row per step received by muscle_nice2control.m
     f = fopen(fullfile(getenv('RUN_DIR'), 'isoflux_log.csv'), 'w');
     fprintf(f, 't,%s,psi_xp,r_xp,z_xp,zpl,ip,psi_lim\n', strjoin(compose('flux_%d', 1:8), ','));
