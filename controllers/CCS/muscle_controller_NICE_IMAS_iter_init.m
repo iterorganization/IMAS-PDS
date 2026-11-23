@@ -95,13 +95,17 @@ if instance.reuse_instance()
     GAP_LIST = [3 8 15 21 25 48];   % the gaps used by shapeIp_CCS (nonzero columns of its Proj)
     N_GAPS = 62;
     N_FLUX = 62;                    % flux inputs of shapeIp_CCS; only the first numel(RfluxCTRpts) are used
-    % PLACEHOLDER: control points of the CREATE test case TC_CCS_01 (3 MA limited plasma),
-    % not designed for this shot. Replace them before using mode 2 or 3.
-    RfluxCTRpts = [4.362071 4.1486759 5.1894636 7.0161489 8.137644 7.0624581];   % [m]
-    ZfluxCTRpts = [-1.5 1.5492 3.2382093 2.6846939 0.62839253 -2.0424846];
-    R_lim = 4.1053;                 % limiter point [m]: where the plasma touches the wall in mode 2
+    % RR3/ZZ3 of the pcs XPT02 case (copy_setup_pcs_params_pcs_expert.m:466-494) without its 9th point, the
+    % X-point reference: here the reference flux of mode 3 is the measured psi_xp at the saddle
+    RfluxCTRpts = [4.3863 4.2220 5.1385 7.2929 8.1866 7.0307 4.6170 5.2594];   % [m]
+    ZfluxCTRpts = [-1.5 1.5492 3.5094 2.9244 0.6292 -2.0128 -3.6807 -3.9861];
+    if ShapeIpControlMode == 2      % limited plasma: the first six points and the touch point (RR2/ZZ2)
+        RfluxCTRpts = [RfluxCTRpts(1:6) 4.1000];
+        ZfluxCTRpts = [ZfluxCTRpts(1:6) 0.7500];
+    end
+    R_lim = 4.1053;                 % fixed limiter point [m]: PsiLimiter of muscle_nice2control.m outside mode 2 (mode 2 uses psi_boundary)
     Z_lim = 0.6039;
-    FLUX_CTR_PLACEHOLDER = true;
+    flux_scale = double(instance.get_setting('isoflux_flux_scale', pyargs('default', 1)));   % scales the fluxes seen by shapeIp_CCS (references and measurements)
 
     %% references: one value per slice of the reference equilibrium
     n_slices = length(equilibrium.time_slice);
@@ -147,7 +151,7 @@ if instance.reuse_instance()
         g = ts.ggd{1};
         F = scatteredInterpolant(g.r{1}.values(:), g.z{1}.values(:), g.psi{1}.values(:));
         psi_pts_ref(:, i) = F(RfluxCTRpts(:), ZfluxCTRpts(:));
-        psi_lim_ref(i) = F(R_lim, Z_lim);
+        psi_lim_ref(i) = ts.global_quantities.psi_boundary;   % limited plasma: the touch-point flux is the boundary flux
     end
 
     % slices without separatrix or X-point take the value of the nearest slice
@@ -164,15 +168,15 @@ if instance.reuse_instance()
         psixp_ref = fillmissing(psixp_ref, 'nearest');
     end
 
-    % isoflux reference: psi(control point) - psi(boundary), where the boundary flux is the
-    % limiter point's in mode 2 and the X-point's in mode 3; 0 when the point is on the boundary
-    if FLUX_CTR_PLACEHOLDER && any(ShapeIpControlMode == [2 3])
-        error('isoflux control points are placeholders: set the right ones before mode 2 or 3');
-    end
+    % isoflux reference: psi(control point) - psi(boundary), where the boundary flux is
+    % global_quantities.psi_boundary in mode 2 and the X-point's in mode 3; 0 when the point is on the boundary
     if ShapeIpControlMode == 3 && all(xp_missing)
         error('mode 3: no X-point in the reference equilibrium');
     end
     n_ctr = numel(RfluxCTRpts);
+    psi_pts_ref = flux_scale * psi_pts_ref;
+    psi_lim_ref = flux_scale * psi_lim_ref;
+    psixp_ref = flux_scale * psixp_ref;
     dpsi_ref = zeros(N_FLUX, n_slices);
     if ShapeIpControlMode == 2
         dpsi_ref(1:n_ctr, :) = psi_pts_ref - psi_lim_ref;
@@ -199,6 +203,11 @@ if instance.reuse_instance()
     SCIpScaling = 1;                % shape action scaled with: 0 nominal Ip, 1 Ip_ref, 2 Ip_est
     IpControlMode = 0;              % Ip control inside the CCS: 0 off, 1 with KCURR, 2 with the shape controller
     AllocatorMode = 1;
+    save(fullfile(getenv('RUN_DIR'), 'isoflux_refs.mat'), 'RfluxCTRpts', 'ZfluxCTRpts', 'dpsi_ref', 'rxp_ref', 'zxp_ref', 't_ref', 't_start', 'flux_scale');
+    % isoflux_log.csv: one row per step received by muscle_nice2control.m
+    f = fopen(fullfile(getenv('RUN_DIR'), 'isoflux_log.csv'), 'w');
+    fprintf(f, 't,%s,psi_xp,r_xp,z_xp,zpl,ip,psi_lim\n', strjoin(compose('flux_%d', 1:8), ','));
+    fclose(f);
 
     logger.info(sprintf('exchange period in_out_dt = %g s', in_out_dt));
 

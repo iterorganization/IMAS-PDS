@@ -106,12 +106,13 @@ for k = GAP_LIST
 end
 
 % X-point: the saddle node of contour_tree; none in a limited plasma (last value kept)
+flux_scale = evalin('base', 'flux_scale');
 for k = 1:numel(ts.contour_tree.node)
     node = ts.contour_tree.node{k};
     if node.critical_type == 1
         r_xp = node.r;
         z_xp = node.z;
-        psi_xp = node.psi;
+        psi_xp = flux_scale * node.psi;
         break
     end
 end
@@ -119,7 +120,7 @@ if isnan(r_xp) && evalin('base', 'ShapeIpControlMode') == 3
     error('muscle_nice2control: mode 3 needs a diverted plasma, no X-point at t=%g', t_out);
 end
 
-% isoflux: psi at the control points and at the limiter point, interpolated on NICE's mesh.
+% isoflux: psi at the control points, interpolated on NICE's mesh, and the boundary flux (mode 2: psi_boundary; else the fixed limiter point).
 % The mesh is the same at every step, so the interpolant is built once.
 if numel(ts.ggd) >= 1 && numel(ts.ggd{1}.psi) >= 1 && ~isempty(ts.ggd{1}.psi{1}.values)
     g = ts.ggd{1};
@@ -131,9 +132,17 @@ if numel(ts.ggd) >= 1 && numel(ts.ggd{1}.psi) >= 1 && ~isempty(ts.ggd{1}.psi{1}.
     end
     R_pts = evalin('base', 'RfluxCTRpts');
     Z_pts = evalin('base', 'ZfluxCTRpts');
-    flux_contr(1:numel(R_pts)) = F_flux(R_pts(:), Z_pts(:));
-    PsiLimiter = F_flux(evalin('base', 'R_lim'), evalin('base', 'Z_lim'));
+    flux_contr(1:numel(R_pts)) = flux_scale * F_flux(R_pts(:), Z_pts(:));
+    if evalin('base', 'ShapeIpControlMode') == 2
+        PsiLimiter = flux_scale * ts.global_quantities.psi_boundary;
+    else
+        PsiLimiter = flux_scale * F_flux(evalin('base', 'R_lim'), evalin('base', 'Z_lim'));
+    end
 end
 
+f = fopen(fullfile(getenv('RUN_DIR'), 'isoflux_log.csv'), 'a');
+if f >= 0
+    fprintf(f, '%.6f', t_out);  fprintf(f, ',%.9g', flux_contr(1:8), psi_xp, r_xp, z_xp, zpl, ip, PsiLimiter);  fprintf(f, '\n');  fclose(f);
+end
 last = {coils_current,rpl,zpl,zdot,ip,r_xp,z_xp,psi_xp,PsiLimiter,flux_contr,gaps,li3,schedulingVar_RZIp};
 end
