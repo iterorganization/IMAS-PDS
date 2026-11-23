@@ -25,7 +25,7 @@ circuits = {'CS3U','CS2U','CS1','CS2L','CS3L','PF1','PF2','PF3','PF4','PF5','PF6
 %% VS law
 %   mode 1: VS1 = F1(KZ_VS1*Ip_ref*Zdot - KI_VS1*(I - I_ref))
 %   mode 2: VS3 = F3(-KZ_VS3*Ip_ref*Zdot - KI_VS3*I_VS3)
-%   mode 3: VS3 = F13(-KZ_VS13*Ip_ref*Zdot - KIVS3_VS13*I_VS3), VS1 = KIVS1_VS13*I_VS3
+%   mode 3: VS3 = F13(-KZ_VS13*Ip_ref*Zdot - KIVS3_VS13*I_VS3), VS1 = -KIVS1_VS13*I_VS3 (KIVS1 flipped as in the init, VS1 unchanged)
 switch VS_control_mode
     case 1
         g = [G.KZ_VS1*G.Ip_ref, 0, -G.KI_VS1(:)'];
@@ -36,7 +36,7 @@ switch VS_control_mode
     case 3
         g = [-G.KZ_VS13*G.Ip_ref, -G.KIVS3_VS13, zeros(1,11)];
         Av = G.AVS13; Bv = G.BVS13*g; Cv = [0*G.CVS13; G.CVS13];
-        Dv = [0, G.KIVS1_VS13, zeros(1,11); G.DVS13*g];
+        Dv = [0, -G.KIVS1_VS13, zeros(1,11); G.DVS13*g];
     otherwise
         Av = zeros(0);  Bv = zeros(0,13);  Cv = zeros(2,0);  Dv = zeros(2,13);
 end
@@ -54,7 +54,7 @@ coil = @(name) double(strcmp(P.coil_names, name)) * P.C_coil;     % one coil cur
 I_circ = [coil('CS3U'); coil('CS2U'); (coil('CS1U') + coil('CS1L'))/2; coil('CS2L'); ...
           coil('CS3L'); coil('PF1'); coil('PF2'); coil('PF3'); coil('PF4'); coil('PF5'); coil('PF6')] * x;
 Ip = P.c_Ip * x;
-I_VS3 = (coil('VS3U') - coil('VS3L'))/2 * x;
+I_VS3 = (coil('VS3L') - coil('VS3U'))/2 * x;     % polarity of controller_input_preprocess.m: grows with VS3_cmd > 0
 
 %% KCURR
 if control_Ip

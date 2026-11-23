@@ -201,9 +201,9 @@ if instance.reuse_instance()
     %% fixed controller parameters (Constant blocks of the model)
     schedulingVar_KCURR = 0;
     IpControlMode_RZIp = 0;         % schedulingVar_RZIp = [t, li3, elongation] comes from the measurements
-    % sign of the R and Z errors fed to RZIp_CCS (designed for Ip > 0): R flipped when Ip < 0 (IMAS), Z not flipped by default
+    % sign of the R and Z errors fed to RZIp_CCS (designed for Ip > 0): both flipped when Ip < 0 (IMAS); the earlier Z runaway came from the VS3 current polarity (controller_input_preprocess.m)
     RZIp_R_sign = double(instance.get_setting('RZIp_R_sign', pyargs('default', sign(mean(ip_ref)) + (mean(ip_ref) == 0))));
-    RZIp_Z_sign = double(instance.get_setting('RZIp_Z_sign', pyargs('default', 1)));
+    RZIp_Z_sign = double(instance.get_setting('RZIp_Z_sign', pyargs('default', RZIp_R_sign)));
     VSIpScaling = 1;                % VS action scaled with: 1 nominal Ip, 2 estimated Ip
     SchedulingVar_ShapeContr = VSControlMode;   % gain region of shapeIp_CCS (its two regions are identical today)
     % shape action scaled with: 0 nominal Ip, 1 Ip_ref, 2 Ip_est. Default 1: Ip_ref/Ipl_nominal < 0 in the IMAS frame gives the
@@ -233,6 +233,7 @@ if instance.reuse_instance()
     obj3.init;
     % VS gains from FC016 instead of the module's defaults
     S = load(fullfile(getenv('CONTROLLER_PATH'), 'params/FC016_Config_VS.mat'), 'Config_VS');
+    S.Config_VS.Gains.KIVS1_VS13 = -S.Config_VS.Gains.KIVS1_VS13;   % keeps VS1 = -0.1*(I_VS3U-I_VS3L)/2 with the VS3 polarity of controller_input_preprocess.m
     fp = ccs_vs_fp(obj3, S.Config_VS);
     if isprop(obj3, 'ddHdl') && ~isempty(obj3.ddHdl) && ismethod(obj3.ddHdl, 'updateField')
         % scdds-core 6b7e482 (pcssp-nightly merge_IGZ_PSC): update_nominal_param_value calls ddHdl.updateValue,

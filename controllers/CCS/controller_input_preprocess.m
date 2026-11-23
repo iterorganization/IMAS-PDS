@@ -1,7 +1,8 @@
 function [Icspf,Ivs3,zdot] = controller_input_preprocess(coil_currents,ip,zdot,t)
 % Plant measurements -> controller inputs:
 % - Icspf: the 11 CS/PF circuit currents, CS1 = mean of CS1U and CS1L;
-% - Ivs3:  the VS3 circuit current, (I_VS3U - I_VS3L)/2 (anti-series pair);
+% - Ivs3:  the VS3 circuit current, (I_VS3L - I_VS3U)/2 (anti-series pair): the polarity driven by +V3cmd after the
+%          nice_signs negation (it grows with V3cmd > 0), as the VS module's KIVS3 feedback term requires;
 % - zdot:  current-centre vertical velocity, with optional noise (zdot_disturbance) and
 %          low-pass filter 1/(tau s + 1) (zdot_filter); both are settings read by the init.
 
@@ -10,7 +11,7 @@ tau = 0.0075;       % [s] filter time constant
 
 coil_currents = coil_currents(:);
 Icspf = [coil_currents(1:2); (coil_currents(3) + coil_currents(4))/2; coil_currents(5:12)];
-Ivs3 = (coil_currents(13) - coil_currents(14))/2;
+Ivs3 = (coil_currents(14) - coil_currents(13))/2;
 
 if abs(ip) <= 100
     error('controller_input_preprocess: plasma current is almost 0');
