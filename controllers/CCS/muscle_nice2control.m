@@ -105,7 +105,8 @@ for k = GAP_LIST
     end
 end
 
-% X-point: the saddle node of contour_tree; none in a limited plasma (last value kept)
+% X-point: the saddle node of contour_tree; none in a limited plasma (last value kept). psi_xp is the mode-3
+% reference flux: at the saddle, or with xp_flux_at_ref = 1 at the reference X-point (below, on the mesh)
 flux_scale = evalin('base', 'flux_scale');
 for k = 1:numel(ts.contour_tree.node)
     node = ts.contour_tree.node{k};
@@ -133,6 +134,11 @@ if numel(ts.ggd) >= 1 && numel(ts.ggd{1}.psi) >= 1 && ~isempty(ts.ggd{1}.psi{1}.
     R_pts = evalin('base', 'RfluxCTRpts');
     Z_pts = evalin('base', 'ZfluxCTRpts');
     flux_contr(1:numel(R_pts)) = flux_scale * F_flux(R_pts(:), Z_pts(:));
+    if evalin('base', 'xp_flux_at_ref') && evalin('base', 'ShapeIpControlMode') == 3
+        t_sim = t_out - evalin('base', 't_start');
+        t_ref = evalin('base', 't_ref');
+        psi_xp = flux_scale * F_flux(interp1(t_ref, evalin('base', 'rxp_ref'), t_sim), interp1(t_ref, evalin('base', 'zxp_ref'), t_sim));
+    end
     if evalin('base', 'ShapeIpControlMode') == 2
         PsiLimiter = flux_scale * ts.global_quantities.psi_boundary;
     else

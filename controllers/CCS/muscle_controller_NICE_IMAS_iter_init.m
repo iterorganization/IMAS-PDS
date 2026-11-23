@@ -96,7 +96,8 @@ if instance.reuse_instance()
     N_GAPS = 62;
     N_FLUX = 62;                    % flux inputs of shapeIp_CCS; only the first numel(RfluxCTRpts) are used
     % RR3/ZZ3 of the pcs XPT02 case (copy_setup_pcs_params_pcs_expert.m:466-494) without its 9th point, the
-    % X-point reference: here the reference flux of mode 3 is the measured psi_xp at the saddle
+    % X-point reference: here the reference flux of mode 3 is the measured psi_xp (at the saddle, or at the
+    % reference X-point rxp_ref/zxp_ref with xp_flux_at_ref = 1, as the pcs XPT02 case evaluates FluxXP_est)
     RfluxCTRpts = [4.3863 4.2220 5.1385 7.2929 8.1866 7.0307 4.6170 5.2594];   % [m]
     ZfluxCTRpts = [-1.5 1.5492 3.5094 2.9244 0.6292 -2.0128 -3.6807 -3.9861];
     if ShapeIpControlMode == 2      % limited plasma: the first six points and the touch point (RR2/ZZ2)
@@ -201,9 +202,10 @@ if instance.reuse_instance()
     VSIpScaling = 1;                % VS action scaled with: 1 nominal Ip, 2 estimated Ip
     SchedulingVar_ShapeContr = VSControlMode;   % gain region of shapeIp_CCS (its two regions are identical today)
     SCIpScaling = 1;                % shape action scaled with: 0 nominal Ip, 1 Ip_ref, 2 Ip_est
+    xp_flux_at_ref = double(instance.get_setting('xp_flux_at_ref', pyargs('default', 0)));   % 1: mode 3 psi_xp at the reference X-point (muscle_nice2control.m)
     IpControlMode = 0;              % Ip control inside the CCS: 0 off, 1 with KCURR, 2 with the shape controller
     AllocatorMode = 1;
-    save(fullfile(getenv('RUN_DIR'), 'isoflux_refs.mat'), 'RfluxCTRpts', 'ZfluxCTRpts', 'dpsi_ref', 'rxp_ref', 'zxp_ref', 't_ref', 't_start', 'flux_scale');
+    save(fullfile(getenv('RUN_DIR'), 'isoflux_refs.mat'), 'RfluxCTRpts', 'ZfluxCTRpts', 'dpsi_ref', 'rxp_ref', 'zxp_ref', 't_ref', 't_start', 'flux_scale', 'xp_flux_at_ref');
     % isoflux_log.csv: one row per step received by muscle_nice2control.m
     f = fopen(fullfile(getenv('RUN_DIR'), 'isoflux_log.csv'), 'w');
     fprintf(f, 't,%s,psi_xp,r_xp,z_xp,zpl,ip,psi_lim\n', strjoin(compose('flux_%d', 1:8), ','));
