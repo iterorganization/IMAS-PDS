@@ -409,7 +409,8 @@ class GyrokineticsFigure(SliderFigure):
         ]
         check_panel_keys(self.all_slices)
 
-        (left, right) = self.fig.subfigures(1, 2, width_ratios=[1, 2])
+        # squeeze=False: always an array of SubFigures (ty can't unpack the union)
+        left, right = self.fig.subfigures(1, 2, width_ratios=[1, 2], squeeze=False)[0]
         self._setup_equilibrium(left)
         self._setup_profiles(right)
         self.update(0)
