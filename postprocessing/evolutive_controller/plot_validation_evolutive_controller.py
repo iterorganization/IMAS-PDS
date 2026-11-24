@@ -5,6 +5,9 @@ plus NICE (q, pressure) and TORAX (Te, ne, q) profiles, each on its own psi grid
 
 import argparse
 import logging
+import os
+import re
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +28,10 @@ def handle_args():
     parser.add_argument(
         "--dina_path",
         type=str,
-        help="Path to load raw DINA scenario data from (reference Ip and PF coil current)",
+        help=(
+            "Path to load raw DINA scenario data from (reference Ip and PF coil current). "
+            "Default: cases/<case>/preprocess/in of the case --run_path belongs to"
+        ),
     )
     parser.add_argument(
         "--reconstruction_path",
@@ -37,14 +43,25 @@ def handle_args():
         ),
     )
     parser.add_argument(
-        "--nice_path",
+        "--run_path",
         type=str,
-        help="Path to load evolutive_controller's NICE output from",
+        default=os.environ.get("RUN_DIR"),
+        help=(
+            "Run directory (default: $RUN_DIR); evolutive_controller's NICE and TORAX "
+            "output are read from its --nice_subdir and --torax_subdir"
+        ),
     )
     parser.add_argument(
-        "--torax_path",
+        "--nice_subdir",
         type=str,
-        help="Path to load TORAX core_profiles output from",
+        default="out_nice",
+        help="Subdirectory of the run with the NICE output (default: out_nice)",
+    )
+    parser.add_argument(
+        "--torax_subdir",
+        type=str,
+        default="out_torax",
+        help="Subdirectory of the run with the TORAX core_profiles output (default: out_torax)",
     )
     parser.add_argument(
         "--n_profiles",
@@ -59,10 +76,40 @@ def handle_args():
         help="Maximum number of time slices per series in the time-trace plots",
     )
     parser.add_argument(
-        "--output_dir", type=str, help="path to directory in which to put plots"
+        "--output_dir",
+        type=str,
+        default=f"{os.environ['RUN_DIR']}/plots" if os.environ.get("RUN_DIR") else None,
+        help="path to directory in which to put plots (default: $RUN_DIR/plots)",
     )
     args = parser.parse_args()
+    if args.output_dir is None:
+        parser.error("--output_dir (or $RUN_DIR) is required")
+    if args.run_path is None:
+        parser.error("--run_path (or $RUN_DIR) is required")
+    if args.dina_path is None:
+        case = case_dir(args.run_path)
+        if case is None:
+            parser.error(
+                f"cannot find the case of run {args.run_path} (not under cases/runs/ and "
+                "$PDS_REPO not set); give --dina_path"
+            )
+        args.dina_path = str(case / "preprocess" / "in")
     return args
+
+
+def case_dir(run_path):
+    """Case directory of a run: cases/<case> for a run cases/runs/[<case>/]<case>_<date>_<time>.
+
+    The cases directory is found from the run's location, else $PDS_REPO/cases.
+    """
+    run = Path(run_path).resolve()
+    case = re.sub(r"_\d{8}_\d{6}$", "", run.name)
+    for parent in run.parents:
+        if parent.name == "runs" and parent.parent.name == "cases":
+            return parent.parent / case
+    if os.environ.get("PDS_REPO"):
+        return Path(os.environ["PDS_REPO"]) / "cases" / case
+    return None
 
 
 def interp_to_range(t_min, t_max, t, *values):
@@ -122,8 +169,8 @@ def main():
         for key, path in {
             "dina": args.dina_path,
             "reconstruction": args.reconstruction_path,
-            "nice": args.nice_path,
-            "torax": args.torax_path,
+            "nice": os.path.join(args.run_path, args.nice_subdir),
+            "torax": os.path.join(args.run_path, args.torax_subdir),
         }.items()
         if path is not None
     }

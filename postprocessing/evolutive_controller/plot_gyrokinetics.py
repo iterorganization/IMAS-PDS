@@ -7,14 +7,17 @@ By default this writes, to ``--output_dir``:
   ``postprocess.sh`` under sbatch); open it in a browser.
 * ``gyrokinetics_<shot>_t=<time>.png``: the figure at each slider time.
 
-Several ``--torax_uri`` can be given to overlay runs, one colour per run. With
-``--nice_uri`` (one per run) the NICE equilibrium (boundary, magnetic axis, q and
-magnetic shear) is overlaid in the same colour, dotted.
+Each ``--run_path`` is a run directory; its TORAX output is read from ``out_torax`` and
+its NICE output from ``out_nice`` (see ``--torax_subdir``/``--nice_subdir``). Several
+run paths can be given to overlay runs, one colour per run. Where a run has NICE
+output, its equilibrium (boundary, magnetic axis, q and magnetic shear) is overlaid in
+the same colour, dotted.
 
 With ``--interactive`` the same figure is shown in a matplotlib window instead.
 """
 
 import argparse
+import os
 from contextlib import ExitStack
 from pathlib import Path
 
@@ -116,33 +119,41 @@ def handle_args():
         "--dina_uri", type=str, help="URI to load DINA output data from"
     )
     parser.add_argument(
-        "--nice_uri",
+        "--metis_uri", type=str, help="URI to load METIS output data from"
+    )
+    parser.add_argument(
+        "--run_path",
         type=str,
         nargs="+",
         action="extend",
         help=(
-            "URI(s) to load NICE output data from, one per --torax_uri in the same order "
-            "('none' for a run without NICE output); overlaid on that run's TORAX data"
+            "Run directory/directories (default: $RUN_DIR); give several to overlay runs. "
+            "TORAX and NICE output are read from --torax_subdir and --nice_subdir in each"
         ),
     )
     parser.add_argument(
-        "--metis_uri", type=str, help="URI to load METIS output data from"
+        "--torax_subdir",
+        type=str,
+        default="out_torax",
+        help="Subdirectory of each run with the TORAX output (default: out_torax)",
     )
     parser.add_argument(
-        "--torax_uri",
+        "--nice_subdir",
         type=str,
-        nargs="+",
-        action="extend",
-        help="URI(s) to load TORAX output data from; give several to overlay runs",
+        default="out_nice",
+        help="Subdirectory of each run with the NICE output, if any (default: out_nice)",
     )
     parser.add_argument(
         "--labels",
         type=str,
         nargs="+",
-        help="Legend label per --torax_uri (default: the run directory names)",
+        help="Legend label per --run_path (default: the run directory names)",
     )
     parser.add_argument(
-        "--output_dir", type=str, help="path to directory in which to put plots"
+        "--output_dir",
+        type=str,
+        default=f"{os.environ['RUN_DIR']}/plots" if os.environ.get("RUN_DIR") else None,
+        help="path to directory in which to put plots (default: $RUN_DIR/plots)",
     )
     parser.add_argument("--t_list", type=int, nargs="+", help="List of times to plot")
     parser.add_argument(
@@ -161,20 +172,22 @@ def handle_args():
     )
     args = parser.parse_args()
     if not args.interactive and args.output_dir is None:
-        parser.error("--output_dir is required unless --interactive is given")
-    if not args.torax_uri:
-        parser.error("--torax_uri is required")
-    if args.nice_uri is not None and len(args.nice_uri) != len(args.torax_uri):
-        parser.error("give one --nice_uri entry per --torax_uri (use 'none' to skip one)")
-    if args.labels is not None and len(args.labels) != len(args.torax_uri):
-        parser.error("give one --labels entry per --torax_uri")
+        parser.error("--output_dir (or $RUN_DIR) is required unless --interactive is given")
+    if not args.run_path:
+        if not os.environ.get("RUN_DIR"):
+            parser.error("--run_path (or $RUN_DIR) is required")
+        args.run_path = [os.environ["RUN_DIR"]]
+    for run in args.run_path:
+        if not (Path(run) / args.torax_subdir).is_dir():
+            parser.error(f"no {args.torax_subdir} in run directory {run}")
+    if args.labels is not None and len(args.labels) != len(args.run_path):
+        parser.error("give one --labels entry per --run_path")
     return args
 
 
-def run_label(uri: str) -> str:
-    """Name of the run a URI belongs to: the run directory for .../<run>/out_torax"""
-    path = Path(uri.split("path=")[-1].rstrip("/"))
-    return path.parent.name if path.name.startswith("out_") else path.name
+def run_label(run_path: str) -> str:
+    """Name of a run: its directory name"""
+    return Path(run_path).resolve().name
 
 
 def short_labels(labels: list[str]) -> list[str]:
@@ -597,19 +610,22 @@ def main():
         if getattr(args, name) is not None:
             print(f"Note: --{name} given but not plotted yet")
 
-    labels = args.labels or short_labels([run_label(uri) for uri in args.torax_uri])
+    labels = args.labels or short_labels([run_label(run) for run in args.run_path])
     if len(set(labels)) != len(labels):
         raise SystemExit(f"plot_gyrokinetics.py: run labels must be unique, got {labels}")
 
     with ExitStack() as stack:
+        def open_db(path: Path) -> DBEntry:
+            return stack.enter_context(DBEntry(f"imas:hdf5?path={path}", "r"))
+
+        run_paths = dict(zip(labels, map(Path, args.run_path)))
         dbs = {
-            label: stack.enter_context(DBEntry(f"imas:hdf5?path={uri}", "r"))
-            for label, uri in zip(labels, args.torax_uri)
+            label: open_db(run / args.torax_subdir) for label, run in run_paths.items()
         }
-        nice_dbs = {
-            label: stack.enter_context(DBEntry(f"imas:hdf5?path={uri}", "r"))
-            for label, uri in zip(labels, args.nice_uri or [])
-            if uri.lower() != "none"
+        nice_dbs = {  # NICE output is optional per run
+            label: open_db(run / args.nice_subdir)
+            for label, run in run_paths.items()
+            if (run / args.nice_subdir).is_dir()
         }
         # Slider times: every run's first, middle and last time slice, plus
         # --max_slices evenly spaced times over the combined time range of all runs
