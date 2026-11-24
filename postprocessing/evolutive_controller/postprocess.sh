@@ -21,8 +21,10 @@
 #                       a case directory (cases/<case>) or a run directory
 #                       (cases/runs/<run>); a case means its latest run. Can be repeated.
 #
-# The validation plots' reconstruction_path mirrors settings.ymmsl's source.source_uri
-# (the inverse_convergence run this case's F_INIT reference equilibrium is read from).
+# The validation plots' reference R, Z is the NICE equilibrium the workflow's `source` actor
+# read: source.source_uri in the run's configuration.ymmsl (an inverse_convergence run's
+# out_nice). That path is used as is when it exists, otherwise the run it names is looked
+# up under $PDS_REPO/cases/runs (the URI may come from another machine).
 set -euo pipefail # stop if anything doesn't work
 : "${PDS_REPO:?must point at the IMAS-PDS checkout}"
 
@@ -46,27 +48,28 @@ case_name() {
   echo "$name"
 }
 
-# Run directory (one with out_torax) for a case name, case directory or run directory
+# Run directory (one with the subdirectory $2, default out_torax) for a case name, case
+# directory or run directory
 resolve_run() {
-  local arg=$1 name runs latest
-  if [[ -d "$arg/out_torax" ]]; then
+  local arg=$1 out=${2:-out_torax} name runs latest
+  if [[ -d "$arg/$out" ]]; then
     realpath "$arg"
     return
   fi
   name=$(basename "$arg")
   runs=$PDS_REPO/cases/runs
   # cases/runs/<case> is a symlink to the latest run, or a directory holding the case's runs
-  if [[ -d "$runs/$name/out_torax" ]]; then
+  if [[ -d "$runs/$name/$out" ]]; then
     realpath "$runs/$name"
     return
   fi
   # Otherwise the latest of cases/runs/[<case>/]<case>_<date>_<time>, by that timestamp
   latest=$(
     for dir in "$runs/${name}_"$STAMP_GLOB "$runs/$name/${name}_"$STAMP_GLOB; do
-      [[ -d "$dir/out_torax" ]] && echo "$(basename "$dir") $dir"
+      [[ -d "$dir/$out" ]] && echo "$(basename "$dir") $dir"
     done | sort | tail -n 1 | cut -d' ' -f2-
   )
-  [[ -n "$latest" ]] || die "no run with out_torax found for '$arg'"
+  [[ -n "$latest" ]] || die "no run with $out found for '$arg'"
   realpath "$latest"
 }
 
@@ -104,6 +107,18 @@ pushd "$CASE_DIR" >/dev/null
 source case.env # sets SHOT
 popd >/dev/null
 
+# Reference equilibrium: source.source_uri from the run's configuration
+SOURCE_URI=$(sed -n 's/^ *source\.source_uri: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' \
+  "$RUN_DIR/configuration.ymmsl")
+[[ -n "$SOURCE_URI" ]] || die "no source.source_uri in $RUN_DIR/configuration.ymmsl"
+RECONSTRUCTION_PATH=${SOURCE_URI#*path=}
+if [[ ! -d "$RECONSTRUCTION_PATH" ]]; then
+  REFERENCE_RUN=$(resolve_run "$(dirname "$RECONSTRUCTION_PATH")" \
+    "$(basename "$RECONSTRUCTION_PATH")")
+  RECONSTRUCTION_PATH=$REFERENCE_RUN/$(basename "$RECONSTRUCTION_PATH")
+fi
+echo "Reference equilibrium: $RECONSTRUCTION_PATH"
+
 PYTHON=${PYTHON:-python}
 SCRIPTS=$PDS_REPO/postprocessing/evolutive_controller
 SLIDER_ARGS=(--output_dir "$RUN_DIR/plots" --max_slices "$MAX_SLICES" "${INTERACTIVE[@]}")
@@ -112,7 +127,7 @@ SLIDER_ARGS=(--output_dir "$RUN_DIR/plots" --max_slices "$MAX_SLICES" "${INTERAC
 "$PYTHON" "$SCRIPTS/plot_validation_evolutive_controller.py" \
   --shot_nr "$SHOT" \
   --run_path "$RUN_DIR" \
-  --reconstruction_path "$RUN_DIR/out_nice" \
+  --reconstruction_path "$RECONSTRUCTION_PATH" \
   "${SLIDER_ARGS[@]}"
 
 "$PYTHON" "$SCRIPTS/plot_gyrokinetics.py" \
