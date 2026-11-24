@@ -453,8 +453,9 @@ class GyrokineticsFigure(SliderFigure):
         ax.set_xlabel("R [m]")
         ax.set_ylabel("Z [m]")
         ax.set_title("Equilibrium")
-        # Run legend; its texts get each run's actual time in _draw_equilibrium
-        self.run_legend = subfig.legend(
+        # Run legend, below the whole figure: the left subfigure is too narrow for the
+        # long run labels. Its texts get each run's actual time in _draw_equilibrium.
+        self.run_legend = self.fig.legend(
             handles=[lines[0] for lines in self.torax_eq_lines.values()],
             labels=list(self.runs),
             loc="outside lower center",
