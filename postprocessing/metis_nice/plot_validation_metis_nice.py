@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from imas import DBEntry
 from imas.ids_defs import CLOSEST_INTERP
+from imas_core.exception import ImasCoreBackendException
 
 PLOT_KWARGS = {"marker": "."}
 GET_KWARGS = {"interpolation_method": CLOSEST_INTERP, "lazy": True}
@@ -42,6 +43,18 @@ def nested_getattr(obj, name_list):
     else:
         new_obj = getattr(obj, name_list[0])
         return nested_getattr(new_obj, name_list[1:])
+
+
+def slice_value(key, eq, field):
+    """Value of field in a get_slice result, or None for a failed NICE solve
+    (output_flag -1) or a field NICE's partial/no-plasma output didn't write"""
+    flag = eq.code.output_flag
+    if key == "nice" and len(flag) > 0 and flag[0] == -1:
+        return None
+    try:
+        return nested_getattr(eq.time_slice[0], field).value
+    except ImasCoreBackendException:
+        return None
 
 
 def main():
@@ -177,21 +190,17 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
         for field in fields_0d:
             if field[-1] not in eq_dict:
                 eq_dict[field[-1]] = {key: [] for key in dbs}
-            vals = {
-                key: nested_getattr(eqs[key].time_slice[0], field).value for key in dbs
-            }
+            vals = {key: slice_value(key, eqs[key], field) for key in dbs}
 
             for key in dbs:
-                if key == "dina":
+                if key == "dina" or vals[key] is None:
                     continue
                 if "boundary" in field and hasattr(
                     eqs[key].time_slice[0].profiles_1d, field[-1]
                 ):
-                    nice_arr = getattr(
-                        eqs[key].time_slice[0].profiles_1d, field[-1]
-                    ).value
-                    nice_psi = eqs[key].time_slice[0].profiles_1d.psi.value
-                    if nice_psi.size == 0:
+                    nice_arr = slice_value(key, eqs[key], ("profiles_1d", field[-1]))
+                    nice_psi = slice_value(key, eqs[key], ("profiles_1d", "psi"))
+                    if nice_arr is None or nice_psi is None or nice_psi.size == 0:
                         continue
                     nice_psi_norm = abs(nice_psi - nice_psi[0]) / abs(
                         nice_psi[-1] - nice_psi[0]
@@ -199,7 +208,7 @@ def equilibrium_plot_func(args, dbs, fields_0d, fields_1d, output_path):
                     vals[key] = np.interp(0.99, nice_psi_norm, nice_arr)
 
             for key in dbs:
-                if abs(vals[key]) > 1e30:
+                if vals[key] is not None and abs(vals[key]) > 1e30:
                     vals[key] = None
                 eq_dict[field[-1]][key].append(vals[key])
 

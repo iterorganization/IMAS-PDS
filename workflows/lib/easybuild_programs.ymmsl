@@ -25,12 +25,23 @@ programs:
     executable: python
     args: -u $PDS_REPO/workflows/utils/temporal_coupler.py
 
+  # IMAS_AL_DISABLE_VALIDATE: this actor deserialises a NICE-inverse equilibrium (whose
+  # grids_ggd is not itself time-varying and so stays at shape (1,) while the rest of the
+  # IDS has one entry per slice -- a coordinate mismatch IMAS's strict validator rejects,
+  # same reason as the waveform_editor and nice_* entries).
+  reference_rebase:
+    modules: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds
+    env:
+      IMAS_AL_DISABLE_VALIDATE: 1
+    executable: python
+    args: -u $PDS_REPO/workflows/utils/reference_rebase.py
+
   # Docs: https://git.iter.org/projects/SCEN/repos/metis/browse/workflow/muscle3/mfile/metis4muscle3_setting_list.m
   metis:
     script: |
       #!/bin/bash
       module purge
-      module load METIS-IRFM/2026.08-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      module load METIS-IRFM/2026.11-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
       # IMAS-AL-Matlab leaks its own numpy onto PYTHONPATH, conflicting with
       # $EBROOTMETIS/muscle3_venv's numpy.
       unset PYTHONPATH
@@ -42,7 +53,7 @@ programs:
   # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_inv:
     base_env: clean
-    modules: NICE/3.0.0.dev446-intel-2025b-pds
+    modules: NICE/3.0.0.dev510-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -52,7 +63,7 @@ programs:
   # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_dir:
     base_env: clean
-    modules: NICE/3.0.0.dev446-intel-2025b-pds
+    modules: NICE/3.0.0.dev510-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -62,7 +73,7 @@ programs:
   # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo_rd:
     base_env: clean
-    modules: NICE/3.0.0.dev446-intel-2025b-pds
+    modules: NICE/3.0.0.dev510-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -72,7 +83,7 @@ programs:
   # Docs: https://blfauger.gitlabpages.inria.fr/nice/imasm3pds.html
   nice_evo:
     base_env: clean
-    modules: NICE/3.0.0.dev446-intel-2025b-pds
+    modules: NICE/3.0.0.dev510-intel-2025b-pds
     env:
       IMAS_AL_DISABLE_VALIDATE: 1
       IMAS_VERSION: "4.0.0"
@@ -90,7 +101,7 @@ programs:
       # silently evaluate to "/controllers/KCURR_RZIp".
       controller_path="$PDS_REPO/controllers/KCURR_RZIp"
       module purge
-      module load PCS/2026.08-pds NICE/3.0.0.dev446-intel-2025b-pds
+      module load PCS/2026.08-pds NICE/3.0.0.dev510-intel-2025b-pds
       # IMAS-MATLAB, not the older IMAS-AL-Matlab: that one only exists built
       # against intel-2023b, so loading it here silently downgrades this
       # whole shell's toolchain out from under NICE's own intel-2025b build
