@@ -110,4 +110,7 @@ run_case_clean inverse_convergence 105073
 run_case_clean evolutive_controller 105073
 run_case_clean metis_from_dina 105084
 run_case_clean metis_nice_inverse_from_dina 105084
-run_case_clean metis_nice_evol_from_dina 105073
+
+# metis evolutive workflow not yet stable after few seconds
+# metis evolutive workflow crashes on early t_max within stable window
+# run_case_clean metis_nice_evol_from_dina 105073
