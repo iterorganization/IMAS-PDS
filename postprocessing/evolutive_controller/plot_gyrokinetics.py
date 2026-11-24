@@ -236,15 +236,15 @@ def load_torax_slice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> d
     zz = np.asarray(eq_slice.boundary.outline.z)
     rr = np.asarray(eq_slice.boundary.outline.r)
 
-    # Midplane-averaged major radius of flux surface
-    # Includes Shafranov shift
-    Ro = (max(rr) - min(rr)) / 2
+    # Midplane-averaged major radius of the last-closed-flux-surface
+    Ro = (max(rr) + min(rr)) / 2
     # Midplane-averaged minor radius of flux surface, normalized by
-    # midplane-averaged minor radius of last-closed-flux-surface.
+    # midplane-averaged minor radius of last-closed-flux-surface; on the equilibrium
+    # grid, so interpolated onto core_profiles' rho
     r_inb = np.asarray(p1d.r_inboard)
     r_outb = np.asarray(p1d.r_outboard)
     xx = (r_outb - r_inb) / (max(rr) - min(rr))
-    xx_intp = np.interp(np.linspace(0, 1, len(Te)), xx, xx)
+    xx_intp = np.interp(rho, np.asarray(p1d.rho_tor_norm), xx)
     tau_bounce = calc_tau_bounce(Te, qx, Ro, Rmin, xx_intp)
     nu_e = calc_nu_e(ne, Te, zeff)
     nustar = nu_e * tau_bounce
