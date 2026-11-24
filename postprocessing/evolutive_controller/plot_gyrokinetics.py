@@ -21,15 +21,19 @@ import os
 from contextlib import ExitStack
 from pathlib import Path
 
-import matplotlib
-
-import matplotlib.pyplot as plt
 import numpy as np
 from imas import DBEntry
 from imas.ids_toplevel import IDSToplevel
-from matplotlib.animation import FuncAnimation
 from matplotlib.lines import Line2D
-from matplotlib.widgets import Slider
+from time_slider import (
+    SliderFigure,
+    add_slider_args,
+    check_slider_args,
+    data_limits,
+    nearest_index,
+    show_or_save,
+    slider_times,
+)
 
 qe = 1.602176565e-19  # electron charge [C]
 me = 9.10938291e-31  # electron mass [kg]
@@ -149,30 +153,10 @@ def handle_args():
         nargs="+",
         help="Legend label per --run_path (default: the run directory names)",
     )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        default=f"{os.environ['RUN_DIR']}/plots" if os.environ.get("RUN_DIR") else None,
-        help="path to directory in which to put plots (default: $RUN_DIR/plots)",
-    )
     parser.add_argument("--t_list", type=int, nargs="+", help="List of times to plot")
-    parser.add_argument(
-        "--max_slices",
-        type=int,
-        default=3,
-        help=(
-            "Number of evenly spaced times on the slider (default: 3). Each run's first, "
-            "middle and last time slice are always included as well"
-        ),
-    )
-    parser.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Open a matplotlib window with a time slider instead of writing files",
-    )
+    add_slider_args(parser)
     args = parser.parse_args()
-    if not args.interactive and args.output_dir is None:
-        parser.error("--output_dir (or $RUN_DIR) is required unless --interactive is given")
+    check_slider_args(parser, args)
     if not args.run_path:
         if not os.environ.get("RUN_DIR"):
             parser.error("--run_path (or $RUN_DIR) is required")
@@ -201,16 +185,9 @@ def short_labels(labels: list[str]) -> list[str]:
     return ["_".join(p[n:]) for p in parts]
 
 
-def merge_times(times, tol=1e-6):
-    """Sorted times with (near-)duplicates merged"""
-    times = np.sort(np.asarray(times, dtype=float))
-    keep = np.concatenate([[True], np.diff(times) > tol])
-    return times[keep]
-
-
 def load_nice(nice_eq: IDSToplevel, nice_time, time_val: float) -> dict:
     """NICE equilibrium quantities at the NICE time slice nearest to time_val"""
-    idx = int(np.argmin(np.abs(nice_time - time_val)))
+    idx = nearest_index(nice_time, time_val)
     eq_slice = nice_eq.time_slice[idx]
     p1d = eq_slice.profiles_1d
     rho = np.asarray(p1d.rho_tor_norm)
@@ -248,7 +225,7 @@ def load_run(to: DBEntry, nice: DBEntry | None, frame_times) -> list[dict | None
         if not cp_time[0] <= t <= cp_time[-1]:
             slices.append(None)
             continue
-        idx = int(np.argmin(np.abs(cp_time - t)))
+        idx = nearest_index(cp_time, t)
         if idx not in loaded:
             print(f"  loading t[{idx}]={cp_time[idx]:.3f}s")
             loaded[idx] = load_timeslice(idx, to_cp, to_eq)
@@ -369,36 +346,19 @@ PANELS = [
 ]
 
 
-def data_limits(values, margin=0.05):
-    """Padded (min, max) over all finite values in a list of arrays"""
-    if len(values) == 0:
-        return -1, 1
-    flat = np.concatenate([np.ravel(v) for v in values])
-    flat = flat[np.isfinite(flat)]
-    if flat.size == 0:
-        return -1, 1
-    lo, hi = flat.min(), flat.max()
-    pad = (hi - lo) * margin or abs(hi) * margin or 1
-    return lo - pad, hi + pad
+class GyrokineticsFigure(SliderFigure):
+    """Equilibrium + 4x3 gyrokinetic profiles below the title and time slider.
 
-
-class GyrokineticsFigure:
-    """The one figure: title, full-width time slider, equilibrium + 4x3 profiles.
-
-    The same figure is shown with ``--interactive`` and saved to PNG/HTML otherwise.
-    Moving the slider (by mouse, arrow keys or :meth:`update`) redraws all lines.
     Each run gets its own colour; within a panel, series are told apart by line style.
     Axis limits are fixed over all runs and slices, so moving the slider shows real
     changes rather than rescaled axes.
     """
 
-    SLIDER_SPACE = 0.10  # top strip of the figure reserved for title and slider
-    SLIDER_RECT = (0.06, 0.895, 0.86, 0.03)  # full width, between title and plots
     LINESTYLES = ["-", "--", ":", "-."]
 
     def __init__(self, runs: dict[str, list[dict | None]], frame_times, shot_nr):
+        super().__init__(frame_times)
         self.runs = runs  # label -> slice per slider time
-        self.frame_times = list(frame_times)
         self.shot_nr = shot_nr
         all_slices = [s for slices in runs.values() for s in slices if s is not None]
 
@@ -409,8 +369,6 @@ class GyrokineticsFigure:
 
         has_nice = any("nice_rr" in s for s in all_slices)
 
-        self.fig = plt.figure(figsize=(18, 10), layout="constrained")
-        self.fig.get_layout_engine().set(rect=(0, 0, 1, 1 - self.SLIDER_SPACE))
         left, right = self.fig.subfigures(1, 2, width_ratios=[1, 2])
         colors = {label: f"C{i}" for i, label in enumerate(runs)}
 
@@ -447,7 +405,7 @@ class GyrokineticsFigure:
         self.ax_eq.set_xlabel("R [m]")
         self.ax_eq.set_ylabel("Z [m]")
         self.ax_eq.set_title("Equilibrium")
-        # Run legend; its texts are updated with each run's actual time in _draw
+        # Run legend; its texts are updated with each run's actual time in draw
         self.run_legend = left.legend(
             handles=[self.eq_lines[label][0] for label in runs],
             labels=list(runs),
@@ -486,31 +444,16 @@ class GyrokineticsFigure:
                     loc="best",
                 )
 
-        self.suptitle = self.fig.suptitle("")
+        self.update(0)
 
-        # Time slider. It steps over slider times (evenly spaced, so the HTML slider
-        # can be laid exactly over it) and shows the selected time.
-        self.ax_slider = self.fig.add_axes(self.SLIDER_RECT)
-        self.slider = Slider(
-            self.ax_slider,
-            "time [s]",
-            0,
-            max(len(self.frame_times) - 1, 1),
-            valinit=0,
-            valstep=1,
+    def title(self, frame: int) -> str:
+        t0, t1 = self.frame_times[0], self.frame_times[-1]
+        return (
+            f"{self.shot_nr} gyrokinetic profiles\n"
+            f"t={self.frame_times[frame]:.3f}s, t=[{t0:.1f}, {t1:.1f}]"
         )
-        self.slider.on_changed(lambda value: self._draw(int(value)))
-        self.fig.canvas.mpl_connect("key_press_event", self._on_key)
-        self._draw(0)
 
-    def update(self, frame: int):
-        """Move the slider to ``frame`` (which redraws); returns the changed artists"""
-        self.slider.set_val(frame)
-        return self.fig.get_children()
-
-    def _draw(self, frame: int):
-        frame = min(frame, len(self.frame_times) - 1)
-        t = self.frame_times[frame]
+    def draw(self, frame: int):
         for (label, slices), text in zip(self.runs.items(), self.run_legend.get_texts()):
             s = slices[frame]
             boundary, axis, midplane = self.eq_lines[label]
@@ -536,73 +479,11 @@ class GyrokineticsFigure:
                 line.set_data([], [])
             else:
                 line.set_data(s[x_key], s[key])
-        t0, t1 = self.frame_times[0], self.frame_times[-1]
-        self.suptitle.set_text(
-            f"{self.shot_nr} gyrokinetic profiles\nt={t:.3f}s, t=[{t0:.1f}, {t1:.1f}]"
-        )
-        self.slider.valtext.set_text(f"{t:.3f}")
-        self.fig.canvas.draw_idle()
-
-    def _on_key(self, event):
-        """Left/right arrow keys step one slider time"""
-        frame = int(self.slider.val)
-        if event.key == "right":
-            self.update(min(frame + 1, len(self.frame_times) - 1))
-        elif event.key == "left":
-            self.update(max(frame - 1, 0))
-
-
-def write_outputs(gk: GyrokineticsFigure, args):
-    """Save the figure: a PNG per time slice, plus an HTML page to scroll through them"""
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    for frame, t in enumerate(gk.frame_times):
-        gk.update(frame)
-        path = output_dir / f"gyrokinetics_{args.shot_nr}_t={t:.3f}.png"
-        print(f"Writing {path}")
-        gk.fig.savefig(path)
-
-    matplotlib.rcParams["animation.embed_limit"] = 500  # MB
-    anim = FuncAnimation(gk.fig, gk.update, frames=len(gk.frame_times), blit=False)
-    path = output_dir / f"gyrokinetics_{args.shot_nr}.html"
-    print(f"Writing {path} ({len(gk.frame_times)} times)")
-    html = anim.to_jshtml(fps=5, default_mode="once")
-
-    # The frames already show the figure's own slider. Lay matplotlib's HTML range input
-    # invisibly over it, so dragging the slider in the image scrolls through time.
-    # Both map slice numbers linearly onto the same rectangle.
-    x0, y0, w, h = GyrokineticsFigure.SLIDER_RECT
-    style = f"""<style>
-.animation {{ display: block; width: 100%; }}
-.gk-figure {{ position: relative; }}
-.gk-figure img {{ display: block; width: 100%; height: auto; }}
-.gk-figure input[type=range].anim-slider {{
-  position: absolute; margin: 0; opacity: 0; cursor: pointer;
-  left: {x0 * 100}%; top: {(1 - y0 - h) * 100}%; width: {w * 100}%; height: {h * 100}%;
-}}
-</style>"""
-    script = """<script>
-document.querySelectorAll(".animation").forEach(function (anim) {
-  var img = anim.querySelector("img");
-  var wrap = document.createElement("div");
-  wrap.className = "gk-figure";
-  img.parentNode.insertBefore(wrap, img);
-  wrap.appendChild(img);
-  wrap.appendChild(anim.querySelector("input.anim-slider"));
-});
-</script>"""
-    # style must come after html: matplotlib's own <style> would otherwise override it
-    path.write_text(
-        f"<!doctype html><title>Gyrokinetics {args.shot_nr}</title>{html}{style}{script}"
-    )
 
 
 def main():
     """Plot gyrokinetically relevant TORAX output for PDS, scrollable in time"""
     args = handle_args()
-    if not args.interactive:
-        matplotlib.use("Agg")
 
     # The other sources are accepted for interface compatibility with the other
     # postprocessing scripts, but not (yet) plotted.
@@ -629,15 +510,10 @@ def main():
         }
         # Slider times: every run's first, middle and last time slice, plus
         # --max_slices evenly spaced times over the combined time range of all runs
-        required = []
-        for to in dbs.values():
-            t = np.asarray(to.get("core_profiles", lazy=True).time)
-            required += [t[0], t[len(t) // 2], t[-1]]
-        evenly = np.linspace(min(required), max(required), args.max_slices)
-        # Skip evenly spaced times that (nearly) coincide with a required slice
-        close = 0.01 * (max(required) - min(required))
-        evenly = [t for t in evenly if np.min(np.abs(np.asarray(required) - t)) > close]
-        frame_times = merge_times(np.concatenate([required, evenly]))
+        frame_times = slider_times(
+            [to.get("core_profiles", lazy=True).time for to in dbs.values()],
+            args.max_slices,
+        )
 
         runs = {}
         for label, to in dbs.items():
@@ -646,11 +522,7 @@ def main():
             runs[label] = load_run(to, nice, frame_times)
 
     gk = GyrokineticsFigure(runs, frame_times, args.shot_nr)
-    if args.interactive:
-        plt.show()
-    else:
-        write_outputs(gk, args)
-    plt.close(gk.fig)
+    show_or_save([(gk, f"gyrokinetics_{args.shot_nr}", f"Gyrokinetics {args.shot_nr}")], args)
 
 
 if __name__ == "__main__":
