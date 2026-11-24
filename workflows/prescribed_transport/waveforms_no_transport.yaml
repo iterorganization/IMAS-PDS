@@ -1,12 +1,11 @@
 # Waveform-Editor configuration for prescribed_transport. Equilibrium only, no
-# core_profiles. Generic across scenarios -- ${SCENARIOS_REPO}/${SHOT} is filled in by
-# pds-create-case.
+# core_profiles. Generic across scenarios -- `input`/`input_md` are written by preprocess.sh.
 
 globals:
   dd_version: 4.0.0
   imports:
-    input: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in"
-    input_md: "imas:hdf5?path=${SCENARIOS_REPO}/${SHOT}/data/in_md"
+    input: "imas:hdf5?path=${CASE_DIR}/preprocess/in"
+    input_md: "imas:hdf5?path=${CASE_DIR}/preprocess/in_md"
     eq: {port: equilibrium_in}
 
 machine_description:

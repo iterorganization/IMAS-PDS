@@ -12,20 +12,20 @@
 #    shared build instead of replacing it.
 #
 #      cd n/NICE
-#      cp NICE-3.0.0.dev258-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
+#      cp NICE-PDS-1.2.0-intel-2025b.eb NICE-mybranch-intel-2025b.eb
 #
 # 2. Build it into your own prefix:
 #
 #      export EASYBUILD_PREFIX=$HOME/my-modules
 #      module load EasyBuild/5.4.0
-#      eb n/NICE/NICE-mybranch-intel-2025b-pds.eb --robot="$PWD"
+#      eb n/NICE/NICE-mybranch-intel-2025b.eb --robot="$PWD"
 #
 # 3. Make it visible:
 #
 #      module use $HOME/my-modules/modules/all
 #
 # 4. Copy workflows/lib/local_programs.ymmsl to workflows/lib/local_programs_<you>.ymmsl
-#    and change only that actor's `modules:` line to NICE/mybranch-intel-2025b-pds.
+#    and change only that actor's `modules:` line to NICE/mybranch-intel-2025b.
 #
 # 5. In the PDS workflow you are running, repoint just that one import:
 #
@@ -43,16 +43,16 @@ export PDS_REPO
 EB_OPTS=(--robot="$PWD")
 
 declare -A LOCAL_EC=(
-  [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-1.0.0.dev69-intel-2025b-pds.eb
-  [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-1.0.0-intel-2025b-pds.eb
-  [Waveform-Editor]=w/Waveform-Editor/Waveform-Editor-0.3.2.dev154-intel-2025b-pds.eb
-  [NICE]=n/NICE/NICE-3.0.0.dev258-intel-2025b-pds.eb
-  [CHEASE]=c/CHEASE/CHEASE-2026.08-intel-2025b-pds.eb
-  [TORAX-MUSCLE3]=t/TORAX-MUSCLE3/TORAX-MUSCLE3-0.1.3-intel-2025b-pds.eb
-  [METIS-IRFM]=m/METIS-IRFM/METIS-IRFM-2026.08-pds.eb
-  [PCS]=p/PCS/PCS-2026.08-pds.eb
-  [ymmsl2svg]=y/ymmsl2svg/ymmsl2svg-0.1.0-intel-2025b-pds.eb
-  [PDS]=p/PDS/PDS-1.0.eb
+  [IMAS-Validator]=i/IMAS-Validator/IMAS-Validator-PDS-1.2.0-intel-2025b.eb
+  [IMAS-MUSCLE3]=i/IMAS-MUSCLE3/IMAS-MUSCLE3-PDS-1.2.0-intel-2025b.eb
+  [Waveform-Editor]=w/Waveform-Editor/Waveform-Editor-PDS-1.2.0-intel-2025b.eb
+  [NICE]=n/NICE/NICE-PDS-1.2.0-intel-2025b.eb
+  [CHEASE]=c/CHEASE/CHEASE-PDS-1.2.0-intel-2025b.eb
+  [TORAX-MUSCLE3]=t/TORAX-MUSCLE3/TORAX-MUSCLE3-PDS-1.2.0-intel-2025b.eb
+  [METIS-IRFM]=m/METIS-IRFM/METIS-IRFM-PDS-1.2.0.eb
+  [PCS]=p/PCS/PCS-PDS-1.2.0.eb
+  [ymmsl2svg]=y/ymmsl2svg/ymmsl2svg-PDS-1.2.0-intel-2025b.eb
+  [PDS]=p/PDS/PDS-1.2.0.eb
 )
 BUILD_ORDER=(IMAS-Validator IMAS-MUSCLE3 Waveform-Editor NICE CHEASE TORAX-MUSCLE3 METIS-IRFM PCS ymmsl2svg PDS)
 

@@ -14,9 +14,6 @@ Requirements
 
 - An account on the ITER cluster, with read access to ``/work/projects/pds``.
 - A checkout of this repository.
-- The separate ``pds-scenarios`` repository, which holds the shot data. A copy is
-  published at ``/work/projects/pds/pds-scenarios``, which is the default when
-  ``SCENARIOS_REPO`` is unset. A private checkout is only needed to override it.
 
 Loading the module
 ------------------

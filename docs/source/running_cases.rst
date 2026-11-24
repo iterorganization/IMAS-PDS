@@ -12,10 +12,10 @@ A run pairs two things:
   *How* something is simulated: which codes are coupled, in what order, over
   which ports. Workflows live in ``workflows/`` and contain no shot data.
 
-**Scenario**
-  *What* is simulated: the machine description, the input equilibrium, the
-  waveforms for one shot. Scenarios live in the separate ``pds-scenarios``
-  repository, keyed by shot number.
+**Shot**
+  *What* is simulated: the DINA run a shot's input is built from, named in
+  ``preprocessing/dina/shots/<shot>.env``. ``preprocessing/`` turns it, together
+  with the ITER machine description, into input.
 
 **Case**
   The pairing of the two, materialised as a directory under ``cases/``. This is
@@ -35,7 +35,7 @@ Creating a case
 
 That writes ``cases/inverse_convergence_105073``; a third argument puts it elsewhere.
 ``source completion.sh`` gives tab completion over the available workflows and the shots
-in your ``$SCENARIOS_REPO``. :ref:`workflows` lists what is available.
+in ``preprocessing/dina/shots``. :ref:`workflows` lists what is available.
 
 What is in a case directory
 ---------------------------

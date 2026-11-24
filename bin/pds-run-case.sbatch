@@ -31,7 +31,7 @@ set -euo pipefail
 # If the case has a postprocess.sh (bin/pds-create-case copies it in from
 # workflows/<workflow>/postprocess.sh, if that exists -- see its header), it runs once after
 # muscle_manager finishes (e.g. validation plots against the run's own output -- see
-# workflows/metis_from_dina/postprocess.sh). It gets PDS_REPO/SCENARIOS_REPO/SHOT/CASE_DIR/
+# workflows/metis_from_dina/postprocess.sh). It gets PDS_REPO/SHOT/CASE_DIR/
 # RUN_DIR/PYTHON (the same interpreter muscle_manager itself resolved to -- use "$PYTHON"
 # rather than a bare `python`) and should write into $RUN_DIR/ (preprocessing, if any,
 # already ran once at bin/pds-create-case time -- see that script's header).
@@ -43,7 +43,6 @@ OVERLAYS=("$@")
 
 PDS_REPO="${PDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 export PDS_REPO
-export SCENARIOS_REPO="${SCENARIOS_REPO:-/work/projects/pds/pds-scenarios}"
 
 CASE_DIR="$CASE_ARG"
 [[ -d "$CASE_DIR" ]] || CASE_DIR="$PDS_REPO/$CASE_ARG"
@@ -59,10 +58,10 @@ if [[ -z "${MANAGER:-}" ]]; then
     if [[ -f "$LMOD_INIT" ]]; then
       source "$LMOD_INIT"
       module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load IMAS-MUSCLE3/1.0.0-intel-2025b-pds 2>/dev/null || true
+      module load IMAS-MUSCLE3/PDS-1.2.0-intel-2025b 2>/dev/null || true
     fi
   fi
-  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.0-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/PDS-1.2.0-intel-2025b not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
   MANAGER="$(command -v muscle_manager)"
   : "${MANAGER:?$0: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi
@@ -78,6 +77,10 @@ export PYTHON
 RUN_DIR="$PDS_REPO/cases/runs/$(basename "$CASE_DIR")_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RUN_DIR"
 export RUN_DIR
+
+for f in postprocess.sh; do
+  [[ -f "$CASE_DIR/$f" ]] && cp "$CASE_DIR/$f" "$RUN_DIR/$f"
+done
 
 stack=()
 for f in workflow.ymmsl workflow_settings.ymmsl scenario_settings.ymmsl preprocess_settings.ymmsl; do
@@ -101,7 +104,7 @@ unset LD_PRELOAD VGL_ISACTIVE VGL_DISPLAY DISPLAY
 rm -rf "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 ln -sfn "$(basename "$RUN_DIR")" "$PDS_REPO/cases/runs/$(basename "$CASE_DIR")"
 
-POSTPROCESS="$CASE_DIR/postprocess.sh"
+POSTPROCESS="$RUN_DIR/postprocess.sh"
 if [[ -x "$POSTPROCESS" ]]; then
   [[ -f "$CASE_DIR/case.env" ]] && source "$CASE_DIR/case.env"
   export SHOT

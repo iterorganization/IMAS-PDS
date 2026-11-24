@@ -1,0 +1,69 @@
+easyblock = 'PythonBundle'
+
+name = 'ymmsl2svg'
+version = 'PDS-1.2.0'
+
+local_commit = 'a0541ace2714e3efef879093229b25630c8ef9d4'
+# feature/timelines: the only ymmsl with TimelineTree that libmuscle 0.10 still accepts
+local_ymmsl_commit = 'ad60da5d950d1604b3257b171a59dc05fa73b04c'
+
+homepage = 'https://github.com/DaanVanVugt/ymmsl2svg'
+description = """Renders a yMMSL configuration as an SVG graph. Used by
+muscle3-dashboard for its per-run workflow graph card."""
+
+toolchain = {'name': 'intel', 'version': '2025b'}
+
+builddependencies = [
+    ('git', '2.50.1'),
+]
+
+dependencies = [
+    ('Python', '3.13.5'),
+    ('MUSCLE3', '0.10.0'),
+    ('IMAS-MUSCLE3', 'PDS-1.2.0'),
+]
+
+exts_list = [
+    ('ymmsl', '0.17.0-timelines', {
+        'modulename': 'ymmsl',
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/multiscale',
+                'repo_name': 'ymmsl-python',
+                'commit': local_ymmsl_commit,
+            },
+            'filename': 'ymmsl-python-%s.tar.gz' % local_ymmsl_commit[:10],
+        }],
+        'checksums': [None],
+    }),
+    ('svg.py', '1.10.0', {
+        'modulename': 'svg',
+        'sources': ['svg_py-1.10.0.tar.gz'],
+        'checksums': ['2e1391411a205220a0e72ca303f3c2d11dbd564cb1dbc445406c5e11421bcc4b'],
+    }),
+    ('ymmsl2svg', '0.1.dev54', {
+        'sources': [{
+            'git_config': {
+                'url': 'https://github.com/DaanVanVugt',
+                'repo_name': 'ymmsl2svg',
+                'commit': local_commit,
+            },
+            'filename': 'ymmsl2svg-%s.tar.gz' % local_commit[:10],
+        }],
+        'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
+        'checksums': [None],
+    }),
+]
+
+sanity_pip_check = False
+
+sanity_check_commands = [
+    "python -c 'from ymmsl.v0_2 import TimelineTree'",
+    "python -c 'from ymmsl2svg.main import configuration2svg'",
+    "python -c 'from ymmsl2svg.settings import settings; settings.disable_port_icons()'",
+    "python -c 'import muscle3_dashboard.components.ymmsl_graph as g; assert g.configuration2svg, \"dashboard graph disabled\"'",
+
+    "python -c 'import libmuscle, muscle3, imas_muscle3.actors.source_component'",
+]
+
+moduleclass = 'vis'

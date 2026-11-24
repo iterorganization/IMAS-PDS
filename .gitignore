@@ -31,3 +31,4 @@ cases/*/
 !*.template
 
 .claude
+.vscode/

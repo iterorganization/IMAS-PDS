@@ -32,7 +32,7 @@ settings:
 programs:
   chease:
     base_env: clean
-    modules: CHEASE/2026.08-intel-2025b-pds
+    modules: CHEASE/PDS-1.2.0-intel-2025b
     executable: $EBROOTCHEASE/chease_m3/bin/chease.exe
 resources:
   source:

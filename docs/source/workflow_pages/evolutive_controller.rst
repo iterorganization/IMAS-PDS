@@ -21,7 +21,7 @@ equilibrium for TORAX's next geometry. No outer loop and no convergence criterio
 two simply advance together until the time window ends.
 
 :Workflow: ``evolutive_controller`` -- :src:`workflows/evolutive_controller/README.md`
-:Scenario: DINA shot 105073, in ``pds-scenarios``
+:Scenario: DINA shot 105073
 :Output: ``<run_dir>/out_nice``, ``<run_dir>/out_torax`` and ``<run_dir>/out_controller``
 
 Running it
@@ -80,7 +80,7 @@ not clear its run directory before running this one.
 
 The waveform editor passes that equilibrium through an ``equilibrium/*: {ref: eq}`` wildcard, 
 so every field survives rather than a hand-pickedfew, and overlays the static machine 
-description, ``core_profiles`` and the ECRH trace from the scenario's own data.
+description, ``core_profiles`` and the EC power from the scenario's own data.
 
 Two fields in that overlay are load-bearing, both because NICE indexes them without a
 size check and segfaults on an empty one:

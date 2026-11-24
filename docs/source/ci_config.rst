@@ -36,6 +36,9 @@ script builds the module environment, then runs, in order:
   ``test_torax_actor``, ``test_nice_actor``, ``test_metis_actor``,
   ``test_chease_actor``. They catch a broken actor environment in seconds, before any
   expensive run starts.
+- **A repeatability check** -- ``ci/check_repeatability.sh`` runs ``test_nice_actor``
+  twice and requires bit-identical sinks (``ci/compare_ids.py``, exact). It catches
+  non-deterministic actors: thread-order reductions, uninitialised memory.
 - **Five full cases**, created and run end to end: ``prescribed_transport
   105099``, ``inverse_convergence 105073``, ``evolutive_controller 105073``,
   ``metis_from_dina 105084`` and ``metis_nice_inverse_from_dina 105084``.

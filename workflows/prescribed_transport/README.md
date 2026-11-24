@@ -13,8 +13,6 @@ psi, and gathers the results back in the original order.
 Build a case folder for a shot, then hand it to SLURM:
 
 ```bash
-export SCENARIOS_REPO=/path/to/pds-scenarios   # defaults to /work/projects/pds/pds-scenarios
-
 bin/pds-create-case prescribed_transport 105084       # -> cases/prescribed_transport_105084
 sbatch --time=00:20:00 --cpus-per-task=8 bin/pds-run-case.sbatch cases/prescribed_transport_105084
 ```
@@ -33,10 +31,9 @@ If an override file was used it is ran by `pds-run-case.sbatch` under `muscle_ma
 
 Scenarios available: 105078, 105084, 105092, 105099.
 
-Only the input DBEntry (`data/in`, `data/in_md`) is read live from `pds-scenarios`; the
-pulse design (`waveforms_no_transport.yaml`) lives in this workflow's own directory, so it's
-versioned and editable here. See `pds-scenarios`' `GENERATING.md` for how `data/` itself is
-produced from DINA and machine-description sources.
+`preprocess.sh` builds the input DBEntry from the shot's DINA run into the case (`preprocess/in`, `preprocess/in_md`, see
+`preprocessing/dina/scenario_input.sh`). The pulse design (`waveforms_no_transport.yaml`)
+lives in this workflow's own directory, so it's versioned and editable here.
 
 ## Assumptions
 
@@ -55,7 +52,7 @@ produced from DINA and machine-description sources.
 
 ## Input requirements
 
-Produced by `tools/prepare <shot>` in the `pds-scenarios` repository.
+Produced by `preprocess.sh` at case creation (see `preprocessing/`).
 
 - A DINA-derived source supplying the equilibrium boundary/target trace to seed NICE's first solve:
   `vacuum_toroidal_field/r0`

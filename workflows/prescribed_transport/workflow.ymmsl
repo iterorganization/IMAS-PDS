@@ -41,7 +41,7 @@ models:
       recorder_equilibrium:
         description: distill recorder (NICE inverse outputs)
         implementation: recorder_component
-        ports: {s: [equilibrium_in, pf_active_in]}
+        ports: {f_init: [equilibrium_in, pf_active_in]}
     conduits:
       # model input ports -> load balancer
       equilibrium_in: load_balancer.equilibrium_in
@@ -57,7 +57,7 @@ models:
       load_balancer.iron_core_scatter: nice.iron_core_in
       # gather from the workers. recorder_equilibrium cannot be wired to nice.equilibrium_out
       # directly: nice has multiplicity: [1], making it an instance set, and the
-      # generic recorder actor's receive_message() has no slot-addressing support --
+      # generic recorder actor's receive() has no slot-addressing support --
       # it can only connect to a genuine single-instance peer, which load_balancer is
       # and the raw `nice` worker is not (confirmed by a real run: recording straight
       # off `nice` fails with `KeyError: Reference("equilibrium.nice")`, because the
