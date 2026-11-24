@@ -7,8 +7,9 @@
 # reconstruction_path mirrors settings.ymmsl's source.source_uri (the inverse_convergence run
 # this case's F_INIT reference equilibrium is read from).
 #
-# Options for the gyrokinetics plots (plot_gyrokinetics.py), e.g. when re-running this script
-# by hand from a run directory:
+# Options, e.g. when re-running this script by hand from a run directory (--max_slices and
+# --interactive apply to the time-slider figures of both plotting scripts, --compare to the
+# gyrokinetics plots):
 #   --max_slices N        number of evenly spaced times on the time slider (default: 3);
 #                         each run's first, middle and last time slice are always shown
 #   --interactive         open a matplotlib window with the slider instead of writing the HTML
@@ -93,7 +94,9 @@ mkdir -p "$RUN_DIR/plots"
   --shot_nr "$SHOT" \
   --reconstruction_path "$RUN_DIR/out_nice" \
   --run_path "$RUN_DIR" \
-  --output_dir "$RUN_DIR/plots"
+  --output_dir "$RUN_DIR/plots" \
+  --max_slices "$MAX_SLICES" \
+  "${INTERACTIVE[@]}"
 
 "$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_gyrokinetics.py" \
   --shot_nr "$SHOT" \

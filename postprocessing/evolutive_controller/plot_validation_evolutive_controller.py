@@ -1,6 +1,10 @@
 """
 Validate evolutive_controller output: reference vs NICE for R, Z, Ip, PF coil current,
 plus NICE (q, pressure) and TORAX (Te, ne, q) profiles, each on its own psi grid.
+
+The profile figures have a time slider (see time_slider.py): saved as a PNG per slider
+time plus a scrollable HTML page, or shown in a window with ``--interactive`` (together
+with the R/Z/Ip and coil current figures).
 """
 
 import argparse
@@ -13,6 +17,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from imas import DBEntry
 from imas.ids_defs import CLOSEST_INTERP
+from time_slider import (
+    SliderFigure,
+    add_slider_args,
+    check_slider_args,
+    data_limits,
+    nearest_index,
+    show_or_save,
+    slider_times,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,26 +77,14 @@ def handle_args():
         help="Subdirectory of the run with the TORAX core_profiles output (default: out_torax)",
     )
     parser.add_argument(
-        "--n_profiles",
-        type=int,
-        default=6,
-        help="Number of time slices to draw in the profiles-vs-psi plots",
-    )
-    parser.add_argument(
         "--max_points",
         type=int,
         default=500,
         help="Maximum number of time slices per series in the time-trace plots",
     )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        default=f"{os.environ['RUN_DIR']}/plots" if os.environ.get("RUN_DIR") else None,
-        help="path to directory in which to put plots (default: $RUN_DIR/plots)",
-    )
+    add_slider_args(parser)
     args = parser.parse_args()
-    if args.output_dir is None:
-        parser.error("--output_dir (or $RUN_DIR) is required")
+    check_slider_args(parser, args)
     if args.run_path is None:
         parser.error("--run_path (or $RUN_DIR) is required")
     if args.dina_path is None:
@@ -177,11 +178,20 @@ def main():
 
     rz_ip_plot(args, dbs)
     kcurr_plot(args, dbs)
-    nice_profiles_plot(args, dbs)
-    torax_profiles_plot(args, dbs)
+    slider_figures = [nice_profiles_plot(args, dbs), torax_profiles_plot(args, dbs)]
 
     for db in dbs.values():
         db.close()
+
+    show_or_save(slider_figures, args)
+
+
+def save_static(fig, path, args):
+    """Save a figure without time slider, unless it is shown with --interactive"""
+    if not args.interactive:
+        print(f"Writing {path}")
+        fig.savefig(path)
+        plt.close(fig)
 
 
 def rz_ip_plot(args, dbs):
@@ -240,7 +250,7 @@ def rz_ip_plot(args, dbs):
         ax.legend()
 
     fig.tight_layout(rect=(0, 0.03, 1, 0.95))
-    fig.savefig(figure_path)
+    save_static(fig, figure_path, args)
 
 
 def kcurr_plot(args, dbs):
@@ -296,46 +306,76 @@ def kcurr_plot(args, dbs):
         fig.delaxes(ax)
 
     fig.tight_layout(rect=(0, 0.03, 1, 0.95))
-    fig.savefig(coil_figure_path)
+    save_static(fig, coil_figure_path, args)
 
 
 def normalise_psi(psi):
     return np.abs(psi - psi[0]) / np.abs(psi[-1] - psi[0])
 
 
-def pick_times(times, n):
-    return times[np.unique(np.linspace(0, len(times) - 1, n).astype(int))]
+class ProfilesPsiFigure(SliderFigure):
+    """One panel per label, showing that profile vs psi_norm at the slider time.
+
+    ``profiles`` holds, per slider time, (actual time, psi_norm, [values per label]) or
+    None when the code has no valid profile there. Axis limits are fixed over all times.
+    """
+
+    def __init__(self, frame_times, profiles, title, labels):
+        super().__init__(frame_times, figsize=(6 * len(labels), 6))
+        self.profiles = profiles
+        self.title_text = title
+        valid = [p for p in profiles if p is not None]
+        axes = self.fig.subplots(1, len(labels))
+        self.lines = []
+        for i, (ax, label) in enumerate(zip(axes, labels, strict=True)):
+            ax.set_title(label)
+            ax.set_ylabel(label)
+            ax.set_xlabel("psi_norm")
+            ax.set_xlim(*data_limits([psi for _, psi, _ in valid], margin=0.02))
+            ax.set_ylim(*data_limits([values[i] for _, _, values in valid]))
+            self.lines.append(ax.plot([], [], color="C0")[0])
+        self.update(0)
+
+    def title(self, frame: int) -> str:
+        p = self.profiles[frame]
+        when = "no valid profile at this time" if p is None else f"t={p[0]:.3f}s"
+        return f"{self.title_text}\n{when}"
+
+    def draw(self, frame: int):
+        p = self.profiles[frame]
+        for i, line in enumerate(self.lines):
+            if p is None:
+                line.set_data([], [])
+            else:
+                line.set_data(p[1], p[2][i])
 
 
-def profiles_psi_plot(figure_path, title, times, labels, get_profiles):
-    """One panel per label, one line per time slice. get_profiles(t) returns
-    (psi, [values per label]) on a code's own grid, or None to skip that slice."""
-    colors = plt.get_cmap("Blues")(np.linspace(0.35, 1.0, len(times)))
-    fig, axes = plt.subplots(nrows=1, ncols=len(labels), figsize=(6 * len(labels), 5))
-    fig.suptitle(title, fontsize=16)
-    for ax, label in zip(axes, labels, strict=True):
-        ax.set_title(label)
-        ax.set_ylabel(label)
-        ax.set_xlabel("psi_norm")
+def slider_profiles(times, max_slices, get_profiles, name):
+    """Slider times over a code's timebase, and its profiles at the nearest time slice.
 
-    for t, color in zip(times, colors, strict=True):
-        profiles = get_profiles(t)
-        if profiles is None:
-            logger.warning("%s: empty profiles at t=%.4f, skipping.", title, t)
-            continue
-        psi, values = profiles
-        for ax, val in zip(axes, values, strict=True):
-            ax.plot(normalise_psi(psi), val, label=f"t={t:.2f}", color=color)
-
-    for ax in axes:
-        ax.legend()
-    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
-    fig.savefig(figure_path)
+    get_profiles(t) returns (psi, [values per label]) or None. Returns the slider times
+    and, per slider time, (actual time, psi_norm, values) or None.
+    """
+    frame_times = slider_times([times], max_slices)
+    loaded = {}
+    profiles = []
+    for t in frame_times:
+        t_slice = float(times[nearest_index(times, t)])
+        if t_slice not in loaded:
+            result = get_profiles(t_slice)
+            if result is None:
+                logger.warning("%s: empty profiles at t=%.4f, skipping.", name, t_slice)
+                loaded[t_slice] = None
+            else:
+                psi, values = result
+                loaded[t_slice] = (t_slice, normalise_psi(psi), values)
+        profiles.append(loaded[t_slice])
+    return frame_times, profiles
 
 
 def nice_profiles_plot(args, dbs):
-    """NICE equilibrium q and pressure on NICE's own psi grid, at n_profiles of NICE's
-    valid slices."""
+    """NICE equilibrium q and pressure on NICE's own psi grid, at NICE's valid slices
+    (slider figure)."""
     nice_t = np.asarray(dbs["nice"].get("equilibrium", lazy=True).time)
     nice_t = nice_t[nice_output_flags(dbs["nice"]) != -1]
 
@@ -351,17 +391,14 @@ def nice_profiles_plot(args, dbs):
             return None
         return psi, [q, pressure / 1e3]
 
-    profiles_psi_plot(
-        f"{args.output_dir}/pds_nice_profiles_psi_{args.shot_nr}.png",
-        f"{args.shot_nr}: NICE profiles vs psi_norm",
-        pick_times(nice_t, args.n_profiles),
-        ["q", "pressure [kPa]"],
-        get_profiles,
-    )
+    title = f"{args.shot_nr}: NICE profiles vs psi_norm"
+    frame_times, profiles = slider_profiles(nice_t, args.max_slices, get_profiles, title)
+    figure = ProfilesPsiFigure(frame_times, profiles, title, ["q", "pressure [kPa]"])
+    return figure, f"pds_nice_profiles_psi_{args.shot_nr}", title
 
 
 def torax_profiles_plot(args, dbs):
-    """TORAX core_profiles Te, ne and q on TORAX's own psi grid."""
+    """TORAX core_profiles Te, ne and q on TORAX's own psi grid (slider figure)."""
     torax_t = np.asarray(dbs["torax"].get("core_profiles", lazy=True).time)
 
     def get_profiles(t):
@@ -380,13 +417,10 @@ def torax_profiles_plot(args, dbs):
             return None
         return psi, values
 
-    profiles_psi_plot(
-        f"{args.output_dir}/pds_torax_profiles_psi_{args.shot_nr}.png",
-        f"{args.shot_nr}: TORAX profiles vs psi_norm",
-        pick_times(torax_t, args.n_profiles),
-        ["Te [keV]", "ne [m^-3]", "q"],
-        get_profiles,
-    )
+    title = f"{args.shot_nr}: TORAX profiles vs psi_norm"
+    frame_times, profiles = slider_profiles(torax_t, args.max_slices, get_profiles, title)
+    figure = ProfilesPsiFigure(frame_times, profiles, title, ["Te [keV]", "ne [m^-3]", "q"])
+    return figure, f"pds_torax_profiles_psi_{args.shot_nr}", title
 
 
 if __name__ == "__main__":
