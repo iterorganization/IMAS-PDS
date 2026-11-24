@@ -52,7 +52,7 @@ def calc_c1(zeff, ne, q, Ro, Rmin, x):
         zeff: Effective ion charge [-]
         ne: Electron density [1e19 m^-3]
         q: Safety factor [-]
-        Ro: Midplane-averaged major radius of last-closed-flux-surface, QuaLiKiz internal [m]
+        Ro: Midplane-averaged major radius of the flux surface [m]
         Rmin: Midplane-averaged minor radius of last-closed-flux-surface [m]
         x: Normalized radius [m] :math:`\frac{r_{\text{out}} + r_{\text{in}}}{r_{\text{out,LCFS}} + r_{\text{in,LCFS}}}`
     """
@@ -109,7 +109,7 @@ def calc_tau_bounce(Te, q, Ro, Rmin, x):
     Args:
         Te: Electron temperature [keV]
         q: Safety factor [-]
-        Ro: Midplane-averaged major radius of last-closed-flux-surface, QuaLiKiz internal [m]
+        Ro: Midplane-averaged major radius of the flux surface [m]
         Rmin: Midplane-averaged minor radius of last-closed-flux-surface [m]
         x: Normalized radius [m]
     """
@@ -236,15 +236,17 @@ def load_torax_slice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> d
     zz = np.asarray(eq_slice.boundary.outline.z)
     rr = np.asarray(eq_slice.boundary.outline.r)
 
-    # Midplane-averaged major radius of the last-closed-flux-surface
-    Ro = (max(rr) + min(rr)) / 2
-    # Midplane-averaged minor radius of flux surface, normalized by
-    # midplane-averaged minor radius of last-closed-flux-surface; on the equilibrium
-    # grid, so interpolated onto core_profiles' rho
+    # QuaLiKiz geometry, per flux surface. r_inboard/r_outboard are major radii, on the
+    # equilibrium grid, so interpolated onto core_profiles' rho.
+    eq_rho = np.asarray(p1d.rho_tor_norm)
     r_inb = np.asarray(p1d.r_inboard)
     r_outb = np.asarray(p1d.r_outboard)
+    # Midplane-averaged major radius of the flux surface (includes the Shafranov shift)
+    Ro = np.interp(rho, eq_rho, (r_outb + r_inb) / 2)
+    # Midplane-averaged minor radius of flux surface, normalized by
+    # midplane-averaged minor radius of last-closed-flux-surface
     xx = (r_outb - r_inb) / (max(rr) - min(rr))
-    xx_intp = np.interp(rho, np.asarray(p1d.rho_tor_norm), xx)
+    xx_intp = np.interp(rho, eq_rho, xx)
     tau_bounce = calc_tau_bounce(Te, qx, Ro, Rmin, xx_intp)
     nu_e = calc_nu_e(ne, Te, zeff)
     nustar = nu_e * tau_bounce
