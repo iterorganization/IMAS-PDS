@@ -53,6 +53,12 @@ def handle_args():
         help="Number of time slices to draw in the profiles-vs-psi plots",
     )
     parser.add_argument(
+        "--max_points",
+        type=int,
+        default=500,
+        help="Maximum number of time slices per series in the time-trace plots",
+    )
+    parser.add_argument(
         "--output_dir", type=str, help="path to directory in which to put plots"
     )
     args = parser.parse_args()
@@ -96,6 +102,18 @@ def nice_output_flags(db):
     return np.asarray(flags)
 
 
+def subsample(n, max_points):
+    """At most max_points evenly spaced indices into a series of length n"""
+    return np.unique(np.linspace(0, n - 1, min(n, max_points)).astype(int))
+
+
+def eq_traces(eq, idx, *getters):
+    """Time and one array per getter at the given time_slice indices of a lazy IDS"""
+    time = np.asarray(eq.time)[idx]
+    slices = [eq.time_slice[int(i)] for i in idx]
+    return (time, *(np.asarray([float(g(ts)) for ts in slices]) for g in getters))
+
+
 def main():
     """Plot evolutive_controller reference-vs-NICE validation figures"""
     args = handle_args()
@@ -128,28 +146,28 @@ def rz_ip_plot(args, dbs):
     """
     figure_path = f"{args.output_dir}/pds_rz_ip_{args.shot_nr}.png"
 
-    recon_eq = dbs["reconstruction"].get("equilibrium")
-    dina_eq = dbs["dina"].get("equilibrium")
-    nice_eq = dbs["nice"].get("equilibrium")
+    recon_eq = dbs["reconstruction"].get("equilibrium", lazy=True)
+    dina_eq = dbs["dina"].get("equilibrium", lazy=True)
+    nice_eq = dbs["nice"].get("equilibrium", lazy=True)
 
-    recon_t = np.asarray(recon_eq.time)
-    recon_r = np.asarray([ts.boundary.geometric_axis.r for ts in recon_eq.time_slice])
-    recon_z = np.asarray([ts.boundary.geometric_axis.z for ts in recon_eq.time_slice])
+    def r(ts):
+        return ts.boundary.geometric_axis.r
 
-    dina_t = np.asarray(dina_eq.time)
-    dina_ip = np.asarray([ts.global_quantities.ip for ts in dina_eq.time_slice])
+    def z(ts):
+        return ts.boundary.geometric_axis.z
 
-    nice_mask = nice_output_flags(dbs["nice"]) != -1
-    nice_t = np.asarray(nice_eq.time)[nice_mask]
-    nice_r = np.asarray([ts.boundary.geometric_axis.r for ts in nice_eq.time_slice])[
-        nice_mask
-    ]
-    nice_z = np.asarray([ts.boundary.geometric_axis.z for ts in nice_eq.time_slice])[
-        nice_mask
-    ]
-    nice_ip = np.asarray([ts.global_quantities.ip for ts in nice_eq.time_slice])[
-        nice_mask
-    ]
+    def ip(ts):
+        return ts.global_quantities.ip
+
+    recon_idx = subsample(len(recon_eq.time), args.max_points)
+    recon_t, recon_r, recon_z = eq_traces(recon_eq, recon_idx, r, z)
+
+    dina_idx = subsample(len(dina_eq.time), args.max_points)
+    dina_t, dina_ip = eq_traces(dina_eq, dina_idx, ip)
+
+    valid = np.flatnonzero(nice_output_flags(dbs["nice"]) != -1)
+    nice_idx = valid[subsample(len(valid), args.max_points)]
+    nice_t, nice_r, nice_z, nice_ip = eq_traces(nice_eq, nice_idx, r, z, ip)
 
     (recon_t, recon_r, recon_z), (nice_rz_t, nice_r, nice_z) = align_ranges(
         recon_t, (recon_r, recon_z), nice_t, (nice_r, nice_z)
@@ -184,8 +202,8 @@ def kcurr_plot(args, dbs):
     coil_figure_path = f"{args.output_dir}/pds_kcurr_{args.shot_nr}.png"
     coil_dict = {}
     pfas = {
-        "reference": dbs["dina"].get("pf_active"),
-        "nice": dbs["nice"].get("pf_active"),
+        "reference": dbs["dina"].get("pf_active", lazy=True),
+        "nice": dbs["nice"].get("pf_active", lazy=True),
     }
     nice_mask = nice_output_flags(dbs["nice"]) != -1
     ref_time = np.asarray(pfas["reference"].time)
@@ -223,7 +241,8 @@ def kcurr_plot(args, dbs):
             time, current = full_time, np.asarray(coil.current.data)
             if mask is not None and len(mask) == len(time):
                 time, current = time[mask], current[mask]
-            time, current = interp_to_range(t_min, t_max, time, current)
+            idx = subsample(len(time), args.max_points)
+            time, current = interp_to_range(t_min, t_max, time[idx], current[idx])
             axes[coil_dict[coil_name]].plot(time, current, label=key, **PLOT_KWARGS)
             axes[coil_dict[coil_name]].legend()
     for ax in axes[len(pfa.coil) :]:
