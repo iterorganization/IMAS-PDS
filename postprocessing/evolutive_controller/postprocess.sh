@@ -6,7 +6,23 @@
 #
 # reconstruction_path mirrors settings.ymmsl's source.source_uri (the inverse_convergence run
 # this case's F_INIT reference equilibrium is read from).
+#
+# Options for the gyrokinetics plots (plot_gyrokinetics.py), e.g. when re-running this script
+# by hand from a run directory:
+#   --max_slices N   number of time slices on the time slider (default: 3)
+#   --interactive    open a matplotlib window with the slider instead of writing the HTML
 set -euo pipefail # stop if anything doesn't work
+
+MAX_SLICES=3
+INTERACTIVE=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --max_slices) MAX_SLICES="$2"; shift 2 ;;
+    --max_slices=*) MAX_SLICES="${1#*=}"; shift ;;
+    --interactive) INTERACTIVE=(--interactive); shift ;;
+    *) echo "postprocess.sh: unknown option $1 (use --max_slices N, --interactive)" >&2; exit 1 ;;
+  esac
+done
 
 # Reconstruct which case matches this run
 RUN_DIR=$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )
@@ -33,4 +49,6 @@ mkdir -p "$RUN_DIR/plots"
   --shot_nr "$SHOT" \
   --nice_uri "$RUN_DIR/out_nice" \
   --torax_uri "$RUN_DIR/out_torax" \
-  --output_dir "$RUN_DIR/plots"
+  --output_dir "$RUN_DIR/plots" \
+  --max_slices "$MAX_SLICES" \
+  "${INTERACTIVE[@]}"
