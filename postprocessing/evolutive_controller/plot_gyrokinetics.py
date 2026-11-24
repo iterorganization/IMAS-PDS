@@ -5,12 +5,17 @@ By default this writes, to ``--output_dir``:
 * ``gyrokinetics_<shot>.html``: the figure for all plotted time slices; drag its time
   slider or use the play controls below it. Works headless (e.g. from
   ``postprocess.sh`` under sbatch); open it in a browser.
-* ``gyrokinetics_<shot>_idx=<i>.png``: the figure at each plotted time slice.
+* ``gyrokinetics_<shot>_t=<time>.png``: the figure at each slider time.
+
+Several ``--torax_uri`` can be given to overlay runs, one colour per run. With
+``--nice_uri`` (one per run) the NICE equilibrium (boundary, magnetic axis, q and
+magnetic shear) is overlaid in the same colour, dotted.
 
 With ``--interactive`` the same figure is shown in a matplotlib window instead.
 """
 
 import argparse
+from contextlib import ExitStack
 from pathlib import Path
 
 import matplotlib
@@ -20,6 +25,7 @@ import numpy as np
 from imas import DBEntry
 from imas.ids_toplevel import IDSToplevel
 from matplotlib.animation import FuncAnimation
+from matplotlib.lines import Line2D
 from matplotlib.widgets import Slider
 
 qe = 1.602176565e-19  # electron charge [C]
@@ -110,13 +116,30 @@ def handle_args():
         "--dina_uri", type=str, help="URI to load DINA output data from"
     )
     parser.add_argument(
-        "--nice_uri", type=str, help="URI to load NICE output data from"
+        "--nice_uri",
+        type=str,
+        nargs="+",
+        action="extend",
+        help=(
+            "URI(s) to load NICE output data from, one per --torax_uri in the same order "
+            "('none' for a run without NICE output); overlaid on that run's TORAX data"
+        ),
     )
     parser.add_argument(
         "--metis_uri", type=str, help="URI to load METIS output data from"
     )
     parser.add_argument(
-        "--torax_uri", type=str, help="URI to load TORAX output data from"
+        "--torax_uri",
+        type=str,
+        nargs="+",
+        action="extend",
+        help="URI(s) to load TORAX output data from; give several to overlay runs",
+    )
+    parser.add_argument(
+        "--labels",
+        type=str,
+        nargs="+",
+        help="Legend label per --torax_uri (default: the run directory names)",
     )
     parser.add_argument(
         "--output_dir", type=str, help="path to directory in which to put plots"
@@ -126,7 +149,10 @@ def handle_args():
         "--max_slices",
         type=int,
         default=3,
-        help="Maximum number of (evenly spaced) time slices on the slider",
+        help=(
+            "Number of evenly spaced times on the slider (default: 3). Each run's first, "
+            "middle and last time slice are always included as well"
+        ),
     )
     parser.add_argument(
         "--interactive",
@@ -136,12 +162,87 @@ def handle_args():
     args = parser.parse_args()
     if not args.interactive and args.output_dir is None:
         parser.error("--output_dir is required unless --interactive is given")
+    if not args.torax_uri:
+        parser.error("--torax_uri is required")
+    if args.nice_uri is not None and len(args.nice_uri) != len(args.torax_uri):
+        parser.error("give one --nice_uri entry per --torax_uri (use 'none' to skip one)")
+    if args.labels is not None and len(args.labels) != len(args.torax_uri):
+        parser.error("give one --labels entry per --torax_uri")
     return args
 
 
-def subsample(n, max_points):
-    """At most max_points evenly spaced indices into a series of length n"""
-    return np.unique(np.linspace(0, n - 1, min(n, max_points)).astype(int))
+def run_label(uri: str) -> str:
+    """Name of the run a URI belongs to: the run directory for .../<run>/out_torax"""
+    path = Path(uri.split("path=")[-1].rstrip("/"))
+    return path.parent.name if path.name.startswith("out_") else path.name
+
+
+def short_labels(labels: list[str]) -> list[str]:
+    """Drop the "_"-separated prefix all labels share (e.g. workflow_shot_), if any"""
+    if len(labels) < 2:
+        return labels
+    parts = [label.split("_") for label in labels]
+    n = 0
+    while all(len(p) > n + 1 and p[n] == parts[0][n] for p in parts):
+        n += 1
+    return ["_".join(p[n:]) for p in parts]
+
+
+def merge_times(times, tol=1e-6):
+    """Sorted times with (near-)duplicates merged"""
+    times = np.sort(np.asarray(times, dtype=float))
+    keep = np.concatenate([[True], np.diff(times) > tol])
+    return times[keep]
+
+
+def load_nice(nice_eq: IDSToplevel, nice_time, time_val: float) -> dict:
+    """NICE equilibrium quantities at the NICE time slice nearest to time_val"""
+    idx = int(np.argmin(np.abs(nice_time - time_val)))
+    eq_slice = nice_eq.time_slice[idx]
+    p1d = eq_slice.profiles_1d
+    rho = np.asarray(p1d.rho_tor_norm)
+    q = np.asarray(p1d.q)
+    smag = np.asarray(p1d.magnetic_shear)
+    if smag.size == 0 or not np.any(smag):
+        # NICE leaves magnetic_shear zero: derive it from q, s = (rho / q) dq/drho
+        with np.errstate(divide="ignore", invalid="ignore"):
+            smag = rho / q * np.gradient(q, rho)
+    return {
+        "nice_time": float(nice_time[idx]),
+        "nice_rho": rho,
+        "nice_qx": q,
+        "nice_smag": smag,
+        "nice_rr": np.asarray(eq_slice.boundary.outline.r),
+        "nice_zz": np.asarray(eq_slice.boundary.outline.z),
+        "nice_rga": float(eq_slice.boundary.geometric_axis.r),
+        "nice_zma": float(eq_slice.global_quantities.magnetic_axis.z),
+    }
+
+
+def load_run(to: DBEntry, nice: DBEntry | None, frame_times) -> list[dict | None]:
+    """Per slider time, the run's nearest time slice (None outside the run's time range).
+
+    With ``nice``, each slice also holds the NICE equilibrium nearest in time (nice_* keys).
+    """
+    nice_eq = nice.get("equilibrium", lazy=True) if nice is not None else None
+    nice_time = np.asarray(nice_eq.time) if nice_eq is not None else None
+    to_cp: IDSToplevel = to.get("core_profiles", lazy=True)
+    to_eq: IDSToplevel = to.get("equilibrium", lazy=True)
+    cp_time = np.asarray(to_cp.time)
+    loaded = {}  # time index -> slice, so nearby slider times share one load
+    slices = []
+    for t in frame_times:
+        if not cp_time[0] <= t <= cp_time[-1]:
+            slices.append(None)
+            continue
+        idx = int(np.argmin(np.abs(cp_time - t)))
+        if idx not in loaded:
+            print(f"  loading t[{idx}]={cp_time[idx]:.3f}s")
+            loaded[idx] = load_timeslice(idx, to_cp, to_eq)
+            if nice_eq is not None:
+                loaded[idx].update(load_nice(nice_eq, nice_time, loaded[idx]["time"]))
+        slices.append(loaded[idx])
+    return slices
 
 
 def load_timeslice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> dict:
@@ -228,7 +329,11 @@ PANELS = [
     (r"$\partial n_e$ [$10^{19} m^{-3}$]", [("dne", "rho", None)], None),
     (
         r"$q$ [-]",
-        [("qx", "rho", r"$q_{1D,torax}$"), ("eq_qx", "eq_rho", r"$q_{eq,torax}$")],
+        [
+            ("qx", "rho", r"$q_{1D,torax}$"),
+            ("eq_qx", "eq_rho", r"$q_{eq,torax}$"),
+            ("nice_qx", "nice_rho", r"$q_{eq,NICE}$"),
+        ],
         None,
     ),
     (
@@ -236,6 +341,7 @@ PANELS = [
         [
             ("smag", "rho", r"$\hat{s}_{1D,torax}$"),
             ("eq_smag", "eq_rho", r"$\hat{s}_{eq,torax}$"),
+            ("nice_smag", "nice_rho", r"$\hat{s}_{eq,NICE}$ (from q)"),
         ],
         None,
     ),
@@ -252,6 +358,8 @@ PANELS = [
 
 def data_limits(values, margin=0.05):
     """Padded (min, max) over all finite values in a list of arrays"""
+    if len(values) == 0:
+        return -1, 1
     flat = np.concatenate([np.ravel(v) for v in values])
     flat = flat[np.isfinite(flat)]
     if flat.size == 0:
@@ -266,69 +374,115 @@ class GyrokineticsFigure:
 
     The same figure is shown with ``--interactive`` and saved to PNG/HTML otherwise.
     Moving the slider (by mouse, arrow keys or :meth:`update`) redraws all lines.
-    Axis limits are fixed over all slices, so moving the slider shows real changes
-    rather than rescaled axes.
+    Each run gets its own colour; within a panel, series are told apart by line style.
+    Axis limits are fixed over all runs and slices, so moving the slider shows real
+    changes rather than rescaled axes.
     """
 
     SLIDER_SPACE = 0.10  # top strip of the figure reserved for title and slider
     SLIDER_RECT = (0.06, 0.895, 0.86, 0.03)  # full width, between title and plots
+    LINESTYLES = ["-", "--", ":", "-."]
 
-    def __init__(self, slices: list[dict], shot_nr, t_range):
-        self.slices = slices
+    def __init__(self, runs: dict[str, list[dict | None]], frame_times, shot_nr):
+        self.runs = runs  # label -> slice per slider time
+        self.frame_times = list(frame_times)
         self.shot_nr = shot_nr
-        self.t_range = t_range
+        all_slices = [s for slices in runs.values() for s in slices if s is not None]
+
+        def limits(*keys, margin=0.05):
+            return data_limits(
+                [s[k] for s in all_slices for k in keys if k in s], margin
+            )
+
+        has_nice = any("nice_rr" in s for s in all_slices)
 
         self.fig = plt.figure(figsize=(18, 10), layout="constrained")
         self.fig.get_layout_engine().set(rect=(0, 0, 1, 1 - self.SLIDER_SPACE))
         left, right = self.fig.subfigures(1, 2, width_ratios=[1, 2])
+        colors = {label: f"C{i}" for i, label in enumerate(runs)}
 
-        # Equilibrium boundary
+        # Equilibrium, per run: TORAX (boundary, magnetic axis, midplane) and
+        # NICE (boundary, magnetic axis)
         self.ax_eq = left.subplots()
-        (self.li_boundary,) = self.ax_eq.plot([], [])
-        (self.li_axis,) = self.ax_eq.plot([], [], "o")
-        (self.li_midplane,) = self.ax_eq.plot([], [])
-        self.ax_eq.set_xlim(*data_limits([s["rr"] for s in slices]))
-        self.ax_eq.set_ylim(*data_limits([s["zz"] for s in slices]))
+        self.eq_lines = {
+            label: (
+                self.ax_eq.plot([], [], color=c)[0],
+                self.ax_eq.plot([], [], "o", color=c)[0],
+                self.ax_eq.plot([], [], color=c, lw=0.8)[0],
+            )
+            for label, c in colors.items()
+        }
+        self.nice_eq_lines = {
+            label: (
+                self.ax_eq.plot([], [], color=c, ls=":")[0],
+                self.ax_eq.plot([], [], "x", color=c)[0],
+            )
+            for label, c in colors.items()
+        }
+        self.ax_eq.set_xlim(*limits("rr", "nice_rr"))
+        self.ax_eq.set_ylim(*limits("zz", "nice_zz"))
+        if has_nice:  # legend for the line styles
+            self.ax_eq.legend(
+                handles=[
+                    Line2D([], [], color="k", marker="o"),
+                    Line2D([], [], color="k", ls=":", marker="x"),
+                ],
+                labels=["TORAX", "NICE"],
+                loc="upper right",
+            )
         self.ax_eq.set_aspect(1)
         self.ax_eq.set_xlabel("R [m]")
         self.ax_eq.set_ylabel("Z [m]")
         self.ax_eq.set_title("Equilibrium")
+        # Run legend; its texts are updated with each run's actual time in _draw
+        self.run_legend = left.legend(
+            handles=[self.eq_lines[label][0] for label in runs],
+            labels=list(runs),
+            loc="outside lower center",
+        )
 
         # Profiles
         axes = right.subplots(4, 3).flatten()
-        group_limits = {}
+        group_keys = {}
         for _, series, group in PANELS:
             if group is not None:
-                values = [s[key] for s in slices for key, _, _ in series]
-                group_limits.setdefault(group, []).extend(values)
-        group_limits = {g: data_limits(v) for g, v in group_limits.items()}
+                group_keys.setdefault(group, []).extend(key for key, _, _ in series)
 
-        x_lim = data_limits([s["rho"] for s in slices], margin=0.02)
-        self.profile_lines = []  # (Line2D, data key, x key)
+        x_lim = limits("rho", margin=0.02)
+        self.profile_lines = []  # (Line2D, run label, data key, x key)
         for ax, (ylabel, series, group) in zip(axes, PANELS):
-            for key, x_key, label in series:
-                (line,) = ax.plot([], [], label=label)
-                self.profile_lines.append((line, key, x_key))
+            for (key, x_key, _), ls in zip(series, self.LINESTYLES):
+                for label, c in colors.items():
+                    (line,) = ax.plot([], [], color=c, ls=ls)
+                    self.profile_lines.append((line, label, key, x_key))
             ax.set_ylabel(ylabel)
             ax.set_xlabel(r"$\rho_{N,tor}$")
             ax.set_xlim(*x_lim)
-            if group is not None:
-                ax.set_ylim(*group_limits[group])
-            else:
-                ax.set_ylim(*data_limits([s[key] for s in slices for key, _, _ in series]))
-            if any(label for _, _, label in series):
-                ax.legend(loc="best")
+            keys = group_keys[group] if group is not None else [k for k, _, _ in series]
+            ax.set_ylim(*limits(*keys))
+            # Legend for the line styles, of the series that have data
+            shown = [
+                (series_label, ls)
+                for (key, _, series_label), ls in zip(series, self.LINESTYLES)
+                if any(key in s for s in all_slices)
+            ]
+            if len(shown) > 1:
+                ax.legend(
+                    handles=[Line2D([], [], color="k", ls=ls) for _, ls in shown],
+                    labels=[series_label for series_label, _ in shown],
+                    loc="best",
+                )
 
         self.suptitle = self.fig.suptitle("")
 
-        # Time slider. It steps over slice numbers (evenly spaced, so the HTML slider
-        # can be laid exactly over it) and shows the time of the selected slice.
+        # Time slider. It steps over slider times (evenly spaced, so the HTML slider
+        # can be laid exactly over it) and shows the selected time.
         self.ax_slider = self.fig.add_axes(self.SLIDER_RECT)
         self.slider = Slider(
             self.ax_slider,
             "time [s]",
             0,
-            max(len(slices) - 1, 1),
+            max(len(self.frame_times) - 1, 1),
             valinit=0,
             valstep=1,
         )
@@ -336,36 +490,51 @@ class GyrokineticsFigure:
         self.fig.canvas.mpl_connect("key_press_event", self._on_key)
         self._draw(0)
 
-    def title(self, frame: int) -> str:
-        s = self.slices[frame]
-        t0, t1 = self.t_range
-        return (
-            f"{self.shot_nr} gyrokinetic profiles\n"
-            f"t[{s['time_idx']}]={s['time']:.3f}s, t=[{t0:.1f}, {t1:.1f}]"
-        )
-
     def update(self, frame: int):
         """Move the slider to ``frame`` (which redraws); returns the changed artists"""
         self.slider.set_val(frame)
         return self.fig.get_children()
 
     def _draw(self, frame: int):
-        frame = min(frame, len(self.slices) - 1)
-        s = self.slices[frame]
-        self.li_boundary.set_data(s["rr"], s["zz"])
-        self.li_axis.set_data([s["rga"]], [s["zma"]])
-        self.li_midplane.set_data((min(s["rr"]), max(s["rr"])), (s["zma"], s["zma"]))
-        for line, key, x_key in self.profile_lines:
-            line.set_data(s[x_key], s[key])
-        self.suptitle.set_text(self.title(frame))
-        self.slider.valtext.set_text(f"{s['time']:.3f}")
+        frame = min(frame, len(self.frame_times) - 1)
+        t = self.frame_times[frame]
+        for (label, slices), text in zip(self.runs.items(), self.run_legend.get_texts()):
+            s = slices[frame]
+            boundary, axis, midplane = self.eq_lines[label]
+            nice_boundary, nice_axis = self.nice_eq_lines[label]
+            if s is not None and "nice_rr" in s:
+                nice_boundary.set_data(s["nice_rr"], s["nice_zz"])
+                nice_axis.set_data([s["nice_rga"]], [s["nice_zma"]])
+            else:
+                nice_boundary.set_data([], [])
+                nice_axis.set_data([], [])
+            if s is None:  # slider time outside this run
+                for line in (boundary, axis, midplane):
+                    line.set_data([], [])
+                text.set_text(f"{label} (no data at this time)")
+                continue
+            boundary.set_data(s["rr"], s["zz"])
+            axis.set_data([s["rga"]], [s["zma"]])
+            midplane.set_data((min(s["rr"]), max(s["rr"])), (s["zma"], s["zma"]))
+            text.set_text(f"{label} (t[{s['time_idx']}]={s['time']:.3f}s)")
+        for line, label, key, x_key in self.profile_lines:
+            s = self.runs[label][frame]
+            if s is None or key not in s:  # outside this run, or no NICE data
+                line.set_data([], [])
+            else:
+                line.set_data(s[x_key], s[key])
+        t0, t1 = self.frame_times[0], self.frame_times[-1]
+        self.suptitle.set_text(
+            f"{self.shot_nr} gyrokinetic profiles\nt={t:.3f}s, t=[{t0:.1f}, {t1:.1f}]"
+        )
+        self.slider.valtext.set_text(f"{t:.3f}")
         self.fig.canvas.draw_idle()
 
     def _on_key(self, event):
-        """Left/right arrow keys step one slice"""
+        """Left/right arrow keys step one slider time"""
         frame = int(self.slider.val)
         if event.key == "right":
-            self.update(min(frame + 1, len(self.slices) - 1))
+            self.update(min(frame + 1, len(self.frame_times) - 1))
         elif event.key == "left":
             self.update(max(frame - 1, 0))
 
@@ -375,16 +544,16 @@ def write_outputs(gk: GyrokineticsFigure, args):
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    for frame, s in enumerate(gk.slices):
+    for frame, t in enumerate(gk.frame_times):
         gk.update(frame)
-        path = output_dir / f"gyrokinetics_{args.shot_nr}_idx={s['time_idx']}.png"
+        path = output_dir / f"gyrokinetics_{args.shot_nr}_t={t:.3f}.png"
         print(f"Writing {path}")
         gk.fig.savefig(path)
 
     matplotlib.rcParams["animation.embed_limit"] = 500  # MB
-    anim = FuncAnimation(gk.fig, gk.update, frames=len(gk.slices), blit=False)
+    anim = FuncAnimation(gk.fig, gk.update, frames=len(gk.frame_times), blit=False)
     path = output_dir / f"gyrokinetics_{args.shot_nr}.html"
-    print(f"Writing {path} ({len(gk.slices)} time slices)")
+    print(f"Writing {path} ({len(gk.frame_times)} times)")
     html = anim.to_jshtml(fps=5, default_mode="once")
 
     # The frames already show the figure's own slider. Lay matplotlib's HTML range input
@@ -422,28 +591,45 @@ def main():
     if not args.interactive:
         matplotlib.use("Agg")
 
-    if args.torax_uri is None:
-        raise SystemExit("plot_gyrokinetics.py: --torax_uri is required")
     # The other sources are accepted for interface compatibility with the other
     # postprocessing scripts, but not (yet) plotted.
-    for name in ("dina_uri", "nice_uri", "metis_uri"):
+    for name in ("dina_uri", "metis_uri"):
         if getattr(args, name) is not None:
             print(f"Note: --{name} given but not plotted yet")
 
-    with DBEntry(f"imas:hdf5?path={args.torax_uri}", "r") as to:
-        print("Getting TORAX core_profiles and equilibrium...")
-        to_cp: IDSToplevel = to.get("core_profiles", lazy=True)
-        to_eq: IDSToplevel = to.get("equilibrium", lazy=True)
-        cp_time = np.asarray(to_cp.time)
-        t_range = (float(cp_time[0]), float(cp_time[-1]))
+    labels = args.labels or short_labels([run_label(uri) for uri in args.torax_uri])
+    if len(set(labels)) != len(labels):
+        raise SystemExit(f"plot_gyrokinetics.py: run labels must be unique, got {labels}")
 
-        idxs = subsample(len(cp_time), args.max_slices)
-        slices = []
-        for n, time_idx in enumerate(idxs):
-            print(f"Loading time slice {n + 1}/{len(idxs)} (t[{time_idx}])")
-            slices.append(load_timeslice(int(time_idx), to_cp, to_eq))
+    with ExitStack() as stack:
+        dbs = {
+            label: stack.enter_context(DBEntry(f"imas:hdf5?path={uri}", "r"))
+            for label, uri in zip(labels, args.torax_uri)
+        }
+        nice_dbs = {
+            label: stack.enter_context(DBEntry(f"imas:hdf5?path={uri}", "r"))
+            for label, uri in zip(labels, args.nice_uri or [])
+            if uri.lower() != "none"
+        }
+        # Slider times: every run's first, middle and last time slice, plus
+        # --max_slices evenly spaced times over the combined time range of all runs
+        required = []
+        for to in dbs.values():
+            t = np.asarray(to.get("core_profiles", lazy=True).time)
+            required += [t[0], t[len(t) // 2], t[-1]]
+        evenly = np.linspace(min(required), max(required), args.max_slices)
+        # Skip evenly spaced times that (nearly) coincide with a required slice
+        close = 0.01 * (max(required) - min(required))
+        evenly = [t for t in evenly if np.min(np.abs(np.asarray(required) - t)) > close]
+        frame_times = merge_times(np.concatenate([required, evenly]))
 
-    gk = GyrokineticsFigure(slices, args.shot_nr, t_range)
+        runs = {}
+        for label, to in dbs.items():
+            nice = nice_dbs.get(label)
+            print(f"Loading run {label} (TORAX{' + NICE' if nice else ''})")
+            runs[label] = load_run(to, nice, frame_times)
+
+    gk = GyrokineticsFigure(runs, frame_times, args.shot_nr)
     if args.interactive:
         plt.show()
     else:
