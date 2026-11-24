@@ -1,8 +1,7 @@
 easyblock = 'Tarball'
 
 name = 'METIS-IRFM'
-version = '2026.11'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 homepage = 'https://git.iter.org/projects/SCEN/repos/metis'
 description = """METIS is a fast integrated tokamak simulator from CEA/IRFM,
@@ -26,7 +25,7 @@ sources = [{
         'repo_name': 'metis',
         'commit': local_commit,
     },
-    'filename': 'metis-%%(version)s-%s.tar.gz' % local_commit[:8],
+    'filename': 'metis-%s.tar.gz' % local_commit[:8],
 }]
 checksums = [None]
 

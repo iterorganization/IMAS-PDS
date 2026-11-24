@@ -1,10 +1,9 @@
 easyblock = 'Bundle'
 
 name = 'PCS'
-version = '2026.08'
+version = 'PDS-1.2.0'
 
 local_pcs_commit = '2a9e7f35eaec8dd05f9b0ab0dbfd1e8f06b4cbe9'
-versionsuffix = '-pds'
 
 homepage = 'https://git.iter.org/projects/PCS/repos/pcs'
 description = """ITER Plasma Control System sources together with PCSSP, the

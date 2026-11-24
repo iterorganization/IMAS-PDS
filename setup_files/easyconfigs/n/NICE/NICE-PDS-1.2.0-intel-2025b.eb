@@ -1,8 +1,7 @@
 easyblock = 'MakeCp'
 
 name = 'NICE'
-version = '3.0.0.dev510'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 homepage = 'https://gitlab.inria.fr/blfauger/nice'
 description = """NICE (Newton direct and Inverse Computation for Equilibrium)
@@ -14,7 +13,7 @@ toolchain = {'name': 'intel', 'version': '2025b'}
 toolchainopts = {'openmp': True, 'pic': True}
 
 # Head of NICE's `develop` branch as of 2026-11-16.
-# `git describe --tags` -> v3.0.0-510-g03ec1ebb, hence the version above.
+# `git describe --tags` -> v3.0.0-510-g03ec1ebb.
 local_commit = '03ec1ebb9d26a20e7740cc0938784240c6b8f8bc'
 
 sources = [{

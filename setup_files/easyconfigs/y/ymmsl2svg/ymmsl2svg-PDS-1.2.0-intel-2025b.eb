@@ -1,8 +1,7 @@
 easyblock = 'PythonBundle'
 
 name = 'ymmsl2svg'
-version = '0.1.dev54'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 local_commit = 'a0541ace2714e3efef879093229b25630c8ef9d4'
 # feature/timelines: the only ymmsl with TimelineTree that libmuscle 0.10 still accepts
@@ -21,7 +20,7 @@ builddependencies = [
 dependencies = [
     ('Python', '3.13.5'),
     ('MUSCLE3', '0.10.0'),
-    ('IMAS-MUSCLE3', '1.0.1.dev133', '-pds'),
+    ('IMAS-MUSCLE3', 'PDS-1.2.0'),
 ]
 
 exts_list = [
@@ -42,7 +41,7 @@ exts_list = [
         'sources': ['svg_py-1.10.0.tar.gz'],
         'checksums': ['2e1391411a205220a0e72ca303f3c2d11dbd564cb1dbc445406c5e11421bcc4b'],
     }),
-    ('ymmsl2svg', version, {
+    ('ymmsl2svg', '0.1.dev54', {
         'sources': [{
             'git_config': {
                 'url': 'https://github.com/DaanVanVugt',
