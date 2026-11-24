@@ -1,32 +1,54 @@
 #!/bin/bash
-# Validation plots: reference vs NICE output for R, Z, Ip, PF coil current, plus NICE and
-# TORAX profiles, each against its own psi grid. Run by
-# bin/pds-run-case.sbatch after muscle_manager finishes -- see that script's header for the
-# PDS_REPO/SHOT/CASE_DIR/RUN_DIR/PYTHON contract.
+# Postprocessing plots for an evolutive_controller run, written to $RUN_DIR/plots:
+#   - validation (plot_validation_evolutive_controller.py): reference vs NICE output for
+#     R, Z, Ip and PF coil currents, plus NICE and TORAX profiles vs psi_norm;
+#   - gyrokinetics (plot_gyrokinetics.py): TORAX profiles relevant for gyrokinetics,
+#     with each run's NICE equilibrium (out_nice, if present) overlaid dotted.
+# The profile plots have a time slider: a PNG per slider time plus a scrollable HTML page.
 #
-# reconstruction_path mirrors settings.ymmsl's source.source_uri (the inverse_convergence run
-# this case's F_INIT reference equilibrium is read from).
+# Run by bin/pds-run-case.sbatch after muscle_manager finishes -- see that script's header
+# for the PDS_REPO/SHOT/CASE_DIR/RUN_DIR/PYTHON contract. RUN_DIR is taken from the
+# environment when set, otherwise it is the directory this script is in, so it can be
+# re-run by hand from a run directory:
 #
-# Options, e.g. when re-running this script by hand from a run directory (--max_slices and
-# --interactive apply to the time-slider figures of both plotting scripts, --compare to the
-# gyrokinetics plots):
-#   --max_slices N        number of evenly spaced times on the time slider (default: 3);
-#                         each run's first, middle and last time slice are always shown
-#   --interactive         open a matplotlib window with the slider instead of writing the HTML
-#   --compare CASE ...    also plot these cases, overlaid on this run. Each CASE is a case
-#                         name (e.g. evolutive_controller_105073_evolcur_psigeo), a case
-#                         directory (cases/<case>), or a run directory (cases/runs/<run>);
-#                         a case means its latest run. Can be repeated.
-# Each run's NICE equilibrium (out_nice, if present) is overlaid on its TORAX output
-# (out_torax), dotted.
+#   cases/runs/<run>/postprocess.sh [--max_slices N] [--interactive] [--compare CASE ...]
 #
-# Plots go to $RUN_DIR/plots. RUN_DIR is taken from the environment when set (as
-# bin/pds-run-case.sbatch does), otherwise it is the directory this script is in.
+#   --max_slices N      number of evenly spaced times on the time sliders (default: 3);
+#                       each run's first, middle and last time slice are always shown
+#   --interactive       open matplotlib windows instead of writing the plots
+#   --compare CASE ...  overlay these cases on this run in the gyrokinetics plots. Each
+#                       CASE is a case name (e.g. evolutive_controller_105073_evolcur_psigeo),
+#                       a case directory (cases/<case>) or a run directory
+#                       (cases/runs/<run>); a case means its latest run. Can be repeated.
+#
+# The validation plots' reconstruction_path mirrors settings.ymmsl's source.source_uri
+# (the inverse_convergence run this case's F_INIT reference equilibrium is read from).
 set -euo pipefail # stop if anything doesn't work
+: "${PDS_REPO:?must point at the IMAS-PDS checkout}"
 
-# Run directory (with out_torax) for a case name, case directory or run directory
+die() {
+  echo "postprocess.sh: $*" >&2
+  exit 1
+}
+
+# Run directories are named <case>_<YYYYMMDD>_<HHMMSS> (same convention as case_dir() in
+# plot_validation_evolutive_controller.py)
+STAMP_GLOB="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]"
+STAMP_REGEX="_[0-9]{8}_[0-9]{6}$"
+
+# Case name of a run directory: its name without the timestamp
+case_name() {
+  local name
+  name=$(basename "$1")
+  if [[ $name =~ $STAMP_REGEX ]]; then
+    name=${name%"${BASH_REMATCH[0]}"}
+  fi
+  echo "$name"
+}
+
+# Run directory (one with out_torax) for a case name, case directory or run directory
 resolve_run() {
-  local arg=$1 name runs candidates
+  local arg=$1 name runs latest
   if [[ -d "$arg/out_torax" ]]; then
     realpath "$arg"
     return
@@ -38,19 +60,17 @@ resolve_run() {
     realpath "$runs/$name"
     return
   fi
-  local stamp="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]"
-  candidates=$(
-    for d in "$runs/${name}_"$stamp "$runs/$name/${name}_"$stamp; do
-      [[ -d "$d/out_torax" ]] && echo "$(basename "$d") $d"
+  # Otherwise the latest of cases/runs/[<case>/]<case>_<date>_<time>, by that timestamp
+  latest=$(
+    for dir in "$runs/${name}_"$STAMP_GLOB "$runs/$name/${name}_"$STAMP_GLOB; do
+      [[ -d "$dir/out_torax" ]] && echo "$(basename "$dir") $dir"
     done | sort | tail -n 1 | cut -d' ' -f2-
-  )  # latest by the timestamp in the run name
-  if [[ -z "$candidates" ]]; then
-    echo "postprocess.sh: no run with out_torax found for '$arg'" >&2
-    return 1
-  fi
-  realpath "$candidates"
+  )
+  [[ -n "$latest" ]] || die "no run with out_torax found for '$arg'"
+  realpath "$latest"
 }
 
+# ---- Options
 MAX_SLICES=3
 INTERACTIVE=()
 COMPARE_ARGS=()
@@ -62,10 +82,10 @@ while [[ $# -gt 0 ]]; do
     --compare=*) COMPARE_ARGS+=("${1#*=}"); shift ;;
     --compare)
       shift
-      [[ $# -gt 0 && "$1" != --* ]] || { echo "postprocess.sh: --compare needs at least one case" >&2; exit 1; }
+      [[ $# -gt 0 && "$1" != --* ]] || die "--compare needs at least one case"
       while [[ $# -gt 0 && "$1" != --* ]]; do COMPARE_ARGS+=("$1"); shift; done
       ;;
-    *) echo "postprocess.sh: unknown option $1 (use --max_slices N, --interactive, --compare CASE ...)" >&2; exit 1 ;;
+    *) die "unknown option $1 (use --max_slices N, --interactive, --compare CASE ...)" ;;
   esac
 done
 
@@ -76,31 +96,26 @@ for arg in "${COMPARE_ARGS[@]}"; do
   COMPARE_RUNS+=("$run")
 done
 
-# Reconstruct which case matches this run
-RUN_DIR=${RUN_DIR:-$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )}
+# ---- This run and its case
+RUN_DIR=${RUN_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
 export RUN_DIR
-CASE_ROOT=$(basename ${RUN_DIR%_[[:digit:]]*_[[:digit:]]*})
-CASE_DIR=$PDS_REPO/cases/$CASE_ROOT
-pushd $CASE_DIR
-source case.env
-popd
+CASE_DIR=$PDS_REPO/cases/$(case_name "$RUN_DIR")
+pushd "$CASE_DIR" >/dev/null
+source case.env # sets SHOT
+popd >/dev/null
 
-# Set runtime variables
 PYTHON=${PYTHON:-python}
+SCRIPTS=$PDS_REPO/postprocessing/evolutive_controller
+SLIDER_ARGS=(--output_dir "$RUN_DIR/plots" --max_slices "$MAX_SLICES" "${INTERACTIVE[@]}")
 
-mkdir -p "$RUN_DIR/plots"
-
-"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_validation_evolutive_controller.py" \
+# ---- Plots
+"$PYTHON" "$SCRIPTS/plot_validation_evolutive_controller.py" \
   --shot_nr "$SHOT" \
-  --reconstruction_path "$RUN_DIR/out_nice" \
   --run_path "$RUN_DIR" \
-  --output_dir "$RUN_DIR/plots" \
-  --max_slices "$MAX_SLICES" \
-  "${INTERACTIVE[@]}"
+  --reconstruction_path "$RUN_DIR/out_nice" \
+  "${SLIDER_ARGS[@]}"
 
-"$PYTHON" "$PDS_REPO/postprocessing/evolutive_controller/plot_gyrokinetics.py" \
+"$PYTHON" "$SCRIPTS/plot_gyrokinetics.py" \
   --shot_nr "$SHOT" \
   --run_path "$RUN_DIR" "${COMPARE_RUNS[@]}" \
-  --output_dir "$RUN_DIR/plots" \
-  --max_slices "$MAX_SLICES" \
-  "${INTERACTIVE[@]}"
+  "${SLIDER_ARGS[@]}"

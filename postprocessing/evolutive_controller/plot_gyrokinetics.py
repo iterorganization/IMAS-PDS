@@ -1,17 +1,16 @@
 """Plot gyrokinetically relevant TORAX profiles, scrollable in time.
 
-By default this writes, to ``--output_dir``:
-
-* ``gyrokinetics_<shot>.html``: the figure for all plotted time slices; drag its time
-  slider or use the play controls below it. Works headless (e.g. from
-  ``postprocess.sh`` under sbatch); open it in a browser.
-* ``gyrokinetics_<shot>_t=<time>.png``: the figure at each slider time.
-
-Each ``--run_path`` is a run directory; its TORAX output is read from ``out_torax`` and
-its NICE output from ``out_nice`` (see ``--torax_subdir``/``--nice_subdir``). Several
-run paths can be given to overlay runs, one colour per run. Where a run has NICE
-output, its equilibrium (boundary, magnetic axis, q and magnetic shear) is overlaid in
+Each ``--run_path`` is a run directory. Its TORAX output is read from ``out_torax`` and,
+if present, its NICE output from ``out_nice`` (see ``--torax_subdir``/``--nice_subdir``).
+Several run paths can be given to overlay runs, one colour per run. Where a run has NICE
+output, its equilibrium (boundary, axis, q and magnetic shear) is overlaid in
 the same colour, dotted.
+
+Writes to ``--output_dir`` (see time_slider.py):
+
+* ``gyrokinetics_<shot>.html``: the figure at every slider time; drag the time slider in
+  the figure or use the play controls below it. Open it in a browser.
+* ``gyrokinetics_<shot>_t=<time>.png``: the figure at each slider time.
 
 With ``--interactive`` the same figure is shown in a matplotlib window instead.
 """
@@ -20,6 +19,7 @@ import argparse
 import os
 from contextlib import ExitStack
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 from imas import DBEntry
@@ -28,12 +28,17 @@ from matplotlib.lines import Line2D
 from time_slider import (
     SliderFigure,
     add_slider_args,
-    check_slider_args,
+    apply_slider_args,
     data_limits,
     nearest_index,
+    per_frame,
     show_or_save,
     slider_times,
 )
+
+# ----------------------------------------------------------------------------------------
+# Collisionality, as in QuaLiKiz
+# ----------------------------------------------------------------------------------------
 
 qe = 1.602176565e-19  # electron charge [C]
 me = 9.10938291e-31  # electron mass [kg]
@@ -114,17 +119,16 @@ def calc_tau_bounce(Te, q, Ro, Rmin, x):
     return q * Ro / (epsilon**1.5 * np.sqrt(Te * 1e3 * qe / me))
 
 
+# ----------------------------------------------------------------------------------------
+# Arguments
+# ----------------------------------------------------------------------------------------
+
+
 def handle_args():
     parser = argparse.ArgumentParser(
         description="Plot gyrokinetically relevant profiles with a time slider"
     )
-    parser.add_argument("--shot_nr", type=int, help="Shot number")
-    parser.add_argument(
-        "--dina_uri", type=str, help="URI to load DINA output data from"
-    )
-    parser.add_argument(
-        "--metis_uri", type=str, help="URI to load METIS output data from"
-    )
+    parser.add_argument("--shot_nr", type=str, help="Shot number")
     parser.add_argument(
         "--run_path",
         type=str,
@@ -153,10 +157,10 @@ def handle_args():
         nargs="+",
         help="Legend label per --run_path (default: the run directory names)",
     )
-    parser.add_argument("--t_list", type=int, nargs="+", help="List of times to plot")
     add_slider_args(parser)
     args = parser.parse_args()
-    check_slider_args(parser, args)
+    apply_slider_args(parser, args)
+
     if not args.run_path:
         if not os.environ.get("RUN_DIR"):
             parser.error("--run_path (or $RUN_DIR) is required")
@@ -164,14 +168,13 @@ def handle_args():
     for run in args.run_path:
         if not (Path(run) / args.torax_subdir).is_dir():
             parser.error(f"no {args.torax_subdir} in run directory {run}")
-    if args.labels is not None and len(args.labels) != len(args.run_path):
+    if args.labels is None:
+        args.labels = short_labels([Path(run).resolve().name for run in args.run_path])
+    if len(args.labels) != len(args.run_path):
         parser.error("give one --labels entry per --run_path")
+    if len(set(args.labels)) != len(args.labels):
+        parser.error(f"run labels must be unique, got {args.labels}")
     return args
-
-
-def run_label(run_path: str) -> str:
-    """Name of a run: its directory name"""
-    return Path(run_path).resolve().name
 
 
 def short_labels(labels: list[str]) -> list[str]:
@@ -185,58 +188,22 @@ def short_labels(labels: list[str]) -> list[str]:
     return ["_".join(p[n:]) for p in parts]
 
 
-def load_nice(nice_eq: IDSToplevel, nice_time, time_val: float) -> dict:
-    """NICE equilibrium quantities at the NICE time slice nearest to time_val"""
-    idx = nearest_index(nice_time, time_val)
-    eq_slice = nice_eq.time_slice[idx]
-    p1d = eq_slice.profiles_1d
-    rho = np.asarray(p1d.rho_tor_norm)
-    q = np.asarray(p1d.q)
-    smag = np.asarray(p1d.magnetic_shear)
-    if smag.size == 0 or not np.any(smag):
-        # NICE leaves magnetic_shear zero: derive it from q, s = (rho / q) dq/drho
-        with np.errstate(divide="ignore", invalid="ignore"):
-            smag = rho / q * np.gradient(q, rho)
-    return {
-        "nice_time": float(nice_time[idx]),
-        "nice_rho": rho,
-        "nice_qx": q,
-        "nice_smag": smag,
-        "nice_rr": np.asarray(eq_slice.boundary.outline.r),
-        "nice_zz": np.asarray(eq_slice.boundary.outline.z),
-        "nice_rga": float(eq_slice.boundary.geometric_axis.r),
-        "nice_zma": float(eq_slice.global_quantities.magnetic_axis.z),
-    }
+# ----------------------------------------------------------------------------------------
+# Loading
+#
+# Everything plotted for one time slice of one run is a "slice" dict with keys
+#   time_idx, time                 the TORAX core_profiles time slice
+#   rho, Te, Ti0, ne, dTe, dTi0, dne, qx, smag, xx, tite0, logNustar, zeff
+#                                  TORAX core_profiles (and derived) profiles vs rho
+#   eq_rho, eq_qx, eq_smag         TORAX equilibrium profiles
+#   rr, zz                         TORAX plasma boundary
+#   rga, zma                       TORAX axis marker: geometric axis R, magnetic axis Z
+#   nice_*                         the same NICE equilibrium quantities, if the run has NICE
+# ----------------------------------------------------------------------------------------
 
 
-def load_run(to: DBEntry, nice: DBEntry | None, frame_times) -> list[dict | None]:
-    """Per slider time, the run's nearest time slice (None outside the run's time range).
-
-    With ``nice``, each slice also holds the NICE equilibrium nearest in time (nice_* keys).
-    """
-    nice_eq = nice.get("equilibrium", lazy=True) if nice is not None else None
-    nice_time = np.asarray(nice_eq.time) if nice_eq is not None else None
-    to_cp: IDSToplevel = to.get("core_profiles", lazy=True)
-    to_eq: IDSToplevel = to.get("equilibrium", lazy=True)
-    cp_time = np.asarray(to_cp.time)
-    loaded = {}  # time index -> slice, so nearby slider times share one load
-    slices = []
-    for t in frame_times:
-        if not cp_time[0] <= t <= cp_time[-1]:
-            slices.append(None)
-            continue
-        idx = nearest_index(cp_time, t)
-        if idx not in loaded:
-            print(f"  loading t[{idx}]={cp_time[idx]:.3f}s")
-            loaded[idx] = load_timeslice(idx, to_cp, to_eq)
-            if nice_eq is not None:
-                loaded[idx].update(load_nice(nice_eq, nice_time, loaded[idx]["time"]))
-        slices.append(loaded[idx])
-    return slices
-
-
-def load_timeslice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> dict:
-    """Load and derive everything plotted for one TORAX core_profiles time slice"""
+def load_torax_slice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> dict:
+    """TORAX quantities at core_profiles time slice ``time_idx``"""
     cp_slice = to_cp.profiles_1d[time_idx]
     elec = cp_slice.electrons
     ion = cp_slice.ion
@@ -308,92 +275,173 @@ def load_timeslice(time_idx: int, to_cp: IDSToplevel, to_eq: IDSToplevel) -> dic
     }
 
 
-# One entry per profile panel: (axis label, [(data key, x key, legend label), ...]).
-# Panels sharing a "ylim group" get the same y-limits, as T_e/T_i and their gradients did.
+def load_nice_slice(nice_eq: IDSToplevel, nice_time, time_val: float) -> dict:
+    """NICE equilibrium quantities (nice_* keys) at the NICE slice nearest to time_val"""
+    idx = nearest_index(nice_time, time_val)
+    eq_slice = nice_eq.time_slice[idx]
+    p1d = eq_slice.profiles_1d
+    rho = np.asarray(p1d.rho_tor_norm)
+    q = np.asarray(p1d.q)
+    smag = np.asarray(p1d.magnetic_shear)
+    if smag.size == 0 or not np.any(smag):
+        # NICE leaves magnetic_shear zero: derive it from q, s = (rho / q) dq/drho
+        with np.errstate(divide="ignore", invalid="ignore"):
+            smag = rho / q * np.gradient(q, rho)
+    return {
+        "nice_rho": rho,
+        "nice_qx": q,
+        "nice_smag": smag,
+        "nice_rr": np.asarray(eq_slice.boundary.outline.r),
+        "nice_zz": np.asarray(eq_slice.boundary.outline.z),
+        "nice_rga": float(eq_slice.boundary.geometric_axis.r),
+        "nice_zma": float(eq_slice.global_quantities.magnetic_axis.z),
+    }
+
+
+def load_run(torax: DBEntry, nice: DBEntry | None, frame_times) -> list[dict | None]:
+    """A run's slice per slider time: its nearest time slice, None outside its range"""
+    to_cp: IDSToplevel = torax.get("core_profiles", lazy=True)
+    to_eq: IDSToplevel = torax.get("equilibrium", lazy=True)
+    nice_eq = nice.get("equilibrium", lazy=True) if nice is not None else None
+    nice_time = np.asarray(nice_eq.time) if nice_eq is not None else None
+    cp_time = np.asarray(to_cp.time)
+
+    def load(idx):
+        print(f"  loading t[{idx}]={cp_time[idx]:.3f}s")
+        s = load_torax_slice(idx, to_cp, to_eq)
+        if nice_eq is not None:
+            s |= load_nice_slice(nice_eq, nice_time, s["time"])
+        return s
+
+    return per_frame(frame_times, cp_time, load)
+
+
+# ----------------------------------------------------------------------------------------
+# Figure
+# ----------------------------------------------------------------------------------------
+
+
+class Series(NamedTuple):
+    """One line in a profile panel: slice keys of its y and x values"""
+
+    key: str
+    x_key: str = "rho"
+    label: str | None = None  # for the line-style legend of panels with several series
+
+
+class Panel(NamedTuple):
+    """One profile panel. Panels with the same ylim_group share their y-limits."""
+
+    ylabel: str
+    series: list[Series]
+    ylim_group: str | None = None
+
+
 PANELS = [
-    (r"$T_e$ [keV]", [("Te", "rho", None)], "T"),
-    (r"$T_{i,0}$ [keV]", [("Ti0", "rho", None)], "T"),
-    (r"$n_e$ [$10^{19} m^{-3}$]", [("ne", "rho", None)], None),
-    (r"$\partial T_e$ [keV]", [("dTe", "rho", None)], "dT"),
-    (r"$\partial T_{i,0}$ [keV]", [("dTi0", "rho", None)], "dT"),
-    (r"$\partial n_e$ [$10^{19} m^{-3}$]", [("dne", "rho", None)], None),
-    (
+    Panel(r"$T_e$ [keV]", [Series("Te")], ylim_group="T"),
+    Panel(r"$T_{i,0}$ [keV]", [Series("Ti0")], ylim_group="T"),
+    Panel(r"$n_e$ [$10^{19} m^{-3}$]", [Series("ne")]),
+    Panel(r"$\partial T_e$ [keV]", [Series("dTe")], ylim_group="dT"),
+    Panel(r"$\partial T_{i,0}$ [keV]", [Series("dTi0")], ylim_group="dT"),
+    Panel(r"$\partial n_e$ [$10^{19} m^{-3}$]", [Series("dne")]),
+    Panel(
         r"$q$ [-]",
         [
-            ("qx", "rho", r"$q_{1D,torax}$"),
-            ("eq_qx", "eq_rho", r"$q_{eq,torax}$"),
-            ("nice_qx", "nice_rho", r"$q_{eq,NICE}$"),
+            Series("qx", label=r"$q_{1D,torax}$"),
+            Series("eq_qx", "eq_rho", r"$q_{eq,torax}$"),
+            Series("nice_qx", "nice_rho", r"$q_{eq,NICE}$"),
         ],
-        None,
     ),
-    (
+    Panel(
         r"$\hat{s}$ [-]",
         [
-            ("smag", "rho", r"$\hat{s}_{1D,torax}$"),
-            ("eq_smag", "eq_rho", r"$\hat{s}_{eq,torax}$"),
-            ("nice_smag", "nice_rho", r"$\hat{s}_{eq,NICE}$ (from q)"),
+            Series("smag", label=r"$\hat{s}_{1D,torax}$"),
+            Series("eq_smag", "eq_rho", r"$\hat{s}_{eq,torax}$"),
+            Series("nice_smag", "nice_rho", r"$\hat{s}_{eq,NICE}$ (from q)"),
         ],
-        None,
     ),
-    (
+    Panel(
         r"$x\equiv\frac{r_{outb} - r_{inb}}{r_{outb,LCFS} - r_{inb,LCFS}}$",
-        [("xx", "rho", None)],
-        None,
+        [Series("xx")],
     ),
-    (r"$\frac{T_{i,0}}{T_e}$ [-]", [("tite0", "rho", None)], None),
-    (r"$\log_{10}(\nu^*$) [-]", [("logNustar", "rho", None)], None),
-    (r"$Z_{eff}$ [-]", [("zeff", "rho", None)], None),
+    Panel(r"$\frac{T_{i,0}}{T_e}$ [-]", [Series("tite0")]),
+    Panel(r"$\log_{10}(\nu^*$) [-]", [Series("logNustar")]),
+    Panel(r"$Z_{eff}$ [-]", [Series("zeff")]),
 ]
+LINESTYLES = ["-", "--", ":", "-."]  # per series within a panel
+
+
+def check_panel_keys(slices):
+    """Fail early on a PANELS key that no slice has (a typo would draw an empty panel)
+
+    NICE keys are only in the slices of runs with NICE output, so they are exempt.
+    """
+    keys = set().union(*slices) if slices else set()
+    for panel in PANELS:
+        for series in panel.series:
+            for key in (series.key, series.x_key):
+                if not key.startswith("nice_") and key not in keys:
+                    raise KeyError(f"PANELS uses {key!r}, which no slice has")
+
+
+def clear(*lines):
+    for line in lines:
+        line.set_data([], [])
 
 
 class GyrokineticsFigure(SliderFigure):
-    """Equilibrium + 4x3 gyrokinetic profiles below the title and time slider.
+    """Equilibrium (left) and 4x3 gyrokinetic profile panels (right).
 
     Each run gets its own colour; within a panel, series are told apart by line style.
     Axis limits are fixed over all runs and slices, so moving the slider shows real
     changes rather than rescaled axes.
     """
 
-    LINESTYLES = ["-", "--", ":", "-."]
-
     def __init__(self, runs: dict[str, list[dict | None]], frame_times, shot_nr):
         super().__init__(frame_times)
-        self.runs = runs  # label -> slice per slider time
+        self.runs = runs  # run label -> slice per slider time
         self.shot_nr = shot_nr
-        all_slices = [s for slices in runs.values() for s in slices if s is not None]
-
-        def limits(*keys, margin=0.05):
-            return data_limits(
-                [s[k] for s in all_slices for k in keys if k in s], margin
-            )
-
-        has_nice = any("nice_rr" in s for s in all_slices)
+        self.colors = {label: f"C{i}" for i, label in enumerate(runs)}
+        self.all_slices = [
+            s for slices in runs.values() for s in slices if s is not None
+        ]
+        check_panel_keys(self.all_slices)
 
         left, right = self.fig.subfigures(1, 2, width_ratios=[1, 2])
-        colors = {label: f"C{i}" for i, label in enumerate(runs)}
+        self._setup_equilibrium(left)
+        self._setup_profiles(right)
+        self.update(0)
 
-        # Equilibrium, per run: TORAX (boundary, magnetic axis, midplane) and
-        # NICE (boundary, magnetic axis)
-        self.ax_eq = left.subplots()
-        self.eq_lines = {
+    def limits(self, *keys, margin=0.05):
+        """Axis limits over the given slice keys of all runs and slices"""
+        values = [s[k] for s in self.all_slices for k in keys if k in s]
+        return data_limits(values, margin)
+
+    def has_data(self, key) -> bool:
+        return any(key in s for s in self.all_slices)
+
+    def _setup_equilibrium(self, subfig):
+        ax = subfig.subplots()
+        # Per run: TORAX (boundary, axis marker, midplane) and NICE (boundary, axis)
+        self.torax_eq_lines = {
             label: (
-                self.ax_eq.plot([], [], color=c)[0],
-                self.ax_eq.plot([], [], "o", color=c)[0],
-                self.ax_eq.plot([], [], color=c, lw=0.8)[0],
+                ax.plot([], [], color=c)[0],
+                ax.plot([], [], "o", color=c)[0],
+                ax.plot([], [], color=c, lw=0.8)[0],
             )
-            for label, c in colors.items()
+            for label, c in self.colors.items()
         }
         self.nice_eq_lines = {
             label: (
-                self.ax_eq.plot([], [], color=c, ls=":")[0],
-                self.ax_eq.plot([], [], "x", color=c)[0],
+                ax.plot([], [], color=c, ls=":")[0],
+                ax.plot([], [], "x", color=c)[0],
             )
-            for label, c in colors.items()
+            for label, c in self.colors.items()
         }
-        self.ax_eq.set_xlim(*limits("rr", "nice_rr"))
-        self.ax_eq.set_ylim(*limits("zz", "nice_zz"))
-        if has_nice:  # legend for the line styles
-            self.ax_eq.legend(
+        ax.set_xlim(*self.limits("rr", "nice_rr"))
+        ax.set_ylim(*self.limits("zz", "nice_zz"))
+        if self.has_data("nice_rr"):  # legend for the line styles
+            ax.legend(
                 handles=[
                     Line2D([], [], color="k", marker="o"),
                     Line2D([], [], color="k", ls=":", marker="x"),
@@ -401,50 +449,51 @@ class GyrokineticsFigure(SliderFigure):
                 labels=["TORAX", "NICE"],
                 loc="upper right",
             )
-        self.ax_eq.set_aspect(1)
-        self.ax_eq.set_xlabel("R [m]")
-        self.ax_eq.set_ylabel("Z [m]")
-        self.ax_eq.set_title("Equilibrium")
-        # Run legend; its texts are updated with each run's actual time in draw
-        self.run_legend = left.legend(
-            handles=[self.eq_lines[label][0] for label in runs],
-            labels=list(runs),
+        ax.set_aspect(1)
+        ax.set_xlabel("R [m]")
+        ax.set_ylabel("Z [m]")
+        ax.set_title("Equilibrium")
+        # Run legend; its texts get each run's actual time in _draw_equilibrium
+        self.run_legend = subfig.legend(
+            handles=[lines[0] for lines in self.torax_eq_lines.values()],
+            labels=list(self.runs),
             loc="outside lower center",
         )
 
-        # Profiles
-        axes = right.subplots(4, 3).flatten()
+    def _setup_profiles(self, subfig):
         group_keys = {}
-        for _, series, group in PANELS:
-            if group is not None:
-                group_keys.setdefault(group, []).extend(key for key, _, _ in series)
+        for panel in PANELS:
+            if panel.ylim_group is not None:
+                group_keys.setdefault(panel.ylim_group, []).extend(
+                    s.key for s in panel.series
+                )
 
-        x_lim = limits("rho", margin=0.02)
-        self.profile_lines = []  # (Line2D, run label, data key, x key)
-        for ax, (ylabel, series, group) in zip(axes, PANELS):
-            for (key, x_key, _), ls in zip(series, self.LINESTYLES):
-                for label, c in colors.items():
+        x_lim = self.limits("rho", margin=0.02)
+        self.profile_lines = []  # (Line2D, run label, Series)
+        for ax, panel in zip(subfig.subplots(4, 3).flatten(), PANELS, strict=True):
+            for series, ls in zip(panel.series, LINESTYLES, strict=False):
+                for label, c in self.colors.items():
                     (line,) = ax.plot([], [], color=c, ls=ls)
-                    self.profile_lines.append((line, label, key, x_key))
-            ax.set_ylabel(ylabel)
+                    self.profile_lines.append((line, label, series))
+            ax.set_ylabel(panel.ylabel)
             ax.set_xlabel(r"$\rho_{N,tor}$")
             ax.set_xlim(*x_lim)
-            keys = group_keys[group] if group is not None else [k for k, _, _ in series]
-            ax.set_ylim(*limits(*keys))
+            if panel.ylim_group is not None:
+                ax.set_ylim(*self.limits(*group_keys[panel.ylim_group]))
+            else:
+                ax.set_ylim(*self.limits(*(s.key for s in panel.series)))
             # Legend for the line styles, of the series that have data
             shown = [
-                (series_label, ls)
-                for (key, _, series_label), ls in zip(series, self.LINESTYLES)
-                if any(key in s for s in all_slices)
+                (series.label, ls)
+                for series, ls in zip(panel.series, LINESTYLES, strict=False)
+                if self.has_data(series.key)
             ]
             if len(shown) > 1:
                 ax.legend(
                     handles=[Line2D([], [], color="k", ls=ls) for _, ls in shown],
-                    labels=[series_label for series_label, _ in shown],
+                    labels=[label for label, _ in shown],
                     loc="best",
                 )
-
-        self.update(0)
 
     def title(self, frame: int) -> str:
         t0, t1 = self.frame_times[0], self.frame_times[-1]
@@ -454,53 +503,53 @@ class GyrokineticsFigure(SliderFigure):
         )
 
     def draw(self, frame: int):
-        for (label, slices), text in zip(self.runs.items(), self.run_legend.get_texts()):
+        self._draw_equilibrium(frame)
+        self._draw_profiles(frame)
+
+    def _draw_equilibrium(self, frame: int):
+        legend_texts = self.run_legend.get_texts()
+        for (label, slices), text in zip(self.runs.items(), legend_texts, strict=True):
             s = slices[frame]
-            boundary, axis, midplane = self.eq_lines[label]
+            boundary, axis, midplane = self.torax_eq_lines[label]
             nice_boundary, nice_axis = self.nice_eq_lines[label]
-            if s is not None and "nice_rr" in s:
-                nice_boundary.set_data(s["nice_rr"], s["nice_zz"])
-                nice_axis.set_data([s["nice_rga"]], [s["nice_zma"]])
-            else:
-                nice_boundary.set_data([], [])
-                nice_axis.set_data([], [])
             if s is None:  # slider time outside this run
-                for line in (boundary, axis, midplane):
-                    line.set_data([], [])
+                clear(boundary, axis, midplane, nice_boundary, nice_axis)
                 text.set_text(f"{label} (no data at this time)")
                 continue
+
             boundary.set_data(s["rr"], s["zz"])
             axis.set_data([s["rga"]], [s["zma"]])
             midplane.set_data((min(s["rr"]), max(s["rr"])), (s["zma"], s["zma"]))
             text.set_text(f"{label} (t[{s['time_idx']}]={s['time']:.3f}s)")
-        for line, label, key, x_key in self.profile_lines:
-            s = self.runs[label][frame]
-            if s is None or key not in s:  # outside this run, or no NICE data
-                line.set_data([], [])
+            if "nice_rr" in s:
+                nice_boundary.set_data(s["nice_rr"], s["nice_zz"])
+                nice_axis.set_data([s["nice_rga"]], [s["nice_zma"]])
             else:
-                line.set_data(s[x_key], s[key])
+                clear(nice_boundary, nice_axis)
+
+    def _draw_profiles(self, frame: int):
+        for line, label, series in self.profile_lines:
+            s = self.runs[label][frame]
+            if s is None or series.key not in s:  # outside this run, or no NICE data
+                clear(line)
+            else:
+                line.set_data(s[series.x_key], s[series.key])
+
+
+# ----------------------------------------------------------------------------------------
 
 
 def main():
-    """Plot gyrokinetically relevant TORAX output for PDS, scrollable in time"""
+    """Plot gyrokinetically relevant TORAX (and NICE) output for PDS, scrollable in time"""
     args = handle_args()
-
-    # The other sources are accepted for interface compatibility with the other
-    # postprocessing scripts, but not (yet) plotted.
-    for name in ("dina_uri", "metis_uri"):
-        if getattr(args, name) is not None:
-            print(f"Note: --{name} given but not plotted yet")
-
-    labels = args.labels or short_labels([run_label(run) for run in args.run_path])
-    if len(set(labels)) != len(labels):
-        raise SystemExit(f"plot_gyrokinetics.py: run labels must be unique, got {labels}")
+    run_paths = dict(zip(args.labels, map(Path, args.run_path), strict=True))
 
     with ExitStack() as stack:
+
         def open_db(path: Path) -> DBEntry:
             return stack.enter_context(DBEntry(f"imas:hdf5?path={path}", "r"))
 
-        run_paths = dict(zip(labels, map(Path, args.run_path)))
-        dbs = {
+        torax_dbs = {
             label: open_db(run / args.torax_subdir) for label, run in run_paths.items()
         }
         nice_dbs = {  # NICE output is optional per run
@@ -508,21 +557,21 @@ def main():
             for label, run in run_paths.items()
             if (run / args.nice_subdir).is_dir()
         }
-        # Slider times: every run's first, middle and last time slice, plus
-        # --max_slices evenly spaced times over the combined time range of all runs
+
         frame_times = slider_times(
-            [to.get("core_profiles", lazy=True).time for to in dbs.values()],
+            [db.get("core_profiles", lazy=True).time for db in torax_dbs.values()],
             args.max_slices,
         )
-
         runs = {}
-        for label, to in dbs.items():
+        for label, torax in torax_dbs.items():
             nice = nice_dbs.get(label)
             print(f"Loading run {label} (TORAX{' + NICE' if nice else ''})")
-            runs[label] = load_run(to, nice, frame_times)
+            runs[label] = load_run(torax, nice, frame_times)
 
-    gk = GyrokineticsFigure(runs, frame_times, args.shot_nr)
-    show_or_save([(gk, f"gyrokinetics_{args.shot_nr}", f"Gyrokinetics {args.shot_nr}")], args)
+    figure = GyrokineticsFigure(runs, frame_times, args.shot_nr)
+    show_or_save(
+        [(figure, f"gyrokinetics_{args.shot_nr}", f"Gyrokinetics {args.shot_nr}")], args
+    )
 
 
 if __name__ == "__main__":
