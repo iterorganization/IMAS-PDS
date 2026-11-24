@@ -146,12 +146,12 @@ the rest on the published stack.
 .. code-block:: bash
 
   cd setup_files/easyconfigs/n/NICE
-  cp NICE-3.0.0.dev510-intel-2025b-pds.eb NICE-mybranch-intel-2025b-pds.eb
+  cp NICE-PDS-1.2.0-intel-2025b.eb NICE-mybranch-intel-2025b.eb
   # edit the new file to point at your branch
 
   export EASYBUILD_PREFIX=$HOME/my-modules
   module load EasyBuild/5.4.0
-  eb NICE-mybranch-intel-2025b-pds.eb --robot="$PWD"
+  eb NICE-mybranch-intel-2025b.eb --robot="$PWD"
 
   module use $HOME/my-modules/modules/all
 

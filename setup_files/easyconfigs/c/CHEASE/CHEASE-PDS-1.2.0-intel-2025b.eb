@@ -1,8 +1,7 @@
 easyblock = 'MakeCp'
 
 name = 'CHEASE'
-version = '2026.08'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 local_commit = '30c8070da33dcd3991a0dbe98cd1e7335a88e218'
 
 homepage = 'https://gitlab.epfl.ch/spc/chease'

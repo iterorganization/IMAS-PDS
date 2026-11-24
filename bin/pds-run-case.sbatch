@@ -58,10 +58,10 @@ if [[ -z "${MANAGER:-}" ]]; then
     if [[ -f "$LMOD_INIT" ]]; then
       source "$LMOD_INIT"
       module use "$PDS_MODULEPATH" 2>/dev/null || true
-      module load IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds 2>/dev/null || true
+      module load IMAS-MUSCLE3/PDS-1.2.0-intel-2025b 2>/dev/null || true
     fi
   fi
-  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/1.0.1.dev133-intel-2025b-pds not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
+  : "${EBROOTIMASMINMUSCLE3:?$0: IMAS-MUSCLE3/PDS-1.2.0-intel-2025b not loaded and could not be loaded automatically -- run 'module use $PDS_MODULEPATH && module load PDS' first}"
   MANAGER="$(command -v muscle_manager)"
   : "${MANAGER:?$0: muscle_manager not on PATH even though IMAS-MUSCLE3 is loaded -- its MUSCLE3 dependency is missing}"
 fi

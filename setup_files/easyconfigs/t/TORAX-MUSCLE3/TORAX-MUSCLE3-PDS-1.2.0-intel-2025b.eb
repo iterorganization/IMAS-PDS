@@ -1,8 +1,7 @@
 easyblock = 'PythonPackage'
 
 name = 'TORAX-MUSCLE3'
-version = '0.1.3.dev115'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 local_commit = '935213c5b3076cbe519182f053d39c23e18cc9bb'
 
@@ -26,7 +25,7 @@ sources = [{
 }]
 checksums = [None]
 
-preinstallopts = 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s '
+preinstallopts = 'SETUPTOOLS_SCM_PRETEND_VERSION=0.1.3.dev115 '
 
 dependencies = [
     ('Python', '3.13.5'),

@@ -29,7 +29,7 @@ settings:
   sink.sink_uri: "imas:hdf5?path=[PWD_PLACEHOLDER]/cases/output/sink_metis"
   sink.sink_mode: "w"
   metis.metis_computation: 1
-  metis.metis_filename: "/work/projects/pds/software/METIS-IRFM/2026.11-pds/certification/metis/ITER_rampup_ECCD.mat"
+  metis.metis_filename: "/work/projects/pds/software/METIS-IRFM/PDS-1.2.0/certification/metis/ITER_rampup_ECCD.mat"
   metis.metis_external_data_equilibrium: 1
   muscle_remote_log_level: 'debug'
 programs:
@@ -37,7 +37,7 @@ programs:
     script: |
       #!/bin/bash
       module purge
-      module load METIS-IRFM/2026.11-pds IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
+      module load METIS-IRFM/PDS-1.2.0 IMAS-AL-Matlab/5.3.0-intel-2023b-DD-4.0.0
       unset PYTHONPATH
       export DIR_METIS4MUSCLE3=$EBROOTMETIS/workflow/muscle3/mfile
       export IMAS_VERSION=4.0.0

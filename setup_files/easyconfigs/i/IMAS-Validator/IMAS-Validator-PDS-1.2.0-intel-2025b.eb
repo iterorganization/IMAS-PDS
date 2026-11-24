@@ -1,8 +1,7 @@
 easyblock = 'PythonBundle'
 
 name = 'IMAS-Validator'
-version = '1.0.0.dev69'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 description = """A pure-python library to handle IDSs"""
 homepage = "https://github.com/iterorganization/IMAS-Validator"
@@ -25,7 +24,7 @@ exts_list = [
         'sources': ['%(name)s-%(version)s-py3-none-any.whl'],
         'checksums': ['dfd100dfdc0ee91e1ffbd1774669b209dec115b285e06af9e31d8743db8931e6'],
     }),
-    ('imas_validator', version, {
+    ('imas_validator', '1.0.0.dev69', {
         'modulename': False,
         'sources': [{
             'git_config': {

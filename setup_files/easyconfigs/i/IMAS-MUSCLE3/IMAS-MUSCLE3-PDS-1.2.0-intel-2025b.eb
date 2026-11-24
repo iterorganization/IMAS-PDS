@@ -1,8 +1,7 @@
 easyblock = 'PythonBundle'
 
 name = 'IMAS-MUSCLE3'
-version = '1.0.1.dev133'
-versionsuffix = '-pds'
+version = 'PDS-1.2.0'
 
 local_commit = 'fe5ab24250f4222c9d3f1867d51b9426c6d7d270'
 local_dashboard_commit = '2346d2c72e62230928d0c496b11c6760e4b83482'
@@ -25,7 +24,7 @@ dependencies = [
     ('Python-bundle-PyPI', '2025.07'),
     ('IMAS-Python', '2.3.0'),
 
-    ('IMAS-Validator', '1.0.0.dev69', '-pds'),
+    ('IMAS-Validator', 'PDS-1.2.0'),
     ('MUSCLE3', '0.10.0'),
     ('xarray', '2025.10.0'),
     ('nodejs', '22.17.1'),
@@ -128,7 +127,7 @@ exts_list = [
         'preinstallopts': 'SETUPTOOLS_SCM_PRETEND_VERSION=%(version)s ',
         'checksums': [None],
     }),
-    ('imas_muscle3', version, {
+    ('imas_muscle3', '1.0.1.dev133', {
         'modulename': 'imas_muscle3',
         'sources': [{
             'git_config': {
