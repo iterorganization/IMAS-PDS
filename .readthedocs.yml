@@ -9,13 +9,17 @@ build:
       # setuptools_scm derives the version from tags, and docs/source/conf.py
       # reads pds.__version__ -- a shallow clone has no tags, so the import fails.
       - git fetch --unshallow || true
-
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+      - git fetch --tags || true
+    # pip ignores [tool.uv] override-dependencies in pyproject.toml, so the docs extra
+    # (ymmsl2svg -> ymmsl 0.18 vs muscle3 0.10 -> ymmsl<0.18) only resolves with uv.
+    pre_create_environment:
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    create_environment:
+      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
+    install:
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --extra docs
 
 # HTML only; no PDF or ePub builds.
 formats: []
