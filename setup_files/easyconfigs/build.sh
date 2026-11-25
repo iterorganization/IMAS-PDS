@@ -52,7 +52,7 @@ declare -A LOCAL_EC=(
   [METIS-IRFM]=m/METIS-IRFM/METIS-IRFM-PDS-1.2.0.eb
   [PCS]=p/PCS/PCS-PDS-1.2.0.eb
   [ymmsl2svg]=y/ymmsl2svg/ymmsl2svg-PDS-1.2.0-intel-2025b.eb
-  [PDS]=p/PDS/PDS-1.2.0.eb
+  [PDS]=p/PDS/PDS-1.2.1.eb
 )
 BUILD_ORDER=(IMAS-Validator IMAS-MUSCLE3 Waveform-Editor NICE CHEASE TORAX-MUSCLE3 METIS-IRFM PCS ymmsl2svg PDS)
 
